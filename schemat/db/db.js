@@ -217,8 +217,8 @@ export class Ring extends WebObject {
 
     /***  Indexes and Transforms  ***/
 
-    async *scan(operator, opts) {
-        /* Scan a sequence in the binary range [`start`, `stop`) and yield records. The sequence is identified by its operator.  */
+    async *scan_binary(operator, opts) {
+        /* Scan a sequence in the range [`start`, `stop`) and yield [key-binary, value-json] pairs. */
         let seq = this.sequence_by_operator.get(operator.id)
         yield* seq.scan_binary(opts)
     }
@@ -408,7 +408,7 @@ export class Database extends WebObject {
         if (stop !== undefined) stop = schema.encode_key(stop)
         opts = {...opts, start, stop}
 
-        let streams = this.rings.map(r => r.scan(operator, opts))
+        let streams = this.rings.map(r => r.scan_binary(operator, opts))
         let merged = merge(compare, ...streams)
         let {limit} = opts
         

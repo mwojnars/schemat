@@ -164,15 +164,6 @@ export class DataSequence extends Sequence {
         return this.find_block(key)
     }
 
-    // async* scan(opts = {}) {
-    //     /* Scan this sequence and yield Records. The `start`, `stop` options are tuples (decoded), not binary. */
-    //     // let {start, stop} = opts
-    //     let rschema = this.operator.record_schema
-    //
-    //     for await (let [key, val] of this.scan_binary(opts)) //{...opts, start, stop}))
-    //         yield new Record(rschema, {key, val})
-    // }
-
     async* scan_objects() {
         /* Yield all objects in this sequence as {id, data} pairs.
            Scanning a data sequence differs from an index scan because the key space is sharded (by low bits),
