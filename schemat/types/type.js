@@ -688,12 +688,9 @@ export class TYPE extends COMPOUND {
             let options = Object.assign({}, ...merge.map(t => t._options).reverse())
             type = new type.constructor(options)
         }
-
         // schemat._print(`TYPE.merge_inherited() merged:`, type)
         // schemat._print(`TYPE.merge_inherited() ...from:`, types)
-
         return type
-        // return types[0]
     }
 }
 
