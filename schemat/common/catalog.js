@@ -661,14 +661,14 @@ export class Catalog {
 
     /***  Read access  ***/
 
-    static merge(catalogs, combine = null) {
+    static merge(catalogs, merge_values = null) {
         /* Merge multiple `catalogs` into a new Catalog. Repeated values for a `key` are merged recursively using
-           combine(values) function which should return an array of value(s) to be ultimately assigned to the key.
-           If combine=null, all repeated values are included in the result as separate entries with their order preserved.
+           merge_values(values) function which returns a single result value to be ultimately assigned to the key.
+           If merge_values=null, all repeated values are included in the result as separate entries, order preserved.
          */
         if (catalogs.length === 1) return catalogs[0]
 
-        if (!combine) {
+        if (!merge_values) {
             let entries = catalogs.map(c => c._entries).flat()
             return new Catalog(entries)
         }
@@ -685,8 +685,9 @@ export class Catalog {
 
         function* combined() {
             for (let [key, values] of entries)
-                for (let value of combine(values))
-                    yield [key, value]
+                yield [key, merge_values(values)]
+                // for (let value of merge_values(values))
+                //     yield [key, value]
         }
         return new Catalog([...combined()])
     }
