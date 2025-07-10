@@ -846,8 +846,8 @@
   name: Operator
   schema:
     name:
-      info: Operator name identifies the derived sequence, without it the sequence 
-        could not be accessed. For this reason, name is a required property.
+      info: Operator's name identifies the derived sequence and without it the  
+        sequence cannot be accessed. For this reason, name is a required property.
       required: true
       blank: ""
       "@": schemat/types/type.js:STRING

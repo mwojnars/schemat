@@ -86,7 +86,7 @@ export class Type extends Struct {
     static default_props() {
         /* Return all options from the prototype chain combined, excluding undefined values. */
         const merged = Object.assign({}, ...T.getInherited(this, 'options'))
-        return Object.fromEntries(Object.entries(merged).filter(([_, v]) => v !== undefined))
+        return Object.fromEntries(Object.entries(merged).filter(([_, v]) => v !== undefined))   // remove explicit `undefined` values
     }
 
     _options = {}               // own config options of this type instance (without defaults)
