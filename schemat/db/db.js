@@ -385,7 +385,7 @@ export class Database extends WebObject {
         /* Yield a stream of plain Records from the index, merge-sorted from all the rings.
            If `limit` is not null, yield at most `limit` items.
            If `reverse` is true, scan in the reverse order.
-           If `batch_size` is not null, yield records in batches of `batch_size` items.
+           If `batch_size` is not null, yield records in batches of `batch_size` items. (TODO)
          */
         // (1) scan & merge *binary* records
         // (2) decode binary record to pseudo-object via operator.record_schema
@@ -417,14 +417,6 @@ export class Database extends WebObject {
         for await (let [key, val] of merged)
             if (limit != null && ++count > limit) break
             else yield new Record(schema, {key, val})
-
-        // if (limit !== undefined && limit !== null) {
-        //     let count = 0
-        //     for await (let record of merged)
-        //         if (++count > limit) break
-        //         else yield record
-        // }
-        // else yield* merged
 
         // TODO: apply `batch_size` to the merged stream and yield in batches
     }

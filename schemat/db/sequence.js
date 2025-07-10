@@ -105,9 +105,6 @@ export class Sequence extends WebObject {
         // let {start, stop} = opts
         let rschema = this.operator.record_schema
 
-        // start = start && rschema.encode_key(start)          // convert `start` and `stop` to binary keys (Uint8Array)
-        // stop = stop && rschema.encode_key(stop)
-
         for await (let [key, val] of this.scan_binary(opts)) //{...opts, start, stop}))
             yield new Record(rschema, {key, val})
     }
