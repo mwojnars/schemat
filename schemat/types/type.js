@@ -134,13 +134,17 @@ export class Type extends Struct {
         /* Validate an object/value to be encoded, clean it up and convert to a canonical form if needed.
            Return the processed value, or raise an exception if the value is invalid.
          */
-        if (value === null || value === undefined)
-            if (this.options.blank) return null
-            else throw new ValueError(`expected a non-blank (non-missing) value, got '${value}' instead`)
+        let {blank, required, class: class_} = this.options
 
-        let class_ = this.options.class
+        if (value === undefined) value = null       // undefined is always converted to null
+
+        if (required && (value === null || value === blank))    // null and `blank` are forbidden if required=true
+            throw new ValueError(`expected a non-blank and non-missing value, got '${value}'`)
+
+        if (value === null) return null             // null is never passed further to custom _validate()
+
         if (class_ && !(value instanceof class_))
-            throw new ValueError(`expected an instance of ${class_}, got ${value} instead`)
+            throw new ValueError(`expected an instance of ${class_}, got ${value}`)
 
         return this._validate(value)
     }
