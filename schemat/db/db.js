@@ -61,11 +61,6 @@ export class Ring extends WebObject {
         return new Map(this.sequences.map(seq => [seq.operator.id, seq]))
     }
 
-    // get sequence_names() {
-    //     /* Map of sequences by their operator's name. */
-    //     return new Map(this.sequences.map(seq => [seq.operator.name, seq]))
-    // }
-
     get id_insert_zones() {
         /* [min_id_exclusive, min_id_forbidden, min_id_sharded] grouped into an array, with the 2nd one imputed if missing.
            The lack of `min_id_exclusive` indicates there's NO exclusive zone.
@@ -221,14 +216,8 @@ export class Ring extends WebObject {
 
     /***  Indexes and Transforms  ***/
 
-    // async *scan(name, opts) {
-    //     /* Scan a given sequence, `name`, in the binary range [`start`, `stop`) and yield the records. */
-    //     let seq = this.sequence_names.get(name)
-    //     yield* seq.scan(opts)
-    // }
-
     async *scan(operator, opts) {
-        /* Scan sequence in the binary range [`start`, `stop`) and yield records. The sequence is identified by its operator.  */
+        /* Scan a sequence in the binary range [`start`, `stop`) and yield records. The sequence is identified by its operator.  */
         let seq = this.sequence_by_operator.get(operator.id)
         yield* seq.scan(opts)
     }
@@ -391,7 +380,7 @@ export class Database extends WebObject {
 
     /***  Indexes  ***/
 
-    async *scan(name, {offset, ...opts} = {}) {
+    async *scan(name, {offset, start, stop, ...opts} = {}) {
         /* Yield a stream of plain Records from the index, merge-sorted from all the rings.
            If `limit` is not null, yield at most `limit` items.
            If `reverse` is true, scan in the reverse order.
@@ -403,6 +392,13 @@ export class Database extends WebObject {
 
         let operator = this.top_ring.operators.get(name)
         if (!operator) throw new Error(`unknown derived sequence '${name}'`)
+
+        let schema = operator.record_schema
+
+        // convert `start` and `stop` to binary keys (Uint8Array)
+        if (start !== undefined) start = schema.encode_key(start)
+        if (stop !== undefined) stop = schema.encode_key(stop)
+        opts = {...opts, start, stop}
 
         let streams = this.rings.map(r => r.scan(operator, opts))
         let merged = merge(Record.compare, ...streams)

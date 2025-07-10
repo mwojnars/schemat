@@ -85,8 +85,8 @@ export class Sequence extends WebObject {
     decode_key(bin) { return this.operator.decode_key(bin) }    // binary > app representation
 
     async* scan_binary(opts = {}) {
-        /* Scan this sequence in [`start`, `stop`) range and yield raw [key, value] pairs,
-           where `key` is an Uint8Array and `value` is a JSON string.
+        /* Scan this sequence in [`start`, `stop`) range and yield [key, value] pairs, where `key` is an Uint8Array
+           and `value` is a JSON string. The options, start/stop, should already be encoded as binary.
          */
         let {start = null, stop = null, reverse = false} = opts
         assert(!reverse)
@@ -101,14 +101,14 @@ export class Sequence extends WebObject {
     }
 
     async* scan(opts = {}) {
-        /* Scan this sequence and yield binary Records. The `start`, `stop` options are tuples (decoded), not binary. */
-        let {start, stop} = opts
+        /* Scan this sequence and yield Records. The `start`, `stop` options are tuples (decoded), not binary. */
+        // let {start, stop} = opts
         let rschema = this.operator.record_schema
 
-        start = start && rschema.encode_key(start)          // convert `start` and `stop` to binary keys (Uint8Array)
-        stop = stop && rschema.encode_key(stop)
+        // start = start && rschema.encode_key(start)          // convert `start` and `stop` to binary keys (Uint8Array)
+        // stop = stop && rschema.encode_key(stop)
 
-        for await (let [key, val] of this.scan_binary({...opts, start, stop}))
+        for await (let [key, val] of this.scan_binary(opts)) //{...opts, start, stop}))
             yield new Record(rschema, {key, val})
     }
 
