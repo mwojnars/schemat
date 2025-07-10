@@ -665,7 +665,7 @@ export class TYPE extends COMPOUND {
     static Widget = widgets.TYPE_Widget
 
     merge_inherited(types) {
-        schemat._print(`TYPE.merge_inherited() called`)
+        schemat._print(`TYPE.merge_inherited() called:`, types)
         return types[0]
     }
 }

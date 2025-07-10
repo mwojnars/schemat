@@ -672,10 +672,10 @@ export class Catalog {
             return new Catalog(entries)
         }
         let catalog = new Catalog()
-        for (const cat of catalogs)
-            for (const entry of (cat._entries || []))
-                if (entry[0] !== undefined && !catalog.has(entry[0]))
-                    catalog._append(...entry)
+        for (let cat of catalogs)
+            for (let [key, value] of cat._entries || [])
+                if (key !== undefined && !catalog.has(key))
+                    catalog._append(key, value)
         return catalog
     }
 
