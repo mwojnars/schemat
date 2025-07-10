@@ -40,7 +40,7 @@ export class Type extends Struct {
                                     // since repeated properties behave like lists of varying length, and zero is a valid length,
                                     // default value is NOT used for them and should be left undefined (TODO: check & enforce this constraint)
 
-        // blank    : undefined,    // "empty" value that should be treated similar as null and rejected when required=true; ex.: '' for strings or [] for arrays
+        blank    : undefined,       // "empty" value that should be treated similar as null and rejected when required=true, like sometimes '' for strings or [] for arrays
         required : undefined,       // if true, the field described by this type must be present and contain a not-null and non-blank value
         repeated : undefined,       // if true, the field described by this type can have multiple occurrences, typically inside a CATALOG/RECORD/SCHEMA
                                     // - all the values (incl. inherited ones) can be retrieved via .field$ then; note that setting repeated=true has performance impact,
@@ -168,15 +168,22 @@ export class Type extends Struct {
            into one, depending on options (repeated, merged). In the latter case, the default value (if present)
            is also included in the merge. `obj` is an argument to downstream impute().
          */
-        let flat = arrays.flat()                // concatenate the arrays
-        if (this.is_repeated()) return flat     // no imputation/merge for repeated types: empty array [] is a valid set of values
+        let {repeated, merged, default: default_} = this.options
+        let values = arrays.flat()          // concatenate the arrays
+        if (repeated) return values         // no imputation/merge for repeated types: empty array [] is a valid set of values
 
-        // if no value in `arrays`, use impute/getter/default to impute one
+        // if (prop === 'schema') obj._print(`combine_inherited() of '${prop}'`)
+
+        // if no value in `arrays`, use impute/getter/default to impute one...
         let value
-        if (!flat.length) value = this._impute(obj, prop)
+        if (!values.length) value = this._impute(obj, prop)
 
         // otherwise, perform merging if allowed, or return the youngest value found
-        else value = this.options.merged ? this.merge_inherited(flat, obj, prop) : flat[0]
+        else if (merged) {
+            if (default_ !== undefined) values.push(default_)       // include default value in the merge, if present
+            value = this.merge_inherited(values, obj, prop)
+        }
+        else value = values[0]
 
         return value !== undefined ? [value] : []
     }

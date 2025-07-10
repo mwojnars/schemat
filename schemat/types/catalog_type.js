@@ -76,9 +76,9 @@ export class CATALOG extends COMPOUND {
     // }
 
     merge_inherited(catalogs) {
-        let {key_type, value_type, default: default_} = this.options
+        let {key_type, value_type} = this.options
 
-        if (default_) catalogs.push(default_)       // include the default value in the merge, if present
+        // if (default_) catalogs.push(default_)       // include the default value in the merge, if present
 
         // three variants of combining repeated values per key:
         // 1) "repeat":  accept repeated keys, if key_type allows this
