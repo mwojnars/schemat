@@ -688,7 +688,7 @@
     "@": 1
 - id: 17
   name: DataOperator
-  class: schemat/db/sequence.js:DataOperator
+  class: schemat/db/operator.js:DataOperator
   __prototype:
     "@": 24
   __category:

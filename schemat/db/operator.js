@@ -2,8 +2,44 @@ import {is_plural, drop_plural} from "../common/globals.js";
 import {assert, print, T} from "../common/utils.js";
 import {BinaryMap} from "../common/binary.js"
 import {Catalog} from "../common/catalog.js";
-import {Operator} from "./sequence.js";
+import {WebObject} from "../core/object.js";
+import {data_schema, RecordSchema} from "./records.js";
 
+
+/**********************************************************************************************************************/
+
+export class Operator extends WebObject {
+    /* Specification of a data sequence operator: source operator(s) + schema of output records + access methods (scan/min/max).
+       The same operator can be applied to multiple rings, producing a different sequence in each ring.
+     */
+    key_fields
+    val_fields
+    file_tag
+
+    get record_schema() {
+        /* RecordSchema that defines the schema (composite key + payload) of output records produced by this operator. */
+        return new RecordSchema(this.key_fields, this.val_fields)
+    }
+
+    encode_key(key) {
+        /* Encode an array of field values [f1,f2,...] to binary representation (Uint8Array). */
+        return this.record_schema.encode_key(key)
+    }
+
+    decode_key(bin) {
+        /* Decode binary representation of a key back to an array of field values. */
+        return this.record_schema.decode_key(bin)
+    }
+
+    // async min(seq)
+    // async max(seq)
+}
+
+export class DataOperator extends Operator {
+    /* Special type of Operator that has no source and represents the main data sequence. */
+
+    get record_schema() { return data_schema }
+}
 
 /**********************************************************************************************************************/
 
