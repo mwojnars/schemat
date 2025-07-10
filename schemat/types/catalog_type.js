@@ -89,7 +89,7 @@ export class CATALOG extends COMPOUND {
             value_type.merged      ? (values) => value_type.merge_inherited(values) :
                                      (values) => [values[0]]
 
-        return Catalog.merge(catalogs, !key_type.is_repeated(), combine)     // merge all input catalogs into a single catalog
+        return Catalog.merge(catalogs, combine)     // merge all input catalogs into a single catalog
     }
 
     _validate(obj) {

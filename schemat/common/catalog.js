@@ -661,13 +661,14 @@ export class Catalog {
 
     /***  Read access  ***/
 
-    static merge(catalogs, unique = true, combine = (values) => values) {
-        /* Merge multiple `catalogs` into a new Catalog. The order of entries is preserved.
-           If unique=true, only the first entry with a given key is included in the result,
-           and the entries with missing keys are dropped. Otherwise, all input entries are passed to the output.
+    static merge(catalogs, combine = null) {
+        /* Merge multiple `catalogs` into a new Catalog. Repeated values for a `key` are merged recursively using
+           combine(values) function which should return an array of value(s) to be ultimately assigned to the key.
+           If combine=null, all repeated values are included in the result as separate entries with their order preserved.
          */
         if (catalogs.length === 1) return catalogs[0]
-        if (!unique) {
+
+        if (!combine) {
             let entries = catalogs.map(c => c._entries).flat()
             return new Catalog(entries)
         }
