@@ -3,7 +3,7 @@ import {DataAccessError, DatabaseError, ObjectNotFound} from "../common/errors.j
 import {compare_uint8} from "../common/binary.js";
 import {Struct} from "../common/catalog.js";
 import {WebObject} from "../core/object.js"
-import {data_schema, Record} from "./records.js";
+import {data_schema} from "./records.js";
 import {DataRequest} from "./data_request.js";
 import {DataSequence} from "./sequence.js";
 import {DataBlock} from "./block.js";
@@ -382,26 +382,21 @@ export class Database extends WebObject {
     /***  Indexes  ***/
 
     async *scan(name, {offset, start, stop, ...opts} = {}) {
-        /* Yield a stream of plain Records from the index, merge-sorted from all the rings.
+        /* Yield a stream of pseudo-objects loaded from index, merge-sorted from all rings, and decoded.
            If `limit` is not null, yield at most `limit` items.
            If `reverse` is true, scan in the reverse order.
            If `batch_size` is not null, yield records in batches of `batch_size` items. (TODO)
          */
-        // (1) scan & merge *binary* records
-        // (2) decode binary record to pseudo-object via operator.record_schema
-        // ??? `operator` to be found by `name` in ... database? top ring? ... then mapped to a sequence in each ring?
-
         let operator = this.top_ring.operators.get(name)
         if (!operator) throw new Error(`unknown derived sequence '${name}'`)
 
         let schema = operator.record_schema
+        let compare = ([key1], [key2]) => compare_uint8(key1, key2)
 
         // convert `start` and `stop` to binary keys (Uint8Array)
         if (start !== undefined) start = schema.encode_key(start)
         if (stop !== undefined) stop = schema.encode_key(stop)
         opts = {...opts, start, stop}
-
-        let compare = ([key1], [key2]) => compare_uint8(key1, key2)
 
         let streams = this.rings.map(r => r.scan(operator, opts))
         let merged = merge(compare, ...streams)
@@ -417,17 +412,9 @@ export class Database extends WebObject {
         for await (let [key, val] of merged)
             if (limit != null && ++count > limit) break
             else yield schema.decode_object(key, val)
-            // else yield new Record(schema, {key, val})
 
         // TODO: apply `batch_size` to the merged stream and yield in batches
     }
-
-    // async *scan_all() {
-    //     /* Scan each ring and merge the sorted streams of entries. */
-    //     // TODO: remove duplicates while merging
-    //     let streams = this.rings.map(r => r.scan_all())
-    //     yield* merge(WebObject.compare, ...streams)
-    // }
 
     async 'action.create_index'(name, key_fields, val_fields = undefined, {category, ring} = {}) {
         /* Add a new index in `ring` and all rings above. If not provided, `ring` is the bottom of the ring stack (ring-kernel).

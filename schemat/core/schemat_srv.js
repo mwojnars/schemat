@@ -342,10 +342,10 @@ export class ServerSchemat extends Schemat {
         let target = (typeof category_or_id === 'number') ? category_or_id : category_or_id?.id     // ID of the target category, or undefined (all categories)
         let start = !full_scan && [target]                                              // [target] is a 1-element record compatible with the index schema
         let stop  = !full_scan && [target + 1]
-        let records = this.db.scan('idx-category', {start, stop, ...opts})   // stream of plain Records
+        let records = this.db.scan('idx-category', {start, stop, ...opts})
 
-        for await (let record of records) {
-            let {__cid, id} = record //.key_object
+        for await (let {__cid, id} of records) {
+            // let {__cid, id} = record.key_object
             assert(full_scan || target === __cid)
             yield load ? this.get_loaded(id) : this.get_object(id)
         }
