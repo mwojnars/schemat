@@ -43,4 +43,9 @@ export const SUBFIELD = '.'
 /**********************************************************************************************************************/
 
 export function is_plural(path) { return path.endsWith(PLURAL) }
-export function truncate_plural(path) { return path.endsWith(PLURAL) ? path.slice(0, -PLURAL.length) : path }
+export function drop_plural(path) { return path.endsWith(PLURAL) ? path.slice(0, -1) : path }
+export function check_plural(path) {
+    let plural = path.endsWith(PLURAL)
+    let base = plural ? path.slice(0, -1) : path    // property name without the $ suffix
+    return [base, plural]
+}

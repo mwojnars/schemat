@@ -6,7 +6,7 @@
  *
  */
 
-import {ROOT_ID, PLURAL, SUBFIELD} from '../common/globals.js'
+import {ROOT_ID, PLURAL, SUBFIELD, check_plural} from '../common/globals.js'
 import {print, assert, T, copy, escape_html, concat, unique, sleep, randint} from '../common/utils.js'
 import {NotLoaded, URLNotFound, ValidationError} from '../common/errors.js'
 import {Catalog, Struct} from '../common/catalog.js'
@@ -90,7 +90,7 @@ class Intercept {
         // return if the object is not loaded yet
         if (!target.__data) return undefined
 
-        let [base, plural] = Intercept._check_plural(prop)      // property name with $ suffix truncated
+        let [base, plural] = check_plural(prop)         // property name with $ suffix truncated
 
         // fetch ALL repeated values of `prop` from __data, ancestors, imputation, etc. (even if plural=false)...
         let values = target._compute_property(base)
@@ -139,16 +139,10 @@ class Intercept {
         })
     }
 
-    static _check_plural(prop) {
-        let plural = prop.endsWith(PLURAL)
-        let base = plural ? prop.slice(0, -1) : prop    // property name without the $ suffix
-        return [base, plural]
-    }
-
     static _get_deep(target, path, receiver) {
         /* Get a *deep* property value from `target` object; `path` is a multi-segment path (a.b.c...),
            optionally terminated with $ (plural path). */
-        let [base, plural] = Intercept._check_plural(path)
+        let [base, plural] = check_plural(path)
         let [step, ...rest] = base.split(SUBFIELD)
         if (plural) {
             let roots = Intercept.proxy_get(target, step + PLURAL, receiver, false) || []
@@ -177,8 +171,8 @@ class Intercept {
 
         // if (!target.__meta.mutable) target._print(`proxy_set(${path}) on/via immutable object ${target}`)
 
-        let [base, plural] = Intercept._check_plural(path)      // property name without the $ suffix
-        let [prop] = base.split(SUBFIELD)                       // first segment of a deep path
+        let [base, plural] = check_plural(path)         // property name without the $ suffix
+        let [prop] = base.split(SUBFIELD)               // first segment of a deep path
 
         // `_xyz` props are treated as "internal" and can be written to __self (if not *explicitly* declared in schema) OR to __data;
         // others, including `__xyz`, are "regular" and can only be written to __data, never to __self
@@ -212,7 +206,7 @@ class Intercept {
         if (Intercept._is_special(path)) return Reflect.deleteProperty(target, path)
         if (!target.__meta.mutable) throw new Error(`trying to modify an immutable object ${target} (${path})`)
 
-        let [base, plural] = Intercept._check_plural(path)      // property name without the $ suffix
+        let [base, plural] = check_plural(path)         // property name without the $ suffix
         target._make_edit('unset', base)
         return true
     }

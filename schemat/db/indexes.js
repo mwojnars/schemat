@@ -1,4 +1,4 @@
-import {is_plural, truncate_plural} from "../common/globals.js";
+import {is_plural, drop_plural} from "../common/globals.js";
 import {assert, print, T} from "../common/utils.js";
 import {BinaryMap} from "../common/binary.js"
 import {Catalog} from "../common/catalog.js";
@@ -100,7 +100,7 @@ export class ObjectIndexOperator extends IndexOperator {
 
         let entries = []
         for (let field of this.key_names) {     // find out the type of every field to build a catalog of {field: type} pairs
-            field = truncate_plural(field)
+            field = drop_plural(field)
             let type = schema.get(field)
             if (!type) throw new Error(`unknown field in 'key': ${field}`)
             entries.push([field, type])
