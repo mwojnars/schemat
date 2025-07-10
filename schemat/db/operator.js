@@ -185,7 +185,7 @@ export class AggregationOperator extends Operator {
     source
     function = 'COUNT'      // COUNT, SUM, AVG
     sum_type                // Type of the sum's output value: INTEGER(), NUMBER(), BIGINT(), ...
-    sum_precision           // no. of decimal digits to shift the input value to the left before SUM
+    sum_precision           // input value is shifted to the left by this no. of decimal digits before SUM
 }
 
 export class COUNT_Operator extends AggregationOperator {}

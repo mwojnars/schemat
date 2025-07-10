@@ -681,7 +681,7 @@
         "@": schemat/types/type.js:STRING
       "@": schemat/types/type.js:ARRAY
     "@": schemat:Catalog
-  class: schemat/db/indexes.js:ObjectIndexOperator
+  class: schemat/db/operator.js:ObjectIndexOperator
   __prototype:
     "@": 15
   __category:
