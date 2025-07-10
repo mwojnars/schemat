@@ -47,8 +47,7 @@ export class Type extends Struct {
                                     // as the inheritance chain must be inspected every time, even when an occurrence was already found in the child object
 
         inherited: true,            // if false, inheritance is disabled for this field (applied to certain system fields)
-        merged   : undefined,       // if true or undefined in a compound non-repeated type, the inherited objects are merged (TODO) rather than being replaced with the youngest one;
-                                    // ... merged=false turns off this default behavior
+        merged   : undefined,       // if true, and repeated=false, inherited values of this type get merged (merge_inherited()) rather than being replaced with the youngest one;
 
         impute   : undefined,       // function object, or a name of method, that should be used to impute the value if missing; inside the function, `this` references the containing object;
                                     // only called for non-repeated properties, when `default` is undefined and there are no inherited values;
@@ -654,7 +653,7 @@ export class SHARD extends CUSTOM_OBJECT {
 export class COMPOUND extends Type {
     static options = {
         repeated: false,
-        merge:    true,     // if true, and repeated=false, inherited values of this type get merged with merge_inherited()
+        merged:   true,     // values of compound types are merged by default during inheritance rather than replaced or repeated
     }
 }
 
