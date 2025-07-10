@@ -1,4 +1,4 @@
-import {Record, data_schema, RecordSchema} from "./records.js";
+import {data_schema, RecordSchema} from "./records.js";
 import {assert, print, T} from "../common/utils.js";
 import {BootDataBlock} from "./block.js";
 import {WebObject} from "../core/object.js";

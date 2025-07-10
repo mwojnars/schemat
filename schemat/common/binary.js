@@ -207,7 +207,7 @@ export function isPowerOfTwo(x) {
 
 
 export function fnv1aHash(uint8array) {
-    /* Fowler–Noll–Vo (FNV-1a) hash function for a Uint8Array. Calculations are performed on 32-bit integers. */
+    /* Fowler-Noll-Vo (FNV-1a) hash function for a Uint8Array. Calculations are performed on 32-bit integers. */
 
     let hash = 2166136261
 
