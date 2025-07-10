@@ -661,7 +661,7 @@ export class Catalog {
 
     /***  Read access  ***/
 
-    static merge(catalogs, unique = true) {
+    static merge(catalogs, unique = true, combine = (values) => values) {
         /* Merge multiple `catalogs` into a new Catalog. The order of entries is preserved.
            If unique=true, only the first entry with a given key is included in the result,
            and the entries with missing keys are dropped. Otherwise, all input entries are passed to the output.
@@ -671,12 +671,31 @@ export class Catalog {
             let entries = catalogs.map(c => c._entries).flat()
             return new Catalog(entries)
         }
-        let catalog = new Catalog()
+
+        // collect all values per key across the input collections
+        let entries = new Map()     // {key: array-of-values}
+
         for (let cat of catalogs)
-            for (let [key, value] of cat._entries || [])
-                if (key !== undefined && !catalog.has(key))
-                    catalog._append(key, value)
-        return catalog
+            for (let [key, value] of cat._entries || []) {
+                let values = entries.get(key)
+                if (!values) entries.set(key, [value])
+                else values.push(value)
+            }
+
+        function* combined() {
+            for (let [key, values] of entries)
+                for (let value of combine(values))
+                    yield [key, value]
+        }
+
+        return new Catalog([...combined()])
+
+        // let catalog = new Catalog()
+        // for (let cat of catalogs)
+        //     for (let [key, value] of cat._entries || [])
+        //         if (key !== undefined && !catalog.has(key))
+        //             catalog._append(key, value)
+        // return catalog
     }
 
     /***  Write access  ***/
