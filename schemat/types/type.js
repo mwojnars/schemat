@@ -562,11 +562,6 @@ export class Atomic extends GENERIC {
     child(key) {}
 }
 
-export class TYPE extends Atomic {
-    static options = {class: Type}
-    static Widget = widgets.TYPE_Widget
-}
-
 export class REF extends Type {
     /* Reference to a WebObject, encoded as {"@": id} or {"@": __index_id} during serialization through JSONx.
        Newly created objects with `__provisional_id` instead of `id` are accepted.
@@ -661,6 +656,14 @@ export class COMPOUND extends Type {
         repeated: false,
         merge:    true,     // if true, and repeated=false, inherited values of this type get merged with merge_inherited()
     }
+}
+
+export class TYPE extends COMPOUND {
+    /* Values of this type are Type instances, `type`, which internally contain options, `type.options`,
+       which could be merged during inheritance. For this reason, TYPE is treated as compound.
+     */
+    static options = {class: Type}
+    static Widget = widgets.TYPE_Widget
 }
 
 export class ARRAY extends COMPOUND {
