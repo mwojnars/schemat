@@ -1,5 +1,6 @@
 import {T, assert, print, merge, fileBaseName, sum} from '../common/utils.js'
 import {DataAccessError, DatabaseError, ObjectNotFound} from "../common/errors.js"
+import {compare_uint8} from "../common/binary.js";
 import {Struct} from "../common/catalog.js";
 import {WebObject} from "../core/object.js"
 import {data_schema, Record} from "./records.js";
@@ -399,6 +400,8 @@ export class Database extends WebObject {
         if (start !== undefined) start = schema.encode_key(start)
         if (stop !== undefined) stop = schema.encode_key(stop)
         opts = {...opts, start, stop}
+
+        let compare = ([key1], [key2]) => compare_uint8(key1, key2)
 
         let streams = this.rings.map(r => r.scan(operator, opts))
         let merged = merge(Record.compare, ...streams)
