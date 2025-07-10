@@ -170,11 +170,8 @@ export class DataSequence extends Sequence {
            not segmented (by high bits/bytes), hence the result stream is not monotonic, OR it will require a merge-sort
            to become monotonic. Plus, the function outputs {id, data} pairs (decoded) instead of binary records.
          */
-        let rschema = this.operator.record_schema
-        for await (let [key_binary, json] of this.scan_binary()) {
-            let key = rschema.decode_key(key_binary)
-            assert(key.length === 1)        // key should be a single field, the item ID - that's how it's stored in a data sequence in the DB
-            let [id] = key
+        for await (let [key, json] of this.scan_binary()) {
+            let id = this.decode_id(key)
             let data = JSONx.parse(json)
             if (T.isPOJO(data)) data = Catalog.__setstate__(data)
             yield {id, data}
