@@ -67,7 +67,7 @@ export class Cluster extends Agent {
         /* Array of all nodes where `agent` is currently deployed. */
     }
 
-    async '$leader.create_node'({}, props = {}) {
+    async '$leader.create_node'(props = {}) {
         /* Create a new Node object and add it to this cluster.
            The newly created node is *first* saved to the DB and only later added to the local state; if we tried to change
            this order, the state would contain a newborn object (no ID) for a while breaking the state's consistency!

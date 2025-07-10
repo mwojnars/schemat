@@ -283,7 +283,7 @@ class Frame {
 
         agent = this.agent
         let [_, func] = this._find_command(command)     // agent may have been replaced while pausing, the existence of `command` must be verified again
-        let callA = () => func.call(agent, this.state, ...args)
+        let callA = () => func.call(agent, ...args)
 
         let callB = async () => {
             // agent._print(`exec() of ${method}(${args}) context=${schemat.current_context}`)

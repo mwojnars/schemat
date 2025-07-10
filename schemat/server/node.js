@@ -641,7 +641,7 @@ export class Node extends Agent {
     // async '$master.ipc_recv'()
     // async '$worker.ipc_recv'()
 
-    async '$master.start_agent'({}, agent, {role, worker, num_workers = 1} = {}) {
+    async '$master.start_agent'(agent, {role, worker, num_workers = 1} = {}) {
         /* `agent` is a web object or ID. */
         this._print(`$master.start_agent() agent=${agent} role=${role}`)
         // this._print(`$master.start_agent() agents:`, this.$state.agents.map(({worker, agent, role}) => ({worker, id: agent.id, role})))
@@ -670,7 +670,7 @@ export class Node extends Agent {
         await this.action.update({agents})
     }
 
-    async '$master.stop_agent'({}, agent, {role, worker} = {}) {
+    async '$master.stop_agent'(agent, {role, worker} = {}) {
         /* `agent` is a web object or ID. */
         this._print(`$master.stop_agent() agent=${agent} role=${role}`)
         // this._print(`$master.stop_agent() agents:`, this.$state.agents.map(({worker, agent, role}) => ({worker, id: agent.id, role})))

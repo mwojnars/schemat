@@ -96,14 +96,14 @@ export class Block extends Agent {
         throw new Error(`unsupported store type '${format}' in ${this}`)
     }
 
-    async '$agent.put'({}, key, value) { return this._put(key, value) }
+    async '$agent.put'(key, value) { return this._put(key, value) }
 
     async _put(key, value) {
         /* Write the [key, value] pair here in this block. No forward of the request to another ring. */
         return this.$state.stores.map(s => s.put(key, value))[0]    // write to all stores, but await the first one only
     }
 
-    async '$agent.del'({}, key) {
+    async '$agent.del'(key) {
         return this._del(key)
     }
 
@@ -111,7 +111,7 @@ export class Block extends Agent {
         return this.$state.stores.map(s => s.del(key, checked))[0]  // delete from all stores, but return the first result only
     }
 
-    async '$agent.scan'({}, opts = {}) {
+    async '$agent.scan'(opts = {}) {
         return arrayFromAsync(this.$state.store.scan(opts))         // TODO: return batches with a hard upper limit on their size
     }
 
@@ -226,14 +226,14 @@ export class DataBlock extends Block {
         return ring
     }
 
-    async '$agent.select'({}, id, req) {
+    async '$agent.select'(id, req) {
         let key = this.encode_id(id)
         let data = await this.$state.store.get(key)     // JSON string
         if (data) return this._annotate(data)
         return await this._move_down(id, req).select(id, req)
     }
 
-    async '$agent.insert'({}, entries, {id, ...opts} = {}) {
+    async '$agent.insert'(entries, {id, ...opts} = {}) {
         /* Insert a number of `entries` as new objects into this block. Each entry is a pair: [provisional-id, data].
            Option `id`: target ID to be assigned to the new object, only if `entries` contains exactly one entry.
         */
@@ -376,7 +376,7 @@ export class DataBlock extends Block {
 
     // _reclaim_id(...ids)
 
-    async '$agent.update'({}, id, edits, req) {
+    async '$agent.update'(id, edits, req) {
         /* Check if `id` is present in this block. If not, pass the request to a lower ring.
            Otherwise, load the data associated with `id`, apply `edits` to it, and save a modified item
            in this block (if the ring permits), or forward the write request back to a higher ring.
@@ -413,7 +413,7 @@ export class DataBlock extends Block {
         })
     }
 
-    async '$agent.upsave'({}, id, data, req) {
+    async '$agent.upsave'(id, data, req) {
         /* Update, or insert an updated object, after the request `req` has been forwarded to a higher ring. */
         return this.$state.lock_row(id, async () =>
         {
@@ -438,7 +438,7 @@ export class DataBlock extends Block {
         schemat.register_changes({id, data})
     }
 
-    async '$agent.delete'({}, id, req) {
+    async '$agent.delete'(id, req) {
         /* Try deleting the `id`, forward to a lower ring if the id is not present here in this block.
            Log an error if the ring is read-only and the `id` is present here.
          */
