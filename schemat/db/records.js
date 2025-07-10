@@ -169,10 +169,17 @@ export class RecordSchema {
     }
 
     encode_value(obj) {
-        if (obj === undefined) return ''
-        let vector = this.val_fields.map(field => obj[field])
+        /* Encode an object into a JSONx-stringified vector of field values. Undefined values are replaced with null. */
+        let {val_fields} = this
+        if (!val_fields.length || obj === undefined) return ''
+        let vector = val_fields.map(field => {let val = obj[field]; return val === undefined ? null : val})
         return JSONx.stringify(vector)
-        // return obj === undefined ? '' : JSON.stringify(obj)
+    }
+
+    decode_value(val_json) {
+        if (!val_json) return undefined
+        let vector = JSONx.parse(val_json)
+        return Object.fromEntries(this.val_fields.map((field, i) => [field, vector[i]]))
     }
 }
 
