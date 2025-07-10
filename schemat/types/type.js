@@ -172,7 +172,7 @@ export class Type extends Struct {
         let values = arrays.flat()          // concatenate the arrays
         if (repeated) return values         // no imputation/merge for repeated types: empty array [] is a valid set of values
 
-        // if (prop === 'schema') obj._print(`combine_inherited() of '${prop}'`)
+        // if (prop === 'schema') obj._print(`combine_inherited() of '${prop}'`, repeated, merged, values.length)
 
         // if no value in `arrays`, use impute/getter/default to impute one...
         let value
@@ -673,7 +673,7 @@ export class TYPE extends COMPOUND {
 
     merge_inherited(types) {
         // throw new Error(`TYPE.merge_inherited() called: ${types}`)
-        schemat._print(`TYPE.merge_inherited() called:`, types)
+        // schemat._print(`TYPE.merge_inherited() called:`, types)
         return types[0]
     }
 }

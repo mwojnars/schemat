@@ -75,19 +75,19 @@ export class CATALOG extends COMPOUND {
     //     })
     // }
 
-    merge_inherited(catalogs) {
+    merge_inherited(catalogs, obj, prop) {
         let {key_type, value_type} = this.options
-
-        // if (default_) catalogs.push(default_)       // include the default value in the merge, if present
 
         // three variants of combining repeated values per key:
         // 1) "repeat":  accept repeated keys, if key_type allows this
         // 2) "merge":   combine repeated values into one through value_type's custom merging method
         // 3) "replace": take the youngest value per key and ignore all remaining ones
         let merge_values =
-            key_type.is_repeated() ? null :
-            value_type.merged      ? (values) => value_type.merge_inherited(values) :
-                                     (values) => values[0]
+            key_type.options.repeated ? null :
+            value_type.options.merged ? (values) => value_type.merge_inherited(values) :
+                                        (values) => values[0]
+
+        // if (prop === 'schema') obj._print(`merge_inherited() of '${prop}'`, merge_values, catalogs.length)
 
         return Catalog.merge(catalogs, merge_values)
     }
