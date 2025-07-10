@@ -657,6 +657,10 @@ export class SHARD extends CUSTOM_OBJECT {
  */
 
 export class COMPOUND extends Type {
+    static options = {
+        repeated: false,
+        merge:    true,     // if true, and repeated=false, inherited values of this type get merged with merge_inherited()
+    }
 }
 
 export class ARRAY extends COMPOUND {
