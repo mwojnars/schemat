@@ -2,11 +2,10 @@
     Low-level representation of objects and index records, for storage and transmission from/to the database.
  */
 
-import {PLURAL} from "../common/globals.js";
+import {drop_plural, PLURAL} from "../common/globals.js";
 import {assert, print, T} from "../common/utils.js";
 import {JSONx} from "../common/jsonx.js";
 import {BinaryInput, BinaryOutput, compare_uint8, fnv1aHash} from "../common/binary.js";
-import {Catalog} from "../common/catalog.js";
 import {INTEGER} from "../types/type.js";
 
 
@@ -168,6 +167,18 @@ export class RecordSchema {
         return key
     }
 
+    decode_key_object(key_binary) {
+        let fields = this.key_names
+        let key = this.decode_key(key_binary)
+        let obj = {}
+
+        for (let i = 0; i < fields.length; i++) {
+            let field = drop_plural(fields[i])
+            obj[field] = key[i]
+        }
+        return obj
+    }
+
     encode_value(obj) {
         /* Encode an object into a JSONx-stringified vector of field values. Undefined values are replaced with null. */
         let {val_fields} = this
@@ -177,7 +188,7 @@ export class RecordSchema {
     }
 
     decode_value(val_json) {
-        if (!val_json) return undefined
+        if (!val_json) return {}
         let vector = JSONx.parse(val_json)
         return Object.fromEntries(this.val_fields.map((field, i) => [field, vector[i]]))
     }
