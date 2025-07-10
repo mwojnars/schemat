@@ -35,6 +35,8 @@ export class Operator extends WebObject {
     // async max(seq)
 }
 
+/**********************************************************************************************************************/
+
 export class DataOperator extends Operator {
     /* Special type of Operator that has no source and represents the main data sequence. */
 
@@ -208,15 +210,17 @@ export class ObjectIndexOperator extends IndexOperator {
 /**********************************************************************************************************************/
 
 export class AggregationOperator extends Operator {
-    /* Maps continuous ranges of source keys onto single records in output sequence, doing aggregation of the original
-       group along the way. The group is always defined in the same way: as a group of records that share the same key
-       on all fields *except* the last one. In other words, merging and aggregation is done over the last field of the key,
+    /* Maps continuous subgroups of source records onto single records in output sequence, doing aggregation of the original
+       group along the way. The group is defined as a range of records that share the same key on all fields
+       *except* the last one. In other words, merging and aggregation is done over the last field of the key,
        and the output key is made from the source key by removing the last field.
 
-       Aggregation function must be additive: it must allow adding/removing individual source records from the group,
+       Aggregation function must be additive (reversible): it must allow adding/removing individual source records from the group,
        and incrementally updating the output, *without* evaluating the entire group. In general, only two functions
        satisfy this requirement: COUNT and SUM; and AVG which calculates SUM & COUNT combined to divide them afterward.
        Note that MIN/MAX over records are *not* additive (not aggregations) and should be calculated from original sorted index.
+       Alternatively, we'd have to guarantee that the source sequence is append-only (no updates/deletes), and in such case,
+       min/max operations could be done via aggregation.
      */
     source
     function = 'COUNT'      // COUNT, SUM, AVG
@@ -228,12 +232,4 @@ export class COUNT_Operator extends AggregationOperator {}
 export class SUM_Operator extends AggregationOperator {}
 export class AVG_Operator extends AggregationOperator {}
 
-
-/**********************************************************************************************************************/
-
-// class AggregateSequence extends Sequence {}     // or Cube like in OLAP databases e.g. Apache Druid ?
-//     /* Aggregates can only implement *reversible* operations, like counting or integer sum.
-//        Min/max must be handled through a full index over the min/max-ed field.
-//        OR, we must somehow guarantee that the source data is never modified, only appended to (immutable source).
-//      */
 
