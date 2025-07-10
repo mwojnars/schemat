@@ -84,8 +84,9 @@ export class Type extends Struct {
     }
 
     static default_props() {
-        /* Return all options from the prototype chain combined. */
-        return Object.assign({}, ...T.getInherited(this, 'options'))
+        /* Return all options from the prototype chain combined, excluding undefined values. */
+        const merged = Object.assign({}, ...T.getInherited(this, 'options'))
+        return Object.fromEntries(Object.entries(merged).filter(([_, v]) => v !== undefined))
     }
 
     _options = {}               // own config options of this type instance (without defaults)
@@ -664,6 +665,7 @@ export class TYPE extends COMPOUND {
     static Widget = widgets.TYPE_Widget
 
     merge_inherited(types) {
+        // throw new Error(`TYPE.merge_inherited() called: ${types}`)
         schemat._print(`TYPE.merge_inherited() called:`, types)
         return types[0]
     }
