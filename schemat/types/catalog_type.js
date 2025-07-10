@@ -76,12 +76,20 @@ export class CATALOG extends COMPOUND {
     // }
 
     merge_inherited(catalogs) {
-        let default_ = this.options.default                     // include the default value in the merge, if present
-        if (default_) catalogs.push(default_)
-        return Catalog.merge(catalogs, !this.is_repeated())     // merge all input catalogs into a single catalog
+        let {key_type, value_type, default: default_} = this.options
 
-        // TODO: inside Catalog.merge(), if repeated=false, overlapping values should be merged recursively
-        //       through combine() of options.value_type type
+        if (default_) catalogs.push(default_)       // include the default value in the merge, if present
+
+        // three variants of combining repeated key values:
+        // 1) "repeat":  accept repeated keys if key_type allows this
+        // 2) "merge":   combine repeated values into one through value_type's custom merging method
+        // 3) "replace": take the youngest value per key and ignore all remaining ones
+        let combine =
+            key_type.is_repeated() ? null :
+            value_type.merged      ? (values) => value_type.merge_inherited(values) :
+                                     (values) => [values[0]]
+
+        return Catalog.merge(catalogs, !key_type.is_repeated(), combine)     // merge all input catalogs into a single catalog
     }
 
     _validate(obj) {
