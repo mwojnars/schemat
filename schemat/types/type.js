@@ -167,16 +167,15 @@ export class Type extends Struct {
            into one, depending on options (repeated, merged). In the latter case, the default value (if present)
            is also included in the merge. `obj` is an argument to downstream impute().
          */
-        let value
         let flat = arrays.flat()                // concatenate the arrays
         if (this.is_repeated()) return flat     // no imputation/merge for repeated types: empty array [] is a valid set of values
 
         // if no value in `arrays`, use impute/getter/default to impute one
+        let value
         if (!flat.length) value = this._impute(obj, prop)
 
-        // try merging if allowed; otherwise return the first object found
-        else if (this.options.merged === false) value = flat[0]
-        else value = this.merge_inherited(flat, obj, prop)
+        // otherwise, perform merging if allowed, or return the youngest value found
+        else value = this.options.merged ? this.merge_inherited(flat, obj, prop) : flat[0]
 
         return value !== undefined ? [value] : []
     }
