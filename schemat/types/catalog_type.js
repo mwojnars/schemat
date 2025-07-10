@@ -37,10 +37,10 @@ export class CATALOG extends Type {
 
     static options = {
         class:          Catalog,
-        key_type:       new FIELD({blank: true}),       // type of keys in the catalog; must be an instance of STRING or its subclass
-        value_type:     generic_type,                   // type of values in the catalog
+        key_type:       new FIELD(),                // type of keys in the catalog; must be an instance of STRING or its subclass
+        value_type:     generic_type,               // type of values in the catalog
         initial:        () => new Catalog(),
-        repeated:       false,                          // typically, CATALOG fields are not repeated, so that their content gets merged during inheritance (which requires repeated=false)
+        repeated:       false,                      // typically, CATALOG fields are not repeated, so that their content gets merged during inheritance (which requires repeated=false)
     }
 
     child(key)   { return this.options.value_type }     // type of values of a `key`; subclasses should throw an exception or return undefined if `key` is not allowed

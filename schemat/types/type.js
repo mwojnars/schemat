@@ -363,15 +363,15 @@ export class INTEGER extends NUMBER {
            is encoded on the minimum required no. of bytes, between 1 and 7 (larger values exceed MAX_SAFE_INTEGER)
            - in such case the detected byte length is written to the output in the first byte.
          */
-        const {blank} = this.options
+        const {required} = this.options
         const adaptive = !length
         const offset = adaptive ? 1 : 0
 
-        if (!blank) assert(value !== null)
+        if (required) assert(value !== null)
 
         if (adaptive)
             length = (value !== null) ? bytes_uint(value) : 0   // length=0 encodes null in adaptive mode
-        else if (blank)
+        else if (!required)
             if (value === null) value = 0                       // in non-adaptive mode, 0 is reserved for "null", hence shifting all values by +1
             else value += 1
 
@@ -387,7 +387,7 @@ export class INTEGER extends NUMBER {
 
     decode_uint(input, length = 0) {
         /* `input` must be a BinaryInput. */
-        const {blank} = this.options
+        const {required} = this.options
         const adaptive = !length
         const offset = adaptive ? 1 : 0
         const buffer = input.current()
@@ -400,11 +400,11 @@ export class INTEGER extends NUMBER {
             // value = (value << 8) | buffer[i]
 
         if (adaptive && length === 0) {
-            assert(blank)
+            assert(!required)
             value = null                                        // length=0 encodes null in adaptive mode
         }
 
-        if (!adaptive && blank)
+        if (!adaptive && !required)
             if (value === 0) value = null                       // in non-adaptive mode, 0 is reserved for "null"
             else value -= 1
 
