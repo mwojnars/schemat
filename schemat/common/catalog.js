@@ -683,13 +683,10 @@ export class Catalog {
                 else values.push(value)
             }
 
-        function* combined() {
-            for (let [key, values] of entries)
-                yield [key, merge_values(values)]
-                // for (let value of merge_values(values))
-                //     yield [key, value]
-        }
-        return new Catalog([...combined()])
+        // convert to an array of entries with unique keys, and `values` merged into one
+        entries = [...entries].map(([key, values]) => [key, merge_values(values)])
+
+        return new Catalog(entries)
     }
 
     /***  Write access  ***/
