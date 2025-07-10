@@ -465,10 +465,10 @@ export class DataBlock extends Block {
         })
     }
 
-    async '$agent.erase'(state) {
-        state.autoincrement = 0
-        state.reserved = new Set()
-        return super['$agent.erase'](state)
+    async '$agent.erase'() {
+        this.$state.autoincrement = 0
+        this.$state.reserved = new Set()
+        return super['$agent.erase']()
     }
 
     propagate_change(key, obj_old = null, obj_new = null) {

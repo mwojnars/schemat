@@ -89,7 +89,7 @@ export class Agent extends WebObject {
         return this.$frame.resume()
     }
 
-    async '$agent.ping'(state, msg) {
+    async '$agent.ping'({}, msg) {
         /* For testing RPC messages and intra-cluster communication. */
         let response = `[${utc()}] PING to ${this}.${this.$role}: ${msg}`
         print(response)

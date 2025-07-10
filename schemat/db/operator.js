@@ -210,10 +210,10 @@ export class ObjectIndexOperator extends IndexOperator {
 /**********************************************************************************************************************/
 
 export class AggregationOperator extends Operator {
-    /* Maps continuous subgroups of source records onto single records in output sequence, doing aggregation of the original
+    /* Map continuous subgroups of source records onto single records in output sequence, doing aggregation of the original
        group along the way. The group is defined as a range of records that share the same key on all fields
        *except* the last one. In other words, merging and aggregation is done over the last field of the key,
-       and the output key is made from the source key by removing the last field.
+       and the output key is made by removing the last field from the source key.
 
        Aggregation function must be additive (reversible): it must allow adding/removing individual source records from the group,
        and incrementally updating the output, *without* evaluating the entire group. In general, only two functions

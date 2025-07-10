@@ -18,7 +18,7 @@ export class Logger extends Agent {
         print(`[${utc()}] ${level.padStart(5)}: ${msg}`)
     }
 
-    '$agent.log'(state, msg, args = null, level = 'INFO') {
+    '$agent.log'({}, msg, args = null, level = 'INFO') {
         return this.log(msg, args, level)
     }
 }
