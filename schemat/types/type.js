@@ -34,13 +34,13 @@ export class Type extends Struct {
     // that are read and used by other parts of the code; additional options can be defined in Type subclasses
     static options = {
         info     : undefined,       // human-readable description of this type: what values are accepted and how they are interpreted
-        blank    : true,            // if true, `null` and `undefined` are treated as a valid value: both are stored and decoded as "null"
         class    : undefined,       // if present, all values (except blank) must be instances of this JS class
         initial  : undefined,       // initial value to be proposed in the UI for a newly created element of this type
         default  : undefined,       // default value to be used for a non-repeated property when no explicit value was provided;
                                     // since repeated properties behave like lists of varying length, and zero is a valid length,
                                     // default value is NOT used for them and should be left undefined (TODO: check & enforce this constraint)
 
+        // blank    : undefined,    // "empty" value that should be treated similar as null and rejected when required=true; ex.: '' for strings or [] for arrays
         required : undefined,       // if true, the field described by this type must be present and contain a not-null and non-blank value
         repeated : undefined,       // if true, the field described by this type can have multiple occurrences, typically inside a CATALOG/RECORD/SCHEMA
                                     // - all the values (incl. inherited ones) can be retrieved via .field$ then; note that setting repeated=true has performance impact,
