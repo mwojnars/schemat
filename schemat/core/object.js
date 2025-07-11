@@ -110,15 +110,19 @@ class Intercept {
 
     static _agent_proxy(target, role) {
         /* Create an RPC proxy for this agent running in a particular role ($agent, $leader, etc.).
-           The proxy creates triggers for intra-cluster RPC calls: obj.$ROLE.fun(...args) sends a message that invokes obj['$ROLE.fun'](...args)
-           on the host node of the agent represented by this web object. The object should be an instance of Agent class/category,
-           because only agents are deployed permanently on specific nodes in the cluster, maintain local state and accept RPC calls.
-           `obj.$ROLE.state` is a special field that gives access to the locally running agent's state (if present)
-         */
+           The proxy creates triggers for intra-cluster RPC calls in two forms:
+           1. obj.$ROLE.fun(...args) - sends a message that invokes obj['$ROLE.fun'](...args);
+           2. obj.$ROLE(opts).fun(...args) - same but with additional options for rpc_send();
+           3. obj.$ROLE.state is a special field that gives access to the locally running agent's state (if present).
+           
+           The object should be an instance of Agent class/category, because only agents are deployed 
+           permanently on specific nodes in the cluster, maintain local state and accept RPC calls.
+        */
         let id = target.id
         assert(id, `trying to target a newborn object like an agent`)
 
-        return new Proxy({}, {
+        // create a proxy handler that will be used for both forms
+        let create_handler = (rpc_opts = {}) => ({
             get(target, name) {
                 if (typeof name !== 'string' || name === '__getstate__') return
                 role ??= schemat.GENERIC_ROLE
@@ -129,14 +133,22 @@ class Intercept {
                 // obj.$ROLE.state is a special field that gives access to the locally running agent's state (if present)
                 if (name === 'state') return frame?.state
 
-                // if the target object is deployed here on the current process, call this object directly without any remote RPC
+                // if the target object is deployed here on the current process, call directly without RPC
                 if (frame) return (...args) => frame.exec(name, args)
 
                 // function wrapper for an RPC call...
                 assert(schemat.node, `the node must be initialized before remote agent [${id}].${role}.${name}() is called`)
-                return (...args) => schemat.node.rpc_send(id, name, args, {role})
+                return (...args) => schemat.node.rpc_send(id, name, args, {...rpc_opts, role})
             }
         })
+
+        // create a function that returns a new proxy when called with options
+        let proxy_fn = function(opts = {}) {
+            return new Proxy({}, create_handler(opts))
+        }
+
+        // make the function itself a proxy that handles the old syntax
+        return new Proxy(proxy_fn, create_handler())
     }
 
     static _get_deep(target, path, receiver) {
