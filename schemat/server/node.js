@@ -537,11 +537,11 @@ export class Node extends Agent {
 
     /* list of SYS signals */
 
-    // async '$worker._start_agent'({}, agent_id, role) {
+    // async '$worker._start_agent'(agent_id, role) {
     //     await schemat.kernel.start_agent(agent_id, role)
     // }
     //
-    // async '$worker._stop_agent'({}, agent_id, role) {
+    // async '$worker._stop_agent'(agent_id, role) {
     //     await schemat.kernel.stop_agent(agent_id, role)
     // }
 

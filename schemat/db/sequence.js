@@ -56,6 +56,9 @@ export class Sequence extends WebObject {
     'action.add_derived'(seq) {
         /* Add a derived sequence that will monitor this sequence and capture changes. */
         this.derived = [...this.derived || [], seq]
+        // this.blocks.map(b => b.edit.touch()) -- touch all blocks to let them know about the new derived sequence ??
+        // schemat.tx.save({broadcast: true})   -- broadcast performed AFTER commit
+        // schemat.tx.broadcast()       = commit + broadcast
     }
 
 

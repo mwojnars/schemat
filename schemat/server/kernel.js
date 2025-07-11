@@ -598,8 +598,9 @@ export class MasterProcess extends Kernel {
             }
             await this.node.sys_send(worker, 'START_AGENT', id, role)
             // await this.sys_send(worker, '$worker._start_agent', id, role)
-            // await this.$worker({worker, local: true})._start_agent(id, role)
+            // await this.$worker({worker})._start_agent(id, role)  -- local=true is deduced from _xxx command name
             // await this.$local(worker)._start_agent(id, role)
+            // await this._$worker._start_agent(id, role)
         }
     }
 }
