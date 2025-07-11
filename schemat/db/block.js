@@ -6,6 +6,16 @@ import {Struct} from "../common/catalog.js"
 import {Agent} from "../server/agent.js"
 
 
+/**********************************************************************************************************************/
+
+export class Monitor {
+    /* Utility class that represents an active connection between a source block and a derived sequence. Monitor captures
+       changes in the source and translates them to destination updates, but also performs a (possibly long-lasting)
+       "warm-up procedure" after new derived sequence was created that needs to be filled up with initial data.
+     */
+}
+
+
 /**********************************************************************************************************************
  **
  **  BLOCKS
