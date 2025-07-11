@@ -13,6 +13,12 @@ export class Monitor {
        changes in the source and translates them to destination updates, but also performs a (possibly long-lasting)
        "warm-up procedure" after new derived sequence was created that needs to be filled up with initial data.
      */
+    constructor(seq) {
+        this.seq = seq
+    }
+    capture_change(key, prev, next) {
+        return this.seq.capture_change(key, prev, next)
+    }
 }
 
 
@@ -80,7 +86,8 @@ export class Block extends Agent {
 
     async __start__() {
         let stores = await Promise.all(this.storage$.map(s => this._create_store(s)))
-        return {stores, store: stores[0]}
+        let monitors = this.sequence.derived?.map(seq => new Monitor(this, seq))
+        return {stores, store: stores[0], monitors}
     }
 
     async __stop__() {
