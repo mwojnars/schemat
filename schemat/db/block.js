@@ -11,7 +11,10 @@ import {Agent} from "../server/agent.js"
 export class Monitor {
     /* Utility class that represents an active connection between a source block and a derived sequence. Monitor captures
        changes in the source and translates them to destination updates, but also performs a (possibly long-lasting)
-       "warm-up procedure" after new derived sequence was created that needs to be filled up with initial data.
+       "warm-up procedure" after a new derived sequence was created and needs to be filled up with initial data.
+       Monitors are "write agents" that perform all updates to a derived sequence, although they reside on source blocks
+       not at destination. Also, they are NOT web objects, so they are not persisted to DB on their own, and whatever
+       internal state they maintain, this state is managed and persisted locally by the host block.
      */
     constructor(seq) {
         this.seq = seq
