@@ -121,8 +121,12 @@ class Intercept {
         let id = target.id
         assert(id, `trying to target a newborn object like an agent`)
 
-        // create a proxy handler that will be used for both forms
-        let create_handler = (rpc_opts = {}) => ({
+        // `current_opts` = opts from $ROLE(opts) remembered here until $ROLE(opts).fun is accessed;
+        // WARNING: never separate $ROLE(opts) from *.fun, because this may result in passing wrong `opts` to `fun` (!)
+        let current_opts
+
+        // create a parameterized handler factory
+        let create_handler = (use_opts) => ({
             get(target, name) {
                 if (typeof name !== 'string' || name === '__getstate__') return
                 role ??= schemat.GENERIC_ROLE
@@ -136,19 +140,26 @@ class Intercept {
                 // if the target object is deployed here on the current process, call directly without RPC
                 if (frame) return (...args) => frame.exec(name, args)
 
-                // function wrapper for an RPC call...
+                let opts = use_opts ? {...current_opts, role} : {role}
+                current_opts = null
+
+                // function wrapper for an RPC call
                 assert(schemat.node, `the node must be initialized before remote agent [${id}].${role}.${name}() is called`)
-                return (...args) => schemat.node.rpc_send(id, name, args, {...rpc_opts, role})
+                return (...args) => schemat.node.rpc_send(id, name, args, opts)
             }
         })
 
-        // create a function that returns a new proxy when called with options
-        let proxy_fn = function(opts = {}) {
-            return new Proxy({}, create_handler(opts))
+        // create both proxies using the handler factory
+        let parameterized_proxy = new Proxy({}, create_handler(true))
+        
+        // create a function that updates current_opts and returns the parameterized proxy
+        let func = function(opts = {}) {
+            current_opts = opts
+            return parameterized_proxy
         }
 
-        // make the function itself a proxy that handles the old syntax
-        return new Proxy(proxy_fn, create_handler())
+        // make the function itself a proxy that handles the direct access
+        return new Proxy(func, create_handler(false))
     }
 
     static _get_deep(target, path, receiver) {
