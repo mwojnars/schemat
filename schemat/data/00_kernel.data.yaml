@@ -632,6 +632,16 @@
       type:
         "@": schemat/types/type.js:BINARY
       "@": schemat/types/type.js:ARRAY
+    derived:
+      info: "Array of derived sequences: their content is a transformation of this
+        sequence and they should receive notifications on every data change."
+      default: []
+      type:
+        category:
+          "@": 13
+        strong: true
+        "@": schemat/types/type.js:REF
+      "@": schemat/types/type.js:ARRAY
     flush_delay:
       info: for how long [sec] the local-file data flush can be delayed waiting for
         more writes to arrive that can be grouped together
@@ -846,8 +856,9 @@
   name: Operator
   schema:
     name:
-      info: Operator's name identifies the derived sequence and without it the  
-        sequence cannot be accessed. For this reason, name is a required property.
+      info: Operator's name identifies the derived sequence and without it the
+        sequence cannot be accessed. For this reason, name is a required
+        property.
       required: true
       blank: ""
       "@": schemat/types/type.js:STRING
