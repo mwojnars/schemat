@@ -73,6 +73,8 @@
     "@": 1003
   operator:
     "@": 20
+  derived:
+    - "@": 1013
   blocks:
     - "@": 1015
   __category:
@@ -118,6 +120,8 @@
     "@": 1016
   operator:
     "@": 20
+  derived:
+    - "@": 1018
   blocks:
     - "@": 1029
     - "@": 1010
@@ -175,6 +179,8 @@
     "@": 1004
   operator:
     "@": 20
+  derived:
+    - "@": 1028
   blocks:
     - "@": 1032
   __category:
