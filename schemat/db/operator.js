@@ -61,33 +61,48 @@ export class IndexOperator extends Operator {
     //     // return this.source.record_schema
     // }
 
-    apply_change(destination /*Sequence*/, key, prev, next) {
-        /* Update `destination` sequence to apply a [prev > next] change that originated in the source sequence at a binary `key`.
-           `prev` and `next` are source-sequence entities: objects or records.
-           Missing 'prev' represents insertion; missing `next` represents deletion.
+    derive(key, prev, next) {
+        /* Calculate what records should be deleted or put in the destination sequence in response to [prev > next] change
+           in the source sequence that occurred at a binary `key`. Return a pair, [del_records, put_records], where both
+           elements are BinaryMaps of destination records to be del/put respectively, {key-binary: val-json/binary/undefined}.
          */
-        // print(`apply_change(), binary key [${key}]:\n   ${value_old} \n->\n   ${value_new}`)
-
-        // del_records and put_records are BinaryMaps, {key-binary: val-json/binary/null/undefined}
+        // del_records and put_records are BinaryMaps,
         let del_records = this._make_records(key, prev)
         let put_records = this._make_records(key, next)
 
         this._prune_plan(del_records, put_records)
-
-        // delete old records
-        for (let [key, value] of del_records || [])     // TODO: `key` may be duplicated (repeated values), remove duplicates beforehand
-            destination.del(key) //|| print(`deleted [${key}]`)
-
-        // (over)write new records
-        for (let [key, value] of put_records || [])     // TODO: `key` may be duplicated, keep the *first* one only
-            destination.put(key, value) //|| print(`put [${key}]`)
+        return [del_records, put_records]
     }
+
+    // apply_change(destination /*Sequence*/, key, prev, next) {
+    //     /* Update `destination` sequence to apply a [prev > next] change that originated in the source sequence at a binary `key`.
+    //        `prev` and `next` are source-sequence entities: objects or records.
+    //        Missing 'prev' represents insertion; missing `next` represents deletion.
+    //      */
+    //     // print(`apply_change(), binary key [${key}]:\n   ${value_old} \n->\n   ${value_new}`)
+    //
+    //     // del_records and put_records are BinaryMaps, {key-binary: val-json/binary/null/undefined}
+    //     let del_records = this._make_records(key, prev)
+    //     let put_records = this._make_records(key, next)
+    //
+    //     this._prune_plan(del_records, put_records)
+    //
+    //     // delete old records
+    //     for (let [key, value] of del_records || [])
+    //         destination.del(key) //|| print(`deleted [${key}]`)
+    //
+    //     // (over)write new records
+    //     for (let [key, value] of put_records || [])
+    //         destination.put(key, value) //|| print(`put [${key}]`)
+    // }
 
     _make_records(key, entity) {
         /* Map a source-sequence entity (typically, a web object) to a list of destination-sequence (index) records. */
         if (!entity) return
         let records = [...this.map_record(key, entity)]
         return new BinaryMap(records)
+        // NOTE: here, the destination keys may be duplicated, like when indexing all outgoing REFs per object
+        // and the same reference occurs several times; duplicates get removed when creating BinaryMap above
     }
 
     *map_record(key, entity) {
