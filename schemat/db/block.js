@@ -89,6 +89,8 @@ export class Block extends Agent {
     async __start__() {
         let stores = await Promise.all(this.storage$.map(s => this._create_store(s)))
         let monitors = this.sequence.derived?.map(seq => new Monitor(seq))
+        // TODO: load internal state of each monitor, maybe some of them are still in warm-up phase?
+        //       schemat.node: node-wide file services + metadata storage + journaling?
         return {stores, store: stores[0], monitors}
     }
 

@@ -146,12 +146,12 @@ export class RocksDBStore extends Store {
         }
     }
 
-    async bulk_write(operations, opts = {}) {
-        /* Execute multiple operations atomically in a single batch.
+    async bulk(operations, opts = {}) {
+        /* Execute multiple write operations atomically in a single batch.
            @param operations: Array of objects with format:
              {type: 'put'|'del', key: binary-key, value?: string}
            @param opts: Options object that can include:
-             - sync: if true, the write is flushed to disk before returning
+             - sync: if true, the save is flushed to disk before returning
          */
         await this._bound.batch(operations, opts)
     }

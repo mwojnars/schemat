@@ -50,8 +50,8 @@ export class Store {
     _flush()            {}
     // get size()          { }                                 // number of records in this storage, or undefined if not implemented
 
-    async bulk_write(operations, opts = {}) {
-        /* Execute multiple operations iteratively by calling put()/del() */
+    async bulk(operations, opts = {}) {
+        /* Execute multiple write operations together. */
         for (let {type, key, value} of operations) {
             if (type === 'put')
                 await this.put(key, value)
