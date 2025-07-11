@@ -10,8 +10,8 @@ import {Agent} from "../server/agent.js"
 
 export class Monitor {
     /* Utility class that represents an active connection between a source block and a derived sequence. Monitor captures
-       changes in the source and translates them to destination updates, but also performs a (possibly long-lasting)
-       "warm-up procedure" after a new derived sequence was created and needs to be filled up with initial data.
+       changes in the source and translates them to destination updates; it also performs a (possibly long-lasting)
+       "warm-up" procedure after a new derived sequence has been created and needs to be filled up with initial data.
        Monitors are "write agents" that perform all updates to a derived sequence, although they reside on source blocks
        not at destination. Also, they are NOT web objects, so they are not persisted to DB on their own, and whatever
        internal state they maintain, this state is managed and persisted locally by the host block.
@@ -46,8 +46,7 @@ export class Block extends Agent {
 
 
     sequence        // parent sequence
-    storage         // storage type, e.g. "yaml", "json", "rocksdb", ... can be repeated
-    storage$
+    storage         // storage type, e.g. "yaml", "json", "rocksdb", ... can be repeated (storage$) for dual writes
     file_tag        // name of the local file/directory of this block, without a path nor extension; initialized during __setup__(),
                     // should not be modified later on; the upper part of the path may vary between nodes
 
@@ -89,7 +88,7 @@ export class Block extends Agent {
 
     async __start__() {
         let stores = await Promise.all(this.storage$.map(s => this._create_store(s)))
-        let monitors = this.sequence.derived?.map(seq => new Monitor(this, seq))
+        let monitors = this.sequence.derived?.map(seq => new Monitor(seq))
         return {stores, store: stores[0], monitors}
     }
 
@@ -495,7 +494,7 @@ export class DataBlock extends Block {
         /* Push a change from this data block to all derived streams in the ring. */
         assert(this.ring?.is_loaded())
         this._cascade_delete(obj_old, obj_new)
-        for (let seq of this.ring.sequences)            // of this.sequence.derived .. of this.monitors
+        for (let seq of this.sequence.derived)          // this.ring.sequences .. of this.monitors
             seq.capture_change(key, obj_old, obj_new)   // no need to await, the result is not used by the caller
     }
 
