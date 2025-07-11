@@ -64,8 +64,8 @@ export class IndexOperator extends Operator {
     // }
 
     apply_change(destination /*Sequence*/, key, prev, next) {
-        /* Update this index on the `destination` sequence to apply a [prev > next] change that originated
-           in the source sequence of this index. `prev` and `next` are source-sequence entities: objects or records.
+        /* Update `destination` sequence to apply a [prev > next] change that originated in the source sequence at a binary `key`.
+           `prev` and `next` are source-sequence entities: objects or records.
            Missing 'prev' represents insertion; missing `next` represents deletion.
          */
         // print(`apply_change(), binary key [${key}]:\n   ${value_old} \n->\n   ${value_new}`)
