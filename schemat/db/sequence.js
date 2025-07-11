@@ -135,6 +135,7 @@ export class IndexSequence extends Sequence {
            `prev` and `next` are source-sequence entities: objects or records.
            Missing 'prev' represents insertion; missing `next` represents deletion.
          */
+        // this._print(`apply_change(), binary key [${key}]:\n   ${prev} \n->\n   ${next}`)
         let [del_records, put_records] = this.operator.derive(key, prev, next)
 
         // delete old records
@@ -144,8 +145,6 @@ export class IndexSequence extends Sequence {
         // (over)write new records
         for (let [key, value] of put_records || [])
             this.put(key, value)
-
-        // this.operator.apply_change(this, key, prev, next)
     }
 }
 
