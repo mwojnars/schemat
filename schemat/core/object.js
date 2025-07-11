@@ -121,8 +121,8 @@ class Intercept {
         let id = target.id
         assert(id, `trying to target a newborn object like an agent`)
 
-        // `current_opts` = opts from $ROLE(opts) remembered here until $ROLE(opts).fun is accessed;
-        // WARNING: never separate $ROLE(opts) from *.fun, because this may result in passing wrong `opts` to `fun` (!)
+        // `current_opts`: opts from $ROLE(opts) remembered here (shared variable!) until $ROLE(opts).fun is accessed;
+        // WARNING: never separate $ROLE(opts) from *.fun, as this may result in passing wrong `opts` to `fun` (!)
         let current_opts
 
         // create a parameterized handler factory
@@ -137,11 +137,11 @@ class Intercept {
                 // obj.$ROLE.state is a special field that gives access to the locally running agent's state (if present)
                 if (name === 'state') return frame?.state
 
-                // if the target object is deployed here on the current process, call directly without RPC
-                if (frame) return (...args) => frame.exec(name, args)
-
                 let opts = use_opts ? {...current_opts, role} : {role}
                 current_opts = null
+
+                // if the target object is deployed here on the current process, call directly without RPC
+                if (frame && !opts.broadcast) return (...args) => frame.exec(name, args)
 
                 // function wrapper for an RPC call
                 assert(schemat.node, `the node must be initialized before remote agent [${id}].${role}.${name}() is called`)
