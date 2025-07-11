@@ -158,9 +158,12 @@ export class Block extends Agent {
         this._print(`_sync_stores() done`)
     }
 
-    // propagate() {
-    //     /* For now, there's NO propagation from index blocks, only from data blocks (see below). */
-    // }
+    _propagate(key, prev = null, next = null) {
+        /* Push a change in this block to all derived sequences. */
+        assert(this.ring?.is_loaded())
+        for (let monitor of this.$state.monitors)
+            monitor.capture_change(key, prev, next)
+    }
 }
 
 
@@ -451,7 +454,7 @@ export class DataBlock extends Block {
         let key = this.encode_id(id)
 
         await this._put(key, data)
-        this.propagate_change(key, prev, obj)
+        this._propagate(key, prev, obj)
 
         data = this._annotate(data)
         schemat.register_changes({id, data})
@@ -476,7 +479,7 @@ export class DataBlock extends Block {
             let deleted = await this._del(key, true)
             if (!deleted) return 0
 
-            this.propagate_change(key, obj)
+            this._propagate(key, obj)
             schemat.register_changes({id, data: {'__status': WebObject.Status.DELETED}})
 
             assert(Number(deleted) === 1)
@@ -490,14 +493,10 @@ export class DataBlock extends Block {
         return super['$agent.erase']()
     }
 
-    propagate_change(key, obj_old = null, obj_new = null) {
-        /* Push a change from this data block to all derived streams in the ring. */
-        assert(this.ring?.is_loaded())
+    _propagate(key, obj_old = null, obj_new = null) {
+        /* Push a change in this block to all derived sequences; also, perform a cascade delete if needed. */
+        super._propagate(key, obj_old, obj_new)
         this._cascade_delete(obj_old, obj_new)
-        for (let monitor of this.$state.monitors)
-            monitor.capture_change(key, obj_old, obj_new)
-        // for (let seq of this.sequence.derived)          // this.ring.sequences .. of this.$state.monitors
-        //     seq.capture_change(key, obj_old, obj_new)   // no need to await, the result is not used by the caller
     }
 
     _cascade_delete(prev, next = null) {
