@@ -179,6 +179,11 @@ export class RecordSchema {
     encode_value(obj) {
         /* Encode an object into a JSONx-stringified vector of field values, with surrounding brackets stripped.
            Undefined values are replaced with null.
+
+           TODO: use CBOR encoding (https://github.com/kriszyp/cbor-x)
+           import cbor from 'cbor-x'
+           let buf = cbor.encode(obj)
+           let obj = cbor.decode(buf)
          */
         let {val_fields} = this
         if (!val_fields.length || obj === undefined) return ''

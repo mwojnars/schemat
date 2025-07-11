@@ -70,7 +70,7 @@ export class IndexOperator extends Operator {
          */
         // print(`apply_change(), binary key [${key}]:\n   ${value_old} \n->\n   ${value_new}`)
 
-        // del_records and put_records are BinaryMaps, {key_binary: val_json}, or null/undefined
+        // del_records and put_records are BinaryMaps, {key-binary: val-json/binary/null/undefined}
         let del_records = this._make_records(key, prev)
         let put_records = this._make_records(key, next)
 
@@ -108,7 +108,7 @@ export class IndexOperator extends Operator {
                 let vdel = del_records.get(key)
                 let vput = put_records.get(key)
 
-                // "put" not needed when old/new values are equal; values can be strings or binary
+                // "put" not needed when old & new values are equal; values can be strings or binary
                 if (vput === vdel || (vput instanceof Uint8Array && compare_uint8(vput, vdel) === 0))
                     put_records.delete(key)
 
@@ -162,11 +162,11 @@ export class ObjectIndexOperator extends IndexOperator {
 
         let schema = this.record_schema
         let value = this.generate_value(obj)
-        let val_json = schema.encode_value(value)
+        let val_encoded = schema.encode_value(value)    // json or binary
 
         for (let key of this.generate_keys(obj)) {
             let key_binary = schema.encode_key(key)
-            yield [key_binary, val_json]
+            yield [key_binary, val_encoded]
         }
     }
 
