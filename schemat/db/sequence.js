@@ -130,12 +130,12 @@ export class IndexSequence extends Sequence {
         return block.$agent.del(key)
     }
 
-    apply_change(key, prev, next) {
-        /* Update this sequence to apply a [prev > next] change that originated in the source sequence at a binary `key`.
-           `prev` and `next` are source-sequence entities: objects or records.
+    capture_change(key, prev, next) {
+        /* Update this sequence to apply a [prev > next] change that originated in the source sequence
+           at a binary `key`. Here, `prev` and `next` are source-sequence entities: objects or records.
            Missing 'prev' represents insertion; missing `next` represents deletion.
          */
-        // this._print(`apply_change(), binary key [${key}]:\n   ${prev} \n->\n   ${next}`)
+        // this._print(`capture_change(), binary key [${key}]:\n   ${prev} \n->\n   ${next}`)
         let [del_records, put_records] = this.operator.derive(key, prev, next)
 
         // delete old records

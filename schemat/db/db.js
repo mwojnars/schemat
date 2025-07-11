@@ -242,7 +242,7 @@ export class Ring extends WebObject {
         for await (let {id, data} of this.data_sequence.scan_objects()) {
             let key = data_schema.encode_key([id])
             let obj = await WebObject.from_data(id, data, {activate: false})
-            await Promise.all(this.sequences.map(seq => seq.apply_change(key, null, obj)))
+            await Promise.all(this.sequences.map(seq => seq.capture_change(key, null, obj)))
         }
     }
 }
