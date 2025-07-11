@@ -22,12 +22,13 @@ export class Sequence extends WebObject {
            Database > Ring > Sequence (data/index) > Block > Store > Record
      */
 
-    ring                // parent Ring of this sequence
-    operator            // Operator that defines this sequence's name, record schema and sources; same operators are shared across rings
-    splits              // array of split points between blocks
-    blocks              // array of Blocks that make up this sequence, can be empty []
-    flush_delay         // delay (in seconds) before flushing all recent updates in a block to disk (to combine multiple consecutive updates in one write)
+    ring            // parent Ring of this sequence
+    operator        // Operator that defines this sequence's name, record schema and sources; same operators are shared across rings
+    splits          // array of split points between blocks
+    blocks          // array of Blocks that make up this sequence, can be empty []
+    flush_delay     // delay (in seconds) before flushing all recent updates in a block to disk (to combine multiple consecutive updates in one write)
     file_tag
+    derived         // array of derived sequences whose content is a transformation of this sequence
 
     // impute_name() { return this.operator?.name }
 
@@ -52,10 +53,10 @@ export class Sequence extends WebObject {
         // return Promise.all(this.blocks.map(b => b.load({ring: this.__ring})))
     }
 
-    // add_derived(sequence) {
-    //     /* Add a derived sequence (index) that must be updated when this sequence changes. */
-    //     this.derived.push(sequence)
-    // }
+    'action.add_derived'(seq) {
+        /* Add a derived sequence that will monitor this sequence and capture changes. */
+        this.derived = [...this.derived || [], seq]
+    }
 
 
     find_block(key_binary) {
