@@ -46,9 +46,7 @@ export class DataOperator extends Operator {
 /**********************************************************************************************************************/
 
 export class IndexOperator extends Operator {
-    /* Sequence of records consisting of a binary `key` and a json `value`. The sequence is sorted by the key and
-       allows to retrieve the value for a given key or range of keys.
-     */
+    /* Operator that pulls data from a source sequence and creates records in a destination sequence. */
 
     // source                      // Operator that this index is derived from
     //
@@ -214,13 +212,13 @@ export class ObjectIndexOperator extends IndexOperator {
 
 /**********************************************************************************************************************/
 
-export class AggregationOperator extends Operator {
+export class GroupOperator extends Operator {
     /* Map continuous subgroups of source records onto single records in output sequence, doing aggregation of the original
        group along the way. The group is defined as a range of records that share the same key on all fields
        *except* the last one. In other words, merging and aggregation is done over the last field of the key,
        and the output key is made by removing the last field from the source key.
 
-       Aggregation function must be additive (reversible): it must allow adding/removing individual source records from the group,
+       Aggregation function(s) must be additive (reversible): it must allow adding/removing individual source records from the group,
        and incrementally updating the output, *without* evaluating the entire group. In general, only two functions
        satisfy this requirement: COUNT and SUM; and AVG which calculates SUM & COUNT combined to divide them afterward.
        Note that MIN/MAX over records are *not* additive (not aggregations) and should be calculated from original sorted index.
@@ -231,10 +229,17 @@ export class AggregationOperator extends Operator {
     function = 'COUNT'      // COUNT, SUM, AVG
     sum_type                // Type of the sum's output value: INTEGER(), NUMBER(), BIGINT(), ...
     sum_precision           // input value is shifted to the left by this no. of decimal digits before SUM
+
+    // output = {'count': 'COUNT', 'sum_views': 'SUM(views)'}
+    // types = {'sum_views': new NUMBER()}
+
+    // aggregation = 'COUNT() as count'
+    // aggregation = 'SUM(views) AS sum_views'
+    // aggregations = ['COUNT', 'SUM(views) AS sum_views', ...]
 }
 
-export class COUNT_Operator extends AggregationOperator {}
-export class SUM_Operator extends AggregationOperator {}
-export class AVG_Operator extends AggregationOperator {}
+// export class COUNT_Operator extends GroupOperator {}
+// export class SUM_Operator extends GroupOperator {}
+// export class AVG_Operator extends GroupOperator {}
 
 

@@ -323,7 +323,7 @@ export class NUMBER extends Primitive {
 }
 
 export class INTEGER extends NUMBER {
-    /* An integer value. Like a NUMBER, but with additional constraints and different binary encoding. */
+    /* An integer value. Like a NUMBER, but with additional constraints and monotonic binary encoding (can be used in index keys). */
 
     static DEFAULT_LENGTH_SIGNED = 6    // default length of the binary representation in bytes, for signed integers
 
