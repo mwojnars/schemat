@@ -141,7 +141,7 @@ export class IndexSequence extends Sequence {
 
         // delete old records
         for (let [key, value] of del_records || [])
-            this.del(key)
+            this.del(key)                   // no need to await, the result is not used by the caller
 
         // (over)write new records
         for (let [key, value] of put_records || [])

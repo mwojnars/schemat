@@ -494,8 +494,10 @@ export class DataBlock extends Block {
         /* Push a change from this data block to all derived streams in the ring. */
         assert(this.ring?.is_loaded())
         this._cascade_delete(obj_old, obj_new)
-        for (let seq of this.sequence.derived)          // this.ring.sequences .. of this.monitors
-            seq.capture_change(key, obj_old, obj_new)   // no need to await, the result is not used by the caller
+        for (let monitor of this.$state.monitors)
+            monitor.capture_change(key, obj_old, obj_new)
+        // for (let seq of this.sequence.derived)          // this.ring.sequences .. of this.$state.monitors
+        //     seq.capture_change(key, obj_old, obj_new)   // no need to await, the result is not used by the caller
     }
 
     _cascade_delete(prev, next = null) {
