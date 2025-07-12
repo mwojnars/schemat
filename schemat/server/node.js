@@ -341,7 +341,7 @@ export class Node extends Agent {
     /* RPC: remote calls to agents */
 
     async rpc_send(agent, cmd, args, opts /*{role, node, worker, wait, wait_delegated, broadcast}*/ = {}) {
-        /* Send an RPC message to a remote `agent`. If needed, the message is first sent over internal (IPC) and
+        /* Send an RPC request to a remote `agent`. If needed, the message is first sent over internal (IPC) and
            external (TCP) communication channels to arrive at a proper node and worker process where the `agent` is running.
            There, '$agent.<cmd>'(...args) of `agent` is invoked and the response is returned via the same path.
            Arguments and the result of the call are JSONx-encoded/decoded.
@@ -351,35 +351,41 @@ export class Node extends Agent {
            TODO: wait_delegated=true if the caller waits for a response that may come from a different node,
                  not the direct recipient of the initial request (delegated RPC request, multi-hop RPC, asymmetric routing)
          */
+        let {local, worker, broadcast, role} = opts
+
         let agent_id = (typeof agent === 'object') ? agent.id : agent
-        let message = RPC_Request.create(agent_id, cmd, args, opts)
+        let request = RPC_Request.create(agent_id, cmd, args, opts)
         // this._print("rpc_send():", JSON.stringify(message))
-        if (opts.worker !== undefined) this._print(`rpc_send() opts.worker = ${opts.worker}`)
+        if (worker !== undefined) this._print(`rpc_send() opts.worker = ${worker}`)
 
         assert(schemat.kernel.frames.size, `kernel not yet initialized`)
         try {
             // check if the target object is deployed here on the current process, then no need to look any further
             // -- this rule is important for loading data blocks during and after bootstrap
-            if (!opts.broadcast) {
-                let frame = schemat.get_frame(agent_id, opts.role)
-                if (frame) return RPC_Response.parse(await this.rpc_recv(message))
+            if (!broadcast) {
+                let frame = schemat.get_frame(agent_id, role)
+                if (frame) return RPC_Response.parse(await this.rpc_exec(request))
             }
 
-            let result = await this.ipc_send(MASTER, message)
+            let result = await this.ipc_send(MASTER, request)
             return RPC_Response.parse(result)
         }
         catch (ex) {
-            this._print("rpc_send() FAILED request:", JSON.stringify(message))
+            this._print("rpc_send() FAILED request:", JSON.stringify(request))
             throw ex
         }
     }
 
     async rpc_recv(message) {
+        return this.rpc_exec(message)
+    }
+
+    async rpc_exec(message) {
         /* Execute an RPC message addressed to an agent running on this process.
            Error is raised if the agent cannot be found, *no* forwarding. `args` are JSONx-encoded.
          */
         let {agent_id, role, cmd, args, ctx, tx} = RPC_Request.parse(message)
-        if (tx?.debug) this._print("rpc_recv():", JSON.stringify(message))
+        if (tx?.debug) this._print("rpc_exec():", JSON.stringify(message))
 
         role ??= schemat.GENERIC_ROLE
         assert(role[0] === '$', `incorrect name of agent role (${role})`)
@@ -431,7 +437,7 @@ export class Node extends Agent {
         // this._print(`ipc_worker(${type}):`, JSON.stringify(msg))
         let [type] = message
         if (type === 'SYS') return this.sys_recv(message)
-        if (type === 'RPC') return this.rpc_recv(message)
+        if (type === 'RPC') return this.rpc_exec(message)
     }
 
     async ipc_send(process_id = 0, message, opts = {}) {
@@ -501,7 +507,8 @@ export class Node extends Agent {
 
             if (proc !== this.worker_id)
                 return this.ipc_send(proc, message)             // forward the message down to a worker process, to its ipc_worker()
-            return this.rpc_recv(message)                       // process the message here in the master process
+
+            return this.rpc_exec(message)                       // process the message here in the master process
         }
         else throw new Error(`unknown node-to-node message type: ${type}`)
     }

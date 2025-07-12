@@ -122,7 +122,7 @@ class Intercept {
         assert(id, `trying to target a newborn object like an agent`)
 
         // `current_opts`: opts from $ROLE(opts) remembered here (shared variable!) until $ROLE(opts).fun is accessed;
-        // WARNING: never separate $ROLE(opts) from *.fun, as this may result in passing wrong `opts` to `fun` (!)
+        // WARNING: never separate $ROLE(opts) from *.fun, as this may result in wrong `opts` being passed to `fun` (!)
         let current_opts
 
         // create a parameterized handler factory
