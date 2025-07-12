@@ -136,7 +136,7 @@ export class IPC_Mailbox extends Mailbox {
 class RPC_Request {
     static create(agent_id, cmd, args = [], opts) {
         /* RPC message format: [type, agent_id, cmd, args, opts], where `opts` may include {broadcast, scope, worker, role, app, tx}.
-           - scope = 'cluster' / 'node' / 'process'  (routing scope)
+           - scope = routing scope: whether the request is target at this stage at entire 'cluster', or current 'node', or 'process' only
            - worker = local ID of the target worker process
            - app = application ID
            - tx = transaction info
@@ -431,6 +431,26 @@ export class Node extends Agent {
 
     /* IPC: vertical communication between master/worker processes */
 
+    rpc_frwd(message) {
+        /* On master, forward an RPC message originating at this node, either to a remote peer or to a local worker process. */
+        let {agent_id, role} = RPC_Request.parse(message)
+        // this._print(`ipc_master():`, `agent_id=${agent_id} method=${method} args=${args}`)
+
+        let node = this._find_node(agent_id, role)
+        if (!node) throw new Error(`missing host node for RPC target agent [${agent_id}]`)
+
+        // check if the target object is deployed here on this node, then no need to look any further
+        // -- this rule is important for loading data blocks during and after bootstrap
+        if (node.is(schemat.node)) {
+            // this._print(`ipc_master(): redirecting to self`)
+            return this.rpc_recv(message)       // target agent is deployed on the current node
+        }
+
+        // await node.load()
+        // this._print(`ipc_master(): sending to ${node.id} at ${node.tcp_address}`)
+        return this.tcp_send(node, message)
+    }
+
     ipc_master(message) {
         /* On master process, handle an IPC message received from a worker process or directly from itself.
            IPC calls do NOT perform JSONx-encoding/decoding of arguments/result, so the latter must be
@@ -441,27 +461,8 @@ export class Node extends Agent {
         // this._print(`ipc_master():`, JSON.stringify(message))
 
         if (type === 'SYS') return this.sys_recv(message)
-        if (type === 'RPC') {
-            let {agent_id, role} = RPC_Request.parse(message)
-            // this._print(`ipc_master():`, `agent_id=${agent_id} method=${method} args=${args}`)
-
-            // check if the target object is deployed here on this node, then no need to look any further
-            // -- this rule is important for loading data blocks during and after bootstrap
-
-            let node = this._find_node(agent_id, role)
-
-            if (!node) throw new Error(`missing host node for RPC target agent [${agent_id}]`)
-            if (node.is(schemat.node)) {
-                // this._print(`ipc_master(): redirecting to self`)
-                return this.rpc_recv(message)       // target agent is deployed on the current node
-            }
-
-            // await node.load()
-            // this._print(`ipc_master(): sending to ${node.id} at ${node.tcp_address}`)
-
-            return this.tcp_send(node, message)
-        }
-        else throw new Error(`unknown worker-to-master message type: ${type}`)
+        if (type === 'RPC') return this.rpc_frwd(message)
+        throw new Error(`unknown worker-to-master message type: ${type}`)
     }
 
     ipc_worker(message) {
