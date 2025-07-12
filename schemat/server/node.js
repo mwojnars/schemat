@@ -483,10 +483,9 @@ export class Node extends Agent {
 
     /* IPC: vertical communication between master/worker processes */
 
-    async ipc_send(process_id = 0, message, opts = {}) {
-        /* Send an IPC message from master down to a worker process, or the other way round.
-           Set opts.wait=false to avoid waiting for the response.
-         */
+    async ipc_send(process_id = 0, message) {
+        /* Send an IPC message from master down to a worker process, or the other way round. */
+
         // this._print(`ipc_send() process_id=${process_id} worker_id=${this.worker_id} message=${message}`)
         try {
             if (process_id === this.worker_id)      // shortcut when sending to itself, on master or worker
@@ -495,22 +494,17 @@ export class Node extends Agent {
             if (process_id) {
                 assert(this.is_master())
                 let worker = this.get_worker(process_id)
-                return await worker.mailbox.send(message, opts)
+                return await worker.mailbox.send(message)
             }
             else {
                 assert(this.is_worker())
-                return await schemat.kernel.mailbox.send(message, opts)
+                return await schemat.kernel.mailbox.send(message)
             }
         }
         catch (ex) {
             this._print(`ipc_send() FAILED request to proc #${process_id}:`, JSON.stringify(message))
             throw ex
         }
-    }
-
-    ipc_notify(process_id, message) {
-        /* Send an IPC message to another process and do NOT wait for a reply. */
-        return this.ipc_send(process_id, message, {wait: false})
     }
 
     ipc_master(message) {
