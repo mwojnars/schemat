@@ -377,7 +377,25 @@ export class Node extends Agent {
     }
 
     async rpc_recv(message) {
-        return this.rpc_exec(message)
+        /* Route an incoming RPC request to the right process on this node and execute. */
+        let {agent_id, role} = RPC_Request.parse(message)
+
+        // find out which process (worker >= 1 or master = 0), has the `agent_id` agent deployed
+
+        // let locs = this.locate_processes(agent_id)
+        // if (locs.length > 1) throw new Error(`TCP target agent [${agent_id}] is deployed multiple times on ${this}`)
+        // let proc = locs[0]
+
+        let proc = this._find_process(agent_id, role)
+        // print("tcp_recv(): process", proc)
+
+        if (proc === undefined)
+            throw new Error(`${this.id}/#${this.worker_id}: agent [${agent_id}] not found on this node`)
+
+        if (proc !== this.worker_id)
+            return this.ipc_send(proc, message)             // forward the message down to a worker process, to its ipc_worker()
+
+        return this.rpc_exec(message)                       // process the message here in the master process
     }
 
     async rpc_exec(message) {
@@ -490,27 +508,8 @@ export class Node extends Agent {
         let [type] = message
         // this._print(`tcp_recv():`, JSON.stringify(message))
 
-        if (type === 'RPC') {
-            let {agent_id, role} = RPC_Request.parse(message)
-
-            // find out which process (worker >= 1 or master = 0), has the `agent_id` agent deployed
-
-            // let locs = this.locate_processes(agent_id)
-            // if (locs.length > 1) throw new Error(`TCP target agent [${agent_id}] is deployed multiple times on ${this}`)
-            // let proc = locs[0]
-
-            let proc = this._find_process(agent_id, role)
-            // print("tcp_recv(): process", proc)
-
-            if (proc === undefined)
-                throw new Error(`${this.id}/#${this.worker_id}: agent [${agent_id}] not found on this node`)
-
-            if (proc !== this.worker_id)
-                return this.ipc_send(proc, message)             // forward the message down to a worker process, to its ipc_worker()
-
-            return this.rpc_exec(message)                       // process the message here in the master process
-        }
-        else throw new Error(`unknown node-to-node message type: ${type}`)
+        if (type === 'RPC') return this.rpc_recv(message)
+        throw new Error(`unknown node-to-node message type: ${type}`)
     }
 
 
