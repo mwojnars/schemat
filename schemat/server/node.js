@@ -440,7 +440,7 @@ export class Node extends Agent {
             if (!node) throw new Error(`missing host node for RPC target agent [${agent_id}]`)
             if (node.is(schemat.node)) {
                 // this._print(`ipc_master(): redirecting to self`)
-                return this.tcp_recv(message)       // target agent is deployed on the current node
+                return this.rpc_recv(message)       // target agent is deployed on the current node
             }
 
             // await node.load()
@@ -503,10 +503,8 @@ export class Node extends Agent {
         /* On master process, handle a message received via TCP from another node or directly from this node via a shortcut.
            `msg` is a plain object/array whose elements may still need to be JSONx-decoded.
          */
-        // print("tcp_recv():", JSON.stringify(message))
         assert(this.is_master())
         let [type] = message
-        // this._print(`tcp_recv():`, JSON.stringify(message))
 
         if (type === 'RPC') return this.rpc_recv(message)
         throw new Error(`unknown node-to-node message type: ${type}`)
