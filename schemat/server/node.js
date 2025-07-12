@@ -350,15 +350,15 @@ export class Node extends Agent {
         return status?.worker
     }
 
-    async _find_frame(agent_id, role, attempts = 5, delay = 0.2) {
-        /* Find an agent by its ID in the current process. Retry `attempts` times with a delay to allow the agent to start during bootstrap. */
-        for (let i = 0; i < attempts; i++) {
-            let frame = schemat.get_frame(agent_id, role)
-            if (frame) return frame
-            this._print(`_find_frame(): retrying agent_id=${agent_id}`)
-            await sleep(delay)
-        }
-    }
+    // async _find_frame(agent_id, role, attempts = 1, delay = 0.2) {
+    //     /* Find an agent by its ID in the current process. Retry `attempts` times with a delay to allow the agent to start during bootstrap. */
+    //     for (let i = 0; i < attempts; i++) {
+    //         let frame = schemat.get_frame(agent_id, role)
+    //         if (frame) return frame
+    //         this._print(`_find_frame(): retrying agent_id=${agent_id}`)
+    //         await sleep(delay)
+    //     }
+    // }
 
 
     /* RPC: remote calls to agents */
@@ -460,8 +460,8 @@ export class Node extends Agent {
         assert(role[0] === '$', `incorrect name of agent role (${role})`)
 
         // locate the agent by its `agent_id`, should be running here in this process
-        let frame = await this._find_frame(agent_id, role)
-        if (!frame) throw new Error(`agent [${agent_id}] not found on this process`)
+        let frame = schemat.get_frame(agent_id, role)
+        if (!frame) throw new Error(`[${agent_id}].${role} not found on this process`)
 
         return frame.exec(cmd, args, ctx, tx, (out, err) => RPC_Response.create(out, err))
     }
