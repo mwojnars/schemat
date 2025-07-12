@@ -133,7 +133,9 @@ export class Application extends WebObject {
     /***  Endpoints  ***/
 
     'POST.server'() {
-        /* Run eval(code) on the server and return a JSONx-encoded result; `code` is a string. */
+        /* Run eval(code) on the server and return a JSONx-encoded result; `code` is a string.
+           Does NOT start a transaction, use action.*() if the DB is to be modified.
+         */
         return new JsonPOST({
             server: (code) => {
                 if (!this.eval_allowed) throw new Error(`custom server-side code execution is not allowed`)
