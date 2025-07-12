@@ -155,6 +155,12 @@ class RPC_Request {
         opts = {...opts, ctx, tx}
         // opts.rpc = [agent_id, cmd, ...args]
 
+        // in `args`, truncate trailing undefined values and replace the remaining ones with nulls
+        if (args.length) {
+            args = args.slice(0, args.findLastIndex(arg => arg !== undefined) + 1)
+            args = args.map(arg => arg === undefined ? null : arg)
+        }
+
         return ['RPC', agent_id, cmd, JSONx.encode(args), opts]
     }
 
