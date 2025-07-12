@@ -134,17 +134,26 @@ export class IPC_Mailbox extends Mailbox {
 /**********************************************************************************************************************/
 
 class RPC_Request {
-    static create(agent_id, cmd, args = [], opts) {
+    static create(agent_id, cmd, args = [], {...opts} = {}) {
         /* RPC message format: [type, agent_id, cmd, args, opts], where `opts` may include {broadcast, scope, worker, role, app, tx}.
-           - scope = routing scope: whether the request is target at this stage at entire 'cluster', or current 'node', or 'process' only
+           - scope = routing scope: whether the request is target at entire 'cluster', or current 'node', or current 'process' only
            - worker = local ID of the target worker process
            - app = application ID
            - tx = transaction info
+           - broadcast
+           - role
          */
+        let {scope, role} = opts
+
+        if (cmd[0] === '_' && scope !== 'process')              // local scope enforced when targeting a private command ("_" prefix)
+            opts.scope = 'node'
+
+        if (role === schemat.GENERIC_ROLE) delete opts.role     // default role passed implicitly
+
         let tx = schemat.tx?.dump_tx()
         let ctx = schemat.db.id
-        if (opts.role === schemat.GENERIC_ROLE) delete opts.role        // default role is passed implicitly
         opts = {...opts, ctx, tx}
+
         return ['RPC', agent_id, cmd, JSONx.encode(args), opts]
     }
 
