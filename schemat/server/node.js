@@ -415,10 +415,13 @@ export class Node extends Agent {
 
     async rpc_frwd(message) {
         /* On master, forward an RPC message originating at this node either to a remote peer or a local worker process. */
-        let {agent_id, role} = RPC_Request.parse(message)
+        let {node, worker, agent_id, role} = RPC_Request.parse(message)
         // this._print(`rpc_frwd():`, `agent_id=${agent_id} method=${method} args=${args}`)
 
-        let node = this._find_node(agent_id, role)
+        // if `worker` is given, `node` is itself by default
+        if (worker != null) node ??= schemat.node
+
+        node ??= this._find_node(agent_id, role)
         if (!node) throw new Error(`missing host node for RPC target agent [${agent_id}]`)
 
         // check if the target object is deployed here on this node, then no need to look any further
@@ -435,7 +438,7 @@ export class Node extends Agent {
 
     async rpc_recv(message) {
         /* Route an incoming RPC request to the right process on this node and execute. */
-        let {agent_id, role} = RPC_Request.parse(message)
+        let {worker, agent_id, role} = RPC_Request.parse(message)
 
         // find out which process (worker >= 1 or master = 0), has the `agent_id` agent deployed
 
@@ -443,14 +446,14 @@ export class Node extends Agent {
         // if (locs.length > 1) throw new Error(`TCP target agent [${agent_id}] is deployed multiple times on ${this}`)
         // let proc = locs[0]
 
-        let proc = this._find_process(agent_id, role)
+        worker ??= this._find_process(agent_id, role)
         // print("tcp_recv(): process", proc)
 
-        if (proc === undefined)
+        if (worker == null)
             throw new Error(`${this.id}/#${this.worker_id}: agent [${agent_id}] not found on this node`)
 
-        if (proc !== this.worker_id)
-            return this.ipc_send(proc, message)             // forward the message down to a worker process, to its ipc_worker()
+        if (worker !== this.worker_id)
+            return this.ipc_send(worker, message)           // forward the message down to a worker process, to its ipc_worker()
 
         return this.rpc_exec(message)                       // process the message here in the master process
     }
