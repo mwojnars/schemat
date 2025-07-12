@@ -718,8 +718,8 @@ export class Node extends Agent {
             agents.push({worker, id: agent.id, role})
 
             // request the worker process to start the agent:
-            await this.sys_send(worker, 'START_AGENT', agent.id, role)
-            // this.$worker({node: this, worker: i}).start_agent(agent.id, role)
+            await this.$worker({worker})._start_agent(agent.id, role)
+            // await this.sys_send(worker, 'START_AGENT', agent.id, role)
         }
         await this.action.update({agents})
     }
@@ -738,8 +738,9 @@ export class Node extends Agent {
         this.$state.agents = agents = agents.filter(status => status.id !== agent.id)
 
         // stop every agent from `stop`, in reverse order
-        for (let status of stop.reverse())
-            await this.sys_send(status.worker, 'STOP_AGENT', agent.id, role)
+        for (let {worker} of stop.reverse())
+            await this.$worker({worker})._stop_agent(agent.id, role)
+            // await this.sys_send(worker, 'STOP_AGENT', agent.id, role)
 
         await this.action.update({agents})
     }
