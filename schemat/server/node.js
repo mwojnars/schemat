@@ -599,15 +599,7 @@ export class Node extends Agent {
         await schemat.kernel.stop_agent(agent_id, role)
     }
 
-    async START_AGENT(agent_id, role) {
-        await schemat.kernel.start_agent(agent_id, role)
-    }
-
-    async STOP_AGENT(agent_id, role) {
-        await schemat.kernel.stop_agent(agent_id, role)
-    }
-
-    // CACHE_RECORD() / REGISTER_RECORD()
+    // async '$worker._capture_records'(records) {}
 
 
     /*************/
@@ -719,7 +711,6 @@ export class Node extends Agent {
 
             // request the worker process to start the agent:
             await this.$worker({worker})._start_agent(agent.id, role)
-            // await this.sys_send(worker, 'START_AGENT', agent.id, role)
         }
         await this.action.update({agents})
     }
@@ -740,7 +731,6 @@ export class Node extends Agent {
         // stop every agent from `stop`, in reverse order
         for (let {worker} of stop.reverse())
             await this.$worker({worker})._stop_agent(agent.id, role)
-            // await this.sys_send(worker, 'STOP_AGENT', agent.id, role)
 
         await this.action.update({agents})
     }

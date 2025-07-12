@@ -597,7 +597,6 @@ export class MasterProcess extends Kernel {
                 worker = new_worker
             }
             await this.node.$worker({worker})._start_agent(id, role)    // scope='node' is deduced from _xxx command name
-            // await this.node.sys_send(worker, 'START_AGENT', id, role)
         }
     }
 }
