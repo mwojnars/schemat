@@ -563,23 +563,23 @@ export class Node extends Agent {
 
     /* SYS: control signals between master <> worker processes */
 
-    sys_send(process_id, method, ...args) {
-        /* Send a system message (SYS) via IPC. */
-        return this.ipc_send(process_id, this._sys_message(method, ...args))
-    }
-
-    sys_notify(process_id, method, ...args) {
-        return this.ipc_notify(process_id, this._sys_message(method, ...args))
-    }
+    // sys_send(process_id, method, ...args) {
+    //     /* Send a system message (SYS) via IPC. */
+    //     return this.ipc_send(process_id, this._sys_message(method, ...args))
+    // }
+    //
+    // sys_notify(process_id, method, ...args) {
+    //     return this.ipc_notify(process_id, this._sys_message(method, ...args))
+    // }
+    //
+    // _sys_message(command, ...args) {
+    //     /* Form a system message ('SYS' type). */
+    //     return ['SYS', command, args]
+    // }
 
     sys_recv(message) {
         let {command, args} = this._sys_parse(message)
         return this[command](...args)
-    }
-
-    _sys_message(command, ...args) {
-        /* Form a system message ('SYS' type). */
-        return ['SYS', command, args]
     }
 
     _sys_parse(message) {
@@ -588,8 +588,6 @@ export class Node extends Agent {
         return {type, command, args}
     }
 
-
-    /* list of SYS signals */
 
     async '$worker._start_agent'(agent_id, role) {
         await schemat.kernel.start_agent(agent_id, role)
