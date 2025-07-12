@@ -366,7 +366,7 @@ export class Node extends Agent {
     async rpc(agent, cmd, args, opts /*{role, node, worker, wait, wait_delegated, broadcast}*/ = {}) {
         /* Make an RPC call to a remote `agent`. If needed, use IPC (internal) and TCP (external) communication to transmit
            the request to the right node and worker process, where the `agent` is running, and to receive a response back.
-           At the target process, '$agent.<cmd>'(...args) of `agent` is invoked. Arguments and result are JSONx-encoded/decoded.
+           At the target process, <role>.<cmd>(...args) or $agent.<cmd>(...args) of `agent` is invoked. Arguments and result are JSONx-encoded.
            If broadcast=true, all known deployments of the agent are targeted and an array of results is returned (TODO);
            otherwise, only one arbitrary (random?) deployment is targeted in case of multiple deployments.
            Additionally, `role`, `node`, `worker`, `scope` options can be used to restrict the set of target deployments to be considered.
@@ -393,20 +393,18 @@ export class Node extends Agent {
     async rpc_send(request) {
         let {agent_id, role, scope, worker, broadcast} = RPC_Request.parse(request)
 
+        // no forwarding when `scope` enforces local execution
+        if (scope === 'process') return this.rpc_exec(request)
+
+        // no forwarding when a target `worker` is given and it's the current process
+        if (scope === 'node' && worker === this.worker_id) return this.rpc_exec(request)
+
         // check if the target object is deployed here on the current process, then no need to look any further
         // -- this rule is important for loading data blocks during and after bootstrap
         let frame = !broadcast && schemat.get_frame(agent_id, role)
-
         if (frame) return this.rpc_exec(request)
+
         return this.ipc_send(MASTER, request)
-    }
-
-    async rpc_frwd_worker(request) {
-        /* On worker, route an RPC message originating at this process either to master or itself. */
-        let {scope, worker, broadcast} = RPC_Request.parse(request)
-
-        if (scope === 'process') return this.rpc_exec(request)
-        // if (broadcast)
     }
 
     async rpc_frwd(message) {
