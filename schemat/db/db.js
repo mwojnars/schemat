@@ -233,8 +233,10 @@ export class Ring extends WebObject {
         this.sequences = [...this.sequences, seq]
         await this.save(opts)
 
+        // TODO: data sequence stored as 'main' in .sequences ?
+        // TODO: initialize `source` in operators
         // // boot up this sequence by requesting all source blocks to send initial data
-        // let src_operator = operator.source      // TODO: initialize `source` in operators ... 'main' = data sequence
+        // let src_operator = operator.source
         // let src_sequence = this.sequence_by_operator.get(src_operator.id)
     }
 
