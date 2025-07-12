@@ -47,7 +47,7 @@ export class Ring extends WebObject {
     }
 
     get operators() {
-        /* Map of operators that define derived sequences in this ring stack, keyed by operator's name. */
+        /* Map of all operators in this ring stack, keyed by operator's name. */
         let base_operators = this.base_ring?.operators || []
         let own_operators = this.sequences.map(seq => {
             let op = seq.operator
@@ -230,9 +230,12 @@ export class Ring extends WebObject {
         let opts = {ring: this.__ring, broadcast: true}
         let IndexSequence = this.__std.IndexSequence
         let seq = await IndexSequence.new({ring: this, operator}).save(opts)
-        // this.sequences.push(seq)
         this.sequences = [...this.sequences, seq]
         await this.save(opts)
+
+        // // boot up this sequence by requesting all source blocks to send initial data
+        // let src_operator = operator.source      // TODO: initialize `source` in operators ... 'main' = data sequence
+        // let src_sequence = this.sequence_by_operator.get(src_operator.id)
     }
 
     async rebuild_indexes() {
@@ -434,6 +437,9 @@ export class Database extends WebObject {
         // if (val_fields && !Array.isArray(val_fields)) throw new Error(`record payload specification must be an array, got ${val_fields}`)
 
         ring = ring ? this.get_ring(ring) : this.bottom_ring
+
+        // check that `name` can be used as an operator name
+        if (this.top_ring.operators.has(name)) throw new Error(`'${name}' is already used as an operator name`)
 
         // create index specification
         let ObjectIndexOperator = this.__std.ObjectIndexOperator
