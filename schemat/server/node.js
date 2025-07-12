@@ -134,7 +134,7 @@ export class IPC_Mailbox extends Mailbox {
 /**********************************************************************************************************************/
 
 class RPC_Request {
-    static create(agent_id, cmd, args = [], {...opts} = {}) {
+    static create(agent_id, cmd, args = [], opts = {}) {
         /* RPC message format: [type, agent_id, cmd, args, opts], where `opts` may include {broadcast, scope, worker, role, app, tx}.
            - scope = routing scope: whether the request is target at entire 'cluster', or current 'node', or current 'process' only
            - worker = local ID of the target worker process
@@ -373,7 +373,7 @@ export class Node extends Agent {
            TODO: wait_delegated=true if the caller waits for a response that may come from a different node,
                  not the direct recipient of the initial request (delegated RPC request, multi-hop RPC, asymmetric routing)
          */
-        let {local, worker, broadcast, role} = opts
+        let {scope, worker, broadcast, role} = opts
 
         let agent_id = (typeof agent === 'object') ? agent.id : agent
         let request = RPC_Request.create(agent_id, cmd, args, opts)
@@ -384,12 +384,12 @@ export class Node extends Agent {
         try {
             // check if the target object is deployed here on the current process, then no need to look any further
             // -- this rule is important for loading data blocks during and after bootstrap
-            if (!broadcast) {
-                let frame = schemat.get_frame(agent_id, role)
-                if (frame) return RPC_Response.parse(await this.rpc_exec(request))
-            }
+            let frame = !broadcast && schemat.get_frame(agent_id, role)
+            let result
 
-            let result = await this.ipc_send(MASTER, request)
+            if (frame) result = await this.rpc_exec(request)
+            else result = await this.ipc_send(MASTER, request)
+
             return RPC_Response.parse(result)
         }
         catch (ex) {
@@ -399,7 +399,7 @@ export class Node extends Agent {
     }
 
     async rpc_frwd(message) {
-        /* On master, forward an RPC message originating at this node, either to a remote peer or to a local worker process. */
+        /* On master, forward an RPC message originating at this node either to a remote peer or a local worker process. */
         let {agent_id, role} = RPC_Request.parse(message)
         // this._print(`rpc_frwd():`, `agent_id=${agent_id} method=${method} args=${args}`)
 
