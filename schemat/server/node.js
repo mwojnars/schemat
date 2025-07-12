@@ -523,7 +523,7 @@ export class Node extends Agent {
         let [type] = message
         // this._print(`ipc_master():`, JSON.stringify(message))
 
-        if (type === 'SYS') return this.sys_recv(message)
+        // if (type === 'SYS') return this.sys_recv(message)
         if (type === 'RPC') return this.rpc_frwd(message)
         throw new Error(`unknown worker-to-master message type: ${type}`)
     }
@@ -531,7 +531,7 @@ export class Node extends Agent {
     ipc_worker(message) {
         // this._print(`ipc_worker(${type}):`, JSON.stringify(msg))
         let [type] = message
-        if (type === 'SYS') return this.sys_recv(message)
+        // if (type === 'SYS') return this.sys_recv(message)
         if (type === 'RPC') return this.rpc_exec(message)
     }
 
@@ -576,17 +576,17 @@ export class Node extends Agent {
     //     /* Form a system message ('SYS' type). */
     //     return ['SYS', command, args]
     // }
-
-    sys_recv(message) {
-        let {command, args} = this._sys_parse(message)
-        return this[command](...args)
-    }
-
-    _sys_parse(message) {
-        let [type, command, args] = message
-        assert(type === 'SYS', `incorrect message type, expected SYS`)
-        return {type, command, args}
-    }
+    //
+    // sys_recv(message) {
+    //     let {command, args} = this._sys_parse(message)
+    //     return this[command](...args)
+    // }
+    //
+    // _sys_parse(message) {
+    //     let [type, command, args] = message
+    //     assert(type === 'SYS', `incorrect message type, expected SYS`)
+    //     return {type, command, args}
+    // }
 
 
     async '$worker._start_agent'(agent_id, role) {
