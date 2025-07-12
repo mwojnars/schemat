@@ -153,6 +153,7 @@ class RPC_Request {
         let tx = schemat.tx?.dump_tx()
         let ctx = schemat.db.id
         opts = {...opts, ctx, tx}
+        // opts.rpc = [agent_id, cmd, ...args]
 
         return ['RPC', agent_id, cmd, JSONx.encode(args), opts]
     }
@@ -166,9 +167,9 @@ class RPC_Request {
     }
 
     static parse(request) {
-        let [type, agent_id, cmd, args, {role, tx, ctx}] = request
+        let [type, agent_id, cmd, args, {role, tx, ctx, scope, worker, broadcast}] = request
         assert(type === 'RPC', `incorrect message type, expected RPC`)
-        return {type, agent_id, role, cmd, args: JSONx.decode(args), tx, ctx}
+        return {type, agent_id, role, cmd, args: JSONx.decode(args), tx, ctx, scope, worker, broadcast}
     }
 }
 
@@ -396,6 +397,14 @@ export class Node extends Agent {
             this._print("rpc_send() FAILED request:", JSON.stringify(request))
             throw ex
         }
+    }
+
+    async rpc_frwd_worker(request) {
+        /* On worker, route an RPC message originating at this process either to master or itself. */
+        let {scope, worker, broadcast} = RPC_Request.parse(request)
+
+        if (scope === 'process') return this.rpc_exec(request)
+        // if (broadcast)
     }
 
     async rpc_frwd(message) {
