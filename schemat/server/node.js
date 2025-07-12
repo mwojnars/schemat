@@ -389,6 +389,26 @@ export class Node extends Agent {
         }
     }
 
+    async rpc_frwd(message) {
+        /* On master, forward an RPC message originating at this node, either to a remote peer or to a local worker process. */
+        let {agent_id, role} = RPC_Request.parse(message)
+        // this._print(`rpc_frwd():`, `agent_id=${agent_id} method=${method} args=${args}`)
+
+        let node = this._find_node(agent_id, role)
+        if (!node) throw new Error(`missing host node for RPC target agent [${agent_id}]`)
+
+        // check if the target object is deployed here on this node, then no need to look any further
+        // -- this rule is important for loading data blocks during and after bootstrap
+        if (node.is(schemat.node)) {
+            // this._print(`rpc_frwd(): redirecting to self`)
+            return this.rpc_recv(message)       // target agent is deployed on the current node
+        }
+
+        // await node.load()
+        // this._print(`rpc_frwd(): sending to ${node.id} at ${node.tcp_address}`)
+        return this.tcp_send(node, message)
+    }
+
     async rpc_recv(message) {
         /* Route an incoming RPC request to the right process on this node and execute. */
         let {agent_id, role} = RPC_Request.parse(message)
@@ -431,47 +451,6 @@ export class Node extends Agent {
 
     /* IPC: vertical communication between master/worker processes */
 
-    rpc_frwd(message) {
-        /* On master, forward an RPC message originating at this node, either to a remote peer or to a local worker process. */
-        let {agent_id, role} = RPC_Request.parse(message)
-        // this._print(`ipc_master():`, `agent_id=${agent_id} method=${method} args=${args}`)
-
-        let node = this._find_node(agent_id, role)
-        if (!node) throw new Error(`missing host node for RPC target agent [${agent_id}]`)
-
-        // check if the target object is deployed here on this node, then no need to look any further
-        // -- this rule is important for loading data blocks during and after bootstrap
-        if (node.is(schemat.node)) {
-            // this._print(`ipc_master(): redirecting to self`)
-            return this.rpc_recv(message)       // target agent is deployed on the current node
-        }
-
-        // await node.load()
-        // this._print(`ipc_master(): sending to ${node.id} at ${node.tcp_address}`)
-        return this.tcp_send(node, message)
-    }
-
-    ipc_master(message) {
-        /* On master process, handle an IPC message received from a worker process or directly from itself.
-           IPC calls do NOT perform JSONx-encoding/decoding of arguments/result, so the latter must be
-           plain JSON-serializable objects, or already JSONx-encoded.
-         */
-        assert(this.is_master())
-        let [type] = message
-        // this._print(`ipc_master():`, JSON.stringify(message))
-
-        if (type === 'SYS') return this.sys_recv(message)
-        if (type === 'RPC') return this.rpc_frwd(message)
-        throw new Error(`unknown worker-to-master message type: ${type}`)
-    }
-
-    ipc_worker(message) {
-        // this._print(`ipc_worker(${type}):`, JSON.stringify(msg))
-        let [type] = message
-        if (type === 'SYS') return this.sys_recv(message)
-        if (type === 'RPC') return this.rpc_exec(message)
-    }
-
     async ipc_send(process_id = 0, message, opts = {}) {
         /* Send an IPC message from master down to a worker process, or the other way round.
            Set opts.wait=false to avoid waiting for the response.
@@ -500,6 +479,27 @@ export class Node extends Agent {
     ipc_notify(process_id, message) {
         /* Send an IPC message to another process and do NOT wait for a reply. */
         return this.ipc_send(process_id, message, {wait: false})
+    }
+
+    ipc_master(message) {
+        /* On master process, handle an IPC message received from a worker process or directly from itself.
+           IPC calls do NOT perform JSONx-encoding/decoding of arguments/result, so the latter must be
+           plain JSON-serializable objects, or already JSONx-encoded.
+         */
+        assert(this.is_master())
+        let [type] = message
+        // this._print(`ipc_master():`, JSON.stringify(message))
+
+        if (type === 'SYS') return this.sys_recv(message)
+        if (type === 'RPC') return this.rpc_frwd(message)
+        throw new Error(`unknown worker-to-master message type: ${type}`)
+    }
+
+    ipc_worker(message) {
+        // this._print(`ipc_worker(${type}):`, JSON.stringify(msg))
+        let [type] = message
+        if (type === 'SYS') return this.sys_recv(message)
+        if (type === 'RPC') return this.rpc_exec(message)
     }
 
 
