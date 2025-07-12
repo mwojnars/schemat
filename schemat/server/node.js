@@ -405,7 +405,7 @@ export class Node extends Agent {
         // no forwarding when a target `worker` is given and it's the current process
         if (scope === 'node' && worker === this.worker_id) return this.rpc_exec(request)
 
-        // check if the target object is deployed here on the current process, then no need to look any further
+        // no forwarding when a target object is deployed here on the current process
         // -- this rule is important for loading data blocks during and after bootstrap
         let frame = !broadcast && schemat.get_frame(agent_id, role)
         if (frame) return this.rpc_exec(request)
@@ -582,13 +582,13 @@ export class Node extends Agent {
 
     /* list of SYS signals */
 
-    // async '$worker._start_agent'(agent_id, role) {
-    //     await schemat.kernel.start_agent(agent_id, role)
-    // }
-    //
-    // async '$worker._stop_agent'(agent_id, role) {
-    //     await schemat.kernel.stop_agent(agent_id, role)
-    // }
+    async '$worker._start_agent'(agent_id, role) {
+        await schemat.kernel.start_agent(agent_id, role)
+    }
+
+    async '$worker._stop_agent'(agent_id, role) {
+        await schemat.kernel.stop_agent(agent_id, role)
+    }
 
     async START_AGENT(agent_id, role) {
         await schemat.kernel.start_agent(agent_id, role)
