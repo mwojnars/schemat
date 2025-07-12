@@ -162,13 +162,11 @@ class RPC_Request {
         assert(!('rpc' in opts))
 
         return {rpc: [agent_id, cmd, JSONx.encode(args)], ...opts}
-        // return [agent_id, cmd, JSONx.encode(args), opts]
     }
 
     static parse(request) {
-        // let [agent_id, cmd, args, {role, tx, ctx, scope, worker, broadcast}] = request
-        let {rpc: [agent_id, cmd, args], role, tx, ctx, scope, worker, broadcast} = request
-        return {agent_id, role, cmd, args: JSONx.decode(args), tx, ctx, scope, worker, broadcast}
+        let {rpc: [agent_id, cmd, args], ...opts} = request
+        return {agent_id, cmd, args: JSONx.decode(args), ...opts}
     }
 
     static is_private(cmd_or_request) {
@@ -176,14 +174,6 @@ class RPC_Request {
         let cmd = (typeof cmd_or_request === 'string') ? cmd_or_request : cmd_or_request.rpc[1]
         return cmd[0] === '_'
     }
-
-    // static rescope(req, scope) {
-    //     /* Change scope of the request to `scope`. */
-    //     let opts = req[4]
-    //     req = [...req]
-    //     req[4] = {...opts, scope}
-    //     return req
-    // }
 }
 
 class RPC_Response {
