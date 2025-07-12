@@ -153,35 +153,37 @@ class RPC_Request {
         let tx = schemat.tx?.dump_tx()
         let ctx = schemat.db.id
         opts = {...opts, ctx, tx}
-        // opts.rpc = [agent_id, cmd, ...args]
 
         // in `args`, truncate trailing undefined values and replace the remaining ones with nulls
         if (args.length) {
             args = args.slice(0, args.findLastIndex(arg => arg !== undefined) + 1)
             args = args.map(arg => arg === undefined ? null : arg)
         }
+        assert(!('rpc' in opts))
 
-        return [agent_id, cmd, JSONx.encode(args), opts]
+        return {rpc: [agent_id, cmd, JSONx.encode(args)], ...opts}
+        // return [agent_id, cmd, JSONx.encode(args), opts]
+    }
+
+    static parse(request) {
+        // let [agent_id, cmd, args, {role, tx, ctx, scope, worker, broadcast}] = request
+        let {rpc: [agent_id, cmd, args], role, tx, ctx, scope, worker, broadcast} = request
+        return {agent_id, role, cmd, args: JSONx.decode(args), tx, ctx, scope, worker, broadcast}
     }
 
     static is_private(cmd_or_request) {
         /* Private command (private request) is the one whose name starts with "_". */
-        let cmd = (typeof cmd_or_request === 'string') ? cmd_or_request : cmd_or_request[2]
+        let cmd = (typeof cmd_or_request === 'string') ? cmd_or_request : cmd_or_request.rpc[1]
         return cmd[0] === '_'
     }
 
-    static rescope(req, scope) {
-        /* Change scope of the request to `scope`. */
-        let opts = req[4]
-        req = [...req]
-        req[4] = {...opts, scope}
-        return req
-    }
-
-    static parse(request) {
-        let [agent_id, cmd, args, {role, tx, ctx, scope, worker, broadcast}] = request
-        return {agent_id, role, cmd, args: JSONx.decode(args), tx, ctx, scope, worker, broadcast}
-    }
+    // static rescope(req, scope) {
+    //     /* Change scope of the request to `scope`. */
+    //     let opts = req[4]
+    //     req = [...req]
+    //     req[4] = {...opts, scope}
+    //     return req
+    // }
 }
 
 class RPC_Response {
@@ -390,7 +392,6 @@ export class Node extends Agent {
         let request = RPC_Request.create(agent_id, cmd, args, opts)
         // this._print("rpc():", JSON.stringify(message))
 
-        if (opts.worker !== undefined) this._print(`rpc() opts.worker = ${opts.worker}`)
         try {
             let response = await this.rpc_send(request)
             return RPC_Response.parse(response)
@@ -512,7 +513,6 @@ export class Node extends Agent {
            IPC calls do NOT perform JSONx-encoding/decoding of arguments/result, so the latter must be
            plain JSON-serializable objects, or already JSONx-encoded.
          */
-        assert(this.is_master())
         // this._print(`ipc_master():`, JSON.stringify(message))
         return this.rpc_frwd(message)
     }
