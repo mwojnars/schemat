@@ -135,7 +135,7 @@ export class IPC_Mailbox extends Mailbox {
 
 class RPC_Request {
     static create(agent_id, cmd, args = [], opts = {}) {
-        /* RPC message format: [type, agent_id, cmd, args, opts], where `opts` may include {broadcast, scope, worker, role, app, tx}.
+        /* RPC message format: [agent_id, cmd, args, opts], where `opts` may include {broadcast, scope, worker, role, app, tx}.
            - scope = routing scope: whether the request is target at entire 'cluster', or current 'node', or current 'process' only
            - worker = local ID of the target worker process
            - app = application ID
@@ -161,7 +161,7 @@ class RPC_Request {
             args = args.map(arg => arg === undefined ? null : arg)
         }
 
-        return ['RPC', agent_id, cmd, JSONx.encode(args), opts]
+        return [agent_id, cmd, JSONx.encode(args), opts]
     }
 
     static is_private(cmd_or_request) {
@@ -179,9 +179,8 @@ class RPC_Request {
     }
 
     static parse(request) {
-        let [type, agent_id, cmd, args, {role, tx, ctx, scope, worker, broadcast}] = request
-        assert(type === 'RPC', `incorrect message type, expected RPC`)
-        return {type, agent_id, role, cmd, args: JSONx.decode(args), tx, ctx, scope, worker, broadcast}
+        let [agent_id, cmd, args, {role, tx, ctx, scope, worker, broadcast}] = request
+        return {agent_id, role, cmd, args: JSONx.decode(args), tx, ctx, scope, worker, broadcast}
     }
 }
 
@@ -520,17 +519,13 @@ export class Node extends Agent {
            plain JSON-serializable objects, or already JSONx-encoded.
          */
         assert(this.is_master())
-        let [type] = message
         // this._print(`ipc_master():`, JSON.stringify(message))
-
-        if (type === 'RPC') return this.rpc_frwd(message)
-        throw new Error(`unknown worker-to-master message type: ${type}`)
+        return this.rpc_frwd(message)
     }
 
     ipc_worker(message) {
-        // this._print(`ipc_worker(${type}):`, JSON.stringify(msg))
-        let [type] = message
-        if (type === 'RPC') return this.rpc_exec(message)
+        // this._print(`ipc_worker():`, JSON.stringify(msg))
+        return this.rpc_exec(message)
     }
 
 
@@ -549,13 +544,8 @@ export class Node extends Agent {
            `msg` is a plain object/array whose elements may still need to be JSONx-decoded.
          */
         assert(this.is_master())
-        let [type] = message
-
-        if (type === 'RPC') {
-            if (RPC_Request.is_private(message)) throw new Error(`cannot handle private message received from another node`)
-            return this.rpc_recv(message)
-        }
-        throw new Error(`unknown node-to-node message type: ${type}`)
+        if (RPC_Request.is_private(message)) throw new Error(`cannot handle private message received from another node`)
+        return this.rpc_recv(message)
     }
 
 
