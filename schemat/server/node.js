@@ -363,11 +363,10 @@ export class Node extends Agent {
 
     /* RPC: remote calls to agents */
 
-    async rpc_send(agent, cmd, args, opts /*{role, node, worker, wait, wait_delegated, broadcast}*/ = {}) {
-        /* Send an RPC request to a remote `agent`. If needed, the message is first sent over internal (IPC) and
-           external (TCP) communication channels to arrive at a proper node and worker process where the `agent` is running.
-           There, '$agent.<cmd>'(...args) of `agent` is invoked and the response is returned via the same path.
-           Arguments and the result of the call are JSONx-encoded/decoded.
+    async rpc(agent, cmd, args, opts /*{role, node, worker, wait, wait_delegated, broadcast}*/ = {}) {
+        /* Make an RPC call to a remote `agent`. If needed, use IPC (internal) and TCP (external) communication to transmit
+           the request to the right node and worker process where the `agent` is running, and to receive a response back.
+           At the target process, '$agent.<cmd>'(...args) of `agent` is invoked. Arguments and result are JSONx-encoded/decoded.
            If broadcast=true, all known deployments of the agent are targeted and an array of results is returned (TODO);
            otherwise, only one arbitrary (random?) deployment is targeted in case of multiple deployments.
            Additionally, `role`, `node` and `worker` can be used to restrict the set of target deployments to be considered.
@@ -378,8 +377,8 @@ export class Node extends Agent {
 
         let agent_id = (typeof agent === 'object') ? agent.id : agent
         let request = RPC_Request.create(agent_id, cmd, args, opts)
-        // this._print("rpc_send():", JSON.stringify(message))
-        if (worker !== undefined) this._print(`rpc_send() opts.worker = ${worker}`)
+        // this._print("rpc():", JSON.stringify(message))
+        if (worker !== undefined) this._print(`rpc() opts.worker = ${worker}`)
 
         assert(schemat.kernel.frames.size, `kernel not yet initialized`)
         try {
@@ -394,7 +393,7 @@ export class Node extends Agent {
             return RPC_Response.parse(result)
         }
         catch (ex) {
-            this._print("rpc_send() FAILED request:", JSON.stringify(request))
+            this._print("rpc() FAILED request:", JSON.stringify(request))
             throw ex
         }
     }

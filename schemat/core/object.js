@@ -112,7 +112,7 @@ class Intercept {
         /* Create an RPC proxy for this agent running in a particular role ($agent, $leader, etc.).
            The proxy creates triggers for intra-cluster RPC calls in two forms:
            1. obj.$ROLE.fun(...args) - sends a message that invokes obj['$ROLE.fun'](...args);
-           2. obj.$ROLE(opts).fun(...args) - same but with additional options for rpc_send();
+           2. obj.$ROLE(opts).fun(...args) - same but with additional options for rpc();
            3. obj.$ROLE.state is a special field that gives access to the locally running agent's state (if present).
            
            The object should be an instance of Agent class/category, because only agents are deployed 
@@ -145,7 +145,7 @@ class Intercept {
 
                 // function wrapper for an RPC call
                 assert(schemat.node, `the node must be initialized before remote agent [${id}].${role}.${name}() is called`)
-                return (...args) => schemat.node.rpc_send(id, name, args, opts)
+                return (...args) => schemat.node.rpc(id, name, args, opts)
             }
         })
 
