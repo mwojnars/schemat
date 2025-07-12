@@ -365,37 +365,40 @@ export class Node extends Agent {
 
     async rpc(agent, cmd, args, opts /*{role, node, worker, wait, wait_delegated, broadcast}*/ = {}) {
         /* Make an RPC call to a remote `agent`. If needed, use IPC (internal) and TCP (external) communication to transmit
-           the request to the right node and worker process where the `agent` is running, and to receive a response back.
+           the request to the right node and worker process, where the `agent` is running, and to receive a response back.
            At the target process, '$agent.<cmd>'(...args) of `agent` is invoked. Arguments and result are JSONx-encoded/decoded.
            If broadcast=true, all known deployments of the agent are targeted and an array of results is returned (TODO);
            otherwise, only one arbitrary (random?) deployment is targeted in case of multiple deployments.
-           Additionally, `role`, `node` and `worker` can be used to restrict the set of target deployments to be considered.
+           Additionally, `role`, `node`, `worker`, `scope` options can be used to restrict the set of target deployments to be considered.
            TODO: wait_delegated=true if the caller waits for a response that may come from a different node,
                  not the direct recipient of the initial request (delegated RPC request, multi-hop RPC, asymmetric routing)
          */
-        let {scope, worker, broadcast, role} = opts
+        assert(schemat.kernel.frames.size, `kernel not yet initialized`)
 
         let agent_id = (typeof agent === 'object') ? agent.id : agent
         let request = RPC_Request.create(agent_id, cmd, args, opts)
         // this._print("rpc():", JSON.stringify(message))
-        if (worker !== undefined) this._print(`rpc() opts.worker = ${worker}`)
 
-        assert(schemat.kernel.frames.size, `kernel not yet initialized`)
+        if (opts.worker !== undefined) this._print(`rpc() opts.worker = ${opts.worker}`)
         try {
-            // check if the target object is deployed here on the current process, then no need to look any further
-            // -- this rule is important for loading data blocks during and after bootstrap
-            let frame = !broadcast && schemat.get_frame(agent_id, role)
-            let result
-
-            if (frame) result = await this.rpc_exec(request)
-            else result = await this.ipc_send(MASTER, request)
-
-            return RPC_Response.parse(result)
+            let response = await this.rpc_send(request)
+            return RPC_Response.parse(response)
         }
         catch (ex) {
-            this._print("rpc() FAILED request:", JSON.stringify(request))
+            this._print("rpc() FAILED on request:", JSON.stringify(request))
             throw ex
         }
+    }
+
+    async rpc_send(request) {
+        let {agent_id, role, scope, worker, broadcast} = RPC_Request.parse(request)
+
+        // check if the target object is deployed here on the current process, then no need to look any further
+        // -- this rule is important for loading data blocks during and after bootstrap
+        let frame = !broadcast && schemat.get_frame(agent_id, role)
+
+        if (frame) return this.rpc_exec(request)
+        return this.ipc_send(MASTER, request)
     }
 
     async rpc_frwd_worker(request) {
