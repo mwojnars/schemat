@@ -523,7 +523,6 @@ export class Node extends Agent {
         let [type] = message
         // this._print(`ipc_master():`, JSON.stringify(message))
 
-        // if (type === 'SYS') return this.sys_recv(message)
         if (type === 'RPC') return this.rpc_frwd(message)
         throw new Error(`unknown worker-to-master message type: ${type}`)
     }
@@ -531,7 +530,6 @@ export class Node extends Agent {
     ipc_worker(message) {
         // this._print(`ipc_worker(${type}):`, JSON.stringify(msg))
         let [type] = message
-        // if (type === 'SYS') return this.sys_recv(message)
         if (type === 'RPC') return this.rpc_exec(message)
     }
 

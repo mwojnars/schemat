@@ -586,7 +586,7 @@ export class MasterProcess extends Kernel {
     }
 
     async _start_agents(agents) {
-        /* Send SYS signals down to worker processes to make them start particular `agents`. */
+        /* Inform worker processes what `agents` to start. */
         let num_workers = this.workers.length
         for (let {worker, id, role} of agents) {
             assert(id)
