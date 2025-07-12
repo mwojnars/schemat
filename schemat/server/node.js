@@ -145,7 +145,7 @@ class RPC_Request {
          */
         let {scope, role} = opts
 
-        if (cmd[0] === '_' && scope !== 'process')              // local scope enforced when targeting a private command ("_" prefix)
+        if (this.is_private(cmd) && scope !== 'process')        // local scope enforced when targeting a private command ("_" prefix)
             opts.scope = 'node'
 
         if (role === schemat.GENERIC_ROLE) delete opts.role     // default role passed implicitly
@@ -156,6 +156,12 @@ class RPC_Request {
         // opts.rpc = [agent_id, cmd, ...args]
 
         return ['RPC', agent_id, cmd, JSONx.encode(args), opts]
+    }
+
+    static is_private(cmd_or_request) {
+        /* Private command (private request) is the one whose name starts with "_". */
+        let cmd = (typeof cmd_or_request === 'string') ? cmd_or_request : cmd_or_request[2]
+        return cmd[0] === '_'
     }
 
     static rescope(req, scope) {
@@ -532,13 +538,16 @@ export class Node extends Agent {
     }
 
     tcp_recv(message) {
-        /* On master process, handle a message received via TCP from another node or directly from this node via a shortcut.
+        /* On master process, handle a message received via TCP from another node.
            `msg` is a plain object/array whose elements may still need to be JSONx-decoded.
          */
         assert(this.is_master())
         let [type] = message
 
-        if (type === 'RPC') return this.rpc_recv(message)
+        if (type === 'RPC') {
+            if (RPC_Request.is_private(message)) throw new Error(`cannot handle private message received from another node`)
+            return this.rpc_recv(message)
+        }
         throw new Error(`unknown node-to-node message type: ${type}`)
     }
 
