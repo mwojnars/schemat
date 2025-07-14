@@ -22,7 +22,6 @@ export class Ring extends WebObject {
 
     file_tag
     main_sequence           // DataSequence containing all primary data of this ring
-    // sequences = []          // array of derived sequences (Sequence objects)
 
     name                    // human-readable name of this ring for get_ring()
     readonly                // if true, the ring does NOT accept modifications: inserts/updates/deletes
@@ -49,7 +48,7 @@ export class Ring extends WebObject {
     get sequences() {
         /* All sequences of this ring inferred from main_sequence by following .derived links. */
         assert(this.main_sequence.is_loaded())
-        return this.main_sequence.derived || []
+        return [this.main_sequence, ...this.main_sequence.derived || []]
     }
 
     get operators() {
@@ -103,7 +102,6 @@ export class Ring extends WebObject {
 
         let DataSequence = this.__std.DataSequence
         this.main_sequence = DataSequence.new({ring: this, operator: base?.main_sequence.operator})
-        this.sequences = []
         if (!base) return
 
         let IndexSequence = this.__std.IndexSequence
@@ -119,7 +117,6 @@ export class Ring extends WebObject {
         await super.__load__()
         await this.base_ring?.load()
         await this.main_sequence.load()
-        // for (let seq of this.sequences) await seq.load()
 
         this.validate_zones()
     }
@@ -251,12 +248,13 @@ export class Ring extends WebObject {
 
     async rebuild_indexes() {
         /* Rebuild all derived sequences by making a full scan of the data sequence. */
-        await Promise.all(this.sequences.map(seq => seq.erase()))
+        let sequences = this.sequences.slice(1)     // all derived sequences, main_sequence skipped
+        await Promise.all(sequences.map(seq => seq.erase()))
 
         for await (let {id, data} of this.main_sequence.scan_objects()) {
             let key = data_schema.encode_key([id])
             let obj = await WebObject.from_data(id, data, {activate: false})
-            await Promise.all(this.sequences.map(seq => seq.capture_change(key, null, obj)))
+            await Promise.all(sequences.map(seq => seq.capture_change(key, null, obj)))
         }
     }
 }
