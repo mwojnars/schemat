@@ -1,4 +1,4 @@
-import {assert, print, T, zip, amap, sleep, utc, joinPath, arrayFromAsync, isPromise} from '../common/utils.js'
+import {assert, print, T, zip, arrayFromAsync, fileBaseName} from '../common/utils.js'
 import {DataAccessError, DataConsistencyError, ObjectNotFound} from '../common/errors.js'
 import {Shard, Mutexes} from "../common/structs.js";  //'async-mutex'
 import {WebObject} from '../core/object.js'
@@ -539,6 +539,7 @@ export class BootDataBlock extends DataBlock {
     _store      // Store for this block's records
 
     async __draft__(path) {
+        this.name = fileBaseName(path)      // for debugging of boot process
         let format = this._detect_format(path)
         this._store = await this._create_store(format, path)
         await this._store.open()

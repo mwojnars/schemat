@@ -89,23 +89,6 @@ export class Ring extends WebObject {
         return [A, B || C, C]
     }
 
-
-    __new__({name, base_ring, file_tag, file, min_id_exclusive, min_id_forbidden, min_id_sharded, readonly = false} = {}) {
-        this.name = name || (file && fileBaseName(file))
-        this.base_ring = base_ring
-
-        // if (!name && file)
-        //     this.name = file.replace(/^.*\/|\.[^.]*$/g, '')         // extract the name from the file path (no directory, no extension)
-        //     // this.name = file.substring(file.lastIndexOf('/') + 1, file.lastIndexOf('.') >= 0 ? file.lastIndexOf('.') : undefined)
-        //     // this.name = path.basename(file, path.extname(file))
-
-        this.file_tag = file_tag
-        this.readonly = readonly
-        this.min_id_exclusive = min_id_exclusive
-        this.min_id_forbidden = min_id_forbidden
-        this.min_id_sharded = min_id_sharded
-    }
-
     // async __setup__() {
     //     /* Re-create `main_sequence` and all derived sequences from the lower ring. */
     //
@@ -270,10 +253,7 @@ export class BootRing extends Ring {
      */
     file        // boot file path
 
-    __new__() {}
-
     async __draft__() {
-        // the draft object here is created from a class and lacks __category; only allowed during boot
         this.main_sequence = await DataSequence.draft({ring: this}, this.file)
     }
 
@@ -565,9 +545,6 @@ export class BootDatabase extends Database {
         for (let spec of ring_specs)
             top = await BootRing.draft({...spec, base_ring: top})
         this.top_ring = top
-
-        // await top.load()
-        schemat._print(`creating bootstrap database... done`)
     }
 
     insert() {assert(false)}
