@@ -563,11 +563,10 @@ export class WebObject {
     }
 
     static async draft(props, ...args) {
-        /* Create a temporary newborn object that is properly initialized via its class's __new__(), and additionally
-           its async __draft__(...args) was called, but the object is NOT intended for insertion to DB: is not registered
-           in transaction and does NOT have any __category assigned, which is incorrect in normal circumstances.
-           This method should only be used for internal purposes, typically during bootstrap, when category objects
-           cannot be loaded yet and draft instances must be created from classes not categories.
+        /* Create a temporary object that is initialized via its class's __new__(), plus async __draft__(...args),
+           but is NOT intended for insertion to DB: it is not registered in transaction and does NOT have
+           any __category assigned, which is undesired in normal circumstances. Such objects are used during bootstrap,
+           when categories cannot be loaded yet and draft instances must be created from classes not categories.
          */
         let obj = this._new([], props, args, {draft: true})
         await obj.__draft__(...args)
