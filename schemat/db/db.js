@@ -106,18 +106,18 @@ export class Ring extends WebObject {
         this.min_id_sharded = min_id_sharded
     }
 
-    async __setup__() {
-        /* Re-create `main_sequence` and all derived sequences from the lower ring. */
-
-        let base = await this.base_ring.load()
-        this.min_id_sharded ??= this.base_ring.min_id_sharded
-
-        let DataSequence = this.__std.DataSequence
-        this.main_sequence = DataSequence.new({ring: this, operator: base.main_sequence.operator})
-
-        for (let seq of base.derived)
-            this.sequences.push(seq.__category.new({ring: this, operator: seq.operator}))
-    }
+    // async __setup__() {
+    //     /* Re-create `main_sequence` and all derived sequences from the lower ring. */
+    //
+    //     let base = await this.base_ring.load()
+    //     this.min_id_sharded ??= this.base_ring.min_id_sharded
+    //
+    //     let DataSequence = this.__std.DataSequence
+    //     this.main_sequence = DataSequence.new({ring: this, operator: base.main_sequence.operator})
+    //
+    //     for (let seq of base.derived)
+    //         this.sequences.push(seq.__category.new({ring: this, operator: seq.operator}))
+    // }
 
     async __load__() {
         /* Initialize the ring after it's been loaded from DB. */
