@@ -539,11 +539,9 @@ export class BootDataBlock extends DataBlock {
     _store      // Store for this block's records
 
     async __draft__(path) {
-        // await super.__load__()
         let format = this._detect_format(path)
         this._store = await this._create_store(format, path)
         await this._store.open()
-        schemat._print(`BootDataBlock.__draft__() done`)
     }
 
     // __new__(path) {
