@@ -236,7 +236,7 @@ export class Ring extends WebObject {
         yield* seq.scan_binary(opts)
     }
 
-    async 'action.create_sequence'(operator) {
+    async 'action.create_derived'(source = 'main', operator) {
         // TODO SEC: check permissions
         if (this.readonly) throw new Error("the ring is read-only")
         assert(this.__ring)
@@ -449,6 +449,12 @@ export class Database extends WebObject {
         // TODO: apply `batch_size` to the merged stream and yield in batches
     }
 
+    async rebuild_indexes() {
+        for (let ring of this.rings)
+            await ring.rebuild_indexes()
+        return true
+    }
+
     async 'action.create_index'(name, key_fields, val_fields = undefined, {category, ring} = {}) {
         /* Add a new index in `ring` and all rings above. If not provided, `ring` is the bottom of the ring stack (ring-kernel).
            Schema of the new index is defined by `key_names` and `val_fields` (arrays of property names).
@@ -461,23 +467,16 @@ export class Database extends WebObject {
         // check that `name` can be used as an operator name
         if (this.top_ring.operators.has(name)) throw new Error(`'${name}' is already used as an operator name`)
 
-        // create index specification
+        // create operator for the derived sequence
         let ObjectIndexOperator = this.__std.ObjectIndexOperator
-        let index = await ObjectIndexOperator.new({name, key_fields, val_fields, category}).save({ring})
-        // schemat._transaction.getStore()?.log_modified(index)
+        let operator = await ObjectIndexOperator.new({name, key_fields, val_fields, category}).save({ring})
 
-        // create streams for `index`, in `ring` and all higher rings
+        // create sequences that will apply `operator` to the "main" sequence, in `ring` and all higher rings
         let pos = this.rings.indexOf(ring)
         for (let i = pos; i < this.rings.length; i++) {
             ring = this.rings[i]
-            await ring.action.create_sequence(index)
+            await ring.action.create_derived('main', operator)
         }
-    }
-
-    async rebuild_indexes() {
-        for (let ring of this.rings)
-            await ring.rebuild_indexes()
-        return true
     }
 
     /***  Administrative  ***/

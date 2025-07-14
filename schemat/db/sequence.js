@@ -136,10 +136,9 @@ export class Sequence extends WebObject {
     }
 
     async 'action.create_derived'(operator) {
-        /* Create a derived sequence that would implement a data `operator`. */
+        /* Create a derived sequence that will capture changes from this sequence and apply `operator` to them. */
 
-        let category = schemat.std.Sequence
-        let seq = await category.new({ring: this.ring, operator})
+        let seq = await schemat.std.Sequence.new({ring: this.ring, operator})
         this.derived = [...this.derived || [], seq]
 
         let opts = {ring: this.__ring, broadcast: true}
@@ -159,7 +158,7 @@ export class DataSequence extends Sequence {
        Supports direct inserts (of new items) with auto-assignment and autoincrement of ID.
      */
 
-    get file_tag() { return 'data' }
+    // get file_tag() { return 'main' }
 
     __new__(boot_file = null) {
         if (boot_file) this.blocks = [BootDataBlock.draft({sequence: this}, boot_file)]
