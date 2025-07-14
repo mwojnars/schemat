@@ -33,7 +33,7 @@ export class Transaction {
     */
 
     _staging = new Objects()    // staging area: a set of mutated or newborn objects that wait for being saved to DB
-    _provisional = 0            // highest absolute __provisional_id assigned to newborn objects so far
+    _provisional = 0            // the last __provisional_id assigned to newborn objects so far
 
     // captured DB changes after commit & save:
     _updated = []               // array of {id, data} records received from DB after committing the corresponding objects
@@ -69,10 +69,10 @@ export class Transaction {
         if (prov) {
             let existing = this._staging.get(prov)
             if (existing === obj) return obj
-            assert(!existing, `another newborn object staged at the same provisional ID (${prov})`)
-            this._provisional = Math.max(this._provisional, prov)
+            assert(!existing, `another newborn object staged with the same provisional ID (${prov})`)
+            this._provisional = Math.min(this._provisional, prov)
         }
-        else obj.__self.__provisional_id = ++this._provisional
+        else obj.__self.__provisional_id = --this._provisional
         return this._staging.add(obj)
     }
 
@@ -160,7 +160,7 @@ export class Transaction {
 
         // verify the validity of provisional IDs of all newborn objects
         let provisional = newborn.map(obj => obj.__provisional_id)
-        assert(new Set(provisional).size === provisional.length, `__provisional_id numbers are not unique`)
+        assert(new Set(provisional).size === provisional.length, `provisional IDs are not unique`)
 
         // unwrap objects so that only plain data structures are passed to DB
         let ins_datas = newborn.map(obj => [obj.__neg_provid, obj.__data.__getstate__()])

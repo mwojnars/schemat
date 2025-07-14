@@ -282,7 +282,7 @@ export class WebObject {
 
     SPECIAL properties (some of them are virtual or implemented with getters; they must be commented out not to mask the getters):
 
-    __provisional_id        temporary ID (1,2,3...) of a newly created object not yet saved to DB; only used to differentiate the object
+    __provisional_id        temporary ID (-1,-2,-3...) of a newly created object not yet saved to DB; only used to differentiate the object
                             in a batch of interconnected objects that are being inserted to DB altogether
     __index_id              ID to be used for local indexing of persisted and newborn objects combined: positive value for persisted objects, negative for newborn ones
 
@@ -490,7 +490,7 @@ export class WebObject {
          */
         if (_fail) throw new Error('web objects should be instantiated with category.new() instead of new CLASS()')
         if (id) this.id = id
-        if (provisional) this.__provisional_id = Math.abs(provisional)
+        if (provisional) this.__provisional_id = -Math.abs(provisional)
         // if (schemat._generation) this.__generation = schemat._generation
 
         // mutable=true allows edit operations on the object and prevents server-side caching of the object in Registry;
