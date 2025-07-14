@@ -142,14 +142,27 @@ export class Sequence extends WebObject {
         this.derived = [...this.derived || [], seq]
         await schemat.save({ring: this.__ring, broadcast: true})
 
-        // TODO: block #0 to be deployed as agent .. cluster.$leader.deploy(block) .. node.$master.deploy(agent)
+        // tx.no_rollback  -- whatever was saved to DB cannot be rolled back;
+        // only in this mode it's allowed to perform mutating operations on the cluster within a DB transaction
+        // schemat.tx.epilog(() => {})
 
-        // // boot up this sequence by requesting all source blocks to send initial data
-        // this.blocks.map(block => block.$agent.boot_derived(seq))
+        await seq.boot(this)
 
         // this.blocks.map(b => b.edit.touch()) -- touch all blocks to let them know about the new derived sequence ??
         // schemat.tx.save({broadcast: true})   -- broadcast performed AFTER commit
         // schemat.tx.broadcast()       = commit + broadcast
+    }
+
+    async boot(source) {
+        /* Initialize the content of this derived sequence (warm-up). */
+
+        // deploy block #0 of the destination sequence as an agent and coordinator of the warm-up process
+        let block = this.blocks[0]
+        await schemat.cluster.$leader.deploy(block)
+        // node.$master.deploy(agent)
+
+        // // boot up this sequence by requesting all source blocks to send initial data
+        // this.blocks.map(block => block.$agent.boot_derived(seq))
     }
 }
 
