@@ -327,7 +327,7 @@ export class WebObject {
     get __cid$() { return this.__category$.map(c => c.id) }
 
     get __index_id()   { return this.id || this.__neg_provid }
-    get __neg_provid() { return this.__provisional_id ? -this.__provisional_id : undefined }
+    get __neg_provid() { return this.__provisional_id ? -Math.abs(this.__provisional_id) : undefined }
 
     get __base() {
         let cats = this.__category$
@@ -650,7 +650,7 @@ export class WebObject {
 
         let id = this.id
         if (!id)
-            if (this.__provisional_id) throw new Error(`trying to load an object with provisional ID (${this.__provisional_id})`)
+            if (this.__provisional_id) throw new Error(`trying to load a newborn object (provisional ID = ${this.__provisional_id})`)
             else throw new Error(`trying to load an object with missing ID (id=${id})`)
 
         if (schemat.registry.get_object(id) === this)

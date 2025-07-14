@@ -33,7 +33,7 @@ export class Transaction {
     */
 
     _staging = new Objects()    // staging area: a set of mutated or newborn objects that wait for being saved to DB
-    _provisional = 0            // highest __provisional_id assigned to newborn objects so far
+    _provisional = 0            // highest absolute __provisional_id assigned to newborn objects so far
 
     // captured DB changes after commit & save:
     _updated = []               // array of {id, data} records received from DB after committing the corresponding objects
@@ -160,7 +160,6 @@ export class Transaction {
 
         // verify the validity of provisional IDs of all newborn objects
         let provisional = newborn.map(obj => obj.__provisional_id)
-        assert(provisional.every(prov_id => prov_id > 0))
         assert(new Set(provisional).size === provisional.length, `__provisional_id numbers are not unique`)
 
         // unwrap objects so that only plain data structures are passed to DB
@@ -203,17 +202,6 @@ export class Transaction {
             }
         })
     }
-
-    // restage_inserted(obj) {
-    //     /* Drop __provional_id in `obj` and restage the object under its proper ID.
-    //        Called during/after insertion, right after `obj` received its final .id in a data block.
-    //      */
-    //     assert(obj.id && obj.__provisional_id)
-    //     this._staging.delete(obj.__provisional_id)
-    //     delete obj.__self.__provisional_id
-    //     obj.__meta.edits = []       // `edits` array is uninitialized in newborns
-    //     this._staging.add(obj)
-    // }
 
     revert() { return this._clear() }
 
