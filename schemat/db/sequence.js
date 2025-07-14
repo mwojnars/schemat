@@ -30,7 +30,14 @@ export class Sequence extends WebObject {
     file_tag
     derived         // array of derived sequences that capture data from this one
 
-    // impute_name() { return this.operator?.name }
+    // get file_tag() { return 'index' }
+
+    __setup__() {
+        print('Sequence.__setup__() creating a block')
+        let Block = this.__std.Block
+        this.blocks = [Block.new({sequence: this, storage: 'json'})]
+        // this._print(`tx._staging:`, schemat.tx._staging)
+    }
 
     async __load__() {
         // TODO: drop __load__() and perform lazy loading of blocks
@@ -75,6 +82,18 @@ export class Sequence extends WebObject {
         // return this.blocks[left]
     }
 
+    async put(key, value) {
+        let block = this.find_block(key)
+        // if (!block.is_loaded()) block = await block.load()
+        return block.$agent.put(key, value)
+    }
+
+    async del(key) {
+        let block = this.find_block(key)
+        // if (!block.is_loaded()) block = await block.load()
+        return block.$agent.del(key)
+    }
+
 
     // if (!this.operator.is_loaded()) this._print(`UNLOADED operator ${this.operator}, __meta=${this.operator.__meta}, __data=${this.operator.__data}`)
     encode_key(key) { return this.operator.encode_key(key) }    // app > binary representation
@@ -99,6 +118,22 @@ export class Sequence extends WebObject {
     async erase()   { return Promise.all(this.blocks.map(b => b.$agent.erase())) }
     async flush()   { return Promise.all(this.blocks.map(b => b.$agent.flush())) }
 
+    capture_change(key, prev, next) {
+        /* Update this sequence to apply a [prev > next] change that originated in the source sequence
+           at a binary `key`. Here, `prev` and `next` are source-sequence entities: objects or records.
+           Missing 'prev' represents insertion; missing `next` represents deletion.
+         */
+        // this._print(`capture_change(), binary key [${key}]:\n   ${prev} \n->\n   ${next}`)
+        let [del_records, put_records] = this.operator.derive(key, prev, next)
+
+        // delete old records
+        for (let [key, value] of del_records || [])
+            this.del(key)                   // no need to await, the result is not used by the caller
+
+        // (over)write new records
+        for (let [key, value] of put_records || [])
+            this.put(key, value)
+    }
 
     async 'action.create_derived'(operator) {
         /* Create a derived sequence that would implement a data `operator`. */
@@ -120,44 +155,6 @@ export class Sequence extends WebObject {
 /**********************************************************************************************************************/
 
 export class IndexSequence extends Sequence {
-
-    get file_tag() { return 'index' }
-
-    __setup__() {
-        print('IndexSequence.__setup__() creating a block')
-        let Block = this.__std.Block
-        this.blocks = [Block.new({sequence: this, storage: 'json'})]
-        // this._print(`tx._staging:`, schemat.tx._staging)
-    }
-
-    async put(key, value) {
-        let block = this.find_block(key)
-        // if (!block.is_loaded()) block = await block.load()
-        return block.$agent.put(key, value)
-    }
-
-    async del(key) {
-        let block = this.find_block(key)
-        // if (!block.is_loaded()) block = await block.load()
-        return block.$agent.del(key)
-    }
-
-    capture_change(key, prev, next) {
-        /* Update this sequence to apply a [prev > next] change that originated in the source sequence
-           at a binary `key`. Here, `prev` and `next` are source-sequence entities: objects or records.
-           Missing 'prev' represents insertion; missing `next` represents deletion.
-         */
-        // this._print(`capture_change(), binary key [${key}]:\n   ${prev} \n->\n   ${next}`)
-        let [del_records, put_records] = this.operator.derive(key, prev, next)
-
-        // delete old records
-        for (let [key, value] of del_records || [])
-            this.del(key)                   // no need to await, the result is not used by the caller
-
-        // (over)write new records
-        for (let [key, value] of put_records || [])
-            this.put(key, value)
-    }
 }
 
 /**********************************************************************************************************************/
