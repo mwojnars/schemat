@@ -16,13 +16,16 @@ function _agent_role(id, role = null) {
 
 export class Cluster extends Agent {
 
+    nodes       // array of Node objects representing physical nodes of this cluster
+
     async __load__() {
         if (SERVER) await Promise.all(this.nodes.map(node => node.load()))
     }
 
     async __start__({role} = {}) {
         // assert(role === '$leader')
-        // let nodes = this.nodes
+        // let nodes = [...this.nodes]
+        // return {nodes}
         let node_ids = this.nodes.map(n => n.id)
         return {node_ids}
     }
@@ -67,13 +70,20 @@ export class Cluster extends Agent {
         /* Array of all nodes where `agent` is currently deployed. */
     }
 
+    /***  Agent operations  ***/
+
+    async '$leader.deploy'(agent) {
+        /* Find the least loaded node and deploy `agent` there. */
+
+    }
+
     async '$leader.create_node'(props = {}) {
         /* Create a new Node object and add it to this cluster.
            The newly created node is *first* saved to the DB and only later added to the local state; if we tried to change
            this order, the state would contain a newborn object (no ID) for a while breaking the state's consistency!
 
            GENERAL RULES:
-           1) When doing mixed DB + $state modifications, first update the DB, and the local state only later. In this way,
+           1) When doing mixed DB + $state modifications, first update the DB, and the state only later. In this way,
               if the DB update fails, $state is NOT left with incompatible content. This is important for other agents
               in the cluster which may condition their actions on this agent's state, but can only observe it through the DB.
 
