@@ -28,7 +28,7 @@ export class Sequence extends WebObject {
     blocks          // array of Blocks that make up this sequence, can be empty []
     flush_delay     // delay (in seconds) before flushing all recent updates in a block to disk (to combine multiple consecutive updates in one write)
     file_tag
-    derived         // array of derived sequences whose content is a transformation of this sequence
+    derived         // array of derived sequences that capture data from this one
 
     // impute_name() { return this.operator?.name }
 
@@ -42,6 +42,7 @@ export class Sequence extends WebObject {
             // assert(this.ring.__meta.loading)
 
         await this.operator?.load()
+        if (this.derived) await Promise.all(this.derived.map(seq => seq.load()))
 
         // 1) Doing block.load() in __load__ is safe, because this sequence (ring) is not yet part of the database (!);
         // doing the same later may cause infinite recursion, because the load() request for a block may be directed

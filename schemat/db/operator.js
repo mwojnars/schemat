@@ -218,6 +218,8 @@ export class GroupOperator extends Operator {
        Note that MIN/MAX over records are *not* additive (not aggregations) and should be calculated from original sorted index.
        Alternatively, we'd have to guarantee that the source sequence is append-only (no updates/deletes), and in such case,
        min/max operations could be done via aggregation.
+
+       Aggregation's monitor working at source block performs pre-aggregation and only sends compacted +/- "inc" records.
      */
     source
     function = 'COUNT'      // COUNT, SUM, AVG
