@@ -519,11 +519,6 @@
   name: Ring
   info: Category for data rings, i.e., stackable database layers in a Database
     object.
-  std:
-    DataSequence:
-      "@": 14
-    IndexSequence:
-      "@": 22
   schema:
     main_sequence:
       info: DataSequence that keeps all primary objects of this ring
