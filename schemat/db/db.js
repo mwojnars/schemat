@@ -22,7 +22,7 @@ export class Ring extends WebObject {
 
     file_tag
     main_sequence           // DataSequence containing all primary data of this ring
-    sequences = []          // array of derived sequences (Sequence objects)
+    // sequences = []          // array of derived sequences (Sequence objects)
 
     name                    // human-readable name of this ring for get_ring()
     readonly                // if true, the ring does NOT accept modifications: inserts/updates/deletes
@@ -46,9 +46,11 @@ export class Ring extends WebObject {
         return [...stack, this]
     }
 
-    // get sequences() {
-    //     /* All sequences of this ring inferred from main_sequence by .derived links. */
-    // }
+    get sequences() {
+        /* All sequences of this ring inferred from main_sequence by following .derived links. */
+        assert(this.main_sequence.is_loaded())
+        return this.main_sequence.derived || []
+    }
 
     get operators() {
         /* Map of all operators in this ring stack keyed by operator's name. */
@@ -117,7 +119,7 @@ export class Ring extends WebObject {
         await super.__load__()
         await this.base_ring?.load()
         await this.main_sequence.load()
-        for (let seq of this.sequences) await seq.load()
+        // for (let seq of this.sequences) await seq.load()
 
         this.validate_zones()
     }
