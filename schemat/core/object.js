@@ -571,7 +571,6 @@ export class WebObject {
         let obj = this._new([], props, args, {draft: true})
         await obj.__draft__(...args)
         obj.__meta.active = true        // assumed to be active already after __draft__(), no _initialize/__load__/_activate()
-        obj.__meta.draft = true
         return obj
     }
 
@@ -637,8 +636,6 @@ export class WebObject {
            as indicated by __seal are linked. The data can only be loaded ONCE for a given WebObject instance due to immutability.
            If you want to refresh the data, create a new instance with .reload().
          */
-        if (this.__meta.draft) return this
-
         let {active, loading} = this.__meta
 
         // data is loaded or being loaded right now? wait for the previous call to complete instead of starting a new one
