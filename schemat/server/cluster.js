@@ -27,7 +27,7 @@ export class Cluster extends Agent {
     }
 
     async __start__({role} = {}) {
-        // assert(role === '$leader')
+        assert(role === '$leader')
         // let nodes = [...this.nodes]
         // return {nodes}
         let node_ids = this.nodes.map(n => n.id)

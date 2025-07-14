@@ -51,9 +51,6 @@ export class Agent extends WebObject {
                     Plain IDs should be included instead, to be converted into fresh objects upon use, if needed.
          */
     }
-    async __stop__(state) {
-        /* Release any local resources that were acquired during __start__() and are passed here in the `state` of execution. */
-    }
 
     async __restart__(stop) {
         /* Called every time when agent object is reloaded in its frame. The default implementation stops
@@ -65,6 +62,10 @@ export class Agent extends WebObject {
          */
         await stop()
         return this.__start__(this.$frame)
+    }
+
+    async __stop__(state) {
+        /* Stop the agent's execution. Release any local resources that were acquired during __start__() or __restart__(). */
     }
 
     async app_context(fn, caller_ctx = null) {
