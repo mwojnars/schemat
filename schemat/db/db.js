@@ -46,9 +46,19 @@ export class Ring extends WebObject {
     }
 
     get sequences() {
-        /* All sequences of this ring inferred from main_sequence by following .derived links. */
-        assert(this.main_sequence.is_loaded())
-        return [this.main_sequence, ...this.main_sequence.derived || []]
+        /* All sequences of this ring inferred from main_sequence by following .derived links, with main_sequence included as sequences[0]. */
+        let seqs = [this.main_sequence]
+
+        // supports single-source derived sequences (indexes & aggregations) without cycles
+        for (let i = 0; i < seqs.length; i++) {
+            let seq = seqs[i]
+            assert(seq.is_loaded())
+            seqs.push(...seq.derived || [])
+        }
+        return seqs
+
+        // assert(this.main_sequence.is_loaded())
+        // return [this.main_sequence, ...this.main_sequence.derived || []]
     }
 
     get operators() {

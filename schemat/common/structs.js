@@ -196,6 +196,10 @@ export class Objects {
      */
     _map = new Map()
 
+    constructor(objects = []) {
+        for (let obj of objects) this.add(obj)
+    }
+
     add(obj)        { this._map.set(obj.__index_id, obj); return obj }  // return value is different than in Set
     delete(obj)     { return this._map.delete(typeof obj === 'object' ? obj.__index_id : obj) }
     get(obj)        { return this._map.get(typeof obj === 'object' ? obj.__index_id : obj) }    // may return a different instance of the same web object, not `obj`
