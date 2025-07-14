@@ -9,8 +9,8 @@ import {data_schema, RecordSchema} from "./records.js";
 /**********************************************************************************************************************/
 
 export class Operator extends WebObject {
-    /* Specification of a data sequence operator: source operator(s) + schema of output records + access methods (scan/min/max).
-       The same operator can be applied to multiple rings, producing a different sequence in each ring.
+    /* Specification of a data processing operator: schema of output records + derivation methods.
+       The same operator can be applied to multiple rings, producing different physical sequences in each ring.
      */
     key_fields
     val_fields
@@ -193,10 +193,10 @@ export class ObjectIndexOperator extends IndexOperator {
 
 /**********************************************************************************************************************/
 
-export class GroupOperator extends Operator {
+export class AggregationOperator extends Operator {
     /* Map continuous subgroups of source records onto single records in output sequence, doing aggregation of the original
        group along the way. The group is defined as a range of records that share the same key on all fields
-       *except* the last one. In other words, merging and aggregation is done over the last field of the key,
+       *except* the last one. In other words, merging and aggregation is always done over the last field of the key,
        and the output key is made by removing the last field from the source key.
 
        Aggregation function(s) must be additive (reversible): it must allow adding/removing individual source records from the group,
@@ -208,7 +208,7 @@ export class GroupOperator extends Operator {
 
        Aggregation's monitor working at source block performs pre-aggregation and only sends compacted +/- "inc" records.
      */
-    source
+
     function = 'COUNT'      // COUNT, SUM, AVG
     sum_type                // Type of the sum's output value: INTEGER(), NUMBER(), BIGINT(), ...
     sum_precision           // input value is shifted to the left by this no. of decimal digits before SUM
@@ -221,8 +221,8 @@ export class GroupOperator extends Operator {
     // aggregations = ['COUNT', 'SUM(views) AS sum_views', ...]
 }
 
-// export class COUNT_Operator extends GroupOperator {}
-// export class SUM_Operator extends GroupOperator {}
-// export class AVG_Operator extends GroupOperator {}
+// export class COUNT_Operator extends AggregationOperator {}
+// export class SUM_Operator extends AggregationOperator {}
+// export class AVG_Operator extends AggregationOperator {}
 
 

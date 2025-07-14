@@ -849,9 +849,6 @@
       required: true
       blank: ""
       "@": schemat/types/type.js:STRING
-    source:
-      info: source Sequence that feeds data to this index
-      "@": schemat/types/type.js:REF
     key_fields:
       info: Names and data types of fields comprising the (composite) key of this
         operator's output records. If missing, this property is computed
