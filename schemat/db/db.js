@@ -270,16 +270,17 @@ export class BootRing extends Ring {
      */
     file        // boot file path
 
-    __new__() {}
-    __draft__() {
-        // the draft object here is created from a class and lacks __category; only allowed during boot
-        this.main_sequence = DataSequence.draft_sync({ring: this}, this.file)
-    }
-
-    // async __draft__() {
+    // __new__() {
     //     // the draft object here is created from a class and lacks __category; only allowed during boot
-    //     this.main_sequence = await DataSequence.draft({ring: this}, this.file)
+    //     this.main_sequence = DataSequence.draft_sync({ring: this}, this.file)
     // }
+
+    __new__() {}
+
+    async __draft__() {
+        // the draft object here is created from a class and lacks __category; only allowed during boot
+        this.main_sequence = await DataSequence.draft({ring: this}, this.file)
+    }
 
     async select(id, req)  {
         // print('boot ring select()')
