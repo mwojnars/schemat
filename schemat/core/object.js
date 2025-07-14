@@ -979,11 +979,14 @@ export class WebObject {
         // TODO: if `prev` object is given, compare property values (x===y) before type.validate() and skip if no change detected
         let data = this.__data
 
-        // make sure that __data does NOT contain special props: id, __meta, __self, __proxy, __status, etc.
-        for (let prop of data._keys.keys())
+        // validate each individual property; __data._entries may get directly modified here... (!)
+        for (let prop of data._keys.keys()) {
+
+            // make sure the property name is not missing nor reserved: id, __meta, __self, __proxy, __status, etc.
+            if (!prop) throw new ValidationError(`missing property name (${prop === '' ? `''` : prop})`)
             if (WebObject.RESERVED.has(prop)) throw new ValidationError(`reserved property name found: '${prop}'`)
 
-        // validate each individual property in __data ... __data._entries may get directly modified (!)
+        }
 
         for (let loc = 0; loc < data.length; loc++) {
             let entry = data._entries[loc]
