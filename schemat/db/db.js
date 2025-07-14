@@ -247,8 +247,6 @@ export class Ring extends WebObject {
         await this.save(opts)
 
         // TODO: block #0 to be deployed as agent .. cluster.$leader.deploy(block) .. node.$master.deploy(agent)
-        // TODO: main_sequence accessible as 'main' in .sequences
-        // TODO: main_sequence > main_sequence ... .sequences turned into getter, inferred from main_sequence by .derived links
         // TODO: set `source` in operators
         // // boot up this sequence by requesting all source blocks to send initial data
         // let src_operator = operator.source

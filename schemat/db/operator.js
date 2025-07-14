@@ -48,19 +48,6 @@ export class DataOperator extends Operator {
 export class IndexOperator extends Operator {
     /* Operator that pulls data from a source sequence and creates records in a destination sequence. */
 
-    // source                      // Operator that this index is derived from
-    //
-    // __new__(source) {
-    //     this.source = source
-    //     assert(source instanceof Operator)
-    //     source.add_derived(this)                // make connection: data > index, for change propagation
-    // }
-    //
-    // get source_schema() {
-    //     throw new Error('not implemented')
-    //     // return this.source.record_schema
-    // }
-
     derive(key, prev, next) {
         /* Calculate what records should be deleted or put in the destination sequence in response to [prev > next] change
            in the source sequence that occurred at a binary `key`. Return a pair, [del_records, put_records], where both

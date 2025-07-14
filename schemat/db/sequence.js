@@ -54,8 +54,9 @@ export class Sequence extends WebObject {
         // return Promise.all(this.blocks.map(b => b.load({ring: this.__ring})))
     }
 
-    'action.add_derived'(seq) {
-        /* Add a derived sequence that will monitor this sequence and capture changes. */
+    'action.create_derived'(operator) {
+        /* Create a derived sequence whose type is defined by `operator`. */
+
         this.derived = [...this.derived || [], seq]
         // this.blocks.map(b => b.edit.touch()) -- touch all blocks to let them know about the new derived sequence ??
         // schemat.tx.save({broadcast: true})   -- broadcast performed AFTER commit
