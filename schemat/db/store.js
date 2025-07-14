@@ -24,7 +24,7 @@ function createFileIfNotExists(filename, fs) {
  */
 
 export class Store {
-    /* Base class for local data storage. Every block has at least one local store to keep its records. */
+    /* Base class for local data storage. Every Block instance has at least one local store to save its records. */
 
     block
     filename
@@ -65,8 +65,11 @@ export class Store {
     }
 }
 
+
+/**********************************************************************************************************************/
+
 export class MemoryStore extends Store {
-    /* All records stored in a Map in memory. Possibly synchronized with a file on disk (implemented in subclasses). */
+    /* Base class for stores that load all records at once and keep them in memory as a Map. */
 
     _records = new BinaryMap()       // preloaded records, {binary-key: json-data}; unordered, sorting is done during scan()
 
@@ -105,14 +108,44 @@ export class MemoryStore extends Store {
     }
 }
 
-/**********************************************************************************************************************
- **
- **  YAML DATA
- **
- */
+/**********************************************************************************************************************/
+
+export class JsonStore extends MemoryStore {
+    /* Binary key-value records stored in a .jl file (JSON Lines) in decoded form. */
+
+    open() {
+        /* Load records from this.filename file into this.records. */
+        createFileIfNotExists(this.filename, fs)
+
+        let content = fs.readFileSync(this.filename, 'utf8')
+        let lines = content.split('\n').filter(line => line.trim().length > 0)
+        let records = lines.map(line => JSON.parse(line))
+
+        this._records.clear()
+
+        for (let [key, value] of records)
+            this._records.set(this.block.encode_key(key), value ? JSON.stringify(value) : '')
+            // this._records.set(Uint8Array.from(key), value ? JSON.stringify(value) : '')
+    }
+
+    async _flush() {
+        /* Save the entire database (this.records) to a file. */
+        // print(`YamlIndexStorage flushing ${this._records.size} records to ${this.filename}...`)
+
+        let lines = [...this.scan()].map(([key_binary, val_json]) => {
+            let key = this.block.decode_key(key_binary)
+            let key_json = JSON.stringify(key)  //Array.from(key_binary))
+            return val_json ? `[${key_json}, ${val_json}]` : `[${key_json}]`
+        })
+        fs.writeFileSync(this.filename, lines.join('\n') + '\n', 'utf8')
+    }
+}
+
+
+/**********************************************************************************************************************/
 
 export class YamlDataStore extends MemoryStore {
-    /* Web objects stored in a YAML file, with object ID saved as .id with other attributes. */
+    /* Web objects stored in a YAML file, with object ID saved as .id with other attributes. For use in DataBlock. */
 
     open() {
         /* Load records from this block's file. */
@@ -175,42 +208,4 @@ export class YamlDataStore extends MemoryStore {
         fs.writeFileSync(this.filename, out, 'utf8')
     }
 }
-
-/**********************************************************************************************************************
- **
- **  JSON INDEX
- **
- */
-
-export class JsonIndexStore extends MemoryStore {
-    /* Binary key-value records stored in a .jl file (JSON Lines) in decoded form. */
-
-    open() {
-        /* Load records from this.filename file into this.records. */
-        createFileIfNotExists(this.filename, fs)
-
-        let content = fs.readFileSync(this.filename, 'utf8')
-        let lines = content.split('\n').filter(line => line.trim().length > 0)
-        let records = lines.map(line => JSON.parse(line))
-
-        this._records.clear()
-
-        for (let [key, value] of records)
-            this._records.set(this.block.encode_key(key), value ? JSON.stringify(value) : '')
-            // this._records.set(Uint8Array.from(key), value ? JSON.stringify(value) : '')
-    }
-
-    async _flush() {
-        /* Save the entire database (this.records) to a file. */
-        // print(`YamlIndexStorage flushing ${this._records.size} records to ${this.filename}...`)
-
-        let lines = [...this.scan()].map(([key_binary, val_json]) => {
-            let key = this.block.decode_key(key_binary)
-            let key_json = JSON.stringify(key)  //Array.from(key_binary))
-            return val_json ? `[${key_json}, ${val_json}]` : `[${key_json}]`
-        })
-        fs.writeFileSync(this.filename, lines.join('\n') + '\n', 'utf8')
-    }
-}
-
 

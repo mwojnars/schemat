@@ -175,8 +175,8 @@ export class BinaryBlock extends Block {
     /* A block of a derived sequence: index, aggregation. */
 
     async _detect_store_class(format) {
-        let {JsonIndexStore} = await import('./store.js')
-        if (format === 'json') return JsonIndexStore
+        let {JsonStore} = await import('./store.js')
+        if (format === 'json') return JsonStore
         return super._detect_store_class(format)
     }
 }
