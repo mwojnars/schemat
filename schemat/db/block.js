@@ -113,7 +113,9 @@ export class Block extends Agent {
         return `${schemat.node.file_path}/${this.file_tag}.${ext}`
     }
 
-    _detect_store_class(format) {
+    async _detect_store_class(format) {
+        let {JsonStore} = await import('./store.js')
+        if (format === 'json') return JsonStore
         throw new Error(`unsupported store type '${format}' in ${this}`)
     }
 
@@ -174,11 +176,6 @@ export class Block extends Agent {
 export class BinaryBlock extends Block {
     /* A block of a derived sequence: index, aggregation. */
 
-    async _detect_store_class(format) {
-        let {JsonStore} = await import('./store.js')
-        if (format === 'json') return JsonStore
-        return super._detect_store_class(format)
-    }
 }
 
 
