@@ -241,20 +241,13 @@ export class Ring extends WebObject {
         if (this.readonly) throw new Error("the ring is read-only")
         assert(this.__ring)
 
-        // this.main_sequence.action.create_derived(operator)
+        this.main_sequence.action.create_derived(operator)
 
-        let opts = {ring: this.__ring, broadcast: true}
-        let Sequence = this.__std.Sequence
-        let seq = await Sequence.new({ring: this, operator}).save(opts)
-        this.sequences = [...this.sequences, seq]
-        await this.save(opts)
-
-        // TODO: block #0 to be deployed as agent .. cluster.$leader.deploy(block) .. node.$master.deploy(agent)
-        // TODO: set `source` in operators
-        // // boot up this sequence by requesting all source blocks to send initial data
-        // let src_operator = operator.source
-        // let src_sequence = this.sequence_by_operator.get(src_operator.id)
-        // src_sequence.blocks.map(block => block.$agent.boot_derived(seq))
+        // let opts = {ring: this.__ring, broadcast: true}
+        // let Sequence = this.__std.Sequence
+        // let seq = await Sequence.new({ring: this, operator}).save(opts)
+        // this.sequences = [...this.sequences, seq]
+        // await this.save(opts)
     }
 
     async rebuild_indexes() {

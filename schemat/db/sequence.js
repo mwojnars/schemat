@@ -144,6 +144,11 @@ export class Sequence extends WebObject {
         let opts = {ring: this.__ring, broadcast: true}
         await this.save(opts)
 
+        // TODO: block #0 to be deployed as agent .. cluster.$leader.deploy(block) .. node.$master.deploy(agent)
+
+        // // boot up this sequence by requesting all source blocks to send initial data
+        // this.blocks.map(block => block.$agent.boot_derived(seq))
+
         // this.blocks.map(b => b.edit.touch()) -- touch all blocks to let them know about the new derived sequence ??
         // schemat.tx.save({broadcast: true})   -- broadcast performed AFTER commit
         // schemat.tx.broadcast()       = commit + broadcast
