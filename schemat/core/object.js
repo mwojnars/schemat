@@ -326,8 +326,7 @@ export class WebObject {
     get __cid()  { return this.__category?.id }
     get __cid$() { return this.__category$.map(c => c.id) }
 
-    get __index_id()   { return this.id || this.__neg_provid }
-    get __neg_provid() { return this.__provisional_id ? -Math.abs(this.__provisional_id) : undefined }
+    get __index_id()   { return this.id || this.__provisional_id }
 
     get __base() {
         let cats = this.__category$
@@ -490,7 +489,7 @@ export class WebObject {
          */
         if (_fail) throw new Error('web objects should be instantiated with category.new() instead of new CLASS()')
         if (id) this.id = id
-        if (provisional) this.__provisional_id = -Math.abs(provisional)
+        if (provisional) this.__provisional_id = provisional
         // if (schemat._generation) this.__generation = schemat._generation
 
         // mutable=true allows edit operations on the object and prevents server-side caching of the object in Registry;

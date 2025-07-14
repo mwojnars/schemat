@@ -275,9 +275,9 @@ export class DataBlock extends Block {
 
         // assign IDs and convert entries to objects; each object is instantiated for validation,
         // but not activated: __load__() & _activate() are NOT executed (performance)
-        let objects = await Promise.all(entries.map(([npid, data]) => {
+        let objects = await Promise.all(entries.map(([provisional, data]) => {
             let _id = id || this._assign_id(opts)
-            return WebObject.from_data(_id, data, {mutable: true, activate: false, provisional: -npid})
+            return WebObject.from_data(_id, data, {mutable: true, activate: false, provisional})
         }))
         let ids = objects.map(obj => obj.id)
 
@@ -320,10 +320,10 @@ export class DataBlock extends Block {
 
         let rectify = (ref) => {
             if (!(ref instanceof WebObject) || ref.id) return
-            let npid = ref.__neg_provid
-            if (!npid) throw new Error(`reference does not contain an ID nor provisional ID`)
-            let sub = subs.get(npid)
-            if (!sub) throw new Error(`provisional ID (${npid}) is invalid`)
+            let prov = ref.__provisional_id
+            if (!prov) throw new Error(`reference does not contain an ID nor provisional ID`)
+            let sub = subs.get(prov)
+            if (!sub) throw new Error(`provisional ID (${prov}) is invalid`)
             return typeof sub === 'object' ? sub : WebObject.stub(sub)
         }
         for (let struct of structs) Struct.transform(struct, rectify)
