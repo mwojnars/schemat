@@ -629,12 +629,11 @@ export class WebObject {
     /***  Loading & initialization  ***/
 
     async load(opts = {}) {
-        /* Load full __data of this object from DB, if not loaded yet. Return this object, *unless* custom DB options for
-           loading are included in `opts` (see _load() below) which may enforce creating a new instance.
-           For a newborn object (__data already present), only perform its *activation* (initialization), no data loading.
+        /* Load full __data from DB, if not loaded yet, and perform *activation* (initialization) of this object.
+           Return self, unless custom DB options (`opts`) enforce creating a new instance, see _load() below.
            If sealed=true and __seal is present in the object, the exact versions of dependencies (prototypes, categories)
-           as indicated by __seal are linked. The data can only be loaded ONCE for a given WebObject instance due to immutability.
-           If you want to refresh the data, create a new instance with .reload().
+           as indicated by __seal are linked. The data is only loaded ONCE for a given WebObject instance due to immutability,
+           and repeated .load() calls have no effect. To refresh the data, create a new instance with .reload().
          */
         let {active, loading} = this.__meta
 
@@ -650,7 +649,9 @@ export class WebObject {
             // })
 
         let id = this.id
-        if (id && schemat.registry.get_object(id) === this)
+        if (!id) throw new Error(`trying to load object with missing ID (id=${id})`)
+
+        if (schemat.registry.get_object(id) === this)
             schemat._loading.set(id, loading)
             // schemat._loading.set(id, loading.catch(() => {}).then(() => {schemat._loading.delete(id); return this}))
 
@@ -662,7 +663,6 @@ export class WebObject {
 
         let {sealed = true, activate = true, custom_opts_allowed = false, ...db_opts} = opts
         let id = this.id
-        // if (!id) throw new Error(`trying to load content into object with missing ID (id=${id})`)
 
         // this._print(`_load() ...`)
         schemat.before_data_loading(this)
@@ -701,7 +701,7 @@ export class WebObject {
             throw ex
 
         } finally {
-            if (id && schemat._loading.get(id) === this.__meta.loading)
+            if (schemat._loading.get(id) === this.__meta.loading)
                 schemat._loading.delete(id)
             this.__meta.loading = false                     // cleanup to allow another load attempt, even after an error
             schemat.after_data_loading(this)
