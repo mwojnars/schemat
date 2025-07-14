@@ -171,6 +171,11 @@ export class DataSequence extends Sequence {
         if (boot_file) this.blocks = [BootDataBlock.draft({sequence: this}, boot_file)]
     }
 
+    // async __draft__(boot_file) {
+    //     this.blocks = [await BootDataBlock.draft({sequence: this}, boot_file)]
+    //     assert(this.blocks[0] instanceof BootDataBlock)
+    // }
+
     async __setup__() {
         let DataBlock = schemat.std.DataBlock
         this.blocks = [DataBlock.new({sequence: this, storage: 'yaml'})]

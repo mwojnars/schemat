@@ -241,7 +241,7 @@ export class Ring extends WebObject {
         if (this.readonly) throw new Error("the ring is read-only")
         assert(this.__ring)
 
-        this.main_sequence.action.create_derived(operator)
+        await this.main_sequence.action.create_derived(operator)
 
         // let opts = {ring: this.__ring, broadcast: true}
         // let Sequence = this.__std.Sequence
@@ -274,6 +274,11 @@ export class BootRing extends Ring {
         // the draft object here is created from a class and lacks __category; only allowed during boot
         this.main_sequence = DataSequence.draft({ring: this}, this.file)
     }
+
+    // async __draft__() {
+    //     // the draft object here is created from a class and lacks __category; only allowed during boot
+    //     this.main_sequence = await DataSequence.draft({ring: this}, this.file)
+    // }
 
     async select(id, req)  {
         // print('boot ring select()')
@@ -558,11 +563,15 @@ export class BootDatabase extends Database {
         /* Create bootstrap rings according to `ring_specs` specification. */
 
         // assert(this.is_newborn())           // open() is a mutating operation, it can only be called on a newborn object (not in DB)
-        print(`creating bootstrap database...`)
+        schemat._print(`creating bootstrap database...`)
         let top
         for (let spec of ring_specs)
-            top = await BootRing.draft({...spec, base_ring: top}).load()
+            top = await BootRing.draft({...spec, base_ring: top}) //.load()
         this.top_ring = top
+
+        await top.load()
+        // await this.load()             // run __load__() and activate the database object
+        schemat._print(`creating bootstrap database... done`)
     }
 
     add_ring(ring) {

@@ -555,21 +555,29 @@ export class WebObject {
 
         obj.__new__(...args)
 
-        if (!draft)                     // schemat.tx is missing during boot; that's why draft objects can't be staged
+        if (!draft)                     // schemat.tx is missing during boot, that's why draft objects can't be staged
             if (schemat.tx) schemat.stage(obj)
             else throw new Error(`cannot create a newborn object when outside a transaction`)
 
         return obj
     }
 
-    static draft(props, ...args) {
-        /* Create a temporary newborn object that is properly initialized via its class's __new__(), but is NOT intended
-           for insertion to DB (should not be registered in transaction) and does NOT have any __category assigned,
-           which is incorrect in normal circumstances. This method should only be used for internal purposes, typically
-           during bootstrap, when category objects cannot be loaded yet and draft instances must be created from classes not categories.
+    static async draft(props, ...args) {
+        /* Create a temporary newborn object that is properly initialized via its class's __new__(), and additionally
+           its async __draft__(...args) was called, but the object is NOT intended for insertion to DB: is not registered
+           in transaction and does NOT have any __category assigned, which is incorrect in normal circumstances.
+           This method should only be used for internal purposes, typically during bootstrap, when category objects
+           cannot be loaded yet and draft instances must be created from classes not categories.
          */
         return this._new([], props, args, {draft: true})
+        // let obj = this._new([], props, args, {draft: true})
+        // await obj.__draft__(...args)
+        // obj.__meta.active = true        // assumed to be active already after __draft__(), no _initialize/__load__/_activate()
+        // obj.__meta.draft = true
+        // return obj
     }
+
+    // __draft__() {}
 
     static async from_data(id, data, {mutable, provisional, ...load_opts} = {}) {
         /* Create a new WebObject instance given the `data` with the object's content (a Catalog or encoded JSONx string). */
@@ -631,6 +639,8 @@ export class WebObject {
            as indicated by __seal are linked. The data can only be loaded ONCE for a given WebObject instance due to immutability.
            If you want to refresh the data, create a new instance with .reload().
          */
+        // if (this.__meta.draft) return this
+
         let {active, loading} = this.__meta
 
         // data is loaded or being loaded right now? wait for the previous call to complete instead of starting a new one
@@ -657,6 +667,7 @@ export class WebObject {
 
         let {sealed = true, activate = true, custom_opts_allowed = false, ...db_opts} = opts
         let id = this.id
+        // if (!id) throw new Error(`trying to load content into object with missing ID (id=${id})`)
 
         // this._print(`_load() ...`)
         schemat.before_data_loading(this)

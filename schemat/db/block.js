@@ -251,7 +251,7 @@ export class DataBlock extends Block {
         let key = this.encode_id(id)
         let data = await this.$state.store.get(key)     // JSON string
         if (data) return this._annotate(data)
-        return await this._move_down(id, req).select(id, req)
+        return this._move_down(id, req).select(id, req)
     }
 
     async '$agent.insert'(entries, {id, ...opts} = {}) {
@@ -538,6 +538,14 @@ export class BootDataBlock extends DataBlock {
 
     _store      // Store for this block's records
 
+    // async __draft__(path) {
+    //     // await super.__load__()
+    //     let format = this._detect_format(path)
+    //     this._store = await this._create_store(format, path)
+    //     await this._store.open()
+    //     schemat._print(`BootDataBlock.__draft__() done`)
+    // }
+
     __new__(path) {
         this._path = path
     }
@@ -558,7 +566,7 @@ export class BootDataBlock extends DataBlock {
         await this._store.open()
     }
 
-    async select(id, req) { return this.$_wrap.select({store: this._store}, id, req) }
+    async select(id, req) { return await this.$_wrap.select({store: this._store}, id, req) }
 
 }
 
