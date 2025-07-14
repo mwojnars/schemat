@@ -352,7 +352,7 @@ export class WebObject {
 
     get __ancestors_ids() {
         /* A Set of all IDs in the __prototype inheritance chain/graph of this object, including self. */
-        return new Set(this.__ancestors)
+        return new Set(this.__ancestors.map(obj => obj.id))
     }
 
     get __assets()  {
