@@ -573,11 +573,6 @@ export class BootDatabase extends Database {
         schemat._print(`creating bootstrap database... done`)
     }
 
-    // add_ring(ring) {
-    //     ring.base_ring = this.top_ring
-    //     this.top_ring = ring
-    // }
-
     insert() {assert(false)}
     scan() {assert(false)}
 }
