@@ -54,16 +54,6 @@ export class Sequence extends WebObject {
         // return Promise.all(this.blocks.map(b => b.load({ring: this.__ring})))
     }
 
-    'action.create_derived'(operator) {
-        /* Create a derived sequence whose type is defined by `operator`. */
-
-        this.derived = [...this.derived || [], seq]
-        // this.blocks.map(b => b.edit.touch()) -- touch all blocks to let them know about the new derived sequence ??
-        // schemat.tx.save({broadcast: true})   -- broadcast performed AFTER commit
-        // schemat.tx.broadcast()       = commit + broadcast
-    }
-
-
     find_block(key_binary) {
         // print('key_binary:', key_binary)
         if (!this.splits?.length) return this.blocks[0]
@@ -108,6 +98,16 @@ export class Sequence extends WebObject {
 
     async erase()   { return Promise.all(this.blocks.map(b => b.$agent.erase())) }
     async flush()   { return Promise.all(this.blocks.map(b => b.$agent.flush())) }
+
+
+    async 'action.create_derived'(operator) {
+        /* Create a derived sequence whose type is defined by `operator`. */
+
+        this.derived = [...this.derived || [], seq]
+        // this.blocks.map(b => b.edit.touch()) -- touch all blocks to let them know about the new derived sequence ??
+        // schemat.tx.save({broadcast: true})   -- broadcast performed AFTER commit
+        // schemat.tx.broadcast()       = commit + broadcast
+    }
 }
 
 
