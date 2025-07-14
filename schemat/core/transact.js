@@ -101,7 +101,7 @@ export class Transaction {
     }
 
     async save_all(opts) {
-        /* Save all pending changes in _staging, plus any others that might have been created while saving.
+        /* Save all pending changes in _staging, plus any other that might have been created while saving.
            If opts.discard = true, all objects from _staging (not only the pending ones) get discarded, so they cannot be mutated later.
          */
         let {discard} = opts
@@ -115,12 +115,13 @@ export class Transaction {
     async save(_opts = {}, objects = null) {
         /* Save changes to the database: either all those staged/pending, or the ones in `objects` (can be a single object).
            If `objects` is missing, save() is equivalent to save_all(): saves all pending changes AND extends to those
-           created while saving. Otherwise, only `objects` are saved.
+           created while saving. Otherwise, only `objects` are saved, PLUS all newborn objects if `objects` contain
+           at least one instance to be inserted or updated.
 
            IMPORTANT:
            It is possible and allowed that while saving changes to DB, the transaction is modified by new mutations
            occurring inside data blocks. For example, new Revision objects may be created while updating a staged object.
-           This means that the content of _staging may change in the background during execution of db.*() calls below.
+           This means that the content of _staging may change in the background during execution of db.submit() below.
            Importantly, there is a barrier between the transaction and the DB: no web objects are passed to db.*() methods,
            and no objects are returned from them, only plain data structures like arrays of IDs or raw data contents.
            Also, the mutated objects are first removed from _staging, so the DB has no access to them and cannot modify them:
@@ -132,9 +133,6 @@ export class Transaction {
         if (!objects) return this.save_all(_opts)
         if (!Array.isArray(objects)) objects = [objects]
 
-        for (let obj of objects)        // every object must have been staged already
-            if (!this.has_exact(obj)) throw new Error(`object ${obj} was not staged in transaction so it cannot be saved`)
-
         // discard objects that are newborn and marked for deletion at the same time
         objects = objects.filter(obj => {
             if (obj.__provisional_id && obj.__status === DELETED) {
@@ -143,6 +141,10 @@ export class Transaction {
             }
             return true
         })
+
+        // check that every object has been staged
+        for (let obj of objects)
+            if (!this.has_exact(obj)) throw new Error(`object ${obj} was not staged in transaction so it cannot be saved`)
 
         // objects.forEach(obj => {
         //     if (obj.id && !obj.__meta.edits) {
