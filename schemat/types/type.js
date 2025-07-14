@@ -591,7 +591,7 @@ export class REF extends Type {
 
         let {category, exact} = this.options
         if (category) {
-            if (!obj.is_loaded()) throw new ValueError(`cannot verify whether ${obj} belongs to category ${category} because it is not loaded`)
+            if (!obj.is_loaded()) throw new ValueError(`cannot verify if ${obj} belongs to category ${category} because the object is not loaded`)
             if (!exact && !obj.instanceof(category)) throw new ValueError(`object ${obj} does not belong to category ${category}`)
             if (exact && !obj.__category?.is(category)) throw new ValueError(`object ${obj} does not belong exactly to category ${category}`)
         }

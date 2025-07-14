@@ -293,6 +293,8 @@ export class WebObject {
 
     __prototype             direct ancestor (prototype) of this object; there can be multiple __prototype$ for an object
     __ancestors             array of all ancestors, deduplicated and linearized, with `this` at the first position
+    __ancestors_ids         a Set of all IDs in the __prototype inheritance chain/graph of this object, including self; for .instanceof() checks
+
     __std                   shortcut for __category.std: standard related objects (categories) that might be needed in __new__(), __setup__() etc
 
     __class                 JS class (or its class path) for this item; assigned AFTER object creation during .load()
@@ -346,6 +348,11 @@ export class WebObject {
         // http://python-history.blogspot.com/2010/06/method-resolution-order.html
         let candidates = this.__prototype$.map(proto => proto.__ancestors)
         return [this, ...unique(concat(candidates))]
+    }
+
+    get __ancestors_ids() {
+        /* A Set of all IDs in the __prototype inheritance chain/graph of this object, including self. */
+        return new Set(this.__ancestors)
     }
 
     get __assets()  {
@@ -954,18 +961,19 @@ export class WebObject {
         */
         // TODO: use cachable this.__ancestors_ids instead
         if (!this.is_loaded()) throw new Error(`object ${this} is not loaded, cannot perform instanceof()`)
-        return this.__category$.some(cat => cat.inherits_from(category))
+        return this.__category$.some(cat => cat.__ancestors_ids.has(category.id))
+        // return this.__category$.some(cat => cat.inherits_from(category))
     }
 
-    inherits_from(parent) {
-        /* Return true if `this` inherits from `parent` through the web-object prototype chain (NOT javascript prototypes).
-           True if parent==this. All comparisons done by ID.
-         */
-        if (this.is(parent)) return true
-        for (const proto of this.__prototype$)
-            if (proto.inherits_from(parent)) return true
-        return false
-    }
+    // inherits_from(parent) {
+    //     /* Return true if `this` inherits from `parent` via __prototype chain (NOT javascript prototypes).
+    //        True if parent==this. All comparisons done by ID.
+    //      */
+    //     if (this.is(parent)) return true
+    //     for (const proto of this.__prototype$)
+    //         if (proto.inherits_from(parent)) return true
+    //     return false
+    // }
 
     validate() {
         let data = this.__data
