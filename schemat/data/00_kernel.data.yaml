@@ -257,18 +257,16 @@
       "@": 7
     ObjectSpace:
       "@": 8
-    IndexOperator:
-      "@": 15
-    ObjectIndexOperator:
-      "@": 16
-    Node:
-      "@": 21
-    IndexSequence:
-      "@": 22
     Database:
       "@": 11
     Ring:
       "@": 12
+    IndexOperator:
+      "@": 15
+    ObjectIndexOperator:
+      "@": 16
+    Sequence:
+      "@": 13
     DataSequence:
       "@": 14
     DataBlock:
@@ -277,6 +275,8 @@
       "@": 18
     DataOperator:
       "@": 17
+    Node:
+      "@": 21
 - id: 2
   name: Application
   info: Top-level URL routing + global configuration of the application.
@@ -593,7 +593,7 @@
     "@": 1
 - id: 13
   name: Sequence
-  info: Base category for sequences of key-value records, either data or indexes.
+  info: Sequences of key-value records, either data objects or derived.
   schema:
     ring:
       info: parent Ring of this sequence

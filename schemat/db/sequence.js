@@ -138,7 +138,7 @@ export class Sequence extends WebObject {
     async 'action.create_derived'(operator) {
         /* Create a derived sequence that would implement a data `operator`. */
 
-        let category = this.__std.IndexSequence
+        let category = this.__std.Sequence
         let seq = await category.new({ring: this.ring, operator})
         this.derived = [...this.derived || [], seq]
 

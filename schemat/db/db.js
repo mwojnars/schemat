@@ -244,8 +244,8 @@ export class Ring extends WebObject {
         // this.main_sequence.action.create_derived(operator)
 
         let opts = {ring: this.__ring, broadcast: true}
-        let IndexSequence = this.__std.IndexSequence
-        let seq = await IndexSequence.new({ring: this, operator}).save(opts)
+        let Sequence = this.__std.Sequence
+        let seq = await Sequence.new({ring: this, operator}).save(opts)
         this.sequences = [...this.sequences, seq]
         await this.save(opts)
 
