@@ -410,20 +410,20 @@ export class DataBlock extends Block {
             if (data === undefined) return this._move_down(id, req).update(id, edits, req)
 
             let prev = await WebObject.from_data(id, data, {mutable: false, activate: false})
-            let obj  = prev._clone()                    // dependencies (category, container, prototypes) are loaded, but references are NOT (!)
+            let obj  = prev._clone()                // dependencies (category, container, prototypes) are loaded, but references NOT (!)
             // let obj  = await WebObject.from_data(id, data, {mutable: true,  activate: false})   // TODO: use prev._clone() to avoid repeated async initialization
 
-            obj._apply_edits(...edits)                  // apply edits; TODO SECURITY: check if edits are safe; prevent modification of internal props (__ver, __seal etc)
-            await obj._initialize(false)                // reinitialize the dependencies (category, class, ...) WITHOUT sealing! they may have been altered by the edits
+            obj._apply_edits(...edits)              // apply edits; TODO SECURITY: check if edits are safe; prevent modification of internal props (__ver, __seal etc)
+            await obj._initialize(false)            // reinitialize the dependencies (category, class, ...) WITHOUT sealing! they may have been altered by the edits
 
-            obj.validate()                              // validate object properties: each one individually and all of them together; may raise exceptions
-            obj._bump_version()                         // increment __ver
-            obj._seal_dependencies()                    // recompute __seal
+            obj.validate()                          // validate object properties: each one individually and all of them together; may raise exceptions
+            obj._bump_version()                     // increment __ver
+            obj._seal_dependencies()                // recompute __seal
 
             if (obj.__base?.save_revisions)
-                await obj._create_revision(data)        // create a Revision (__prev) to hold the previous version of `data`
+                await obj._create_revision(data)    // create a Revision (__prev) to hold the previous version of `data`
 
-            if (this.ring.readonly)                     // can't write the update here in this ring? forward to the first higher ring that's writable
+            if (this.ring.readonly)                 // can't write the update here in this ring? forward to the first higher ring that's writable
                 return this._move_up(req).upsave(id, obj.__json, req)
 
                 // saving to a higher ring is done OUTSIDE the mutex and a race condition may arise no matter how this is implemented;

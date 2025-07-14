@@ -575,8 +575,8 @@ export class REF extends Type {
        which is not possible with GENERIC.
      */
     static options = {
-        category:  undefined,       // if present, the referenced object must be loaded and belong to `category`
-        exact:     false,           // if true, the objects must belong to this exact `category`, not any of its subcategories
+        // category:  undefined,       // if present, the referenced object must be loaded and belong to `category`
+        // exact:     false,           // if true, the objects must belong to this exact `category`, not any of its subcategories
         strong:    false,           // if true, the referenced object is considered an essential part of the current one ("strong ownership")
                                     // that should be removed automatically when the parent (or the link itself) is removed
     }
@@ -589,12 +589,12 @@ export class REF extends Type {
         if (!(obj instanceof schemat.WebObject)) throw new ValueError(`expected a WebObject, got ${obj} instead`)
         if (!obj.__index_id) throw new ValueError(`found a reference to a newborn object without a provisional ID: ${obj}`)
 
-        let {category, exact} = this.options
-        if (category) {
-            if (!obj.is_loaded()) throw new ValueError(`cannot verify if ${obj} belongs to category ${category} because the object is not loaded`)
-            if (!exact && !obj.instanceof(category)) throw new ValueError(`object ${obj} does not belong to category ${category}`)
-            if (exact && !obj.__category?.is(category)) throw new ValueError(`object ${obj} does not belong exactly to category ${category}`)
-        }
+        // let {category, exact} = this.options
+        // if (category) {
+        //     if (!obj.is_loaded()) throw new ValueError(`cannot verify if ${obj} belongs to category ${category} because the object is not loaded`)
+        //     if (!exact && !obj.instanceof(category)) throw new ValueError(`object ${obj} does not belong to category ${category}`)
+        //     if (exact && !obj.__category?.is(category)) throw new ValueError(`object ${obj} does not belong exactly to category ${category}`)
+        // }
         return obj
     }
 }

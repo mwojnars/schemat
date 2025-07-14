@@ -975,7 +975,8 @@ export class WebObject {
     //     return false
     // }
 
-    validate() {
+    validate(prev = null) {
+        // TODO: if `prev` object is given, compare property values (x===y) before type.validate() and skip if no change detected
         let data = this.__data
 
         // make sure that __data does NOT contain special props: id, __meta, __self, __proxy, __status, etc.
