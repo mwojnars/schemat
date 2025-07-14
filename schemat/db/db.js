@@ -559,7 +559,7 @@ export class Database extends WebObject {
 
 
 export class BootDatabase extends Database {
-    async open(ring_specs) {
+    async __draft__(ring_specs) {
         /* Create bootstrap rings according to `ring_specs` specification. */
 
         // assert(this.is_newborn())           // open() is a mutating operation, it can only be called on a newborn object (not in DB)

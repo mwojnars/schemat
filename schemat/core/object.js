@@ -580,7 +580,7 @@ export class WebObject {
         return obj
     }
 
-    // __draft__() {}
+    __draft__() {}
 
     static async from_data(id, data, {mutable, provisional, ...load_opts} = {}) {
         /* Create a new WebObject instance given the `data` with the object's content (a Catalog or encoded JSONx string). */
