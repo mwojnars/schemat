@@ -258,10 +258,8 @@ export class BootRing extends Ring {
     }
 
     async select(id, req)  {
-        // print('boot ring select()')
-        let block = this._find_block(id)
-        await block.load()
-        return block.select(id, req || new DataRequest())
+        // here, direct call to block is performed instead of $agent.*()
+        return this._find_block(id).select(id, req || new DataRequest())
     }
 
     insert() {assert(false, `inserts not supported in BootRing`)}
