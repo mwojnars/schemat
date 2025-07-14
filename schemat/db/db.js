@@ -571,7 +571,7 @@ export class BootDatabase extends Database {
             top = await BootRing.draft({...spec, base_ring: top})
         this.top_ring = top
 
-        await top.load()
+        // await top.load()
         schemat._print(`creating bootstrap database... done`)
     }
 
