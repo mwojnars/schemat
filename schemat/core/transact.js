@@ -115,8 +115,7 @@ export class Transaction {
     async save(_opts = {}, objects = null) {
         /* Save changes to the database: either all those staged/pending, or the ones in `objects` (can be a single object).
            If `objects` is missing, save() is equivalent to save_all(): saves all pending changes AND extends to those
-           created while saving. Otherwise, only `objects` are saved, PLUS all newborn objects if `objects` contain
-           at least one instance to be inserted or updated.
+           created while saving. Otherwise, only `objects` are saved.
 
            IMPORTANT:
            It is possible and allowed that while saving changes to DB, the transaction is modified by new mutations

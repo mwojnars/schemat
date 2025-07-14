@@ -138,14 +138,9 @@ export class Sequence extends WebObject {
     async 'action.create_derived'(operator) {
         /* Create a derived sequence that will capture changes from this sequence and apply `operator` to them. */
 
-        let opts = {ring: this.__ring, broadcast: true}
-        let seq = await schemat.std.Sequence.new({ring: this.ring, operator}) //.save(opts)
-
-        // this._print(`action.create_derived(), seq:`, seq.__content)
+        let seq = await schemat.std.Sequence.new({ring: this.ring, operator})
         this.derived = [...this.derived || [], seq]
-
-        await schemat.save(opts)
-        // await this.save(opts)
+        await schemat.save({ring: this.__ring, broadcast: true})
 
         // TODO: block #0 to be deployed as agent .. cluster.$leader.deploy(block) .. node.$master.deploy(agent)
 
