@@ -112,7 +112,7 @@ export class MemoryStore extends Store {
  */
 
 export class YamlDataStore extends MemoryStore {
-    /* Items stored in a YAML file. The file can be unordered. For use during development only. */
+    /* Web objects stored in a YAML file, with object ID saved as .id with other attributes. */
 
     open() {
         /* Load records from this block's file. */
@@ -183,7 +183,7 @@ export class YamlDataStore extends MemoryStore {
  */
 
 export class JsonIndexStore extends MemoryStore {
-    /* Binary key-value records stored in a .jl file (JSON Lines) in decoded form. For use in development. */
+    /* Binary key-value records stored in a .jl file (JSON Lines) in decoded form. */
 
     open() {
         /* Load records from this.filename file into this.records. */

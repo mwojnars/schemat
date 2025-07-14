@@ -185,7 +185,7 @@ export class BinaryBlock extends Block {
 /**********************************************************************************************************************/
 
 export class DataBlock extends Block {
-    /* A Block that stores objects and provides the "insert" operation. */
+    /* A storage block that keeps web objects and implements high-level CRUD operations: insert/update/delete/upsave. */
 
     // properties
     shard
