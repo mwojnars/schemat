@@ -649,7 +649,9 @@ export class WebObject {
             // })
 
         let id = this.id
-        if (!id) throw new Error(`trying to load object with missing ID (id=${id})`)
+        if (!id)
+            if (this.__provisional_id) throw new Error(`trying to load an object with provisional ID (${this.__provisional_id})`)
+            else throw new Error(`trying to load an object with missing ID (id=${id})`)
 
         if (schemat.registry.get_object(id) === this)
             schemat._loading.set(id, loading)
