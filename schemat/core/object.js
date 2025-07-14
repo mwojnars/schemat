@@ -562,6 +562,10 @@ export class WebObject {
         return obj
     }
 
+    static draft_sync(props, ...args) {
+        return this._new([], props, args, {draft: true})
+    }
+
     static async draft(props, ...args) {
         /* Create a temporary newborn object that is properly initialized via its class's __new__(), and additionally
            its async __draft__(...args) was called, but the object is NOT intended for insertion to DB: is not registered
@@ -569,12 +573,11 @@ export class WebObject {
            This method should only be used for internal purposes, typically during bootstrap, when category objects
            cannot be loaded yet and draft instances must be created from classes not categories.
          */
-        return this._new([], props, args, {draft: true})
-        // let obj = this._new([], props, args, {draft: true})
-        // await obj.__draft__(...args)
-        // obj.__meta.active = true        // assumed to be active already after __draft__(), no _initialize/__load__/_activate()
-        // obj.__meta.draft = true
-        // return obj
+        let obj = this._new([], props, args, {draft: true})
+        await obj.__draft__(...args)
+        obj.__meta.active = true        // assumed to be active already after __draft__(), no _initialize/__load__/_activate()
+        obj.__meta.draft = true
+        return obj
     }
 
     // __draft__() {}
@@ -639,7 +642,7 @@ export class WebObject {
            as indicated by __seal are linked. The data can only be loaded ONCE for a given WebObject instance due to immutability.
            If you want to refresh the data, create a new instance with .reload().
          */
-        // if (this.__meta.draft) return this
+        if (this.__meta.draft) return this
 
         let {active, loading} = this.__meta
 

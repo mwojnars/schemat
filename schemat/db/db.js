@@ -272,7 +272,7 @@ export class BootRing extends Ring {
 
     __new__() {
         // the draft object here is created from a class and lacks __category; only allowed during boot
-        this.main_sequence = DataSequence.draft({ring: this}, this.file)
+        this.main_sequence = DataSequence.draft_sync({ring: this}, this.file)
     }
 
     // async __draft__() {
@@ -566,7 +566,7 @@ export class BootDatabase extends Database {
         schemat._print(`creating bootstrap database...`)
         let top
         for (let spec of ring_specs)
-            top = await BootRing.draft({...spec, base_ring: top}) //.load()
+            top = await BootRing.draft_sync({...spec, base_ring: top}) //.load()
         this.top_ring = top
 
         await top.load()
