@@ -575,8 +575,8 @@ export class WebObject {
          */
         let obj = this._new([], props, args, {draft: true})
         await obj.__draft__(...args)
-        obj.__meta.active = true        // assumed to be active already after __draft__(), no _initialize/__load__/_activate()
-        obj.__meta.draft = true
+        // obj.__meta.active = true        // assumed to be active already after __draft__(), no _initialize/__load__/_activate()
+        // obj.__meta.draft = true
         return obj
     }
 
