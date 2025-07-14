@@ -167,14 +167,14 @@ export class DataSequence extends Sequence {
 
     // get file_tag() { return 'main' }
 
-    __draft__(boot_file = null) {
-        if (boot_file) this.blocks = [BootDataBlock.draft_sync({sequence: this}, boot_file)]
-    }
-
-    // async __draft__(boot_file) {
-    //     this.blocks = [await BootDataBlock.draft({sequence: this}, boot_file)]
-    //     assert(this.blocks[0] instanceof BootDataBlock)
+    // __new__(boot_file = null) {
+    //     if (boot_file) this.blocks = [BootDataBlock.draft_sync({sequence: this}, boot_file)]
     // }
+
+    async __draft__(boot_file) {
+        this.blocks = [await BootDataBlock.draft({sequence: this}, boot_file)]
+        assert(this.blocks[0] instanceof BootDataBlock)
+    }
 
     async __setup__() {
         let DataBlock = schemat.std.DataBlock

@@ -538,32 +538,32 @@ export class BootDataBlock extends DataBlock {
 
     _store      // Store for this block's records
 
-    // async __draft__(path) {
-    //     // await super.__load__()
-    //     let format = this._detect_format(path)
-    //     this._store = await this._create_store(format, path)
-    //     await this._store.open()
-    //     schemat._print(`BootDataBlock.__draft__() done`)
-    // }
-
-    __new__(path) {
-        this._path = path
+    async __draft__(path) {
+        // await super.__load__()
+        let format = this._detect_format(path)
+        this._store = await this._create_store(format, path)
+        await this._store.open()
+        schemat._print(`BootDataBlock.__draft__() done`)
     }
+
+    // __new__(path) {
+    //     this._path = path
+    // }
+    //
+    // async __load__() {
+    //     await super.__load__()
+    //     let format = this._detect_format(this._path)
+    //     this._store = await this._create_store(format, this._path)
+    //     // let storage_class = this._detect_store_class(format)
+    //     // this._store = new storage_class(this._path, this)
+    //     await this._store.open()
+    // }
 
     _detect_format(path) {
         // infer storage type from file extension
         let ext = path.split('.').pop()
         if (ext === 'yaml') return 'yaml'
         if (ext === 'jl') return 'json'
-    }
-
-    async __load__() {
-        await super.__load__()
-        let format = this._detect_format(this._path)
-        this._store = await this._create_store(format, this._path)
-        // let storage_class = this._detect_store_class(format)
-        // this._store = new storage_class(this._path, this)
-        await this._store.open()
     }
 
     async select(id, req) { return await this.$_wrap.select({store: this._store}, id, req) }
