@@ -544,19 +544,6 @@ export class BootDataBlock extends DataBlock {
         await this._store.open()
     }
 
-    // __new__(path) {
-    //     this._path = path
-    // }
-    //
-    // async __load__() {
-    //     await super.__load__()
-    //     let format = this._detect_format(this._path)
-    //     this._store = await this._create_store(format, this._path)
-    //     // let storage_class = this._detect_store_class(format)
-    //     // this._store = new storage_class(this._path, this)
-    //     await this._store.open()
-    // }
-
     _detect_format(path) {
         // infer storage type from file extension
         let ext = path.split('.').pop()
