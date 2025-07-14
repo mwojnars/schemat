@@ -977,31 +977,39 @@ export class WebObject {
 
     validate(prev = null) {
         // TODO: if `prev` object is given, compare property values (x===y) before type.validate() and skip if no change detected
+
         let data = this.__data
+        let schema = this.__schema
 
         // validate each individual property; __data._entries may get directly modified here... (!)
-        for (let prop of data._keys.keys()) {
+        for (let [prop, locs] of data._keys) {
 
             // make sure the property name is not missing nor reserved: id, __meta, __self, __proxy, __status, etc.
             if (!prop) throw new ValidationError(`missing property name (${prop === '' ? `''` : prop})`)
-            if (WebObject.RESERVED.has(prop)) throw new ValidationError(`reserved property name found: '${prop}'`)
+            if (WebObject.RESERVED.has(prop)) throw new ValidationError(`reserved property name ('${prop}')`)
 
+            let type = schema.get(prop)
+
+            if (!type)                                      // property not in schema? skip or raise error
+                if (this.__category.allow_custom_fields) continue
+                else throw new ValidationError(`unknown property '${prop}' in ${this}`)
+
+            if (!type.options.repeated) {                   // single-valued property should have no repetitions
+                // print(`prop=${prop}:`, type)
+                let count = data.getAll(prop).length
+                if (count > 1) throw new ValidationError(`found multiple occurrences of a property declared as single-valued (${prop}) in object [${this.id}]`)
+            }
+
+            // for (let loc of locs) {
+            //     let entry = data._entries[loc]
+            //     let value = entry[1]
+            // }
         }
 
         for (let loc = 0; loc < data.length; loc++) {
             let entry = data._entries[loc]
             let [prop, value] = entry
             let type = this.__schema.get(prop)
-
-            if (!type)                                      // the property `prop` is not present in the schema? skip or raise an error
-                if (this.__category.allow_custom_fields) continue
-                else throw new ValidationError(`unknown property: ${prop} in object [${this.id}]`)
-
-            if (!type.options.repeated) {                   // check that a single-valued property has no repetitions
-                // print(`prop=${prop}:`, type)
-                let count = data.getAll(prop).length
-                if (count > 1) throw new ValidationError(`found multiple occurrences of a property declared as single-valued (${prop}) in object [${this.id}]`)
-            }
 
             try {
                 // if (type.options.getter) throw new ValueError(`"getter" property cannot be stored explicitly`)
