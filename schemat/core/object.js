@@ -949,16 +949,17 @@ export class WebObject {
     _own_values(prop)  { return this.__data.getAll(prop) }
 
     instanceof(category) {
-        /* Check whether this item belongs to a `category`, or its subcategory.
-           All comparisons along the way use item IDs, not object identity. The item must be loaded.
+        /* Check whether this object belongs to `category` or its subcategory.
+           All comparisons along the way use IDs, not object identity. The item must be loaded.
         */
+        // TODO: use cachable this.__ancestors_ids instead
         if (!this.is_loaded()) throw new Error(`object ${this} is not loaded, cannot perform instanceof()`)
         return this.__category$.some(cat => cat.inherits_from(category))
     }
 
     inherits_from(parent) {
-        /* Return true if `this` inherits from a `parent` item through the item prototype chain (NOT javascript prototypes).
-           True if parent==this. All comparisons by item ID.
+        /* Return true if `this` inherits from `parent` through the web-object prototype chain (NOT javascript prototypes).
+           True if parent==this. All comparisons done by ID.
          */
         if (this.is(parent)) return true
         for (const proto of this.__prototype$)
