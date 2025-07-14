@@ -101,9 +101,15 @@ export class Sequence extends WebObject {
 
 
     async 'action.create_derived'(operator) {
-        /* Create a derived sequence whose type is defined by `operator`. */
+        /* Create a derived sequence that would implement a data `operator`. */
 
+        let category = this.__std.IndexSequence
+        let seq = await category.new({ring: this.ring, operator})
         this.derived = [...this.derived || [], seq]
+
+        let opts = {ring: this.__ring, broadcast: true}
+        await this.save(opts)
+
         // this.blocks.map(b => b.edit.touch()) -- touch all blocks to let them know about the new derived sequence ??
         // schemat.tx.save({broadcast: true})   -- broadcast performed AFTER commit
         // schemat.tx.broadcast()       = commit + broadcast
