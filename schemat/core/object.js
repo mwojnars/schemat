@@ -997,26 +997,17 @@ export class WebObject {
             if (locs.length > 1 && !type.options.repeated)      // single-valued property should have no repetitions
                 throw new ValidationError(`multiple occurrences of property '${prop}' declared as single-valued in ${this.id}`)
 
-            // for (let loc of locs) {
-            //     let entry = data._entries[loc]
-            //     let value = entry[1]
-            // }
-        }
-
-        for (let loc = 0; loc < data.length; loc++) {
-            let entry = data._entries[loc]
-            let [prop, value] = entry
-            let type = this.__schema.get(prop)
+            // if (type.options.getter) throw new ValueError(`cannot write to a property marked as a "getter" ('${prop}')`)
 
             try {
-                // if (type.options.getter) throw new ValueError(`"getter" property cannot be stored explicitly`)
-                entry[1] = type.validate(value)             // may raise an exception
-                // let newval = type.validate(value)
-                // if (post_setup) entry[1] = newval
+                for (let loc of locs) {
+                    let entry = data._entries[loc]          // validate the value and possibly replace it IN PLACE with a normalized value
+                    entry[1] = type.validate(entry[1])      // ... may raise an exception
+                }
             }
             catch (ex) {
                 // add name of the property to the exception message
-                ex.message = `invalid value of property "${prop}" in object [${this.id}]: ${ex.message}`
+                ex.message = `invalid value of property '${prop}' in ${this}: ${ex.message}`
                 throw ex
             }
         }
