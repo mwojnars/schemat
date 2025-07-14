@@ -101,15 +101,13 @@ export class Ring extends WebObject {
     }
 
     async __setup__() {
-        /* Create `main_sequence` and all derived sequences as present in the lower ring. */
+        /* Re-create `main_sequence` and all derived sequences as present in the lower ring. */
 
-        let base = await this.base_ring?.load()
-
+        let base = await this.base_ring.load()
         this.min_id_sharded ??= this.base_ring.min_id_sharded
 
         let DataSequence = this.__std.DataSequence
-        this.main_sequence = DataSequence.new({ring: this, operator: base?.main_sequence.operator})
-        if (!base) return
+        this.main_sequence = DataSequence.new({ring: this, operator: base.main_sequence.operator})
 
         let IndexSequence = this.__std.IndexSequence
         for (let seq of base.sequences)
