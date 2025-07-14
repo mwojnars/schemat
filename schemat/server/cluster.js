@@ -9,6 +9,10 @@ function _agent_role(id, role = null) {
     return `${id}_${role}`        // 1234_$agent
 }
 
+class NodeState {
+    /* Statistics of how a particular node in the cluster is functioning: health, load, heartbeat etc. */
+}
+
 /**********************************************************************************************************************/
 
 // Cluster extends System

@@ -55,7 +55,7 @@ export class Agent extends WebObject {
         /* Release any local resources that were acquired during __start__() and are passed here in the `state` of execution. */
     }
 
-    async __restart__(state, stop) {
+    async __restart__(stop) {
         /* In many cases, refreshing an agent in the worker process does NOT require full stop+start, which might have undesired side effects
            (temporary unavailability of the microservice). For this reason, __restart__() is called upon agent refresh - it can be customized
            in subclasses, and the default implementation either does nothing (default), or performs the full stop+start cycle (if hard_restart=true).
@@ -163,10 +163,10 @@ export class WebServer extends Agent {
         return {server: await this._create_server()}
     }
 
-    async __restart__({server}) {
-        // start new server and close old one (existing connections will complete)
+    async __restart__() {
+        /* Start a new server while closing the old one (existing connections will run undisturbed). */
         let new_server = await this._create_server()
-        server.close()      // TODO: add timeout to make sure the server is closed
+        this.$state.server.close()      // TODO: add timeout to make sure the server is closed
         return {server: new_server}
     }
 

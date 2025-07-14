@@ -204,10 +204,10 @@ class Frame {
 
         schemat._print(`restarting agent ${agent} ...`)
         try {
-            let stop = () => this._frame_context(prev, () => prev.__stop__(this.state))
-            let restart = () => agent.__restart__(this.state, stop)
-            let state = await this._tracked(agent.app_context(() => this._frame_context(agent, restart)))
-            this.set_state(state)
+            let stop    = () => this._frame_context(prev,  () => prev.__stop__(this.state))
+            let restart = () => this._frame_context(agent, () => agent.__restart__(stop))
+            let state = await this._tracked(agent.app_context(restart))
+            if (state !== undefined) this.set_state(state)
             this.agent = agent
         }
         catch (ex) {
