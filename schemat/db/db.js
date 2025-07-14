@@ -270,11 +270,6 @@ export class BootRing extends Ring {
      */
     file        // boot file path
 
-    // __new__() {
-    //     // the draft object here is created from a class and lacks __category; only allowed during boot
-    //     this.main_sequence = DataSequence.draft_sync({ring: this}, this.file)
-    // }
-
     __new__() {}
 
     async __draft__() {

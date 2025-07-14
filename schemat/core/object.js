@@ -562,10 +562,6 @@ export class WebObject {
         return obj
     }
 
-    static draft_sync(props, ...args) {
-        return this._new([], props, args, {draft: true})
-    }
-
     static async draft(props, ...args) {
         /* Create a temporary newborn object that is properly initialized via its class's __new__(), and additionally
            its async __draft__(...args) was called, but the object is NOT intended for insertion to DB: is not registered
