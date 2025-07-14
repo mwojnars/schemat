@@ -55,15 +55,15 @@ export class Agent extends WebObject {
         /* Release any local resources that were acquired during __start__() and are passed here in the `state` of execution. */
     }
 
-    async __restart__(state, prev) {
+    async __restart__(state, stop) {
         /* In many cases, refreshing an agent in the worker process does NOT require full stop+start, which might have undesired side effects
            (temporary unavailability of the microservice). For this reason, __restart__() is called upon agent refresh - it can be customized
            in subclasses, and the default implementation either does nothing (default), or performs the full stop+start cycle (if hard_restart=true).
          */
         // if (!this.hard_restart) return state
         // this._print(`doing HARD restart`)
-        await this.$frame._frame_context(prev, () => prev.__stop__(state))
-        // await prev.__stop__(state)
+        // await this.$frame._frame_context(prev, () => prev.__stop__(state))
+        await stop()
         return this.__start__()     // TODO: role
     }
 

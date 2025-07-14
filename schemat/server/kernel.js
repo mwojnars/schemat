@@ -187,9 +187,8 @@ class Frame {
     async restart() {
         /* Replace the agent with its newest copy after reload and call its __restart__(). */
         if (this.stopping || schemat.terminating) return
-        let agent
+        let agent, prev = this.agent
 
-        // LEAK: storing and reloading the agent causes memory leaks in a long run (several hours)
         try { agent = await this.agent.reload() }
         catch (ex) {
             schemat._print(`error reloading agent ${this.agent}:`, ex, `- restart skipped`)
@@ -205,7 +204,8 @@ class Frame {
 
         schemat._print(`restarting agent ${agent} ...`)
         try {
-            let restart = () => agent.__restart__(this.state, agent)
+            let stop = () => this._frame_context(prev, () => prev.__stop__(this.state))
+            let restart = () => agent.__restart__(this.state, stop)
             let state = await this._tracked(agent.app_context(() => this._frame_context(agent, restart)))
             this.set_state(state)
             this.agent = agent
