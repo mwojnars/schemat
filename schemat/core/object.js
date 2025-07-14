@@ -379,8 +379,8 @@ export class WebObject {
     get __label()  {
         /* [NAME] or [ID/CATEGORY] string that can be used in debug messages. */
         if (this.name) return `[${this.name}]`
-        if (this.__category?.name) return `[${this.id}:${this.__category.name}]`
-        return `[${this.id}]`
+        if (this.__category?.name) return `[${this.__index_id}:${this.__category.name}]`
+        return `[${this.__index_id}]`
     }
 
     get __content() {
