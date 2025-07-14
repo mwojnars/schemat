@@ -56,9 +56,6 @@ export class Ring extends WebObject {
             seqs.push(...seq.derived || [])
         }
         return seqs
-
-        // assert(this.main_sequence.is_loaded())
-        // return [this.main_sequence, ...this.main_sequence.derived || []]
     }
 
     get operators() {

@@ -20,8 +20,6 @@
   name: ring-kernel
   main_sequence:
     "@": 1012
-  sequences:
-    - "@": 1013
   readonly: false
   insert_mode: compact
   min_id_exclusive: 1
@@ -41,8 +39,6 @@
   base_ring_readonly: false
   main_sequence:
     "@": 1027
-  sequences:
-    - "@": 1028
   readonly: false
   insert_mode: compact
   min_id_exclusive: 1001
@@ -102,8 +98,6 @@
   base_ring_readonly: false
   main_sequence:
     "@": 1017
-  sequences:
-    - "@": 1018
   readonly: false
   min_id_exclusive: 2001
   min_id_forbidden: 3000
