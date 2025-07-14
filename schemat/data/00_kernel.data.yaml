@@ -589,6 +589,7 @@
 - id: 13
   name: Sequence
   info: Sequences of key-value records, either data objects or derived.
+  class: schemat/db/sequence.js:Sequence
   schema:
     ring:
       info: parent Ring of this sequence

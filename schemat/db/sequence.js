@@ -34,7 +34,7 @@ export class Sequence extends WebObject {
 
     __setup__() {
         print('Sequence.__setup__() creating a block')
-        let Block = this.__std.Block
+        let Block = schemat.std.Block
         this.blocks = [Block.new({sequence: this, storage: 'json'})]
         // this._print(`tx._staging:`, schemat.tx._staging)
     }
@@ -138,7 +138,7 @@ export class Sequence extends WebObject {
     async 'action.create_derived'(operator) {
         /* Create a derived sequence that would implement a data `operator`. */
 
-        let category = this.__std.Sequence
+        let category = schemat.std.Sequence
         let seq = await category.new({ring: this.ring, operator})
         this.derived = [...this.derived || [], seq]
 
@@ -171,7 +171,7 @@ export class DataSequence extends Sequence {
     }
 
     async __setup__() {
-        let DataBlock = this.__std.DataBlock
+        let DataBlock = schemat.std.DataBlock
         this.blocks = [DataBlock.new({sequence: this, storage: 'yaml'})]
     }
 
