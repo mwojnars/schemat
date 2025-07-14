@@ -18,7 +18,7 @@
     "@": 11
 - id: 1003
   name: ring-kernel
-  data_sequence:
+  main_sequence:
     "@": 1012
   sequences:
     - "@": 1013
@@ -39,7 +39,7 @@
   base_ring:
     "@": 1003
   base_ring_readonly: false
-  data_sequence:
+  main_sequence:
     "@": 1027
   sequences:
     - "@": 1028
@@ -100,7 +100,7 @@
   base_ring:
     "@": 1004
   base_ring_readonly: false
-  data_sequence:
+  main_sequence:
     "@": 1017
   sequences:
     - "@": 1018

@@ -21,7 +21,7 @@ export class Ring extends WebObject {
      */
 
     file_tag
-    data_sequence           // DataSequence containing all primary data of this ring
+    main_sequence           // DataSequence containing all primary data of this ring
     sequences = []          // array of derived sequences (Sequence objects)
 
     name                    // human-readable name of this ring for get_ring()
@@ -46,8 +46,12 @@ export class Ring extends WebObject {
         return [...stack, this]
     }
 
+    // get sequences() {
+    //     /* All sequences of this ring inferred from main_sequence by .derived links. */
+    // }
+
     get operators() {
-        /* Map of all operators in this ring stack, keyed by operator's name. */
+        /* Map of all operators in this ring stack keyed by operator's name. */
         let base_operators = this.base_ring?.operators || []
         let own_operators = this.sequences.map(seq => {
             let op = seq.operator
@@ -89,14 +93,14 @@ export class Ring extends WebObject {
     }
 
     async __setup__() {
-        /* Create `data_sequence` and all derived sequences as present in the lower ring. */
+        /* Create `main_sequence` and all derived sequences as present in the lower ring. */
 
         let base = await this.base_ring?.load()
 
         this.min_id_sharded ??= this.base_ring.min_id_sharded
 
         let DataSequence = this.__std.DataSequence
-        this.data_sequence = DataSequence.new({ring: this, operator: base?.data_sequence.operator})
+        this.main_sequence = DataSequence.new({ring: this, operator: base?.main_sequence.operator})
         this.sequences = []
         if (!base) return
 
@@ -112,7 +116,7 @@ export class Ring extends WebObject {
 
         await super.__load__()
         await this.base_ring?.load()
-        await this.data_sequence.load()
+        await this.main_sequence.load()
         for (let seq of this.sequences) await seq.load()
 
         this.validate_zones()
@@ -121,10 +125,10 @@ export class Ring extends WebObject {
     async erase(req) {
         /* Remove all records from this ring; open() should be called first. */
         if (this.readonly) throw new DataAccessError("the ring is read-only and cannot be erased")
-        return this.data_sequence.erase(req)
+        return this.main_sequence.erase(req)
     }
 
-    async flush() { return this.data_sequence.flush() }
+    async flush() { return this.main_sequence.flush() }
 
 
     /***  Errors & internal checks  ***/
@@ -179,12 +183,12 @@ export class Ring extends WebObject {
 
     _find_block(id) {
         assert(this.__meta.active, `trying to access uninitialized ring '${this.name}' [${this.id}] for object [${id}]`)
-        return this.data_sequence.find_block_id(id)
+        return this.main_sequence.find_block_id(id)
     }
 
     _random_block() {
         assert(this.__meta.active, `trying to access uninitialized ring '${this.name}' [${this.id}] for insert`)
-        return this.data_sequence.blocks[0]
+        return this.main_sequence.blocks[0]
     }
 
     async select(id, req) {
@@ -234,8 +238,8 @@ export class Ring extends WebObject {
         await this.save(opts)
 
         // TODO: block #0 to be deployed as agent .. cluster.$leader.deploy(block) .. node.$master.deploy(agent)
-        // TODO: data_sequence accessible as 'main' in .sequences
-        // TODO: data_sequence > main_sequence ... .sequences turned into getter, inferred from main_sequence by .derived links
+        // TODO: main_sequence accessible as 'main' in .sequences
+        // TODO: main_sequence > main_sequence ... .sequences turned into getter, inferred from main_sequence by .derived links
         // TODO: set `source` in operators
         // // boot up this sequence by requesting all source blocks to send initial data
         // let src_operator = operator.source
@@ -247,7 +251,7 @@ export class Ring extends WebObject {
         /* Rebuild all derived sequences by making a full scan of the data sequence. */
         await Promise.all(this.sequences.map(seq => seq.erase()))
 
-        for await (let {id, data} of this.data_sequence.scan_objects()) {
+        for await (let {id, data} of this.main_sequence.scan_objects()) {
             let key = data_schema.encode_key([id])
             let obj = await WebObject.from_data(id, data, {activate: false})
             await Promise.all(this.sequences.map(seq => seq.capture_change(key, null, obj)))
@@ -264,7 +268,7 @@ export class BootRing extends Ring {
 
     __new__() {
         // the draft object here is created from a class and lacks __category; only allowed during boot
-        this.data_sequence = DataSequence.draft({ring: this}, this.file)
+        this.main_sequence = DataSequence.draft({ring: this}, this.file)
     }
 
     async select(id, req)  {
@@ -530,7 +534,7 @@ export class Database extends WebObject {
 
         // search for references to `old_id` in all rings and all records
         for (let ring of this.rings)
-            for await (let {id, data} of ring.data_sequence.scan_objects()) {
+            for await (let {id, data} of ring.main_sequence.scan_objects()) {
                 let old_json = data.dump()
                 let new_json = Struct.transform(data, transform).dump()     // `data` catalog is transformed in place (!)
 

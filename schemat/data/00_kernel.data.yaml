@@ -525,7 +525,7 @@
     IndexSequence:
       "@": 22
   schema:
-    data_sequence:
+    main_sequence:
       info: DataSequence that keeps all primary objects of this ring
       category:
         "@": 14
@@ -533,7 +533,7 @@
       "@": schemat/types/type.js:REF
     sequences:
       info: "Derived Sequences: indexes, aggregations etc. Their records are
-        calculated from `data_sequence`, or from other derived sequences,
+        calculated from `main_sequence`, or from other derived sequences,
         according to the rules defined by each sequence's `operator`. The graph
         of dependencies (connections) between sequences is defined through their
         operators."
