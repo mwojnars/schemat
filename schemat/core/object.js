@@ -975,8 +975,8 @@ export class WebObject {
     //     return false
     // }
 
-    validate(prev = null) {
-        // TODO: if `prev` object is given, compare property values (x===y) before type.validate() and skip if no change detected
+    validate() {
+        /* Check validity of this object's properties before insert/update. */
 
         let data = this.__data
         let schema = this.__schema
