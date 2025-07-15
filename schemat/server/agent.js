@@ -19,9 +19,9 @@ export class Agent extends WebObject {
     get $state()    { return this.$frame?.state }
     get $role()     { return this.$frame?.role }
 
-    __ctx           // Database object that provides context of execution for this agent's __start__/__stop__ methods ("user mode"),
-                    // and a fallback context for $agent.*() methods if no request-specific RPC context was given;
-                    // if missing, kernel's context (cluster) is used ("kernel mode")
+    __ctx           // Database object that provides context of execution for __start__/__stop__/$agent.*()
+                    // methods ("user mode"); if missing, kernel's context (cluster-level DB) is used ("kernel mode");
+                    // behavior for $agent.*() calls can be modified with switch_context=true
 
     num_copies          // no. of concurrent copies of this agent to be deployed at a single node; -1 = "one per worker process"
     concurrent_calls    // if true, multiple calls to this agent may execute concurrently
