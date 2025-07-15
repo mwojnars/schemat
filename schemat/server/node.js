@@ -194,7 +194,11 @@ class RPC_Response {
     static parse(response) {
         if (response === undefined) throw new Error(`missing RPC response`)
         let {ret, err, records} = JSONx.decode(response)
-        if (err) throw new RPC_Error("peer error during RPC call", {cause: err})
+        if (err) {
+            let err2 = new RPC_Error("peer error during RPC call")
+            err2.cause = err    // passing this in constructor ({cause: err}) pollutes the stack trace and makes it unreadable
+            throw err2
+        }
         if (records?.length) schemat.register_changes(...records)
         // TODO: above, use register_changes() only for important records that should be stored in TX and passed back to the originator
         return ret
@@ -396,7 +400,8 @@ export class Node extends Agent {
             return RPC_Response.parse(response)
         }
         catch (ex) {
-            this._print("rpc() FAILED on request:", JSON.stringify(request))
+            // this._print("rpc() of request", JSON.stringify(request), "FAILED...")
+            ex.request = JSON.stringify(request)
             throw ex
         }
     }
