@@ -591,13 +591,18 @@ export class WebObject {
     _print(...args) { schemat._print(this.__label, ...args) }
 
     _print_error(title, ex) {
-        /* Print an error with a chain of .cause errors. */
-        let errors = []
+        /* Print an error together with its .cause chain of errors. */
+        let errors = [], prev
         while (ex) {
-            errors.push(ex);
-            [ex, ex.cause] = [ex.cause, null]
+            errors.push(prev = ex)
+            ex = prev.cause
+            delete prev.cause
         }
-        this._print(title)
+        for (let ex of errors.reverse()) {
+            // if (ex.request) title += `... when processing request ${ex.request}`
+            this._print(title, ex)  //`${ex.name}:`, ex.message)
+            title = 'which caused'
+        }
     }
 
     _print_stack(...args) {
