@@ -934,7 +934,7 @@
         a loaded instance of this agent present in the system. This is needed
         for some system agents (data blocks). False by default.
       "@": schemat/types/type.js:BOOLEAN
-    num_clones:
+    num_copies:
       default: 1
       info: No. of concurrent copies of this agent to be deployed at a single node, -1
         means 'one per worker process' (as many copies as workers). Most agents

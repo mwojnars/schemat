@@ -24,7 +24,7 @@ export class Agent extends WebObject {
     get $role()     { return this.$frame?.role }
 
     __concurrent    // if true, agent methods of this agent may execute concurrently
-    num_clones      // no. of concurrent copies of this agent to be deployed at a single node; -1 = "one per worker process"
+    num_copies      // no. of concurrent copies of this agent to be deployed at a single node; -1 = "one per worker process"
     file_tag        // string to be included in names of files and directories
     switch_context  // if true, commands are executed in the caller's context not the agent's own context
     frame_agent
