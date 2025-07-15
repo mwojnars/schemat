@@ -469,12 +469,21 @@ export function sum(...nums) {
 }
 
 export function min(arr, key = null) {
-    /* Similar to Math.min(), but compares array elements by key(arr[i]) value. Ignores null and undefined elements. */
-    if (!arr?.length) return undefined
-    let opt = undefined     // current minimum
-    arr.forEach((elem, i) => {
+    /* Returns the first element of `arr` array that minimizes key(arr[i]) value (or arr[i] if no key). Ignores null and undefined values. */
+    let opt     // current minimum
+    arr.forEach((elem) => {
         let v = key ? key(elem) : elem
-        if (v != null && (opt == null || v < opt)) opt = arr[i]
+        if (v != null && (opt == null || v < opt)) opt = elem
+    })
+    return opt
+}
+
+export function max(arr, key = null) {
+    /* Returns the first element of `arr` array that maximizes key(arr[i]) value (or arr[i] if no key). Ignores null and undefined values. */
+    let opt     // current maximum
+    arr.forEach((elem) => {
+        let v = key ? key(elem) : elem
+        if (v != null && (opt == null || v > opt)) opt = elem
     })
     return opt
 }
