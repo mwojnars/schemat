@@ -549,12 +549,14 @@ export class MasterProcess extends Kernel {
 
     async start() {
         print(`starting node:`, this.node_id)
-        this._start_workers()
+        let node = await schemat.load(this.node_id)
+
+        this._start_workers(node.num_workers)
         // await sleep(2.0)            // wait for workers to start their IPC before sending requests
         await super.start()
     }
 
-    _start_workers(num_workers = 2) {
+    _start_workers(num_workers) {
         print(`starting ${num_workers} worker(s) in the master process (PID=${process.pid})...`)
 
         this.workers = []

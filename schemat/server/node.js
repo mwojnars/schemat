@@ -210,6 +210,7 @@ export class Node extends Agent {
        The node's own agent is started implicitly on itself.
      */
 
+    num_workers
     agents                  // array of AgentStatus objects of the form {worker, id, role, ...}; AgentStatus class is not yet defined, so these are plain objects
     agent_refresh_interval
     http_host
@@ -220,7 +221,7 @@ export class Node extends Agent {
     tcp_retry_interval
 
     get worker_id()   { return schemat.kernel.worker_id }
-    get num_workers() { assert(this.is_master()); return schemat.kernel.workers.length }
+    // get num_workers() { assert(this.is_master()); return schemat.kernel.workers.length }
 
     is_master()     { return schemat.kernel.is_master() }
     is_worker()     { return !this.is_master() }
