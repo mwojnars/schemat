@@ -747,6 +747,10 @@
     all child (worker) processes. Nodes communicate with each other using Kafka,
     and in this way they form a distributed compute & storage cluster.
   schema:
+    num_workers:
+      info: Number of worker processes to launch when this node (its master process)
+        is restarted.
+      "@": schemat/types/type.js:INTEGER
     agents:
       info: Array of agent status objects {worker, id (of agent), role, options, ...}
         describing agents running on different processes of this node. `worker`
@@ -755,13 +759,6 @@
       type:
         "@": schemat/types/type.js:GENERIC
       inline: false
-      "@": schemat/types/type.js:ARRAY
-    master_agents_running:
-      info: Names of installed agents that should be currently running on the master
-        process of this node. [NOT USED!]
-      default: []
-      type:
-        "@": schemat/types/type.js:STRING
       "@": schemat/types/type.js:ARRAY
     agent_refresh_interval:
       default: 11
