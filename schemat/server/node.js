@@ -211,7 +211,7 @@ export class Node extends Agent {
      */
 
     num_workers
-    agents                  // array of AgentStatus objects of the form {worker, id, role, ...}; AgentStatus class is not yet defined, so these are plain objects
+    agents                  // array of AgentState objects of the form {worker, id, role, ...}
     agent_refresh_interval
     http_host
     http_port
@@ -607,33 +607,6 @@ export class Node extends Agent {
     }
 
     // async '$worker._capture_records'(records) {}
-
-
-    /* SYS: control signals between master <> worker processes */
-
-    // sys_send(process_id, method, ...args) {
-    //     /* Send a system message (SYS) via IPC. */
-    //     return this.ipc_send(process_id, this._sys_message(method, ...args))
-    // }
-    //
-    // sys_notify(process_id, method, ...args) {
-    //     return this.ipc_notify(process_id, this._sys_message(method, ...args))
-    // }
-    //
-    // _sys_message(command, ...args) {
-    //     /* Form a system message ('SYS' type). */
-    //     return ['SYS', command, args]
-    // }
-    //
-    // sys_recv(message) {
-    //     let {command, args} = this._sys_parse(message)
-    //     return this[command](...args)
-    // }
-    //
-    // _sys_parse(message) {
-    //     let [type, command, args] = message
-    //     assert(type === 'SYS', `incorrect message type, expected SYS`)
-    //     return {type, command, args}
-    // }
+    
 }
 

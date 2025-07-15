@@ -98,12 +98,11 @@ export class Cluster extends Agent {
     /***  Agent operations  ***/
 
     async '$leader.deploy'(agent, role = null) {
-        /* Find the least busy node and deploy `agent` there. Return true on success. */
+        /* Find the least busy node and deploy `agent` there. */
         let nodes = [...this.$state.nodes.values()]
         let node = min(nodes, n => n.avg_agents)
-        let done = await node.$master.deploy(agent, role)
-        if (done) this.$state.nodes.get(node).num_agents++
-        return done
+        await node.$master.deploy(agent, role)
+        this.$state.nodes.get(node).num_agents++
     }
 
     async '$leader.create_node'(props = {}) {
