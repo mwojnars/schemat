@@ -468,6 +468,17 @@ export function sum(...nums) {
     return nums.flat().reduce((a, b) => a + b, 0)
 }
 
+export function min(arr, key = null) {
+    /* Similar to Math.min(), but compares array elements by key(arr[i]) value. Ignores null and undefined elements. */
+    if (!arr?.length) return undefined
+    let opt = undefined     // current minimum
+    arr.forEach((elem, i) => {
+        let v = key ? key(elem) : elem
+        if (v != null && (opt == null || v < opt)) opt = arr[i]
+    })
+    return opt
+}
+
 // export function argmin(arr, key = (x) => x) {
 //     /* Return position `pos` in array `arr` such that the value of key(arr[pos])) is the lowest.
 //        If there are two or more such elements, the lower index is returned.
@@ -503,14 +514,14 @@ export function argmin(arr, order, direction = 1) {
 
 export function argmax(arr, order) { return argmin(arr, order, -1) }
 
-export function min(arr, order) {
-    /* Like Math.min(), but supports a custom ordering function, order(a,b), similar as array.sort() does;
-        and auto-skips `undefined` values. The order(a,b) function should return -1, 0, or 1.
-     */
-    let pos = argmin(arr, order)
-    if (pos === undefined) return undefined
-    return arr[pos]
-}
+// export function min(arr, order) {
+//     /* Like Math.min(), but supports a custom ordering function, order(a,b), similar as array.sort() does;
+//         and auto-skips `undefined` values. The order(a,b) function should return -1, 0, or 1.
+//      */
+//     let pos = argmin(arr, order)
+//     if (pos === undefined) return undefined
+//     return arr[pos]
+// }
 
 
 export function gcd(a, b) {
