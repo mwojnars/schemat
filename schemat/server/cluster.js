@@ -101,7 +101,8 @@ export class Cluster extends Agent {
     async '$leader.deploy'(agent, role = null) {
         /* Find the least busy node and deploy `agent` there. */
         let nodes = [...this.$state.nodes.values()]
-        let node = min(nodes, n => n.avg_agents)
+        let {id} = min(nodes, n => n.avg_agents)
+        let node = schemat.get_object(id)
         await node.$master.deploy(agent, role)
         this.$state.nodes.get(node).num_agents++
     }
