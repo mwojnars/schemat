@@ -24,7 +24,7 @@ export class Agent extends WebObject {
                     // behavior for $agent.*() calls can be modified with switch_context=true
 
     switch_context      // if true, commands are executed in the caller's context not the agent's own context (__ctx)
-    num_copies          // no. of concurrent copies of this agent to be deployed at a single node; -1 = "one per worker process"
+    num_copies          // no. of instances of this agent that should be deployed at different workers of a given node; -1 = "one per worker"
     concurrent_calls    // if true, multiple calls to this agent may execute concurrently
     file_tag            // string to be included in names of local files and directories created by this agent
 

@@ -546,6 +546,11 @@ export class Node extends Agent {
 
     // async '$worker._capture_records'(records) {}
 
+    async '$master.deploy'(agent, role) {
+        /* Find the least busy worker process and deploy `agent` there. Return true on success. */
+
+    }
+
     async '$master.start_agent'(agent, {role, worker, num_copies = 1} = {}) {
         /* `agent` is a web object or ID. */
         this._print(`$master.start_agent() agent=${agent} role=${role}`)
