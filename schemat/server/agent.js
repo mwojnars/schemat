@@ -13,20 +13,20 @@ export class Agent extends WebObject {
        being allocated/deallocated in __install__/__uninstall__(), while some others (e.g., sockets) in __start__/__stop__().
     */
 
-    __ctx           // Database object that provides context of execution for this agent's __start__/__stop__ methods ("user mode"),
-                    // and a fallback context for $agent.*() methods if no request-specific RPC context was given;
-                    // if missing, kernel's context (cluster) is used ("kernel mode")
-
     __frame         // AsyncLocalStorage that holds the current Frame of this agent while its agent-method(s) is being called
 
     get $frame()    { return this.__frame?.getStore() }
     get $state()    { return this.$frame?.state }
     get $role()     { return this.$frame?.role }
 
+    __ctx           // Database object that provides context of execution for this agent's __start__/__stop__ methods ("user mode"),
+                    // and a fallback context for $agent.*() methods if no request-specific RPC context was given;
+                    // if missing, kernel's context (cluster) is used ("kernel mode")
+
     num_copies          // no. of concurrent copies of this agent to be deployed at a single node; -1 = "one per worker process"
     concurrent_calls    // if true, multiple calls to this agent may execute concurrently
     switch_context      // if true, commands are executed in the caller's context not the agent's own context
-    file_tag            // string to be included in names of files and directories
+    file_tag            // string to be included in names of local files and directories created by this agent
 
     get file_path() { throw new Error(`file_path not implemented for agent ${this}`) }
 
