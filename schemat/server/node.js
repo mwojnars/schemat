@@ -549,7 +549,7 @@ export class Node extends Agent {
 
     /* Starting & stopping agents */
 
-    async '$master.deploy'(agent, role = null) {
+    async '$master.deploy'(agent, role) {
         /* Find the least busy worker process and deploy `agent` there. */
         return this.$master.start_agent(agent, {role})
     }
@@ -571,7 +571,8 @@ export class Node extends Agent {
         let workers = worker ? (Array.isArray(worker) ? worker : [worker]) : this._rank_workers(agents)
         workers = workers.slice(0, replicas)
 
-        if (role === schemat.GENERIC_ROLE) role = undefined     // the default role "$agent" is passed implicitly
+        if (role === null || role === schemat.GENERIC_ROLE)
+            role = undefined             // the default role "$agent" is passed implicitly
         
         for (let worker of workers) {
             assert(worker >= 1 && worker <= this.num_workers)
