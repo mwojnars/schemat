@@ -13,19 +13,23 @@ function _agent_role(id, role = null) {
 class NodeState {
     /* Statistics of how a particular node in the cluster is doing: health, load, heartbeat etc. */
 
-    // general
+    // general:
     status          // running / stopped / crashed
     heartbeat       // most recent heartbeat info with a timestamp
 
-    // load
+    // load:
     num_workers     // no. of worker processes
-    tot_agents      // total no. of individual agent-role deployments across the entire node
-    avg_agents      // average no. of individual agent-role deployments per worker process
+    tot_agents      // total no. of individual agent-role deployments across the node, excluding node.$master/$worker itself
+
+    // average no. of individual agent-role deployments per worker process
+    get avg_agents() { return this.tot_agents / (this.num_workers || 1) }
 
     // resource utilization (mem, disk, cpu), possibly grouped by agent category ...
 
     constructor(node) {
-        /* Initial stats are pulled from node's info in DB. */
+        /* Initial stats pulled from node's info in DB. */
+        this.num_workers = node.num_workers
+        this.tot_agents = node.agents.length
     }
 }
 
