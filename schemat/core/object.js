@@ -598,11 +598,10 @@ export class WebObject {
             ex = ex.cause
         }
         for (let [stack, request] of errors) {
-            // if (ex.request) title += `... when processing request ${ex.request}`
-            title = first ? this.__label + ' ' + title : '  caused by'
-            first = false
-            print(title, stack)
+            if (first) schemat._print(this.__label, title, stack)
+            else print('  caused by', stack)
             if (request) print('    request:\x1b[32m', request, '\x1b[0m')
+            first = false
         }
     }
 
