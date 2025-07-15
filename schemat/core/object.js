@@ -590,6 +590,16 @@ export class WebObject {
 
     _print(...args) { schemat._print(this.__label, ...args) }
 
+    _print_error(title, ex) {
+        /* Print an error with a chain of .cause errors. */
+        let errors = []
+        while (ex) {
+            errors.push(ex);
+            [ex, ex.cause] = [ex.cause, null]
+        }
+        this._print(title)
+    }
+
     _print_stack(...args) {
         /* Print the current stack trace with detailed header information: node ID, worker process, current object. */
         let stack  = new Error().stack
