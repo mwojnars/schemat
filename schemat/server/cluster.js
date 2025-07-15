@@ -11,6 +11,12 @@ function _agent_role(id, role = null) {
 
 class NodeState {
     /* Statistics of how a particular node in the cluster is functioning: health, load, heartbeat etc. */
+
+    num_workers     // no. of worker processes
+    tot_agents      // total no. of individual agent-role deployments across the entire node
+    avg_agents      // average no. of individual agent-role deployments per worker process
+
+    // resource utilization (mem, disk, cpu), possibly grouped by agent category ...
 }
 
 /**********************************************************************************************************************/
@@ -26,7 +32,7 @@ export class Cluster extends Agent {
         if (SERVER) await Promise.all(this.nodes.map(node => node.load()))
     }
 
-    async __start__({role} = {}) {
+    async __start__({role}) {
         assert(role === '$leader')
         // let nodes = [...this.nodes]
         // return {nodes}
@@ -77,7 +83,7 @@ export class Cluster extends Agent {
     /***  Agent operations  ***/
 
     async '$leader.deploy'(agent) {
-        /* Find the least loaded node and deploy `agent` there. */
+        /* Find the least busy node and deploy `agent` there. */
 
     }
 
