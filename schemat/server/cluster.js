@@ -1,4 +1,4 @@
-import {assert, print, argmin} from "../common/utils.js";
+import {assert, print, min} from "../common/utils.js";
 import {Agent} from "./agent.js";
 import {ObjectsMap} from "../common/structs.js";
 
@@ -20,10 +20,10 @@ class NodeState {
 
     // load:
     num_workers     // no. of worker processes
-    tot_agents      // total no. of individual agent-role deployments across the node excluding node.$master/$worker itself
+    num_agents      // total no. of individual agent-role deployments across the node excluding node.$master/$worker itself
 
     // average no. of individual agent-role deployments per worker process
-    get avg_agents() { return this.tot_agents / (this.num_workers || 1) }
+    get avg_agents() { return this.num_agents / (this.num_workers || 1) }
 
     // resource utilization (mem, disk, cpu), possibly grouped by agent category ...
 
@@ -31,7 +31,7 @@ class NodeState {
         /* Initial stats pulled from node's info in DB. */
         this.id = node.id
         this.num_workers = node.num_workers
-        this.tot_agents = node.agents.length
+        this.num_agents = node.agents.length
     }
 }
 
@@ -51,7 +51,7 @@ export class Cluster extends Agent {
 
     async __start__({role}) {
         assert(role === '$leader')
-        let nodes = new ObjectsMap(this.nodes.map(node => [node, new NodeState(node)]))
+        let nodes = new ObjectsMap(this.nodes.map(n => [n, new NodeState(n)]))
         return {nodes}
     }
 
@@ -97,11 +97,13 @@ export class Cluster extends Agent {
 
     /***  Agent operations  ***/
 
-    async '$leader.deploy'(agent) {
-        /* Find the least busy node and deploy `agent` there. */
+    async '$leader.deploy'(agent, role = null) {
+        /* Find the least busy node and deploy `agent` there. Return true on success. */
         let nodes = [...this.$state.nodes.values()]
         let node = min(nodes, n => n.avg_agents)
-        // let node = nodes.reduce((min, obj) => obj.x < min.x ? obj : min)
+        let done = await node.$master.deploy(agent, role)
+        if (done) this.$state.nodes.get(node).num_agents++
+        return done
     }
 
     async '$leader.create_node'(props = {}) {

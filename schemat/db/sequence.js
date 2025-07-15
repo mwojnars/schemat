@@ -159,7 +159,6 @@ export class Sequence extends WebObject {
         // deploy block #0 of the destination sequence as an agent and coordinator of the warm-up process
         let block = this.blocks[0]
         await schemat.cluster.$leader.deploy(block)
-        // node.$master.deploy(agent)
 
         // // boot up this sequence by requesting all source blocks to send initial data
         // this.blocks.map(block => block.$agent.boot_derived(seq))
