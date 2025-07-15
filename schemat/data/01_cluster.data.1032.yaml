@@ -132,7 +132,7 @@
     "@": 13
 - id: 1023
   name: webserver
-  num_copies: -1
+  num_replicas: -1
   __ctx:
     "@": 1002
   __category:

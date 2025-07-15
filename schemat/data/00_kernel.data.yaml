@@ -925,7 +925,7 @@
       category:
         "@": 11
       "@": schemat/types/type.js:REF
-    num_copies:
+    num_replicas:
       default: 1
       info: No. of concurrent copies of this agent to be deployed at a single node, -1
         means 'one per worker process' (as many copies as workers). Most agents
