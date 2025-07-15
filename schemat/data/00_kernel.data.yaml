@@ -936,11 +936,10 @@
       "@": schemat/types/type.js:BOOLEAN
     num_clones:
       default: 1
-      info: The number of concurrent worker processes on the host node that should
-        execute this agent's microservice at the same time. -1 means 'all
-        available'. Most agents need only one worker per node, but some others
-        (like web servers) may benefit from concurrent execution on multiple
-        workers.
+      info: No. of concurrent copies of this agent to be deployed at a single node, -1
+        means 'one per worker process' (as many copies as workers). Most agents
+        need only one copy per node, or per cluster, but some others (like web
+        servers) may benefit from concurrent execution on multiple workers.
       "@": schemat/types/type.js:INTEGER
     file_tag:
       info: A string to be included in names of local files/directories related to
