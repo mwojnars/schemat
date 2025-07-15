@@ -468,6 +468,28 @@ export function sum(...nums) {
     return nums.flat().reduce((a, b) => a + b, 0)
 }
 
+// export function argmin(arr, key = (x) => x) {
+//     /* Return position `pos` in array `arr` such that the value of key(arr[pos])) is the lowest.
+//        If there are two or more such elements, the lower index is returned.
+//      */
+//     if (!arr.length) return undefined
+//     let pos = -1         // current position of the minimum
+//     let val = undefined
+//
+//     arr.forEach((elem, i) => {
+//         let v = key(elem)
+//         if (v !== undefined && (pos < 0 || v < val)) {
+//             pos = i
+//             val = arr[i]
+//         }
+//     })
+//     return pos >= 0 ? pos : undefined
+// }
+//
+// export function argmax(arr, key = (x) => x) {
+//     return argmin(arr, x => -key(x))
+// }
+
 export function argmin(arr, order, direction = 1) {
     /* Position of the lowest element in `arr` according to the ordering function: order(a,b)*direction.
         If there are two or more such elements, their lowest index is returned.
@@ -478,6 +500,7 @@ export function argmin(arr, order, direction = 1) {
     arr.forEach((v,i) => { if ((v !== undefined) && (pos < 0 || order(v,arr[pos]) * direction < 0)) pos = i })
     return pos >= 0 ? pos : undefined
 }
+
 export function argmax(arr, order) { return argmin(arr, order, -1) }
 
 export function min(arr, order) {
@@ -488,6 +511,7 @@ export function min(arr, order) {
     if (pos === undefined) return undefined
     return arr[pos]
 }
+
 
 export function gcd(a, b) {
     /* Calculate the greatest common divisor using the Euclidean algorithm. */
