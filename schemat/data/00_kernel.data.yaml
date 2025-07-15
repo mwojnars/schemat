@@ -925,10 +925,6 @@
       category:
         "@": 11
       "@": schemat/types/type.js:REF
-    __concurrent:
-      info: If true, agent methods of this agent may execute concurrently. Turned off
-        by default (methods run in exclusive lock).
-      "@": schemat/types/type.js:BOOLEAN
     num_copies:
       default: 1
       info: No. of concurrent copies of this agent to be deployed at a single node, -1
@@ -936,6 +932,14 @@
         need only one copy per node, or per cluster, but some others (like web
         servers) may benefit from concurrent execution on multiple workers.
       "@": schemat/types/type.js:INTEGER
+    __concurrent:
+      info: If true, multiple calls to an agent instance may execute concurrently.
+        Disabled by default, so every agent method runs in exclusive lock.
+      "@": schemat/types/type.js:BOOLEAN
+    switch_context:
+      info: If true, commands are executed in the caller's context (application & DB),
+        not the agent's own context.
+      "@": schemat/types/type.js:BOOLEAN
     file_tag:
       info: A string to be included in names of local files/directories related to
         this agent. Should not contain any slashes (it is not a path), nor an
@@ -947,10 +951,6 @@
         be changed later on. Same value on every node, unlike `file_path` getter
         which may partly depend on the local node's settings.
       "@": schemat/types/type.js:STRING
-    switch_context:
-      info: If true, commands are executed in the caller's context (application & DB),
-        not the agent's own context.
-      "@": schemat/types/type.js:BOOLEAN
     "@": schemat:Catalog
   ttl: 30
   __category:
