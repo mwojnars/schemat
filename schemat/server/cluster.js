@@ -1,5 +1,6 @@
 import {assert, print} from "../common/utils.js";
 import {Agent} from "./agent.js";
+import {ObjectsMap} from "../common/structs.js";
 
 
 function _agent_role(id, role = null) {
@@ -10,13 +11,22 @@ function _agent_role(id, role = null) {
 }
 
 class NodeState {
-    /* Statistics of how a particular node in the cluster is functioning: health, load, heartbeat etc. */
+    /* Statistics of how a particular node in the cluster is doing: health, load, heartbeat etc. */
 
+    // general
+    status          // running / stopped / crashed
+    heartbeat       // most recent heartbeat info with a timestamp
+
+    // load
     num_workers     // no. of worker processes
     tot_agents      // total no. of individual agent-role deployments across the entire node
     avg_agents      // average no. of individual agent-role deployments per worker process
 
     // resource utilization (mem, disk, cpu), possibly grouped by agent category ...
+
+    constructor(node) {
+        /* Initial stats are pulled from node's info in DB. */
+    }
 }
 
 /**********************************************************************************************************************/
@@ -26,7 +36,8 @@ class NodeState {
 
 export class Cluster extends Agent {
 
-    nodes       // array of Node objects representing physical nodes of this cluster
+    // nodes            array of Node objects representing physical nodes of this cluster
+    // $state.nodes     array of NodeState objects keeping the most recent stats on node's well-being
 
     async __load__() {
         if (SERVER) await Promise.all(this.nodes.map(node => node.load()))
@@ -34,10 +45,8 @@ export class Cluster extends Agent {
 
     async __start__({role}) {
         assert(role === '$leader')
-        // let nodes = [...this.nodes]
-        // return {nodes}
-        let node_ids = this.nodes.map(n => n.id)
-        return {node_ids}
+        let nodes = new ObjectsMap(this.nodes.map(node => [node, new NodeState(node)]))
+        return {nodes}
     }
 
     get agent_placements() {
