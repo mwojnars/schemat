@@ -592,16 +592,16 @@ export class WebObject {
 
     _print_error(title, ex) {
         /* Print an error together with its .cause chain of errors. */
-        let errors = [], prev
+        let errors = [], first = true
         while (ex) {
-            errors.push(prev = ex)
-            ex = prev.cause
-            delete prev.cause
+            errors.push(ex.stack, ex.request)
+            ex = ex.cause
         }
-        for (let ex of errors.reverse()) {
+        for (let [stack, request] of errors) {
             // if (ex.request) title += `... when processing request ${ex.request}`
-            this._print(title, ex)  //`${ex.name}:`, ex.message)
-            title = 'which caused'
+            title = first ? this.__label + ' ' + title : '  caused by'
+            first = false
+            print(title, stack)
         }
     }
 

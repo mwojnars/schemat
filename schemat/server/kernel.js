@@ -13,6 +13,7 @@ import {ServerSchemat} from "../core/schemat_srv.js";
 import {BootDatabase} from "../db/db.js";
 import {Agent} from "./agent.js";
 import {IPC_Mailbox} from "./node.js";
+import {JSONx} from "../common/jsonx.js";
 
 
 // print NODE_PATH:
@@ -286,7 +287,9 @@ class Frame {
             // agent._print(`exec() of ${method}(${args}) context=${schemat.current_context}`)
             let error, result = await this._tracked(this._frame_context(agent, callA)).catch(ex => {
                 if (!callback) throw ex
-                agent._print(`exec() of ${method}(${args}) FAILED, propagating to caller:`, ex)
+                let s_args = JSONx.stringify(args).slice(1,-1)
+                agent._print_error(`exec() of ${method}(${s_args}) FAILED with`, ex)
+                // agent._print(`exec() of ${method}(${args}) FAILED, propagating to caller:`, ex)
                 error = ex
             })
             return callback ? callback(result, error) : result
