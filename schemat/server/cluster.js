@@ -14,7 +14,7 @@ class NodeState {
     /* Statistics of how a particular node in the cluster is doing: health, load, heartbeat etc. */
 
     // general:
-    id
+    id              // node.id
     status          // running / stopped / crashed
     heartbeat       // most recent heartbeat info with a timestamp
 
@@ -43,7 +43,7 @@ class NodeState {
 export class Cluster extends Agent {
 
     // nodes            array of Node objects representing physical nodes of this cluster
-    // $state.nodes     array of NodeState objects keeping the most recent stats on node's well-being
+    // $state.nodes     array of NodeState objects keeping the most recent stats on the node's health and activity
 
     async __load__() {
         if (SERVER) await Promise.all(this.nodes.map(node => node.load()))
