@@ -748,6 +748,7 @@
     and in this way they form a distributed compute & storage cluster.
   schema:
     num_workers:
+      default: 1
       info: Number of worker processes to launch when this node (its master process)
         is restarted.
       "@": schemat/types/type.js:INTEGER

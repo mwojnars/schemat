@@ -139,8 +139,6 @@
     "@": 30
 - id: 1024
   tcp_port: 5828
-  __category:
-    "@": 21
   agents:
     - worker: 2
       id: 1015
@@ -161,6 +159,8 @@
       id: 1023
     - worker: 2
       id: 1023
+  __category:
+    "@": 21
 - id: 1026
   sequence:
     "@": 1013
@@ -219,8 +219,6 @@
     "@": 34
 - id: 1036
   tcp_port: 5829
-  __category:
-    "@": 21
   agents:
     - worker: 1
       id: 1015
@@ -238,6 +236,8 @@
       id: 1023
     - worker: 2
       id: 1023
+  __category:
+    "@": 21
 - id: 1037
   name: logger
   __category:
