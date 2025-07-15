@@ -10,7 +10,8 @@ function _agent_role(id, role = null) {
     return `${id}_${role}`        // 1234_$agent
 }
 
-class NodeState {
+
+export class NodeState {
     /* Statistics of how a particular node in the cluster is doing: health, load, heartbeat etc. */
 
     // general:

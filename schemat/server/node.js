@@ -203,7 +203,7 @@ class RPC_Response {
 
 /**********************************************************************************************************************/
 
-class AgentState {
+export class AgentState {
     id          // agent.id
     role        // name of the role: "$leader" ...
     worker      // ID of the worker process (1,2,...)
