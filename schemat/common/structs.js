@@ -100,7 +100,9 @@ export class CustomMap extends Map {
 }
 
 export class ObjectsMap extends CustomMap {
-    /* A Map where keys are WebObject instances, converted to their IDs for underlying storage. */
+    /* A Map where keys are WebObject instances, converted to their IDs for underlying storage.
+       Upon retrieval, objects are recreated using schemat.get_object(). NO real objects are kept in the map as keys.
+     */
 
     convert(obj) { return typeof obj === 'number' ? obj : obj.id }
     reverse(id)  { return schemat.get_object(id) }

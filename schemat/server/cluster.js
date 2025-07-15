@@ -1,4 +1,4 @@
-import {assert, print} from "../common/utils.js";
+import {assert, print, argmin} from "../common/utils.js";
 import {Agent} from "./agent.js";
 import {ObjectsMap} from "../common/structs.js";
 
@@ -14,12 +14,13 @@ class NodeState {
     /* Statistics of how a particular node in the cluster is doing: health, load, heartbeat etc. */
 
     // general:
+    id
     status          // running / stopped / crashed
     heartbeat       // most recent heartbeat info with a timestamp
 
     // load:
     num_workers     // no. of worker processes
-    tot_agents      // total no. of individual agent-role deployments across the node, excluding node.$master/$worker itself
+    tot_agents      // total no. of individual agent-role deployments across the node excluding node.$master/$worker itself
 
     // average no. of individual agent-role deployments per worker process
     get avg_agents() { return this.tot_agents / (this.num_workers || 1) }
@@ -28,6 +29,7 @@ class NodeState {
 
     constructor(node) {
         /* Initial stats pulled from node's info in DB. */
+        this.id = node.id
         this.num_workers = node.num_workers
         this.tot_agents = node.agents.length
     }
@@ -97,7 +99,9 @@ export class Cluster extends Agent {
 
     async '$leader.deploy'(agent) {
         /* Find the least busy node and deploy `agent` there. */
-
+        let nodes = [...this.$state.nodes.values()]
+        let pos = argmin(nodes, n => n.avg_agents)
+        // let node = nodes.reduce((min, obj) => obj.x < min.x ? obj : min)
     }
 
     async '$leader.create_node'(props = {}) {
