@@ -104,7 +104,7 @@ export class ServerSchemat extends Schemat {
 
         let cluster_id = this.cluster_id = this.config.cluster
         if (cluster_id && !this.app_id) {
-            print(`loading cluster ${cluster_id} ...`)
+            this._print(`loading cluster ${cluster_id} ...`)
             this._essential.push(cluster_id)
             this._cluster = await this.get_loaded(cluster_id)
         }
