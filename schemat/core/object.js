@@ -594,12 +594,12 @@ export class WebObject {
         /* Print an error together with its .cause chain of errors. */
         let errors = [], first = true
         while (ex) {
-            errors.push([ex.stack, ex.request])
+            errors.push([ex.stack, ex.request, ex.node, ex.worker])
             ex = ex.cause
         }
-        for (let [stack, request] of errors) {
+        for (let [stack, request, node, worker] of errors) {
             if (first) schemat._print(this.__label, title, stack)
-            else print('  caused by', stack)
+            else print(`  caused at ${node}/#${worker} by`, stack)
             if (request) print('    request:\x1b[32m', request, '\x1b[0m')
             first = false
         }
