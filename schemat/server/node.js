@@ -546,7 +546,7 @@ export class Node extends Agent {
 
     // async '$worker._capture_records'(records) {}
 
-    async '$master.start_agent'(agent, {role, worker, num_workers = 1} = {}) {
+    async '$master.start_agent'(agent, {role, worker, num_clones = 1} = {}) {
         /* `agent` is a web object or ID. */
         this._print(`$master.start_agent() agent=${agent} role=${role}`)
         // this._print(`$master.start_agent() agents:`, this.$state.agents.map(({worker, agent, role}) => ({worker, id: agent.id, role})))
@@ -556,11 +556,11 @@ export class Node extends Agent {
         // if (agents.has(agent)) throw new Error(`agent ${agent} is already running on node ${this}`)
         // agents.set(agent, {params, role, workers})
         
-        if (num_workers === -1) num_workers = this.num_workers
-        assert(num_workers <= this.num_workers, `num_workers (${num_workers}) must be <= ${this.num_workers}`)
+        if (num_clones === -1) num_clones = this.num_workers
+        assert(num_clones <= this.num_workers, `num_clones (${num_clones}) must be <= ${this.num_workers}`)
 
         let workers = worker ? (Array.isArray(worker) ? worker : [worker]) : this._rank_workers(agents)
-        workers = workers.slice(0, num_workers)
+        workers = workers.slice(0, num_clones)
 
         if (role === schemat.GENERIC_ROLE) role = undefined     // the default role "$agent" is passed implicitly
         

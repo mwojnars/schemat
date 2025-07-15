@@ -132,7 +132,7 @@
     "@": 13
 - id: 1023
   name: webserver
-  num_workers: -1
+  num_clones: -1
   __ctx:
     "@": 1002
   __category:

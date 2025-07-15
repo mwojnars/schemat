@@ -934,7 +934,7 @@
         a loaded instance of this agent present in the system. This is needed
         for some system agents (data blocks). False by default.
       "@": schemat/types/type.js:BOOLEAN
-    num_workers:
+    num_clones:
       default: 1
       info: The number of concurrent worker processes on the host node that should
         execute this agent's microservice at the same time. -1 means 'all
