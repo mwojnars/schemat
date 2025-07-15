@@ -536,22 +536,13 @@ export class Node extends Agent {
 
     /* Starting & stopping agents */
 
-    async '$worker._start_agent'(agent_id, role) {
-        await schemat.kernel.start_agent(agent_id, role)
+    async '$master.deploy'(agent, role = null) {
+        /* Find the least busy worker process and deploy `agent` there. */
+        return this.$master.start_agent(agent, {role})
     }
+    // async '$master.remove'(agent, role) {}
 
-    async '$worker._stop_agent'(agent_id, role) {
-        await schemat.kernel.stop_agent(agent_id, role)
-    }
-
-    // async '$worker._capture_records'(records) {}
-
-    async '$master.deploy'(agent, role) {
-        /* Find the least busy worker process and deploy `agent` there. Return true on success. */
-
-    }
-
-    async '$master.start_agent'(agent, {role, worker, num_replicas = 1} = {}) {
+    async '$master.start_agent'(agent, {role, worker, replicas = 1} = {}) {
         /* `agent` is a web object or ID. */
         this._print(`$master.start_agent() agent=${agent} role=${role}`)
         // this._print(`$master.start_agent() agents:`, this.$state.agents.map(({worker, agent, role}) => ({worker, id: agent.id, role})))
@@ -560,12 +551,12 @@ export class Node extends Agent {
         agent = schemat.as_object(agent)
         // if (agents.has(agent)) throw new Error(`agent ${agent} is already running on node ${this}`)
         // agents.set(agent, {params, role, workers})
-        
-        if (num_replicas === -1) num_replicas = this.num_workers
-        assert(num_replicas <= this.num_workers, `num_replicas (${num_replicas}) must be <= ${this.num_workers}`)
+
+        if (replicas > this.num_workers) throw new Error(`no. of replicas (${replicas}) must be <= ${this.num_workers}`)
+        if (replicas === -1) replicas = this.num_workers
 
         let workers = worker ? (Array.isArray(worker) ? worker : [worker]) : this._rank_workers(agents)
-        workers = workers.slice(0, num_replicas)
+        workers = workers.slice(0, replicas)
 
         if (role === schemat.GENERIC_ROLE) role = undefined     // the default role "$agent" is passed implicitly
         
@@ -606,6 +597,16 @@ export class Node extends Agent {
         let sorted = counts.least_common()
         return sorted.map(entry => entry[0])
     }
+
+    async '$worker._start_agent'(agent_id, role) {
+        await schemat.kernel.start_agent(agent_id, role)
+    }
+
+    async '$worker._stop_agent'(agent_id, role) {
+        await schemat.kernel.stop_agent(agent_id, role)
+    }
+
+    // async '$worker._capture_records'(records) {}
 
 
     /* SYS: control signals between master <> worker processes */
