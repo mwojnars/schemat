@@ -186,7 +186,7 @@ export class HttpService extends Service {
             return this._send_result(target, request, result, ...args)
         }
         catch (ex) {
-            schemat._print('web service FAILED with', ex)
+            schemat._print(`${request.endpoint}() FAILED with`, ex)
             let [code, msg] = this.error.encode_error(ex)
             request.res.status(code).send(msg)
             // throw ex
