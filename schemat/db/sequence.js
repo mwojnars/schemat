@@ -146,6 +146,7 @@ export class Sequence extends WebObject {
         // only in this mode it's allowed to perform mutating operations on the cluster within a DB transaction
         // schemat.tx.epilog(() => {})
 
+        seq = await seq.reload()        // seq.blocks gets loaded only now
         await seq.boot(this)
 
         // this.blocks.map(b => b.edit.touch()) -- touch all blocks to let them know about the new derived sequence ??

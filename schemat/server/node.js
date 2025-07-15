@@ -195,7 +195,7 @@ class RPC_Response {
         if (response === undefined) throw new Error(`missing RPC response`)
         let {ret, err, records} = JSONx.decode(response)
         if (err) {
-            let err2 = new RPC_Error("peer error during RPC call")
+            let err2 = new RPC_Error('')
             err2.cause = err    // passing this in constructor ({cause: err}) pollutes the stack trace and makes it unreadable
             throw err2
         }
