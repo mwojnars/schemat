@@ -147,22 +147,22 @@ export class Sequence extends WebObject {
         // schemat.tx.epilog(() => {})
 
         seq = await seq.reload()        // seq.blocks gets loaded only now
-        await seq.boot(this)
+        await seq.backfill(this)
 
         // this.blocks.map(b => b.edit.touch()) -- touch all blocks to let them know about the new derived sequence ??
         // schemat.tx.save({broadcast: true})   -- broadcast performed AFTER commit
         // schemat.tx.broadcast()       = commit + broadcast
     }
 
-    async boot(source) {
-        /* Initialize the content of this derived sequence (warm-up). */
+    async backfill(source) {
+        /* Populate this derived sequence with initial data (backfill, warm-up). */
 
         // deploy block #0 of the destination sequence as an agent and coordinator of the warm-up process
         let block = this.blocks[0]
         await schemat.cluster.$leader.deploy(block)
 
-        // // boot up this sequence by requesting all source blocks to send initial data
-        // this.blocks.map(block => block.$agent.boot_derived(seq))
+        // boot up this sequence by requesting all source blocks to send initial data
+        source.blocks.map(block => block.$agent.boot_derived(this))
     }
 }
 
