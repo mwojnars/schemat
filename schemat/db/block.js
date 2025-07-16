@@ -1,6 +1,6 @@
 import {assert, print, T, zip, arrayFromAsync, fileBaseName} from '../common/utils.js'
 import {DataAccessError, DataConsistencyError, ObjectNotFound} from '../common/errors.js'
-import {Shard, Mutexes} from "../common/structs.js";  //'async-mutex'
+import {Shard, Mutexes, ObjectsMap} from "../common/structs.js"
 import {WebObject} from '../core/object.js'
 import {Struct} from "../common/catalog.js"
 import {Agent} from "../server/agent.js"
@@ -94,7 +94,7 @@ export class Block extends Agent {
 
     async __start__() {
         let stores = await Promise.all(this.storage$.map(s => this._create_store(s)))
-        let monitors = this.sequence.derived?.map(seq => new Monitor(seq))
+        let monitors = new ObjectsMap(this.sequence.derived.map(seq => [seq, new Monitor(seq)]))
         // TODO: load internal state of each monitor, maybe some of them are still in warm-up phase?
         //       schemat.node: node-wide file services + metadata storage + journaling?
         return {stores, store: stores[0], monitors}
@@ -181,7 +181,7 @@ export class Block extends Agent {
     _propagate(key, prev = null, next = null) {
         /* Push a change in this block to all derived sequences. */
         assert(this.ring?.is_loaded())
-        for (let monitor of this.$state.monitors)
+        for (let monitor of this.$state.monitors.values())
             monitor.capture_change(key, prev, next)
     }
 }
