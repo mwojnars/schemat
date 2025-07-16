@@ -16,9 +16,15 @@ export class Monitor {
        not at destination. Also, they are NOT web objects, so they are not persisted to DB on their own, and whatever
        internal state they maintain, this state is managed and persisted locally by the host block.
      */
+
+    backfill_offset     // position of the backfill process: all keys up to backfill_offset has been processed,
+                        // so the monitor forwards insert/update/delete events occurring at keys <= backfill_offset,
+                        // but ignores any events occurring above backfill_offset; set to null after backfill is finished
+
     constructor(seq) {
         this.seq = seq
     }
+
     capture_change(key, prev, next) {
         return this.seq.capture_change(key, prev, next)
     }
