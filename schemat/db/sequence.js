@@ -162,7 +162,7 @@ export class Sequence extends WebObject {
         await schemat.cluster.$leader.deploy(block)
 
         // boot up this sequence by requesting all source blocks to send initial data + set up data capture for future changes
-        source.blocks.map(block => block.$agent.populate(this))
+        source.blocks.map(block => block.$agent.backfill(this))
     }
 }
 

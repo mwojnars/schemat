@@ -168,6 +168,13 @@ export class Block extends Agent {
         this._print(`_sync_stores() done`)
     }
 
+    async '$agent.backfill'(dest_sequence) {
+        /* Start a monitor that will perform the initial scan of this (source) sequence, compute derived records
+           and send them to `dest_sequence` as a part of the backfilling procedure. The monitor then stays to
+           continue feeding updates to the destination sequence.
+         */
+    }
+
     _propagate(key, prev = null, next = null) {
         /* Push a change in this block to all derived sequences. */
         assert(this.ring?.is_loaded())
