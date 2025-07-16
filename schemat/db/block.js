@@ -170,9 +170,12 @@ export class Block extends Agent {
 
     async '$agent.backfill'(dest_sequence) {
         /* Start a monitor that will perform the initial scan of this (source) sequence, compute derived records
-           and send them to `dest_sequence` as a part of the backfilling procedure. The monitor then stays to
-           continue feeding updates to the destination sequence.
+           and send them to `dest_sequence` as a part of the backfilling (initialization) procedure.
+           The monitor then stays to continue feeding updates to the destination sequence.
          */
+        let {monitors} = this.$state
+        let {id} = dest_sequence
+        if (monitors.has(id)) return
     }
 
     _propagate(key, prev = null, next = null) {
