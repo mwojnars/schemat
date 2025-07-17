@@ -12,10 +12,18 @@ const fs = await server_import('node:fs')
 /**********************************************************************************************************************/
 
 export class OP {
-    /* Binary operation (instruction) to be executed on a destination block. Can be serialized to a WAL log for durability (TODO). */
+    /* Low-level binary operation (instruction) to be executed on a destination block or sequence.
+       Can be serialized to a WAL log for durability. (TODO)
+     */
     constructor(op, ...args) {
         this.op = op        // put, del, inc, ???
         this.args = args
+    }
+
+    async exec() {
+        let {block, op, args} = this
+        assert(['put', 'del'].includes(op))
+        return block.$agent[op](...args)
     }
 }
 
@@ -76,12 +84,16 @@ export class Monitor {
         return this.dst.capture_change(key, prev, next)
     }
 
-    derive(key, prev, next) {
+    derive_ops(key, prev, next) {
         /* In response to a captured data [prev > next] data change at a `key` in the source sequence, derive a list
            of low-level instructions that should be
          */
         if (this._in_pending_zone(key)) return []
-        let [del_records, put_records] = this.dst.operator.derive(key, prev, next)
+        let ops = this.dst.operator.derive_ops(key, prev, next)
+
+        // in each op, append designation of the destination block
+        ops.forEach(op => {op.block = this.dst.find_block(op.key)})
+        return ops
     }
 }
 
@@ -259,8 +271,11 @@ export class Block extends Agent {
     _propagate(key, prev = null, next = null) {
         /* Push a change in this block to all derived sequences. */
         assert(this.ring?.is_loaded())
-        for (let monitor of this.$state.monitors.values())
-            monitor.capture_change(key, prev, next)
+        for (let monitor of this.$state.monitors.values()) {
+            let ops = monitor.derive_ops(key, prev, next)
+            ops.forEach(op => op.exec())
+            // monitor.capture_change(key, prev, next)
+        }
     }
 }
 

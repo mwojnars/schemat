@@ -56,9 +56,9 @@ export class IndexOperator extends Operator {
         let [del_records, put_records] = this.derive(key, prev, next)
         let ops = []
 
-        for (let key of del_records.keys())
+        for (let key of del_records?.keys() || [])
             ops.push(new OP('del', key))
-        for (let [key, val] of put_records)
+        for (let [key, val] of put_records || [])
             ops.push(new OP('put', key, val))
 
         return ops
@@ -70,7 +70,7 @@ export class IndexOperator extends Operator {
            elements are BinaryMaps of destination records to be del/put respectively, {key-binary: val-json/binary/undefined}.
            (TODO: result could be merged to one BinaryMap if "tombstone" values are used)
          */
-        // del_records and put_records are BinaryMaps
+        // del_records and put_records are BinaryMaps or undefined
         let del_records = this._make_records(key, prev)
         let put_records = this._make_records(key, next)
 
