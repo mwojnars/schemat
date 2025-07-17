@@ -1,7 +1,7 @@
 import {assert, print, T, zip, arrayFromAsync, fileBaseName} from '../common/utils.js'
 import {DataAccessError, DataConsistencyError, ObjectNotFound} from '../common/errors.js'
 import {Shard, Mutexes, ObjectsMap} from "../common/structs.js"
-import {zero_binary} from "../common/binary.js";
+import {compare_uint8, zero_binary} from "../common/binary.js";
 import {JSONx} from "../common/jsonx.js";
 import {Struct} from "../common/catalog.js"
 import {WebObject} from '../core/object.js'
@@ -14,10 +14,10 @@ const fs = await server_import('node:fs')
 export class Monitor {
     /* Utility class that represents an active connection between a source block and a derived sequence. Monitor captures
        changes in the source and translates them to destination updates; it also performs a (possibly long-lasting)
-       "warm-up" procedure after a new derived sequence has been created and needs to be filled up with initial data.
+       backfilling procedure after a new derived sequence has been created and needs to be filled up with initial data.
        Monitors are "write agents" that perform all updates to a derived sequence, although they reside on source blocks
        not at destination. Also, they are NOT web objects, so they are not persisted to DB on their own, and whatever
-       internal state they maintain, this state is managed and persisted locally by the host block.
+       internal state they maintain, this state is managed and persisted locally via the host block.
      */
 
     src     // source block
@@ -53,6 +53,8 @@ export class Monitor {
     }
 
     capture_change(key, prev, next) {
+        if (this.backfill_offset && compare_uint8(this.backfill_offset, key) === -1)
+            return      // don't capture changes in the "pending zone" (above offset) while backfilling
         return this.dst.capture_change(key, prev, next)
     }
 }
@@ -517,6 +519,10 @@ export class DataBlock extends Block {
         let id = obj.id
         let data = obj.__json
         let key = this.encode_id(id)
+
+        // let oper_put = ['put', key, data]
+        // let oper_derived = []        // instructions to be sent to derived sequences as a part of change data capture
+        // let plan = [oper_put, ...oper_derived]
 
         await this._put(key, data)
         this._propagate(key, prev, obj)
