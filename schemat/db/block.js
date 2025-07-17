@@ -1,6 +1,7 @@
 import {assert, print, T, zip, arrayFromAsync, fileBaseName} from '../common/utils.js'
 import {DataAccessError, DataConsistencyError, ObjectNotFound} from '../common/errors.js'
 import {Shard, Mutexes, ObjectsMap} from "../common/structs.js"
+import {zero_binary} from "../common/binary.js";
 import {WebObject} from '../core/object.js'
 import {Struct} from "../common/catalog.js"
 import {Agent} from "../server/agent.js"
@@ -17,16 +18,33 @@ export class Monitor {
        internal state they maintain, this state is managed and persisted locally by the host block.
      */
 
+    src     // source block
+    dst     // destination sequence
+
     backfill_offset     // position of the backfill process: all keys up to backfill_offset has been processed,
                         // so the monitor forwards insert/update/delete events occurring at keys <= backfill_offset,
                         // but ignores any events occurring above backfill_offset; set to null after backfill is finished
 
-    constructor(seq) {
-        this.seq = seq
+    constructor(src, dst, backfill = false) {
+        this.src = src
+        this.dst = dst
+
+        if (backfill && dst.filled) throw new Error(`sequence ${dst} is already filled, no need to start backfilling`)
+        backfill ||= !dst.filled
+
+        // read current `backfill_offset` from local file .../data/backfill/<src>.<dst>.json
+        // let path = await src_block.get_backfill_filepath(dst)      // creates the .../backfill folder if needed
+
+        if (backfill) {
+            this.backfill_offset = zero_binary
+        }
+        else {
+            // remove the backfill file if present
+        }
     }
 
     capture_change(key, prev, next) {
-        return this.seq.capture_change(key, prev, next)
+        return this.dst.capture_change(key, prev, next)
     }
 }
 
@@ -94,7 +112,7 @@ export class Block extends Agent {
 
     async __start__() {
         let stores = await Promise.all(this.storage$.map(s => this._create_store(s)))
-        let monitors = new ObjectsMap(this.sequence.derived.map(seq => [seq, new Monitor(seq)]))
+        let monitors = new ObjectsMap(this.sequence.derived.map(seq => [seq, new Monitor(this, seq)]))
         // TODO: load internal state of each monitor, maybe some of them are still in warm-up phase?
         //       schemat.node: node-wide file services + metadata storage + journaling?
         return {stores, store: stores[0], monitors}
@@ -168,14 +186,16 @@ export class Block extends Agent {
         this._print(`_sync_stores() done`)
     }
 
-    async '$agent.backfill'(dest_sequence) {
+    async '$agent.backfill'(seq) {
         /* Start a monitor that will perform the initial scan of this (source) sequence, compute derived records
-           and send them to `dest_sequence` as a part of the backfilling (initialization) procedure.
-           The monitor then stays to continue feeding updates to the destination sequence.
+           and send them to the destination sequence `seq` as a part of its backfilling (initialization) procedure.
+           The monitor then stays to continue feeding updates to `seq`.
          */
         let {monitors} = this.$state
-        let {id} = dest_sequence
-        if (monitors.has(id)) return
+        let monitor = monitors.get(seq)
+        if (monitor) return
+
+        monitors.set(seq, monitor = new Monitor(this, seq, true))
     }
 
     _propagate(key, prev = null, next = null) {
