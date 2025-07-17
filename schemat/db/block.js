@@ -6,6 +6,7 @@ import {WebObject} from '../core/object.js'
 import {Struct} from "../common/catalog.js"
 import {Agent} from "../server/agent.js"
 
+const fs = await server_import('node:fs')
 
 /**********************************************************************************************************************/
 
@@ -34,6 +35,7 @@ export class Monitor {
 
         // read current `backfill_offset` from local file .../data/backfill/<src>.<dst>.json
         let path = src._get_backfill_path(dst)      // creates the .../backfill folder if needed
+        src._print(`backfill file:`, path)
 
         if (backfill) {
             this.backfill_offset = zero_binary
@@ -144,11 +146,13 @@ export class Block extends Agent {
     }
 
     _get_backfill_path(seq) {
-        /* File path to the local file that holds backfilling status information for data transfer from
+        /* Path to the local file that holds backfilling status information for data transfer from
            this source block to `seq` derived sequence. Creates the parent .../backfill folder if needed.
          */
-        // .../data/backfill/<src>.<dst>.json
-        // creates the .../backfill folder if needed
+        // create the .../backfill folder if needed
+        let folder = `${schemat.node.file_path}/backfill`
+        if (!fs.existsSync(folder)) fs.mkdirSync(folder)    // create `folder` if missing
+        return `${folder}/${this.id}.${seq.id}.json`        // .../data/backfill/<src>.<dst>.json
     }
 
 
