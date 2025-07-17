@@ -76,6 +76,7 @@ export class RocksDBStore extends Store {
     }
 
     async del(key, checked = false) {
+        // TODO: drop `checked` arg
         if (!checked) return this._bound.del(key)
         try {
             await this._bound.get(key)   // raises error if not found

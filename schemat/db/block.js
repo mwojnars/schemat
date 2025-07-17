@@ -217,12 +217,10 @@ export class Block extends Agent {
         return this.$state.stores.map(s => s.put(key, value))[0]    // write to all stores, but await the first one only
     }
 
-    async '$agent.del'(key) {
-        return this._del(key)
-    }
+    async '$agent.del'(key) { return this._del(key) }
 
-    async _del(key, checked = false) {
-        return this.$state.stores.map(s => s.del(key, checked))[0]  // delete from all stores, but return the first result only
+    async _del(key) {
+        return this.$state.stores.map(s => s.del(key))[0]           // delete from all stores, but return the first result only
     }
 
     async '$agent.scan'(opts = {}) {
@@ -596,8 +594,7 @@ export class DataBlock extends Block {
                 // return req.error_access("cannot remove the item, the ring is read-only")
 
             let obj = await WebObject.from_data(id, data, {activate: false})
-            let deleted = await this._del(key, true)
-            if (!deleted) return 0
+            let deleted = await this._del(key)
 
             this._propagate(key, obj)
             schemat.register_changes({id, data: {'__status': WebObject.Status.DELETED}})
