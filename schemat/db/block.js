@@ -79,10 +79,10 @@ export class Monitor {
         return this.backfill_offset && compare_uint8(this.backfill_offset, key) === -1
     }
 
-    capture_change(key, prev, next) {
-        if (this._in_pending_zone(key)) return      // don't capture changes above offset during backfilling
-        return this.dst.capture_change(key, prev, next)
-    }
+    // capture_change(key, prev, next) {
+    //     if (this._in_pending_zone(key)) return      // don't capture changes above offset during backfilling
+    //     return this.dst.capture_change(key, prev, next)
+    // }
 
     derive_ops(key, prev, next) {
         /* In response to a captured data [prev > next] data change at a `key` in the source sequence, derive a list
@@ -274,7 +274,6 @@ export class Block extends Agent {
         for (let monitor of this.$state.monitors.values()) {
             let ops = monitor.derive_ops(key, prev, next)
             ops.forEach(op => op.exec())
-            // monitor.capture_change(key, prev, next)
         }
     }
 }
