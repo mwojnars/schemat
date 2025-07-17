@@ -567,9 +567,11 @@ export class DataBlock extends Block {
         let data = obj.__json
         let key = this.encode_id(id)
 
-        // let oper_put = ['put', key, data]
-        // let oper_derived = []        // instructions to be sent to derived sequences (change data capture)
-        // let plan = [oper_put, ...oper_derived]
+        // let op_put = ['put', key, data]
+        // let ops_derived = this._derive(key, prev, obj)       // instructions for derived sequences
+        // let ops = [op_put, ...ops_derived]
+        // this._plan/schedule/apply/administer/perform/submit/stage/enact/ordain(ops)
+        // this._apply(ops)        // schedule `ops` for execution, either immediately or later with WAL
 
         await this._put(key, data)
         this._propagate(key, prev, obj)
