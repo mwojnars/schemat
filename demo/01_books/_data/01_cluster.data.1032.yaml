@@ -80,6 +80,7 @@
     "@": 1003
   operator:
     "@": 23
+  filled: true
   blocks:
     - "@": 1026
   __category:
@@ -126,6 +127,7 @@
     "@": 1016
   operator:
     "@": 23
+  filled: true
   blocks:
     - "@": 1030
   __category:
@@ -186,6 +188,7 @@
     "@": 1004
   operator:
     "@": 23
+  filled: true
   blocks:
     - "@": 1033
   __category:
