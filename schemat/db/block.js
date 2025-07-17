@@ -143,6 +143,12 @@ export class Block extends Agent {
         throw new Error(`unsupported store type '${format}' in ${this}`)
     }
 
+
+    async _get(key, checked = false) {
+        if (checked && !this.sequence.filled) throw new Error(`sequence ${this.sequence} is not filled`)
+        return this.$state.store.get(key)
+    }
+
     async '$agent.put'(key, value) { return this._put(key, value) }
 
     async _put(key, value) {
@@ -159,6 +165,7 @@ export class Block extends Agent {
     }
 
     async '$agent.scan'(opts = {}) {
+        if (!this.sequence.filled) throw new Error(`sequence not initialized`)
         return arrayFromAsync(this.$state.store.scan(opts))         // TODO: return batches with a hard upper limit on their size
     }
 
@@ -285,8 +292,8 @@ export class DataBlock extends Block {
 
     async '$agent.select'(id, req) {
         let key = this.encode_id(id)
-        let data = await this.$state.store.get(key)     // JSON string
-        if (data) return this._annotate(data)
+        let json = await this._get(key)
+        if (json) return this._annotate(json)
         return this._move_down(id, req).select(id, req)
     }
 
@@ -305,7 +312,7 @@ export class DataBlock extends Block {
         if (id) {
             assert(entries.length === 1)        // fixed ID provided by the caller? check for uniqueness
             let key = this.encode_id(id)
-            if (await this.$state.store.get(key))
+            if (await this._get(key))
                 throw new DataConsistencyError(`record with this ID already exists`, {id})
         }
 
@@ -442,7 +449,7 @@ export class DataBlock extends Block {
         return this.$state.lock_row(id, async () =>
         {
             let key = this.encode_id(id)
-            let data = await this.$state.store.get(key)
+            let data = await this._get(key)
             if (data === undefined) return this._move_down(id, req).update(id, edits, req)
 
             let prev = await WebObject.from_data(id, data, {mutable: false, activate: false})
@@ -475,7 +482,7 @@ export class DataBlock extends Block {
         return this.$state.lock_row(id, async () =>
         {
             let key = this.encode_id(id)
-            if (await this.$state.store.get(key))
+            if (await this._get(key))
                 throw new DataConsistencyError('newly-inserted object with same ID discovered in a higher ring during upward pass of update', {id})
 
             let obj = await WebObject.from_data(id, data, {activate: false})
@@ -502,7 +509,7 @@ export class DataBlock extends Block {
         return this.$state.lock_row(id, async () =>
         {
             let key = this.encode_id(id)
-            let data = await this.$state.store.get(key)
+            let data = await this._get(key)
             if (data === undefined) return this._move_down(id, req).delete(id, req)
 
             if (this.ring.readonly)
