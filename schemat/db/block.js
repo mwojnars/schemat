@@ -18,6 +18,10 @@ export class Monitor {
        Monitors are "write agents" that perform all updates to a derived sequence, although they reside on source blocks
        not at destination. Also, they are NOT web objects, so they are not persisted to DB on their own, and whatever
        internal state they maintain, this state is managed and persisted locally via the host block.
+
+       During backfill process, source keys are split into two ranges:
+       - "processed zone" (key <= backfill_offset): these keys were already sent to destination and undergo regular change capture
+       - "pending zone" (key > backfill_offset): not yet sent to destination, no change capture for these keys
      */
 
     src     // source block
@@ -52,10 +56,19 @@ export class Monitor {
             fs.unlinkSync(path)     // remove the backfill file when initialization of `seq` was completed
     }
 
+    _in_pending_zone(key) {
+        /* During backfilling, changes in the pending zone (above offset, unprocessed yet) should be ignored. */
+        return this.backfill_offset && compare_uint8(this.backfill_offset, key) === -1
+    }
+
     capture_change(key, prev, next) {
-        if (this.backfill_offset && compare_uint8(this.backfill_offset, key) === -1)
-            return      // don't capture changes in the "pending zone" (above offset) while backfilling
+        if (this._in_pending_zone(key)) return      // don't capture changes above offset during backfilling
         return this.dst.capture_change(key, prev, next)
+    }
+
+    derive(key, prev, next) {
+        if (this._in_pending_zone(key)) return []
+        let [del_records, put_records] = this.dst.operator.derive(key, prev, next)
     }
 }
 
@@ -521,7 +534,7 @@ export class DataBlock extends Block {
         let key = this.encode_id(id)
 
         // let oper_put = ['put', key, data]
-        // let oper_derived = []        // instructions to be sent to derived sequences as a part of change data capture
+        // let oper_derived = []        // instructions to be sent to derived sequences (change data capture)
         // let plan = [oper_put, ...oper_derived]
 
         await this._put(key, data)

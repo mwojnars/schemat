@@ -118,23 +118,6 @@ export class Sequence extends WebObject {
     async erase()   { return Promise.all(this.blocks.map(b => b.$agent.erase())) }
     async flush()   { return Promise.all(this.blocks.map(b => b.$agent.flush())) }
 
-    capture_change(key, prev, next) {
-        /* Update this sequence to apply a [prev > next] change that originated in the source sequence
-           at a binary `key`. Here, `prev` and `next` are source-sequence entities: objects or records.
-           Missing 'prev' represents insertion; missing `next` represents deletion.
-         */
-        // this._print(`capture_change(), binary key [${key}]:\n   ${prev} \n->\n   ${next}`)
-        let [del_records, put_records] = this.operator.derive(key, prev, next)
-
-        // delete old records
-        for (let [key, value] of del_records || [])
-            this.del(key)                   // no need to await, the result is not used by the caller
-
-        // (over)write new records
-        for (let [key, value] of put_records || [])
-            this.put(key, value)
-    }
-
     async 'action.create_derived'(operator) {
         /* Create a derived sequence that will capture changes from this sequence and apply `operator` to them. */
 
@@ -163,6 +146,23 @@ export class Sequence extends WebObject {
 
         // boot up this sequence by requesting all source blocks to send initial data + set up data capture for future changes
         source.blocks.map(block => block.$agent.backfill(this))
+    }
+
+    capture_change(key, prev, next) {
+        /* Update this sequence to apply a [prev > next] change that originated in the source sequence
+           at a binary `key`. Here, `prev` and `next` are source-sequence entities: objects or records.
+           Missing 'prev' represents insertion; missing `next` represents deletion.
+         */
+        // this._print(`capture_change(), binary key [${key}]:\n   ${prev} \n->\n   ${next}`)
+        let [del_records, put_records] = this.operator.derive(key, prev, next)
+
+        // delete old records
+        for (let [key, value] of del_records || [])
+            this.del(key)                   // no need to await, the result is not used by the caller
+
+        // (over)write new records
+        for (let [key, value] of put_records || [])
+            this.put(key, value)
     }
 }
 
