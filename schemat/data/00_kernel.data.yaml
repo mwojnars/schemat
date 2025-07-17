@@ -615,6 +615,11 @@
       type:
         "@": schemat/types/type.js:BINARY
       "@": schemat/types/type.js:ARRAY
+    filled:
+      info: Indicates whether the backfill procedure for this (derived) sequence has
+        been completed. Only when filled=true, the sequence is fully initialized
+        and can be used for read access.
+      "@": schemat/types/type.js:BOOLEAN
     derived:
       info: "Array of derived sequences: their content is a transformation of this
         sequence and they should receive notifications on every data change."
