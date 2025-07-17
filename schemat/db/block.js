@@ -2,8 +2,9 @@ import {assert, print, T, zip, arrayFromAsync, fileBaseName} from '../common/uti
 import {DataAccessError, DataConsistencyError, ObjectNotFound} from '../common/errors.js'
 import {Shard, Mutexes, ObjectsMap} from "../common/structs.js"
 import {zero_binary} from "../common/binary.js";
-import {WebObject} from '../core/object.js'
+import {JSONx} from "../common/jsonx.js";
 import {Struct} from "../common/catalog.js"
+import {WebObject} from '../core/object.js'
 import {Agent} from "../server/agent.js"
 
 const fs = await server_import('node:fs')
@@ -26,23 +27,29 @@ export class Monitor {
                         // so the monitor forwards insert/update/delete events occurring at keys <= backfill_offset,
                         // but ignores any events occurring above backfill_offset; set to null after backfill is finished
 
+    get _backfill_path() { return this.src._get_backfill_path(this.dst) }
+
     constructor(src, dst, backfill = false) {
         this.src = src
         this.dst = dst
+        this.backfill_offset = null
 
         if (backfill && dst.filled) throw new Error(`sequence ${dst} is already filled, no need to start backfilling`)
         backfill ||= !dst.filled
 
-        // read current `backfill_offset` from local file .../data/backfill/<src>.<dst>.json
-        let path = src._get_backfill_path(dst)      // creates the .../backfill folder if needed
-        src._print(`backfill file:`, path)
+        let path = this._backfill_path
+        let exists = fs.existsSync(path)
 
         if (backfill) {
-            this.backfill_offset = zero_binary
+            // read current `backfill_offset` from local file .../data/backfill/<src>.<dst>.json, if present
+            if (exists) {
+                let json = JSONx.parse(fs.readFileSync(path, 'utf8'))
+                this.backfill_offset = json.offset
+            }
+            else this.backfill_offset = zero_binary
         }
-        else {
-            // remove the backfill file if present
-        }
+        else if (exists)
+            fs.unlinkSync(path)     // remove the backfill file when initialization of `seq` was completed
     }
 
     capture_change(key, prev, next) {
