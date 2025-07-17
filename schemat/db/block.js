@@ -33,7 +33,7 @@ export class Monitor {
         backfill ||= !dst.filled
 
         // read current `backfill_offset` from local file .../data/backfill/<src>.<dst>.json
-        // let path = await src_block.get_backfill_filepath(dst)      // creates the .../backfill folder if needed
+        let path = src._get_backfill_path(dst)      // creates the .../backfill folder if needed
 
         if (backfill) {
             this.backfill_offset = zero_binary
@@ -123,26 +123,36 @@ export class Block extends Agent {
         await Promise.all(this.$state.stores.toReversed().map(store => store.close()))
     }
 
-    async _create_store(storage, path = null) {
-        path ??= this._file_path(storage)
-        let clas_ = await this._detect_store_class(storage)
-        let store = new clas_(path, this)
-        await store.open()
-        return store
-    }
-
-    _file_path(storage) {
-        let ext = Block.STORAGE_TYPES[storage]
-        if (!ext) throw new Error(`unknown storage type '${storage}' in ${this}`)
-        return `${schemat.node.file_path}/${this.file_tag}.${ext}`
-    }
-
     async _detect_store_class(format) {
         let {JsonStore} = await import('./store.js')
         if (format === 'json') return JsonStore
         throw new Error(`unsupported store type '${format}' in ${this}`)
     }
 
+    async _create_store(storage, path = null) {
+        path ??= this._get_store_path(storage)
+        let clas_ = await this._detect_store_class(storage)
+        let store = new clas_(path, this)
+        await store.open()
+        return store
+    }
+
+    _get_store_path(storage) {
+        let ext = Block.STORAGE_TYPES[storage]
+        if (!ext) throw new Error(`unknown storage type '${storage}' in ${this}`)
+        return `${schemat.node.file_path}/${this.file_tag}.${ext}`
+    }
+
+    _get_backfill_path(seq) {
+        /* File path to the local file that holds backfilling status information for data transfer from
+           this source block to `seq` derived sequence. Creates the parent .../backfill folder if needed.
+         */
+        // .../data/backfill/<src>.<dst>.json
+        // creates the .../backfill folder if needed
+    }
+
+
+    /***  Access to records  ***/
 
     async _get(key, checked = false) {
         if (checked && !this.sequence.filled) throw new Error(`sequence ${this.sequence} is not filled`)
@@ -192,6 +202,8 @@ export class Block extends Agent {
 
         this._print(`_sync_stores() done`)
     }
+
+    /***  Change propagation  ***/
 
     async '$agent.backfill'(seq) {
         /* Start a monitor that will perform the initial scan of this (source) sequence, compute derived records
