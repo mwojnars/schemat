@@ -78,9 +78,11 @@ export class BinaryInput {
 
 /**********************************************************************************************************************/
 
+export const zero_binary = new Uint8Array(0)
+
 export function compare_uint8(arr1, arr2) {
     /* Compare two Uint8Arrays byte by byte. Return -1 if arr1 < arr2, 1 if arr1 > arr2, 0 if arr1 === arr2.
-       Empty array [] represents a "zero" vector, which is a lower bound for all arrays.
+       Empty array [] (`zero_binary`) represents a "zero" vector, which is a lower bound for all arrays.
        `null` represents a "full" vector, which is an upper bound for all arrays.
      */
     if (arr1 === null) return arr2 === null ? 0 : 1
