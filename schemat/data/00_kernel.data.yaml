@@ -651,6 +651,9 @@
     DataBlock:
       "@": 19
   class: schemat/db/sequence.js:DataSequence
+  defaults:
+    filled: true
+    "@": schemat:Catalog
   __prototype:
     "@": 13
   __category:
