@@ -271,10 +271,19 @@ export class Block extends Agent {
     _propagate(key, prev = null, next = null) {
         /* Push a change in this block to all derived sequences. */
         assert(this.ring?.is_loaded())
-        for (let monitor of this.$state.monitors.values()) {
-            let ops = monitor.derive_ops(key, prev, next)
-            ops.forEach(op => op.exec())
-        }
+        // for (let monitor of this.$state.monitors.values()) {
+        //     let ops = monitor.derive_ops(key, prev, next)
+        //     ops.forEach(op => op.exec())
+        // }
+        let ops = this._derive(key, prev, next)
+        ops.forEach(op => op.exec())
+    }
+
+    _derive(key, prev = null, next = null) {
+        let ops = []
+        for (let monitor of this.$state.monitors.values())
+            ops.push(...monitor.derive_ops(key, prev, next))
+        return ops
     }
 }
 
