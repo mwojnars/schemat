@@ -20,10 +20,18 @@ export class OP {
         this.args = args
     }
 
-    async exec() {
+    async submit() {
+        /* RPC execution on a derived block. */
         let {block, op, args} = this
         assert(['put', 'del'].includes(op))
         return block.$agent[op](...args)
+    }
+
+    exec(block) {
+        /* Immediate execution here on `block`. */
+        let {op, args} = this
+        assert(['put', 'del'].includes(op))
+        return block[`_${op}`](...args)
     }
 }
 
@@ -271,10 +279,10 @@ export class Block extends Agent {
         assert(this.ring?.is_loaded())
         // for (let monitor of this.$state.monitors.values()) {
         //     let ops = monitor.derive_ops(key, prev, next)
-        //     ops.forEach(op => op.exec())
+        //     ops.forEach(op => op.submit())
         // }
         let ops = this._derive(key, prev, next)
-        ops.forEach(op => op.exec())
+        ops.forEach(op => op.submit())
     }
 
     _derive(key, prev = null, next = null) {
@@ -282,6 +290,13 @@ export class Block extends Agent {
         for (let monitor of this.$state.monitors.values())
             ops.push(...monitor.derive_ops(key, prev, next))
         return ops
+    }
+    
+    _apply(ops) {
+        /* Schedule local or remote `ops` for execution, either immediately or later with WAL (TODO). */
+        for (let op of ops)
+            if (op.block) op.submit()       // RPC execution on a derived block
+            else op.exec(this)              // immediate execution here on this block
     }
 }
 
@@ -567,14 +582,15 @@ export class DataBlock extends Block {
         let data = obj.__json
         let key = this.encode_id(id)
 
-        // let op_put = ['put', key, data]
-        // let ops_derived = this._derive(key, prev, obj)       // instructions for derived sequences
-        // let ops = [op_put, ...ops_derived]
-        // this._plan/schedule/apply/administer/perform/submit/stage/enact/ordain(ops)
-        // this._apply(ops)        // schedule `ops` for execution, either immediately or later with WAL
+        let op_put = new OP('put', key, data)
+        let ops_derived = this._derive(key, prev, obj)       // instructions for derived sequences
+        let ops = [op_put, ...ops_derived]
 
-        await this._put(key, data)
-        this._propagate(key, prev, obj)
+        this._apply(ops)                        // schedule `ops` for execution, either immediately or later with WAL
+        this._cascade_delete(prev, obj)         // removed related objects if needed
+
+        // await this._put(key, data)
+        // this._propagate(key, prev, obj)
 
         data = this._annotate(data)
         schemat.register_changes({id, data})
