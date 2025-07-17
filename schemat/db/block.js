@@ -11,6 +11,16 @@ const fs = await server_import('node:fs')
 
 /**********************************************************************************************************************/
 
+export class OP {
+    /* Binary operation (instruction) to be executed on a destination block. Can be serialized to a WAL log for durability (TODO). */
+    constructor(op, ...args) {
+        this.op = op        // put, del, inc, ???
+        this.args = args
+    }
+}
+
+/**********************************************************************************************************************/
+
 export class Monitor {
     /* Utility class that represents an active connection between a source block and a derived sequence. Monitor captures
        changes in the source and translates them to destination updates; it also performs a (possibly long-lasting)
@@ -67,6 +77,9 @@ export class Monitor {
     }
 
     derive(key, prev, next) {
+        /* In response to a captured data [prev > next] data change at a `key` in the source sequence, derive a list
+           of low-level instructions that should be
+         */
         if (this._in_pending_zone(key)) return []
         let [del_records, put_records] = this.dst.operator.derive(key, prev, next)
     }

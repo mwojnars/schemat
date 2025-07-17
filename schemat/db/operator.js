@@ -4,6 +4,7 @@ import {BinaryMap, compare_uint8} from "../common/binary.js"
 import {Catalog} from "../common/catalog.js";
 import {WebObject} from "../core/object.js";
 import {data_schema, RecordSchema} from "./records.js";
+import {OP} from "./block.js";
 
 
 /**********************************************************************************************************************/
@@ -48,13 +49,28 @@ export class DataOperator extends Operator {
 export class IndexOperator extends Operator {
     /* Operator that pulls data from a source sequence and creates records in a destination sequence. */
 
+    derive_ops(key, prev, next) {
+        /* Generate a list of binary instructions ("ops") to be executed on the destination sequence in response
+           to [prev > next] change in the source sequence that occurred at a binary `key`.
+         */
+        let [del_records, put_records] = this.derive(key, prev, next)
+        let ops = []
+
+        for (let key of del_records.keys())
+            ops.push(new OP('del', key))
+        for (let [key, val] of put_records)
+            ops.push(new OP('put', key, val))
+
+        return ops
+    }
+
     derive(key, prev, next) {
         /* Calculate what records should be deleted or put in the destination sequence in response to [prev > next] change
            in the source sequence that occurred at a binary `key`. Return a pair, [del_records, put_records], where both
            elements are BinaryMaps of destination records to be del/put respectively, {key-binary: val-json/binary/undefined}.
            (TODO: result could be merged to one BinaryMap if "tombstone" values are used)
          */
-        // del_records and put_records are BinaryMaps,
+        // del_records and put_records are BinaryMaps
         let del_records = this._make_records(key, prev)
         let put_records = this._make_records(key, next)
 
