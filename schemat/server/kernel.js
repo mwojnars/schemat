@@ -2,7 +2,7 @@ import fs from 'node:fs'
 import cluster from 'node:cluster'
 import {AsyncLocalStorage} from 'node:async_hooks'
 import yaml from 'yaml'
-import why from 'why-is-node-running'
+// import why from 'why-is-node-running'
 
 import "../common/globals.js"           // global flags: CLIENT, SERVER
 
@@ -26,15 +26,16 @@ export class Recurrent {
     /* A recurrent task executed at predefined intervals, with the ability to change the interval at any point. */
 
     constructor({name, delay = 1.0, randomize = 0.1} = {}, fn) {
-        this.interval = delay           // [seconds]
+        this.interval = delay || 1.0    // [seconds]
         this.randomize = randomize      // [0.0..1.0]
         this.fn = fn                    // function to be executed at the interval
         this.name = name || fn.name     // name of the task
         this.timeout = null             // timer handle
+        this.schedule()
     }
 
     schedule() {
-        /* Schedule the next tick at the interval. */
+        /* Schedule the next tick() execution at the interval. */
         if (this.timeout) clearTimeout(this.timeout)
 
         let delay = this.interval * 1000
@@ -170,7 +171,8 @@ class Frame {
     stopped             // if true, the agent is permanently stopped and should not be restarted even after node restart unless explicitly requested by its creator/supervisor [UNUSED]
     migrating_to        // node ID where this agent is migrating to right now; all new requests are forwarded to that node
 
-    restart_timeout     // timeout for agent's scheduled restart
+    _task_restart       // Recurrent instance for agent's scheduled restart
+    // restart_timeout     // timeout for agent's scheduled restart
 
     constructor(agent, role) {
         this.agent = agent
@@ -195,38 +197,45 @@ class Frame {
 
         let state = await agent.app_context(() => agent.__start__(this)) || {}
         this.set_state(state)
-        await this._schedule_restart()
+
+        this._task_restart = new Recurrent({name: `${agent}.__restart__()`, delay: agent.__ttl}, async () => {
+            await this.restart()
+            let ttl = this.agent.__ttl
+            if (ttl <= 0) ttl = 1.0     // fast restart during boot to quickly arrive at a clean version of the object
+            return ttl
+        })
+        // await this._schedule_restart()
 
         schemat._print(`starting agent ${agent} done`)
         return state
     }
 
-    async _schedule_restart(boot_ttl = 1.0, randomize_ttl = 0.1) {
-        /* Schedule this.restart() execution after the agent's TTL expires.
-           If a restart is already scheduled, clear it and re-schedule. 
-           After restart, schedule a new restart, unless the agent is stopped.
-         */
-        if (this.restart_timeout) this._cancel_restart()    // clear any existing scheduled restart
-        if (this.stopping) return
-
-        let {agent} = this
-        let ttl = agent.__ttl           // it's assumed that __ttl is never missing, although it can be 0.0 during boot
-        if (ttl <= 0) ttl = boot_ttl    // restart faster during boot to quickly arrive at a clean version of the object
-        ttl = fluctuate(ttl)            // multiply ttl by random factor between 0.9 and 1.0 to spread restarts more uniformly
-
-        // schemat._print(`_schedule_restart() will restart ${agent} after ${ttl.toFixed(2)} seconds; __ttl=${agent.__ttl}`)
-
-        this.restart_timeout = setTimeout(async () => {
-            try { await this.restart() }
-            catch (ex) { schemat._print(`error restarting agent ${agent}:`, ex) }
-            finally { this._schedule_restart() }
-        }, ttl * 1000).unref()
-    }
-
-    _cancel_restart() {
-        clearTimeout(this.restart_timeout)
-        this.restart_timeout = null
-    }
+    // async _schedule_restart(boot_ttl = 1.0, randomize_ttl = 0.1) {
+    //     /* Schedule this.restart() execution after the agent's TTL expires.
+    //        If a restart is already scheduled, clear it and re-schedule.
+    //        After restart, schedule a new restart, unless the agent is stopped.
+    //      */
+    //     if (this.restart_timeout) this._cancel_restart()    // clear any existing scheduled restart
+    //     if (this.stopping) return
+    //
+    //     let {agent} = this
+    //     let ttl = agent.__ttl           // it's assumed that __ttl is never missing, although it can be 0.0 during boot
+    //     if (ttl <= 0) ttl = boot_ttl    // restart faster during boot to quickly arrive at a clean version of the object
+    //     ttl = fluctuate(ttl)            // multiply ttl by random factor between 0.9 and 1.0 to spread restarts more uniformly
+    //
+    //     // schemat._print(`_schedule_restart() will restart ${agent} after ${ttl.toFixed(2)} seconds; __ttl=${agent.__ttl}`)
+    //
+    //     this.restart_timeout = setTimeout(async () => {
+    //         try { await this.restart() }
+    //         catch (ex) { schemat._print(`error restarting agent ${agent}:`, ex) }
+    //         finally { this._schedule_restart() }
+    //     }, ttl * 1000).unref()
+    // }
+    //
+    // _cancel_restart() {
+    //     clearTimeout(this.restart_timeout)
+    //     this.restart_timeout = null
+    // }
 
     async restart() {
         /* Replace the agent with its newest copy after reload and call its __restart__(). */
@@ -268,9 +277,10 @@ class Frame {
     async stop() {
         /* Let running calls complete, then stop the agent by calling its __stop__(). */
         this.stopping = true                // prevent new calls from being executed on the agent
-        this._cancel_restart()              // clear any scheduled restart of the agent
-        let {calls} = this
+        this._task_restart.stop()           // clear any scheduled restart of the agent
+        // this._cancel_restart()              // clear any scheduled restart of the agent
 
+        let {calls} = this
         if (calls.length > 0) {             // wait for pending calls to complete before stopping
             schemat._print(`waiting for ${calls.length} pending calls to agent ${this.agent} to complete`)
             await Promise.all(calls)
