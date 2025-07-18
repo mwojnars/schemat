@@ -92,6 +92,8 @@ export class Monitor {
            destination-sequence mutations, and submit to destination.
          */
         let records = this.src._scan({limit, gt: this.backfill_offset})
+        this.src._print(`backfill() to ${this.dst} records:`, records)
+
         let count = 0
         let ops = []
         
@@ -104,10 +106,20 @@ export class Monitor {
             this.backfill_offset = key
             count++
         }
-        if (count < limit) this.backfill_offset = null      // clear the offset if no more records
+        if (count < limit) this._finalize_backfill()        // terminate backfilling if no more records
         
         // TODO: batch & compact instructions addressed to the same block, for performance AND to prevent accidental reordering
         return Promise.all(ops.map(op => op.submit()))
+    }
+
+    _flush_backfill() {
+        // TODO: flush backfill_offset to file
+    }
+
+    _finalize_backfill() {
+        /* Finalize the backfill process: clear the offset, remove file. */
+        this.backfill_offset = null
+        // TODO: remove file...
     }
 
     _in_pending_zone(key) {
@@ -264,7 +276,7 @@ export class Block extends Agent {
         return arrayFromAsync(this._scan(opts))
     }
 
-    async _scan(opts = {}) { return this.$state.store.scan(opts) }
+    async *_scan(opts = {}) { yield* this.$state.store.scan(opts) }
 
     async '$agent.erase'() {
         /* Remove all records from this block. */
