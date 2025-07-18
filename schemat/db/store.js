@@ -79,12 +79,15 @@ export class MemoryStore extends Store {
     erase()             { this._records.clear(); this.flush(0) }
     // get size()       { return this._records.size }
 
-    *scan({start /*Uint8Array*/, stop /*Uint8Array*/} = {}) {
+    *scan({start, stop, gt, gte, lt, lte /*Uint8Array*/} = {}) {
         /* Iterate over records in this block whose keys are in the [start, stop) range, where `start` and `stop`
            are binary keys (Uint8Array). Yield [key, value] pairs.
          */
         let sorted_keys = [...this._records.keys()].sort(compare_uint8)
         let total = sorted_keys.length
+
+        gte ??= start
+        lt  ??= stop
 
         let start_index = start ? sorted_keys.findIndex(key => compare_uint8(key, start) >= 0) : 0
         let stop_index = stop ? sorted_keys.findIndex(key => compare_uint8(key, stop) >= 0) : total

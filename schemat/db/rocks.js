@@ -112,7 +112,7 @@ export class RocksDBStore extends Store {
          - start:           start bound (inclusive), same as `gte` below
          - stop:            end bound (exclusive), same as `lt` below
          - limit:           maximum number of entries to return
-         - keys, values:    whether to return keys or values only
+         - keys, values:    whether (or not) to return keys/values
          - reverse:         whether to scan in reverse order
 
          Options specific to RocksDB:
