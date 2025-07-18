@@ -198,13 +198,8 @@ export class DataSequence extends Sequence {
         this.blocks = [DataBlock.new({sequence: this, storage: 'yaml'})]
     }
 
-    encode_id(id) {
-        assert(id !== undefined)
-        return data_schema.encode_key([id])
-    }
-    decode_id(key) {
-        return data_schema.decode_key(key)[0]
-    }
+    encode_id(id)  { return data_schema.encode_id(id) }
+    decode_id(key) { return data_schema.decode_id(key) }
 
     find_block_id(id) {
         let key = this.encode_id(id)
