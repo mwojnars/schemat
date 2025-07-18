@@ -319,8 +319,8 @@ export class Block extends Agent {
         let monitors = [...this.$state.monitors.values()].filter(m => m.is_backfilling())
         if (!monitors.length) return 10.0       // no backfilling, increase the delay between background job calls
 
-        // for (let monitor of monitors)
-        //     await monitor.backfill()
+        for (let monitor of monitors)
+            await monitor.backfill()
 
         return 0.2
     }
