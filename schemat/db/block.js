@@ -87,15 +87,25 @@ export class Monitor {
         return !!this.backfill_offset
     }
 
-    async backfill_step() {
-        /* Run another step of backfilling: scan the next batch of source records, transform them into
+    async backfill(limit = 100) {
+        /* Run another round of backfilling: scan the next batch of source records, transform them into
            destination-sequence mutations, and submit to the destination.
          */
-        for await (let [key, val] of this.src._scan()) {
+        let records = this.src._scan({limit, gt: this.backfill_offset})
+        let count = 0
+        let ops = []
+        
+        for await (let [key, val] of records) {
             let obj = this.src.decode_object(key, val)
             if (obj instanceof Promise) obj = await obj
-            let ops = this.derive_ops(key, null, obj)
+            ops.push(...this.derive_ops(key, null, obj))
+            this.backfill_offset = key
+            count++
         }
+        if (count < limit) this.backfill_offset = null
+        
+        // TODO: batch instructions addressed to the same block, for performance AND to prevent accidental reordering
+        return Promise.all(ops.map(op => op.submit()))
     }
 
     _in_pending_zone(key) {
@@ -308,7 +318,7 @@ export class Block extends Agent {
         if (!monitors.length) return 10.0       // no backfilling, increase the delay between background job calls
 
         // for (let monitor of monitors)
-        //     await monitor.backfill_step()
+        //     await monitor.backfill()
 
         return 0.2
     }
