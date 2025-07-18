@@ -63,6 +63,25 @@ export class Store {
         if (opts.sync)
             await this.flush(0)
     }
+
+    _normalize_scan_opts({start, stop, gt, gte, lt, lte /*Uint8Array*/} = {}) {
+        gte ??= start
+        lt  ??= stop
+
+        // drop one of (gt, gte) if both are present, same for (lt, lte):
+        // - if XX=XXe, XXe is a weaker constraint and should be dropped
+        // - if gtX>gtY, gtY is a weaker constraint and should be dropped
+        // - if ltX<ltY, ltY is a weaker constraint and should be dropped
+        if (gt && gte)
+            if (compare_bin(gt, gte) >= 0) gte = undefined
+            else gt = undefined
+
+        if (lt && lte)
+            if (compare_bin(lt, lte) <= 0) lte = undefined
+            else lt = undefined
+
+        return {gt, gte, lt, lte}
+    }
 }
 
 
@@ -96,25 +115,6 @@ export class MemoryStore extends Store {
 
         for (let key of sorted_keys.slice(start_index, stop_index))
             yield [key, this._records.get(key)]
-    }
-
-    _normalize_scan_opts({start, stop, gt, gte, lt, lte /*Uint8Array*/} = {}) {
-        gte ??= start
-        lt  ??= stop
-
-        // drop one of (gt, gte) if both are present, same for (lt, lte); the rules:
-        // - if XX=XXe, XXe is a weaker constraint and should be dropped
-        // - if gtX>gtY, gtY is a weaker constraint and should be dropped
-        // - if ltX<ltY, ltY is a weaker constraint and should be dropped
-        if (gt && gte)
-            if (compare_bin(gt, gte) >= 0) gte = undefined
-            else gt = undefined
-
-        if (lt && lte)
-            if (compare_bin(lt, lte) <= 0) lte = undefined
-            else lt = undefined
-
-        return {gt, gte, lt, lte}
     }
 
     flush(delay = 0.1) {
