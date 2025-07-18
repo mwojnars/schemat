@@ -147,7 +147,7 @@ export class Frame {
         this._task_restart = new Recurrent(this.restart.bind(this), {delay: agent.__ttl})
 
         // schedule recurrent execution of background job; the initial interval of 5 sec can be changed later by the agent
-        this._task_restart = new Recurrent(this.background.bind(this), {delay: 5.0})
+        this._task_background = new Recurrent(this.background.bind(this), {delay: 5.0})
 
         schemat._print(`starting agent ${agent} done`)
         return state
@@ -198,7 +198,8 @@ export class Frame {
     async stop() {
         /* Let running calls complete, then stop the agent by calling its __stop__(). */
         this.stopping = true                // prevent new calls from being executed on the agent
-        this._task_restart.stop()           // clear any scheduled restart of the agent
+        this._task_background.stop()        // clear scheduled tasks: background job & restart
+        this._task_restart.stop()
 
         let {calls} = this
         if (calls.length > 0) {             // wait for pending calls to complete before stopping
