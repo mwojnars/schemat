@@ -93,7 +93,7 @@ export class Agent extends WebObject {
     }
 
     '$agent.background'() {
-        /* Doing a batch of background processing that is triggered in spare time when there are no other pending calls.
+        /* A batch of background processing that is triggered in spare time when there are no other pending calls.
            The returned value says how long to delay [sec] the next execution, even if there are no pending calls.
            Override in subclasses.
          */

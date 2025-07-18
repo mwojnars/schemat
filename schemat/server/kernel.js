@@ -22,6 +22,43 @@ import {JSONx} from "../common/jsonx.js";
 
 /**********************************************************************************************************************/
 
+export class Recurrent {
+    /* A recurrent task executed at predefined intervals, with the ability to change the interval at any point. */
+
+    constructor(interval, fn) {
+        this.interval = interval        // [seconds]
+        this.fn = fn                    // function to be executed at the interval
+        this.timeout = null             // timer handle
+    }
+
+    schedule() {
+        /* Schedule the next tick at the interval. */
+        if (this.timeout) clearTimeout(this.timeout)
+        this.timeout = setTimeout(async () => {
+            try {
+                await this.tick()
+            }
+            catch (ex) { schemat._print(`error executing recurrent task ${this.name}:`, ex) }
+            finally { this.schedule() }
+        }, this.interval * 1000).unref()
+    }
+
+    async tick() {
+        /* Execute this.fn() and amend the interval. */
+        this.timeout = null
+        let interval = await this.fn()
+        this.interval = interval ?? this.interval
+    }
+
+    stop() {
+        /* Stop the recurrent task. */
+        if (this.timeout) clearTimeout(this.timeout)
+        this.timeout = null
+    }
+}
+
+/**********************************************************************************************************************/
+
 export async function boot_schemat(opts, callback) {
     /* Create global (async local) `schemat` object, load the initial database, and run `callback`. */
 
