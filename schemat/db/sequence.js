@@ -115,7 +115,13 @@ export class Sequence extends WebObject {
         yield* await block_start.$agent.scan(opts)
     }
 
-    async erase()   { /*delete this.filled;*/ return Promise.all(this.blocks.map(b => b.$agent.erase())) }
+    async 'action.erase'() {
+        // this._print(this.__content)
+        // delete this.filled
+        return Promise.all(this.blocks.map(b => b.$agent.erase()))
+    }
+
+    // async erase()   { return Promise.all(this.blocks.map(b => b.$agent.erase())) }
     // async flush()   { return Promise.all(this.blocks.map(b => b.$agent.flush())) }
 
     async 'action.create_derived'(operator) {
