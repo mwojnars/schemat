@@ -217,11 +217,13 @@ export class Frame {
     async background() {
         /* Execute agent's background job, $agent.background(), and return updated interval for next execution. */
 
-        // either call <role>.background(), if present, or $agent.background() as a fallback
-        let {agent, role} = this
-        if (!agent[`${role}.background`]) role = schemat.GENERIC_ROLE
+        // // either call <role>.background(), if present, or $agent.background() as a fallback
+        // let {agent, role} = this
+        // if (!agent[`${role}.background`]) role = schemat.GENERIC_ROLE
 
-        let interval = await agent[role].background()
+        // let interval = await agent[role].background()
+
+        let interval = await this.exec('background')
         interval ||= 60     // 60 sec by default if no specific interval was returned
 
         let high_priority = (interval < 0)
@@ -248,7 +250,7 @@ export class Frame {
         this.paused = false
     }
 
-    async exec(command, args, caller_ctx = schemat.current_context, tx = null, callback = null) {
+    async exec(command, args = [], caller_ctx = schemat.current_context, tx = null, callback = null) {
         /* Call agent's `command` in tracked mode, in a proper app context (own or caller's) + schemat.tx context + agent.__frame context.
          */
         let {agent} = this

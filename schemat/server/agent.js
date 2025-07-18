@@ -93,7 +93,7 @@ export class Agent extends WebObject {
     }
 
     '$agent.background'() {
-        /* Background processing to be triggered at regular intervals, usually in spare time when there are no other calls.
+        /* Background processing that is triggered at regular intervals, usually in spare time when there are no other calls.
            The agent may control how often this operation is executed by returning the length of the next time interval (in seconds).
            A positive value means low-priority execution that waits until there's no other running/pending call.
            A negative value, -T, means a normal-priority execution that will start exactly in T seconds from now,
