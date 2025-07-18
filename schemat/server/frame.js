@@ -2,6 +2,7 @@ import {AsyncLocalStorage} from 'node:async_hooks'
 import {print, assert, T, fluctuate, sleep} from "../common/utils.js";
 import {JSONx} from "../common/jsonx.js";
 import {CustomMap} from "../common/structs.js";
+import {StoppingNow} from "../common/errors.js";
 
 
 /**********************************************************************************************************************/
@@ -222,7 +223,7 @@ export class Frame {
         if (this._background_priority === 'low')        // if low priority, wait until the agent is idle...
             while (this.calls.length > 0) {
                 await Promise.all(this.calls)           // wait for termination of ongoing calls
-                await sleep()                           // let pending calls jump in
+                await sleep()                           // let pending calls jump in and execute
             }
 
         let interval = await this.exec('background')
