@@ -114,11 +114,11 @@ export class Ring extends WebObject {
         this.validate_zones()
     }
 
-    async erase(req) {
-        /* Remove all records from this ring; open() should be called first. */
-        if (this.readonly) throw new DataAccessError("the ring is read-only and cannot be erased")
-        return this.main_sequence.erase(req)
-    }
+    // async erase(req) {
+    //     /* Remove all records from this ring; open() should be called first. */
+    //     if (this.readonly) throw new DataAccessError("the ring is read-only and cannot be erased")
+    //     return this.main_sequence.erase(req)
+    // }
 
     async flush() { return this.main_sequence.flush() }
 
