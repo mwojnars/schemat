@@ -142,8 +142,11 @@ export class Frame {
         let state = await agent.app_context(() => agent.__start__(this)) || {}
         this.set_state(state)
 
-        // schedule recurrent calls to this.restart() after the agent's TTL expires
+        // schedule recurrent agent restarts after the agent's TTL expires
         this._task_restart = new Recurrent(this.restart.bind(this), {delay: agent.__ttl})
+
+        // schedule recurrent execution of background job; the initial interval of 5 sec can be changed later by the agent
+        // this._task_restart = new Recurrent(this.background.bind(this), {delay: 5.0})
 
         schemat._print(`starting agent ${agent} done`)
         return state
