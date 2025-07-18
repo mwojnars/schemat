@@ -57,8 +57,6 @@ export class Monitor {
                         // so the monitor forwards insert/update/delete events occurring at keys <= backfill_offset,
                         // but ignores any events occurring above backfill_offset; set to null after backfill is finished
 
-    get _backfill_path() { return this.src._get_backfill_path(this.dst) }
-
     constructor(src, dst, backfill = false) {
         this.src = src
         this.dst = dst
@@ -80,6 +78,13 @@ export class Monitor {
         }
         else if (exists)
             fs.unlinkSync(path)     // remove the backfill file when initialization of `seq` was completed
+    }
+
+    get _backfill_path() { return this.src._get_backfill_path(this.dst) }
+
+    is_backfilling() {
+        /* True if the target sequence is not yet initialized and the backfill process from `src` is still ongoing. */
+        return !!this.backfill_offset
     }
 
     _in_pending_zone(key) {
@@ -257,25 +262,6 @@ export class Block extends Agent {
 
     /***  Change propagation  ***/
 
-    async '$agent.backfill'(seq) {
-        /* Start a monitor that will perform the initial scan of this (source) sequence, compute derived records
-           and send them to the destination sequence `seq` as a part of its backfilling (initialization) procedure.
-           The monitor then stays to continue feeding updates to `seq`.
-         */
-        let {monitors} = this.$state
-        let monitor = monitors.get(seq)
-        if (monitor) return
-
-        monitors.set(seq, monitor = new Monitor(this, seq, true))
-    }
-
-    // _propagate(key, prev = null, next = null) {
-    //     /* Push a change in this block to all derived sequences. */
-    //     assert(this.ring?.is_loaded())
-    //     let ops = this._derive(key, prev, next)
-    //     ops.forEach(op => op.submit())
-    // }
-
     _derive(key, prev = null, next = null) {
         let ops = []
         for (let monitor of this.$state.monitors.values())
@@ -294,6 +280,35 @@ export class Block extends Agent {
             return Promise.all(local)
         })
     }
+
+    async _backfill_step() {
+        /* Run another step of backfilling on behalf of all derived sequences. */
+    }
+
+    async '$agent.background'(seq) {
+        /* */
+        await this._backfill_step()
+        return 1.0
+    }
+
+    async '$agent.backfill'(seq) {
+        /* Start a monitor that will perform the initial scan of this (source) sequence, compute derived records
+           and send them to the destination sequence `seq` as a part of its backfilling (initialization) procedure.
+           The monitor then stays to continue feeding updates to `seq`.
+         */
+        let {monitors} = this.$state
+        let monitor = monitors.get(seq)
+        if (monitor) return
+
+        monitors.set(seq, monitor = new Monitor(this, seq, true))
+    }
+
+    // _propagate(key, prev = null, next = null) {
+    //     /* Push a change in this block to all derived sequences. */
+    //     assert(this.ring?.is_loaded())
+    //     let ops = this._derive(key, prev, next)
+    //     ops.forEach(op => op.submit())
+    // }
 }
 
 
