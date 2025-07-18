@@ -571,6 +571,12 @@ export class WebObject {
         return obj
     }
 
+    static async inactive(id, data, opts = {}) {
+        /* Create an inactive object - no _initialize/__load__/_activate() - that is seeded with pre-existing `data`,
+           typically loaded from storage or to be written there. */
+        return this.from_data(id, data, {...opts, inactive: true})
+    }
+
     static async from_data(id, data, {mutable, provisional, ...load_opts} = {}) {
         /* Create a new WebObject instance given the `data` with the object's content (a Catalog or encoded JSONx string). */
         // assert(typeof data === 'string' || data instanceof Catalog)
