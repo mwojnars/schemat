@@ -114,7 +114,7 @@ export class Frame {
     stopped             // if true, the agent is permanently stopped and should not be restarted even after node restart unless explicitly requested by its creator/supervisor [UNUSED]
     migrating_to        // node ID where this agent is migrating to right now; all new requests are forwarded to that node
 
-    _task_restart       // Recurrent task for agent's scheduled restart
+    _task_restart       // Recurrent task for this.restart() calls
     _task_background    // Recurrent task for $agent.background() calls
 
     constructor(agent, role) {
@@ -142,12 +142,7 @@ export class Frame {
         this.set_state(state)
 
         // schedule recurrent calls to this.restart() after the agent's TTL expires
-        this._task_restart = new Recurrent({name: `${agent}.__restart__()`, delay: agent.__ttl}, async () => {
-            await this.restart()
-            let ttl = this.agent.__ttl
-            if (ttl <= 0) ttl = 1.0     // fast restart during boot to quickly arrive at a clean version of the object
-            return ttl
-        })
+        this._task_restart = new Recurrent({name: `${agent}.__restart__()`, delay: agent.__ttl}, this.restart.bind(this))
 
         schemat._print(`starting agent ${agent} done`)
         return state
@@ -212,6 +207,11 @@ export class Frame {
 
         if (was_running) await this.resume()    // resume RPC calls unless the agent was already paused
         schemat._print(`restarting agent ${agent} done`)
+
+        // return updated time interval to the next execution of restart()
+        let ttl = agent.__ttl
+        if (ttl <= 0) ttl = 1.0     // fast restart during boot to quickly arrive at a clean version of the object
+        return ttl
 
         // TODO: check for changes in external props; if needed, invoke setup.* triggers to update the environment & installation
         //       and call explicitly __stop__ + triggers + __start__() instead of __restart__()
