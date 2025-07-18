@@ -177,8 +177,8 @@ export class Block extends Agent {
         //                                 // it's assumed that `sequence` WILL get fully loaded before any CRUD operation (ins/upd/del) starts
     }
 
-    encode_key(key) { return this.sequence.encode_key(key) }
-    decode_key(bin) { return this.sequence.decode_key(bin) }
+    encode_key(key) { return this.schema.encode_key(key) }
+    decode_key(bin) { return this.schema.decode_key(bin) }
 
     decode_record(key, val) { return this.schema.decode_object(key, val) }
 

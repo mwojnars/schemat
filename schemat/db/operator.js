@@ -22,15 +22,15 @@ export class Operator extends WebObject {
         return new RecordSchema(this.key_fields, this.val_fields)
     }
 
-    encode_key(key) {
-        /* Encode an array of field values [f1,f2,...] to binary representation (Uint8Array). */
-        return this.record_schema.encode_key(key)
-    }
-
-    decode_key(bin) {
-        /* Decode binary representation of a key back to an array of field values. */
-        return this.record_schema.decode_key(bin)
-    }
+    // encode_key(key) {
+    //     /* Encode an array of field values [f1,f2,...] to binary representation (Uint8Array). */
+    //     return this.record_schema.encode_key(key)
+    // }
+    //
+    // decode_key(bin) {
+    //     /* Decode binary representation of a key back to an array of field values. */
+    //     return this.record_schema.decode_key(bin)
+    // }
 
     // async min(seq)
     // async max(seq)

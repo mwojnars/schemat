@@ -95,9 +95,8 @@ export class Sequence extends WebObject {
     }
 
 
-    // if (!this.operator.is_loaded()) this._print(`UNLOADED operator ${this.operator}, __meta=${this.operator.__meta}, __data=${this.operator.__data}`)
-    encode_key(key) { return this.operator.encode_key(key) }    // app > binary representation
-    decode_key(bin) { return this.operator.decode_key(bin) }    // binary > app representation
+    // encode_key(key) { return this.operator.encode_key(key) }    // app > binary representation
+    // decode_key(bin) { return this.operator.decode_key(bin) }    // binary > app representation
 
     async* scan_binary(opts = {}) {
         /* Scan this sequence in [`start`, `stop`) range and yield [key, value] pairs, where `key` is an Uint8Array
