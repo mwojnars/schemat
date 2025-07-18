@@ -115,12 +115,6 @@ export class Sequence extends WebObject {
         yield* await block_start.$agent.scan(opts)
     }
 
-    async 'action.erase'() {
-        // this._print(this.__content)
-        // delete this.filled
-        return Promise.all(this.blocks.map(b => b.$agent.erase()))
-    }
-
     // async erase()   { return Promise.all(this.blocks.map(b => b.$agent.erase())) }
     // async flush()   { return Promise.all(this.blocks.map(b => b.$agent.flush())) }
 
@@ -156,8 +150,15 @@ export class Sequence extends WebObject {
         source.blocks.map(block => block.$agent.backfill(this))
     }
 
-    rebuild(source) {
-        /* Erase this sequence and build again from scratch. */
+    async 'action.erase'() {
+        return Promise.all(this.blocks.map(b => b.$agent.erase()))
+    }
+
+    async 'action.rebuild'(source) {
+        /* Erase this sequence and build again from `source`. */
+        delete this.filled
+        await Promise.all(this.blocks.map(b => b.$agent.erase()))
+        return this.build(source)
     }
 
     capture_change(key, prev, next) {
