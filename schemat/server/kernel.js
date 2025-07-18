@@ -25,22 +25,28 @@ import {JSONx} from "../common/jsonx.js";
 export class Recurrent {
     /* A recurrent task executed at predefined intervals, with the ability to change the interval at any point. */
 
-    constructor(interval, fn) {
-        this.interval = interval        // [seconds]
+    constructor({name, delay = 1.0, randomize = 0.1} = {}, fn) {
+        this.interval = delay           // [seconds]
+        this.randomize = randomize      // [0.0..1.0]
         this.fn = fn                    // function to be executed at the interval
+        this.name = name || fn.name     // name of the task
         this.timeout = null             // timer handle
     }
 
     schedule() {
         /* Schedule the next tick at the interval. */
         if (this.timeout) clearTimeout(this.timeout)
+
+        let delay = this.interval * 1000
+        if (this.randomize) delay = fluctuate(delay, this.randomize)
+
         this.timeout = setTimeout(async () => {
             try {
                 await this.tick()
             }
             catch (ex) { schemat._print(`error executing recurrent task ${this.name}:`, ex) }
             finally { this.schedule() }
-        }, this.interval * 1000).unref()
+        }, delay).unref()
     }
 
     async tick() {
