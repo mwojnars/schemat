@@ -64,7 +64,7 @@ export class Store {
             await this.flush(0)
     }
 
-    _normalize_scan_opts({start, stop, gt, gte, lt, lte /*Uint8Array*/} = {}) {
+    _normalize_scan_opts({start, stop, gt, gte, lt, lte /*Uint8Array*/, ...opts} = {}) {
         gte ??= start
         lt  ??= stop
 
@@ -80,7 +80,7 @@ export class Store {
             if (compare_bin(lt, lte) <= 0) lte = undefined
             else lt = undefined
 
-        return {gt, gte, lt, lte}
+        return {gt, gte, lt, lte, ...opts}
     }
 }
 
@@ -107,13 +107,34 @@ export class MemoryStore extends Store {
         let sorted_keys = [...this._records.keys()].sort(compare_bin)
         let total = sorted_keys.length
 
-        let start_index = gte ? sorted_keys.findIndex(key => compare_bin(key, gte) >= 0) : 0
-        let stop_index  = lt  ? sorted_keys.findIndex(key => compare_bin(key, lt) >= 0) : total
+        // indexes for slice(start, stop) on sorted list of records
+        let start = 0
+        let stop  = total
 
-        if (start_index < 0) start_index = total
-        if (stop_index < 0) stop_index = total
+        if (gt) {
+            let pos = sorted_keys.findIndex(key => compare_bin(key, gt) > 0)        // first `key` to be accepted
+            if (pos >= 0) start = pos; else start = total
+        }
+        if (gte) {
+            let pos = sorted_keys.findIndex(key => compare_bin(key, gte) >= 0)
+            if (pos >= 0) start = pos; else start = total
+        }
+        if (lt) {
+            let pos = sorted_keys.findIndex(key => compare_bin(key, lt) >= 0)       // first `key` to be rejected
+            if (pos >= 0) stop = pos
+        }
+        if (lte) {
+            let pos = sorted_keys.findIndex(key => compare_bin(key, lte) > 0)
+            if (pos >= 0) stop = pos
+        }
 
-        for (let key of sorted_keys.slice(start_index, stop_index))
+        // let start = gte ? sorted_keys.findIndex(key => compare_bin(key, gte) >= 0) : 0
+        // let stop  = lt  ? sorted_keys.findIndex(key => compare_bin(key, lt) >= 0) : total
+        //
+        // if (start < 0) start = total
+        // if (stop < 0) stop = total
+
+        for (let key of sorted_keys.slice(start, stop))
             yield [key, this._records.get(key)]
     }
 
