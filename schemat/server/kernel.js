@@ -172,6 +172,7 @@ class Frame {
     migrating_to        // node ID where this agent is migrating to right now; all new requests are forwarded to that node
 
     _task_restart       // Recurrent task for agent's scheduled restart
+    _task_background    // Recurrent task for $agent.background() calls
 
     constructor(agent, role) {
         this.agent = agent
