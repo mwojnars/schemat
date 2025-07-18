@@ -175,6 +175,7 @@ export class DataSequence extends Sequence {
      */
 
     // get file_tag() { return 'main' }
+    get filled() { return true }
 
     async __draft__(boot_file) {
         this.blocks = [await BootDataBlock.draft({sequence: this}, boot_file)]

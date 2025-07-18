@@ -88,8 +88,8 @@ export class Monitor {
     }
 
     derive_ops(key, prev, next) {
-        /* In response to a captured data [prev > next] data change at a `key` in the source sequence, derive a list
-           of low-level instructions that should be
+        /* In response to a captured [prev > next] data change at `key` in the source sequence, derive a list
+           of low-level instructions that should be executed on the destination derived block to propagate the change.
          */
         if (this._in_pending_zone(key)) return []
         let ops = this.dst.operator.derive_ops(key, prev, next)
@@ -370,7 +370,7 @@ export class DataBlock extends Block {
 
     async '$agent.select'(id, req) {
         let key = this.encode_id(id)
-        let json = await this._get(key)
+        let json = await this._get(key, true)
         if (json) return this._annotate(json)
         return this._move_down(id, req).select(id, req)
     }
