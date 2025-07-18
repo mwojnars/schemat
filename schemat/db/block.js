@@ -91,8 +91,11 @@ export class Monitor {
         /* Run another step of backfilling: scan the next batch of source records, transform them into
            destination-sequence mutations, and submit to the destination.
          */
-        // this.src._scan()
-        // let ops = this.derive_ops()
+        // for await (let [key, val] of this.src._scan()) {
+        //     // if (data === undefined) return this._move_down(id, req).update(id, edits, req)
+        //     // let prev = await WebObject.from_data(id, data, {mutable: false, activate: false})
+        //     let ops = this.derive_ops(key, null, val)
+        // }
     }
 
     _in_pending_zone(key) {
@@ -101,7 +104,7 @@ export class Monitor {
     }
 
     derive_ops(key, prev, next) {
-        /* In response to a captured [prev > next] data change at `key` in the source sequence, derive a list
+        /* In response to a captured [prev > next] value change at `key` in the source sequence, derive a list
            of low-level instructions that should be executed on the destination derived block to propagate the change.
          */
         if (this._in_pending_zone(key)) return []
