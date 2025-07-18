@@ -91,11 +91,11 @@ export class Monitor {
         /* Run another step of backfilling: scan the next batch of source records, transform them into
            destination-sequence mutations, and submit to the destination.
          */
-        // for await (let [key, val] of this.src._scan()) {
-        //     // let obj = await WebObject.inactive(id, val)
-        //     let obj = this.src.decode_record(key, val)
-        //     let ops = this.derive_ops(key, null, obj)
-        // }
+        for await (let [key, val] of this.src._scan()) {
+            let obj = this.src.decode_object(key, val)
+            if (obj instanceof Promise) obj = await obj
+            let ops = this.derive_ops(key, null, obj)
+        }
     }
 
     _in_pending_zone(key) {
@@ -180,7 +180,7 @@ export class Block extends Agent {
     encode_key(key) { return this.schema.encode_key(key) }
     decode_key(bin) { return this.schema.decode_key(bin) }
 
-    decode_record(key, val) { return this.schema.decode_object(key, val) }
+    decode_object(key, val) { return this.schema.decode_object(key, val) }
 
     async __start__() {
         let stores = await Promise.all(this.storage$.map(s => this._create_store(s)))
@@ -307,8 +307,8 @@ export class Block extends Agent {
         let monitors = [...this.$state.monitors.values()].filter(m => m.is_backfilling())
         if (!monitors.length) return 10.0       // no backfilling, increase the delay between background job calls
 
-        for (let monitor of monitors)
-            await monitor.backfill_step()
+        // for (let monitor of monitors)
+        //     await monitor.backfill_step()
 
         return 0.2
     }
@@ -374,6 +374,11 @@ export class DataBlock extends Block {
 
     encode_id(id)  { return this.sequence.encode_id(id) }
     decode_id(key) { return this.sequence.decode_id(key) }
+
+    async decode_object(key, json) {
+        let id = this.decode_id(key)
+        return WebObject.inactive(id, json)
+    }
 
     _annotate(json) {
         /* Append metadata (__meta) with ring & block ID to the JSON content of an object retrieved during select/update. */
