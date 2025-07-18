@@ -171,8 +171,7 @@ class Frame {
     stopped             // if true, the agent is permanently stopped and should not be restarted even after node restart unless explicitly requested by its creator/supervisor [UNUSED]
     migrating_to        // node ID where this agent is migrating to right now; all new requests are forwarded to that node
 
-    _task_restart       // Recurrent instance for agent's scheduled restart
-    // restart_timeout     // timeout for agent's scheduled restart
+    _task_restart       // Recurrent task for agent's scheduled restart
 
     constructor(agent, role) {
         this.agent = agent
@@ -198,13 +197,13 @@ class Frame {
         let state = await agent.app_context(() => agent.__start__(this)) || {}
         this.set_state(state)
 
+        // schedule recurrent calls to this.restart() after the agent's TTL expires
         this._task_restart = new Recurrent({name: `${agent}.__restart__()`, delay: agent.__ttl}, async () => {
             await this.restart()
             let ttl = this.agent.__ttl
             if (ttl <= 0) ttl = 1.0     // fast restart during boot to quickly arrive at a clean version of the object
             return ttl
         })
-        // await this._schedule_restart()
 
         schemat._print(`starting agent ${agent} done`)
         return state
@@ -278,7 +277,6 @@ class Frame {
         /* Let running calls complete, then stop the agent by calling its __stop__(). */
         this.stopping = true                // prevent new calls from being executed on the agent
         this._task_restart.stop()           // clear any scheduled restart of the agent
-        // this._cancel_restart()              // clear any scheduled restart of the agent
 
         let {calls} = this
         if (calls.length > 0) {             // wait for pending calls to complete before stopping
