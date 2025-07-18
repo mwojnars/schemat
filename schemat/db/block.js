@@ -317,7 +317,7 @@ export class Block extends Agent {
 
         // identify the monitors that perform backfilling right now
         let monitors = [...this.$state.monitors.values()].filter(m => m.is_backfilling())
-        if (!monitors.length) return 10.0       // no backfilling, increase the delay between background job calls
+        if (!monitors.length) return 10.0       // increase the delay between background job calls if no backfilling
 
         for (let monitor of monitors)
             await monitor.backfill()
