@@ -88,9 +88,11 @@ export class Monitor {
     }
 
     async backfill_step() {
-        /* Run another step of backfilling: scan the next batch of source records and transform them to derive
-           destination-sequence mutations.
+        /* Run another step of backfilling: scan the next batch of source records, transform them into
+           destination-sequence mutations, and submit to the destination.
          */
+        // this.src._scan()
+        // let ops = this.derive_ops()
     }
 
     _in_pending_zone(key) {
@@ -238,9 +240,12 @@ export class Block extends Agent {
     }
 
     async '$agent.scan'(opts = {}) {
+        /* Generator of binary records in a key range defined by `opts`. */
         if (!this.sequence.filled) throw new Error(`sequence not initialized`)
-        return arrayFromAsync(this.$state.store.scan(opts))         // TODO: return batches with a hard upper limit on their size
+        return arrayFromAsync(this._scan(opts))
     }
+
+    async _scan(opts = {}) { return this.$state.store.scan(opts) }
 
     async '$agent.erase'() {
         /* Remove all records from this block. */
