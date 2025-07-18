@@ -92,6 +92,15 @@ export class Agent extends WebObject {
         return this.$frame.resume()
     }
 
+    '$agent.background'() {
+        /* Doing a batch of background processing that is triggered in spare time when there are no other pending calls.
+           The returned value says how long to delay [sec] the next execution, even if there are no pending calls.
+           Override in subclasses.
+         */
+        this._print(`$agent.background() ...`)
+        return 60
+    }
+
     async '$agent.ping'(msg) {
         /* For testing RPC messages and intra-cluster communication. */
         let response = `[${utc()}] PING to ${this}.${this.$role}: ${msg}`
