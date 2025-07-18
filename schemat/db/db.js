@@ -119,8 +119,8 @@ export class Ring extends WebObject {
     //     if (this.readonly) throw new DataAccessError("the ring is read-only and cannot be erased")
     //     return this.main_sequence.erase(req)
     // }
-
-    async flush() { return this.main_sequence.flush() }
+    //
+    // async flush() { return this.main_sequence.flush() }
 
 
     /***  Errors & internal checks  ***/

@@ -116,7 +116,7 @@ export class Sequence extends WebObject {
     }
 
     async erase()   { /*delete this.filled;*/ return Promise.all(this.blocks.map(b => b.$agent.erase())) }
-    async flush()   { return Promise.all(this.blocks.map(b => b.$agent.flush())) }
+    // async flush()   { return Promise.all(this.blocks.map(b => b.$agent.flush())) }
 
     async 'action.create_derived'(operator) {
         /* Create a derived sequence that will capture changes from this sequence and apply `operator` to them. */
