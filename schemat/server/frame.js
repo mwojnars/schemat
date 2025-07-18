@@ -149,33 +149,6 @@ export class Frame {
         return state
     }
 
-    // async _schedule_restart(boot_ttl = 1.0, randomize_ttl = 0.1) {
-    //     /* Schedule this.restart() execution after the agent's TTL expires.
-    //        If a restart is already scheduled, clear it and re-schedule.
-    //        After restart, schedule a new restart, unless the agent is stopped.
-    //      */
-    //     if (this.restart_timeout) this._cancel_restart()    // clear any existing scheduled restart
-    //     if (this.stopping) return
-    //
-    //     let {agent} = this
-    //     let ttl = agent.__ttl           // it's assumed that __ttl is never missing, although it can be 0.0 during boot
-    //     if (ttl <= 0) ttl = boot_ttl    // restart faster during boot to quickly arrive at a clean version of the object
-    //     ttl = fluctuate(ttl)            // multiply ttl by random factor between 0.9 and 1.0 to spread restarts more uniformly
-    //
-    //     // schemat._print(`_schedule_restart() will restart ${agent} after ${ttl.toFixed(2)} seconds; __ttl=${agent.__ttl}`)
-    //
-    //     this.restart_timeout = setTimeout(async () => {
-    //         try { await this.restart() }
-    //         catch (ex) { schemat._print(`error restarting agent ${agent}:`, ex) }
-    //         finally { this._schedule_restart() }
-    //     }, ttl * 1000).unref()
-    // }
-    //
-    // _cancel_restart() {
-    //     clearTimeout(this.restart_timeout)
-    //     this.restart_timeout = null
-    // }
-
     async restart() {
         /* Replace the agent with its newest copy after reload and call its __restart__(). */
         if (this.stopping || schemat.terminating) return
