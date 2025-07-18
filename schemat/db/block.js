@@ -100,7 +100,7 @@ export class Monitor {
             if (obj instanceof Promise) obj = await obj
             ops.push(...this.derive_ops(key, null, obj))
 
-            assert(compare_bin(this.backfill_offset, key) === -1, `next key retrieved during backfill was expected to be strictly greater than offset`)
+            assert(compare_bin(this.backfill_offset, key) < 0, `next key retrieved during backfill was expected to be strictly greater than offset`)
             this.backfill_offset = key
             count++
         }
@@ -112,7 +112,7 @@ export class Monitor {
 
     _in_pending_zone(key) {
         /* During backfilling, changes in the pending zone (above offset, unprocessed yet) are ignored. */
-        return this.backfill_offset && compare_bin(this.backfill_offset, key) === -1
+        return this.backfill_offset && compare_bin(this.backfill_offset, key) < 0
     }
 
     derive_ops(key, prev, next) {

@@ -89,8 +89,20 @@ export class MemoryStore extends Store {
         gte ??= start
         lt  ??= stop
 
-        let start_index = start ? sorted_keys.findIndex(key => compare_bin(key, start) >= 0) : 0
-        let stop_index = stop ? sorted_keys.findIndex(key => compare_bin(key, stop) >= 0) : total
+        // drop one of (gt, gte) if both are present, same for (lt, lte); the rules:
+        // - if XX=XXe, XXe is a weaker constraint and should be dropped
+        // - if gtX>gtY, gtY is a weaker constraint and should be dropped
+        // - if ltX<ltY, ltY is a weaker constraint and should be dropped
+        if (gt && gte)
+            if (compare_bin(gt, gte) >= 0) gte = undefined
+            else gt = undefined
+
+        if (lt && lte)
+            if (compare_bin(lt, lte) <= 0) lte = undefined
+            else lt = undefined
+
+        let start_index = gte ? sorted_keys.findIndex(key => compare_bin(key, gte) >= 0) : 0
+        let stop_index  = lt  ? sorted_keys.findIndex(key => compare_bin(key, lt) >= 0) : total
 
         if (start_index < 0) start_index = total
         if (stop_index < 0) stop_index = total
