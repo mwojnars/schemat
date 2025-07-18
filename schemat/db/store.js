@@ -79,13 +79,26 @@ export class MemoryStore extends Store {
     erase()             { this._records.clear(); this.flush(0) }
     // get size()       { return this._records.size }
 
-    *scan({start, stop, gt, gte, lt, lte /*Uint8Array*/} = {}) {
+    *scan(opts) {
         /* Iterate over records in this block whose keys are in the [start, stop) range, where `start` and `stop`
            are binary keys (Uint8Array). Yield [key, value] pairs.
          */
+        let {gt, gte, lt, lte} = this._normalize_scan_opts(opts)
+
         let sorted_keys = [...this._records.keys()].sort(compare_bin)
         let total = sorted_keys.length
 
+        let start_index = gte ? sorted_keys.findIndex(key => compare_bin(key, gte) >= 0) : 0
+        let stop_index  = lt  ? sorted_keys.findIndex(key => compare_bin(key, lt) >= 0) : total
+
+        if (start_index < 0) start_index = total
+        if (stop_index < 0) stop_index = total
+
+        for (let key of sorted_keys.slice(start_index, stop_index))
+            yield [key, this._records.get(key)]
+    }
+
+    _normalize_scan_opts({start, stop, gt, gte, lt, lte /*Uint8Array*/} = {}) {
         gte ??= start
         lt  ??= stop
 
@@ -101,14 +114,7 @@ export class MemoryStore extends Store {
             if (compare_bin(lt, lte) <= 0) lte = undefined
             else lt = undefined
 
-        let start_index = gte ? sorted_keys.findIndex(key => compare_bin(key, gte) >= 0) : 0
-        let stop_index  = lt  ? sorted_keys.findIndex(key => compare_bin(key, lt) >= 0) : total
-
-        if (start_index < 0) start_index = total
-        if (stop_index < 0) stop_index = total
-
-        for (let key of sorted_keys.slice(start_index, stop_index))
-            yield [key, this._records.get(key)]
+        return {gt, gte, lt, lte}
     }
 
     flush(delay = 0.1) {
