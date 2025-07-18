@@ -144,6 +144,7 @@ export class Block extends Agent {
                     // should not be modified later on; the upper part of the path may vary between nodes
 
     get ring()      { return this.sequence.ring }
+    get schema()    { return this.sequence.operator.record_schema }
 
     async __setup__() {
         print('Block.__setup__() ...')
@@ -178,6 +179,8 @@ export class Block extends Agent {
 
     encode_key(key) { return this.sequence.encode_key(key) }
     decode_key(bin) { return this.sequence.decode_key(bin) }
+
+    decode_record(key, val) { return this.schema.decode_object(key, val) }
 
     async __start__() {
         let stores = await Promise.all(this.storage$.map(s => this._create_store(s)))
