@@ -120,7 +120,8 @@ export class Frame {
 
     constructor(agent, role) {
         this.agent = agent
-        this.role = role
+        this.role = role || schemat.GENERIC_ROLE
+        assert(this.role[0] === '$')
 
         let _resolve
         this.starting = new Promise(resolve => {_resolve = resolve})
@@ -214,6 +215,8 @@ export class Frame {
 
     async background() {
         /* Execute agent's background job, $agent.background(), and return updated interval for next execution. */
+
+
 
         let interval = await this.agent.$agent.background()
         interval ||= 60     // 60 sec by default if no specific interval was returned

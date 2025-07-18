@@ -97,7 +97,7 @@ export class Agent extends WebObject {
            The agent may control how often this operation is executed by returning the length of the next time interval (in seconds).
            A positive value means low-priority execution that waits until there's no other running/pending call.
            A negative value, -T, means a normal-priority execution that will start exactly in T seconds from now,
-           even if the agent is busy with other calls. When nothing returned, the default is +60 seconds.
+           even if the agent is busy with other calls. When nothing returned, +60 seconds are assumed.
            Override in subclasses.
          */
         this._print(`$agent.background() ...`)
