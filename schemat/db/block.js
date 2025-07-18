@@ -583,11 +583,9 @@ export class DataBlock extends Block {
         let key = this.encode_id(id)
 
         let op_put = new OP('put', key, data)
-        let ops_derived = this._derive(key, prev, obj)       // instructions for derived sequences
-        let ops = [op_put, ...ops_derived]
-
-        this._apply(ops)                        // schedule `ops` for execution, either immediately or later with WAL
-        this._cascade_delete(prev, obj)         // removed related objects if needed
+        let ops_derived = this._derive(key, prev, obj)      // instructions for derived sequences
+        this._apply([op_put, ...ops_derived])               // schedule `ops` for execution, either immediately or later with WAL
+        this._cascade_delete(prev, obj)                     // remove objects linked to via a strong reference
 
         // await this._put(key, data)
         // this._propagate(key, prev, obj)
@@ -612,13 +610,19 @@ export class DataBlock extends Block {
                 // return req.error_access("cannot remove the item, the ring is read-only")
 
             let obj = await WebObject.from_data(id, data, {activate: false})
-            let deleted = await this._del(key)
 
-            this._propagate(key, obj)
+            let op_del = new OP('del', key)
+            let ops_derived = this._derive(key, obj)        // instructions for derived sequences
+            this._apply([op_del, ...ops_derived])           // schedule `ops` for execution, either immediately or later with WAL
+            this._cascade_delete(obj)                       // remove objects linked to via a strong reference
+
+            // let deleted = await this._del(key)
+            // this._propagate(key, obj)
+
             schemat.register_changes({id, data: {'__status': WebObject.Status.DELETED}})
-
-            assert(Number(deleted) === 1)
-            return Number(deleted)
+            return 1
+            // assert(Number(deleted) === 1)
+            // return Number(deleted)
         })
     }
 
