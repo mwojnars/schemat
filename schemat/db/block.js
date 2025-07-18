@@ -92,9 +92,9 @@ export class Monitor {
            destination-sequence mutations, and submit to the destination.
          */
         // for await (let [key, val] of this.src._scan()) {
-        //     // if (data === undefined) return this._move_down(id, req).update(id, edits, req)
-        //     // let prev = await WebObject.inactive(id, data)
-        //     let ops = this.derive_ops(key, null, val)
+        //     // let obj = await WebObject.inactive(id, val)
+        //     let obj = this.src.decode_record(key, val)
+        //     let ops = this.derive_ops(key, null, obj)
         // }
     }
 
@@ -104,8 +104,9 @@ export class Monitor {
     }
 
     derive_ops(key, prev, next) {
-        /* In response to a captured [prev > next] value change at `key` in the source sequence, derive a list
+        /* In response to a captured [prev > next] value change at a binary `key` in the source sequence, derive a list
            of low-level instructions that should be executed on the destination derived block to propagate the change.
+           Arguments, prev/next, are records *decoded* into object representation (web objects, pseudo-objects).
          */
         if (this._in_pending_zone(key)) return []
         let ops = this.dst.operator.derive_ops(key, prev, next)

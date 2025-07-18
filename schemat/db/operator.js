@@ -51,8 +51,12 @@ export class IndexOperator extends Operator {
 
     derive_ops(key, prev, next) {
         /* Generate a list of binary instructions ("ops") to be executed on the destination sequence in response
-           to [prev > next] change in the source sequence that occurred at a binary `key`.
+           to [prev > next] change in the source sequence that occurred at a binary `key`. Normally, prev/next should be
+           objects (instantiated), but if they are JSON dumps, they are instantiated as objects here.
          */
+        // if (typeof prev === 'string')
+        //     prev = await WebObject.inactive(id, data)
+
         let [del_records, put_records] = this.derive(key, prev, next)
         let ops = []
 

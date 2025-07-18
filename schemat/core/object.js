@@ -572,8 +572,8 @@ export class WebObject {
     }
 
     static async inactive(id, data, opts = {}) {
-        /* Create an inactive object - with no _initialize/__load__/_activate() executed - that is seeded
-           with pre-existing `data`, typically loaded from storage or pending write. */
+        /* Create an inactive object - with no __load__/_activate() executed - that is seeded with pre-existing `data`,
+           typically loaded from storage, or pending write. The ._initialize() is run and for this reason the method is async. */
         return this.from_data(id, data, {...opts, activate: false})
     }
 
