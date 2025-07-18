@@ -1,5 +1,5 @@
 import {AsyncLocalStorage} from 'node:async_hooks'
-import {print, assert, T, fluctuate} from "../common/utils.js";
+import {print, assert, T, fluctuate, sleep} from "../common/utils.js";
 import {JSONx} from "../common/jsonx.js";
 import {CustomMap} from "../common/structs.js";
 
@@ -115,8 +115,9 @@ export class Frame {
     stopped             // if true, the agent is permanently stopped and should not be restarted even after node restart unless explicitly requested by its creator/supervisor [UNUSED]
     migrating_to        // node ID where this agent is migrating to right now; all new requests are forwarded to that node
 
-    _task_restart       // Recurrent task for this.restart() calls
+    _background_priority// 'normal' or 'low'; if 'low', the background task is delayed until all ongoing/pending jobs are done
     _task_background    // Recurrent task for $agent.background() calls
+    _task_restart       // Recurrent task for this.restart() calls
 
     constructor(agent, role) {
         this.agent = agent
@@ -143,11 +144,11 @@ export class Frame {
         let state = await agent.app_context(() => agent.__start__(this)) || {}
         this.set_state(state)
 
-        // schedule recurrent agent restarts after the agent's TTL expires
-        this._task_restart = new Recurrent(this.restart.bind(this), {delay: agent.__ttl})
-
         // schedule recurrent execution of background job; the initial interval of 5 sec can be changed later by the agent
         this._task_background = new Recurrent(this.background.bind(this), {delay: 5.0})
+
+        // schedule recurrent agent restarts after the agent's TTL expires
+        this._task_restart = new Recurrent(this.restart.bind(this), {delay: agent.__ttl})
 
         schemat._print(`starting agent ${agent} done`)
         return state
@@ -198,8 +199,8 @@ export class Frame {
     async stop() {
         /* Let running calls complete, then stop the agent by calling its __stop__(). */
         this.stopping = true                // prevent new calls from being executed on the agent
-        this._task_background.stop()        // clear scheduled tasks: background job & restart
-        this._task_restart.stop()
+        this._task_restart.stop()           // clear all scheduled tasks
+        this._task_background.stop()
 
         let {calls} = this
         if (calls.length > 0) {             // wait for pending calls to complete before stopping
@@ -215,19 +216,20 @@ export class Frame {
     }
 
     async background() {
-        /* Execute agent's background job, $agent.background(), and return updated interval for next execution. */
-
-        // // either call <role>.background(), if present, or $agent.background() as a fallback
-        // let {agent, role} = this
-        // if (!agent[`${role}.background`]) role = schemat.GENERIC_ROLE
-
-        // let interval = await agent[role].background()
+        /* Execute agent's background job, <role>.background() or $agent.background(), and update the interval
+           and priority for next execution.
+         */
+        if (this._background_priority === 'low')        // if low priority, wait until the agent is idle...
+            while (this.calls.length > 0) {
+                await Promise.all(this.calls)           // wait for termination of ongoing calls
+                await sleep()                           // let pending calls jump in
+            }
 
         let interval = await this.exec('background')
         interval ||= 60     // 60 sec by default if no specific interval was returned
 
-        let high_priority = (interval < 0)
-        interval = Math.abs(interval)
+        this._background_priority = (interval < 0) ? 'normal' : 'low'
+        return Math.abs(interval)
     }
 
     async pause() {
