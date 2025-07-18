@@ -1,6 +1,6 @@
 import {assert, print, T, zip, arrayFromAsync, fileBaseName} from '../common/utils.js'
 import {DataAccessError, DataConsistencyError, ObjectNotFound} from '../common/errors.js'
-import {Shard, Mutexes, ObjectsMap} from "../common/structs.js"
+import {Shard, ObjectsMap, Mutex, Mutexes} from "../common/structs.js"
 import {compare_uint8, zero_binary} from "../common/binary.js";
 import {JSONx} from "../common/jsonx.js";
 import {Struct} from "../common/catalog.js"
@@ -165,9 +165,9 @@ export class Block extends Agent {
     async __start__() {
         let stores = await Promise.all(this.storage$.map(s => this._create_store(s)))
         let monitors = new ObjectsMap(this.sequence.derived.map(seq => [seq, new Monitor(this, seq)]))
-        // TODO: load internal state of each monitor, maybe some of them are still in warm-up phase?
-        //       schemat.node: node-wide file services + metadata storage + journaling?
-        return {stores, store: stores[0], monitors}
+        let _mutex = new Mutex()
+        let global_lock = (fn) => _mutex.run_exclusive(fn)
+        return {stores, store: stores[0], monitors, global_lock}
     }
 
     async __stop__() {
