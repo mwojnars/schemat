@@ -1,7 +1,7 @@
 import {assert, print, T, zip, arrayFromAsync, fileBaseName} from '../common/utils.js'
 import {DataAccessError, DataConsistencyError, ObjectNotFound} from '../common/errors.js'
 import {Shard, ObjectsMap, Mutex, Mutexes} from "../common/structs.js"
-import {compare_uint8, zero_binary} from "../common/binary.js";
+import {compare_bin, zero_binary} from "../common/binary.js";
 import {JSONx} from "../common/jsonx.js";
 import {Struct} from "../common/catalog.js"
 import {WebObject} from '../core/object.js'
@@ -100,7 +100,7 @@ export class Monitor {
             if (obj instanceof Promise) obj = await obj
             ops.push(...this.derive_ops(key, null, obj))
 
-            assert(compare_uint8(this.backfill_offset, key) === -1, `next key retrieved during backfill was expected to be strictly greater than offset`)
+            assert(compare_bin(this.backfill_offset, key) === -1, `next key retrieved during backfill was expected to be strictly greater than offset`)
             this.backfill_offset = key
             count++
         }
@@ -112,7 +112,7 @@ export class Monitor {
 
     _in_pending_zone(key) {
         /* During backfilling, changes in the pending zone (above offset, unprocessed yet) are ignored. */
-        return this.backfill_offset && compare_uint8(this.backfill_offset, key) === -1
+        return this.backfill_offset && compare_bin(this.backfill_offset, key) === -1
     }
 
     derive_ops(key, prev, next) {

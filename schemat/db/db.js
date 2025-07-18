@@ -1,6 +1,6 @@
 import {T, assert, print, merge, fileBaseName, sum} from '../common/utils.js'
 import {DataAccessError, DatabaseError, ObjectNotFound} from "../common/errors.js"
-import {compare_uint8} from "../common/binary.js";
+import {compare_bin} from "../common/binary.js";
 import {Struct} from "../common/catalog.js";
 import {WebObject} from "../core/object.js"
 import {data_schema} from "./records.js";
@@ -401,7 +401,7 @@ export class Database extends WebObject {
         if (!operator) throw new Error(`unknown derived sequence '${name}'`)
 
         let schema = operator.record_schema
-        let compare = ([key1], [key2]) => compare_uint8(key1, key2)
+        let compare = ([key1], [key2]) => compare_bin(key1, key2)
 
         // convert `start` and `stop` to binary keys (Uint8Array)
         if (start !== undefined) start = schema.encode_key(start)

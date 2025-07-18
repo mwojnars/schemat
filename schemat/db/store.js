@@ -3,7 +3,7 @@ import YAML from 'yaml'
 
 import {assert, print, T} from '../common/utils.js'
 import {NotImplemented} from '../common/errors.js'
-import {BinaryMap, compare_uint8} from "../common/binary.js"
+import {BinaryMap, compare_bin} from "../common/binary.js"
 import {data_schema} from "./records.js"
 
 // const fs = await server_import('node:fs')
@@ -83,14 +83,14 @@ export class MemoryStore extends Store {
         /* Iterate over records in this block whose keys are in the [start, stop) range, where `start` and `stop`
            are binary keys (Uint8Array). Yield [key, value] pairs.
          */
-        let sorted_keys = [...this._records.keys()].sort(compare_uint8)
+        let sorted_keys = [...this._records.keys()].sort(compare_bin)
         let total = sorted_keys.length
 
         gte ??= start
         lt  ??= stop
 
-        let start_index = start ? sorted_keys.findIndex(key => compare_uint8(key, start) >= 0) : 0
-        let stop_index = stop ? sorted_keys.findIndex(key => compare_uint8(key, stop) >= 0) : total
+        let start_index = start ? sorted_keys.findIndex(key => compare_bin(key, start) >= 0) : 0
+        let stop_index = stop ? sorted_keys.findIndex(key => compare_bin(key, stop) >= 0) : total
 
         if (start_index < 0) start_index = total
         if (stop_index < 0) stop_index = total

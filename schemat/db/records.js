@@ -80,7 +80,7 @@ import {INTEGER} from "../types/type.js";
 //
 //     static compare(rec1, rec2) {
 //         /* Compare two records by their binary keys (byte order). */
-//         return compare_uint8(rec1.key_binary, rec2.key_binary)
+//         return compare_bin(rec1.key_binary, rec2.key_binary)
 //     }
 //
 //     constructor(schema, binary = null, /*plain = null*/) {

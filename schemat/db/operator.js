@@ -1,6 +1,6 @@
 import {is_plural, drop_plural} from "../common/globals.js";
 import {assert, print, T} from "../common/utils.js";
-import {BinaryMap, compare_uint8} from "../common/binary.js"
+import {BinaryMap, compare_bin} from "../common/binary.js"
 import {Catalog} from "../common/catalog.js";
 import {WebObject} from "../core/object.js";
 import {data_schema, RecordSchema} from "./records.js";
@@ -104,7 +104,7 @@ export class IndexOperator extends Operator {
                 let vput = put_records.get(key)
 
                 // "put" not needed when old & new values are equal; values can be strings or binary
-                if (vput === vdel || (vput instanceof Uint8Array && compare_uint8(vput, vdel) === 0))
+                if (vput === vdel || (vput instanceof Uint8Array && compare_bin(vput, vdel) === 0))
                     put_records.delete(key)
 
                 del_records.delete(key)     // in either case, do NOT explicitly delete the previous record
