@@ -9,33 +9,34 @@ import {CustomMap} from "../common/structs.js";
 export class Recurrent {
     /* A recurrent task executed at predefined intervals, with the ability to change the interval at any point. */
 
-    constructor({name, delay = 1.0, randomize = 0.1} = {}, fn) {
-        this.interval = delay || 1.0    // [seconds]
+    constructor(fn, {name, delay = 1.0, randomize = 0.1} = {}) {
+        this.interval = delay           // [seconds]
         this.randomize = randomize      // [0.0..1.0]
         this.fn = fn                    // function to be executed at the interval
-        this.name = name || fn.name     // name of the task
+        this.name = name                // name of the task
         this.timeout = null             // timer handle
         this.schedule()
     }
 
     schedule() {
-        /* Schedule the next tick() execution at the interval. */
+        /* Schedule the next tick() at the interval. */
         if (this.timeout) clearTimeout(this.timeout)
 
-        let delay = this.interval * 1000
+        let delay = this.interval
+        if (!delay || delay < 0) delay = 1.0
         if (this.randomize) delay = fluctuate(delay, this.randomize)
 
         this.timeout = setTimeout(async () => {
             try {
                 await this.tick()
             }
-            catch (ex) { schemat._print(`error executing recurrent task ${this.name}:`, ex) }
+            catch (ex) { schemat._print(`error executing recurrent task ${this.name || this.fn}:`, ex) }
             finally { this.schedule() }
-        }, delay).unref()
+        }, delay * 1000).unref()
     }
 
     async tick() {
-        /* Execute this.fn() and amend the interval. */
+        /* Execute this.fn() and update the interval. */
         this.timeout = null
         let interval = await this.fn()
         this.interval = interval ?? this.interval
@@ -142,7 +143,7 @@ export class Frame {
         this.set_state(state)
 
         // schedule recurrent calls to this.restart() after the agent's TTL expires
-        this._task_restart = new Recurrent({name: `${agent}.__restart__()`, delay: agent.__ttl}, this.restart.bind(this))
+        this._task_restart = new Recurrent(this.restart.bind(this), {delay: agent.__ttl})
 
         schemat._print(`starting agent ${agent} done`)
         return state
