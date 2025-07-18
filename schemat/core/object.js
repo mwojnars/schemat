@@ -227,9 +227,7 @@ class Intercept {
 
     static proxy_delete(target, path) {
         if (Intercept._is_special(path)) return Reflect.deleteProperty(target, path)
-        if (!target.__meta.mutable) throw new Error(`trying to modify an immutable object ${target} (${path})`)
-
-        let [base, plural] = check_plural(path)         // property name without the $ suffix
+        let [base] = check_plural(path)         // property name without the $ suffix
         target._make_edit('unset', base)
         return true
     }
@@ -1338,23 +1336,14 @@ export class WebObject {
         })
     }
 
-    // mutate(props = null, opts = {}) {
-    //     /* Create synchronously a mutable copy of `this` and assign selected properties to it according to `props`. Return the mutated object.
-    //        Remember to call `await obj.save()` on the returned object to actually save the mutations to DB.
-    //      */
-    //     let obj = this._get_mutable(opts)
-    //     if (props)
-    //         for (let [key, val] of Object.entries(props))
-    //             obj[key] = val
-    //     return obj
-    // }
-
     get_mutable() {
         /* Return the mutable instance of this object as currently recorded in the transaction under this ID;
            or itself if `this` is already mutable (which does NOT imply it is included in the transaction!
            but normally, __meta.obsolete should be true if this instance got excluded from the TX).
          */
-        return this.__meta.mutable ? this : schemat.tx.get_mutable(this)
+        if (this.__meta.mutable) return this
+        if (schemat.tx) return schemat.tx.get_mutable(this)
+        throw new Error(`cannot create a mutable copy of ${this} outside a transaction`)
     }
 
     _get_mutable(opts = {}) {
