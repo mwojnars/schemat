@@ -87,6 +87,12 @@ export class Monitor {
         return !!this.backfill_offset
     }
 
+    async backfill_step() {
+        /* Run another step of backfilling: scan the next batch of source records and transform them to derive
+           destination-sequence mutations.
+         */
+    }
+
     _in_pending_zone(key) {
         /* During backfilling, changes in the pending zone (above offset, unprocessed yet) are ignored. */
         return this.backfill_offset && compare_uint8(this.backfill_offset, key) === -1
@@ -281,14 +287,18 @@ export class Block extends Agent {
         })
     }
 
-    async _backfill_step() {
-        /* Run another step of backfilling on behalf of all derived sequences. */
-    }
-
     async '$agent.background'(seq) {
         /* */
-        await this._backfill_step()
-        return 1.0
+        this._print(`background job...`)
+
+        // identify the monitors that perform backfilling right now
+        let monitors = [...this.$state.monitors.values()].filter(m => m.is_backfilling())
+        if (!monitors.length) return 10.0       // no backfilling, increase the delay between background job calls
+
+        for (let monitor of monitors)
+            await monitor.backfill_step()
+
+        return 0.2
     }
 
     async '$agent.backfill'(seq) {
