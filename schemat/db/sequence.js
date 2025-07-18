@@ -115,7 +115,7 @@ export class Sequence extends WebObject {
         yield* await block_start.$agent.scan(opts)
     }
 
-    async erase()   { return Promise.all(this.blocks.map(b => b.$agent.erase())) }
+    async erase()   { /*delete this.filled;*/ return Promise.all(this.blocks.map(b => b.$agent.erase())) }
     async flush()   { return Promise.all(this.blocks.map(b => b.$agent.flush())) }
 
     async 'action.create_derived'(operator) {
@@ -148,6 +148,10 @@ export class Sequence extends WebObject {
         /* Start the backfill process to populate this derived sequence with initial data from source. */
         // request all source blocks to send initial data + set up data capture for future changes
         source.blocks.map(block => block.$agent.backfill(this))
+    }
+
+    rebuild(source) {
+        /* Erase this sequence and build again from scratch. */
     }
 
     capture_change(key, prev, next) {

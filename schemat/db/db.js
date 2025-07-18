@@ -235,8 +235,12 @@ export class Ring extends WebObject {
 
     async rebuild_indexes() {
         /* Rebuild all derived sequences by making full scan of the data sequence. */
+
+        // for (let seq of this.derived)
+        //     seq.rebuild()
+
         let derived = this.derived
-        await Promise.all(derived.map(seq => seq.erase()))   // seq.rebuild()
+        await Promise.all(derived.map(seq => seq.erase()))
 
         for await (let {id, data} of this.main_sequence.scan_objects()) {
             let key = data_schema.encode_key([id])

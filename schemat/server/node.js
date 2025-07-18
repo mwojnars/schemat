@@ -345,7 +345,7 @@ export class Node extends Agent {
     /* Agent routing */
 
     _find_node(agent_id, role) {
-        /* Return the node where the `agent` is running in a given `role`. The current node has a priority:
+        /* Return the node where `agent` is deployed in a given `role`. The current node has a priority:
            if the agent is deployed on one of the local processes, `this` is returned.
          */
         if (this._find_worker(agent_id, role) != null) return this
