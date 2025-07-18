@@ -160,11 +160,12 @@ export class Schemat {
         builtin.set(":TypeError", TypeError)
 
         await builtin.fetch("../index.js", {path: 'schemat'})       // Schemat core classes, e.g., "schemat:WebObject"
-        await builtin.fetch("./app.js")
-        await builtin.fetch("../std/files.js")
-        await builtin.fetch("../std/containers.js")
         await builtin.fetch("../common/structs.js")
         await builtin.fetch("../common/errors.js")                  // for serialization of errors in responses
+        await builtin.fetch("../std/files.js")
+        await builtin.fetch("../std/containers.js")
+        await builtin.fetch("../web/page.js")
+        await builtin.fetch("./app.js")
 
         let accept = (name) => name.toUpperCase() === name
         await builtin.fetch("../types/type.js", {accept})

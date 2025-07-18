@@ -92,7 +92,7 @@ export class Monitor {
            destination-sequence mutations, and submit to destination.
          */
         let records = this.src._scan({limit, gt: this.backfill_offset})
-        this.src._print(`backfill() to ${this.dst} records:`, records)
+        this.src._print(`backfill() to ${this.dst} ...`)
 
         let count = 0
         let ops = []
