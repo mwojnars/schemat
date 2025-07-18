@@ -146,7 +146,7 @@ export class Frame {
         this._task_restart = new Recurrent(this.restart.bind(this), {delay: agent.__ttl})
 
         // schedule recurrent execution of background job; the initial interval of 5 sec can be changed later by the agent
-        // this._task_restart = new Recurrent(this.background.bind(this), {delay: 5.0})
+        this._task_restart = new Recurrent(this.background.bind(this), {delay: 5.0})
 
         schemat._print(`starting agent ${agent} done`)
         return state
@@ -210,6 +210,16 @@ export class Frame {
         let stop = () => agent.__stop__(this.state)
         await agent.app_context(() => this._frame_context(agent, stop))
         schemat._print(`stopping agent ${agent} done`)
+    }
+
+    async background() {
+        /* Execute agent's background job, $agent.background(), and return updated interval for next execution. */
+
+        let interval = await this.agent.$agent.background()
+        interval ||= 60     // 60 sec by default if no specific interval was returned
+
+        let high_priority = (interval < 0)
+        interval = Math.abs(interval)
     }
 
     async pause() {

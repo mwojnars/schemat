@@ -93,14 +93,14 @@ export class Agent extends WebObject {
     }
 
     '$agent.background'() {
-        /* A batch of background processing to be triggered at regular intervals, usually in spare time when there are
-           no other calls. The agent may control how often this operation is executed by returning the length of the next
-           time interval (in seconds). A positive value means a low-priority execution that waits until there's no other
-           running/pending call. A negative value, -T, means a normal-priority execution that will start exactly
-           in T seconds from now, even if the agent is busy with other calls. Override in subclasses.
+        /* Background processing to be triggered at regular intervals, usually in spare time when there are no other calls.
+           The agent may control how often this operation is executed by returning the length of the next time interval (in seconds).
+           A positive value means low-priority execution that waits until there's no other running/pending call.
+           A negative value, -T, means a normal-priority execution that will start exactly in T seconds from now,
+           even if the agent is busy with other calls. When nothing returned, the default is +60 seconds.
+           Override in subclasses.
          */
         this._print(`$agent.background() ...`)
-        return 60
     }
 
     async '$agent.ping'(msg) {
