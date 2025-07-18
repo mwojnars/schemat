@@ -283,11 +283,16 @@ export class Block extends Agent {
         return ops
     }
     
-    _apply(ops) {
+    async _apply(ops) {
         /* Schedule local or remote `ops` for execution, either immediately or later with WAL (TODO). */
-        for (let op of ops)
-            if (op.block) op.submit()       // RPC execution on a derived block
-            else op.exec(this)              // immediate execution here on this block
+        return this.$state.global_lock(async () =>
+        {
+            let local = []
+            for (let op of ops)
+                if (op.block) op.submit()           // RPC execution on a derived block
+                else local.push(op.exec(this))      // immediate execution here on this block
+            return Promise.all(local)
+        })
     }
 }
 
@@ -575,7 +580,7 @@ export class DataBlock extends Block {
 
         let op_put = new OP('put', key, data)
         let ops_derived = this._derive(key, prev, obj)      // instructions for derived sequences
-        this._apply([op_put, ...ops_derived])               // schedule `ops` for execution, either immediately or later with WAL
+        await this._apply([op_put, ...ops_derived])         // schedule `ops` for execution, either immediately or later with WAL
         this._cascade_delete(prev, obj)                     // remove objects linked to via a strong reference
 
         // await this._put(key, data)
@@ -604,7 +609,7 @@ export class DataBlock extends Block {
 
             let op_del = new OP('del', key)
             let ops_derived = this._derive(key, obj)        // instructions for derived sequences
-            this._apply([op_del, ...ops_derived])           // schedule `ops` for execution, either immediately or later with WAL
+            await this._apply([op_del, ...ops_derived])     // schedule `ops` for execution, either immediately or later with WAL
             this._cascade_delete(obj)                       // remove objects linked to via a strong reference
 
             // let deleted = await this._del(key)
