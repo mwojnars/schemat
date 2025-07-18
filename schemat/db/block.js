@@ -93,7 +93,7 @@ export class Monitor {
          */
         // for await (let [key, val] of this.src._scan()) {
         //     // if (data === undefined) return this._move_down(id, req).update(id, edits, req)
-        //     // let prev = await WebObject.from_data(id, data, {mutable: false, activate: false})
+        //     // let prev = await WebObject.inactive(id, data)
         //     let ops = this.derive_ops(key, null, val)
         // }
     }
@@ -436,7 +436,7 @@ export class DataBlock extends Block {
         // but not activated: __load__() & _activate() are NOT executed (performance)
         let objects = await Promise.all(entries.map(([provisional, data]) => {
             let _id = id || this._assign_id(opts)
-            return WebObject.from_data(_id, data, {mutable: true, activate: false, provisional})
+            return WebObject.inactive(_id, data, {mutable: true, provisional})
         }))
         let ids = objects.map(obj => obj.id)
 
@@ -568,7 +568,7 @@ export class DataBlock extends Block {
             let data = await this._get(key)
             if (data === undefined) return this._move_down(id, req).update(id, edits, req)
 
-            let prev = await WebObject.from_data(id, data, {activate: false})
+            let prev = await WebObject.inactive(id, data)
             let obj  = prev._clone()                // dependencies (category, container, prototypes) are loaded, but references NOT (!)
 
             obj._apply_edits(...edits)              // apply edits; TODO SECURITY: check if edits are safe; prevent modification of internal props (__ver, __seal etc)
@@ -600,7 +600,7 @@ export class DataBlock extends Block {
             if (await this._get(key))
                 throw new DataConsistencyError('newly-inserted object with same ID discovered in a higher ring during upward pass of update', {id})
 
-            let obj = await WebObject.from_data(id, data, {activate: false})
+            let obj = await WebObject.inactive(id, data)
             await this._save(obj)
         })
     }
@@ -637,7 +637,7 @@ export class DataBlock extends Block {
                 throw new DataAccessError("cannot remove the item, the ring is read-only", {id})
                 // return req.error_access("cannot remove the item, the ring is read-only")
 
-            let obj = await WebObject.from_data(id, data, {activate: false})
+            let obj = await WebObject.inactive(id, data)
 
             let op_del = new OP('del', key)
             let ops_derived = this._derive(key, obj)        // instructions for derived sequences
