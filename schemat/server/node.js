@@ -348,11 +348,11 @@ export class Node extends Agent {
         /* Return the node where the `agent` is running in a given `role`. The current node has a priority:
            if the agent is deployed on one of the local processes, `this` is returned.
          */
-        if (this._find_process(agent_id, role) != null) return this
+        if (this._find_worker(agent_id, role) != null) return this
         return schemat.cluster.find_node(agent_id, role)
     }
 
-    _find_process(agent_id, role) {
+    _find_worker(agent_id, role) {
         /* On master, look up the `agents` array of agent placements to find the local process where the agent runs
            in a given `role` (or in any role if `role` is missing or GENERIC_ROLE).
          */
@@ -456,8 +456,7 @@ export class Node extends Agent {
         // if (locs.length > 1) throw new Error(`TCP target agent [${agent_id}] is deployed multiple times on ${this}`)
         // let proc = locs[0]
 
-        worker ??= this._find_process(agent_id, role)
-        // print("tcp_recv(): process", proc)
+        worker ??= this._find_worker(agent_id, role)
 
         if (worker == null)
             throw new Error(`${this.id}/#${this.worker_id}: agent [${agent_id}] not found on this node`)

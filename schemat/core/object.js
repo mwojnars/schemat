@@ -573,8 +573,6 @@ export class WebObject {
         return obj
     }
 
-    __draft__() {}
-
     static async from_data(id, data, {mutable, provisional, ...load_opts} = {}) {
         /* Create a new WebObject instance given the `data` with the object's content (a Catalog or encoded JSONx string). */
         // assert(typeof data === 'string' || data instanceof Catalog)
@@ -1078,6 +1076,9 @@ export class WebObject {
            is not yet available, despite '__category' field may be written into __data. More advanced initialization
            may have to be moved to __setup__(), with is called on an object with initialized dependencies (but NOT yet fully activated!).
          */
+
+    __draft__() {}
+        /* Async setup of a temporary object created with static draft(), typically during bootstrap. */
 
     __setup__() {}  //config, {ring, block}) {}
         /* Server-side setup of the object, launched during insert to a data block, right after the object received
