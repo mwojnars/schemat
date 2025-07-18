@@ -94,7 +94,7 @@ export class Monitor {
         if (this._in_pending_zone(key)) return []
         let ops = this.dst.operator.derive_ops(key, prev, next)
 
-        // in each op, append designation of the destination block
+        // in each op, append info about the destination block
         ops.forEach(op => {op.block = this.dst.find_block(op.key)})
         return ops
     }

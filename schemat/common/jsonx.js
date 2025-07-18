@@ -7,7 +7,7 @@ import {bin_to_hex, hex_to_bin} from "./binary.js"
 /*************************************************************************************************/
 
 const FLAG_BIGINT = "%big"     // special value of ATTR_CLASS that informs the value is a BigInt decimal string
-const FLAG_BIN   = "%hex"      // special value of ATTR_CLASS that informs the value is a hex-encoded Uint8Array instance
+const FLAG_BIN   = "%bin"      // special value of ATTR_CLASS that informs the value is a hex-encoded Uint8Array instance
 const FLAG_TYPE  = "%class"    // special value of ATTR_CLASS that informs the value is a class rather than an instance
 const FLAG_WRAP  = "%wrap"     // special value of ATTR_CLASS that denotes a plain-object (POJO) wrapper for another object containing the reserved "@" key
 const ATTR_CLASS = "@"         // special attribute appended to object state to store a class name (with package) of the object being encoded
