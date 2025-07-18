@@ -83,14 +83,9 @@ export class Monitor {
     }
 
     _in_pending_zone(key) {
-        /* During backfilling, changes in the pending zone (above offset, unprocessed yet) should be ignored. */
+        /* During backfilling, changes in the pending zone (above offset, unprocessed yet) are ignored. */
         return this.backfill_offset && compare_uint8(this.backfill_offset, key) === -1
     }
-
-    // capture_change(key, prev, next) {
-    //     if (this._in_pending_zone(key)) return      // don't capture changes above offset during backfilling
-    //     return this.dst.capture_change(key, prev, next)
-    // }
 
     derive_ops(key, prev, next) {
         /* In response to a captured data [prev > next] data change at a `key` in the source sequence, derive a list
@@ -274,16 +269,12 @@ export class Block extends Agent {
         monitors.set(seq, monitor = new Monitor(this, seq, true))
     }
 
-    _propagate(key, prev = null, next = null) {
-        /* Push a change in this block to all derived sequences. */
-        assert(this.ring?.is_loaded())
-        // for (let monitor of this.$state.monitors.values()) {
-        //     let ops = monitor.derive_ops(key, prev, next)
-        //     ops.forEach(op => op.submit())
-        // }
-        let ops = this._derive(key, prev, next)
-        ops.forEach(op => op.submit())
-    }
+    // _propagate(key, prev = null, next = null) {
+    //     /* Push a change in this block to all derived sequences. */
+    //     assert(this.ring?.is_loaded())
+    //     let ops = this._derive(key, prev, next)
+    //     ops.forEach(op => op.submit())
+    // }
 
     _derive(key, prev = null, next = null) {
         let ops = []
@@ -632,11 +623,11 @@ export class DataBlock extends Block {
         return super['$agent.erase']()
     }
 
-    _propagate(key, obj_old = null, obj_new = null) {
-        /* Push a change in this block to all derived sequences; also, perform a cascade delete if needed. */
-        super._propagate(key, obj_old, obj_new)
-        this._cascade_delete(obj_old, obj_new)
-    }
+    // _propagate(key, obj_old = null, obj_new = null) {
+    //     /* Push a change in this block to all derived sequences; also, perform a cascade delete if needed. */
+    //     super._propagate(key, obj_old, obj_new)
+    //     this._cascade_delete(obj_old, obj_new)
+    // }
 
     _cascade_delete(prev, next = null) {
         /* Compare `prev` and `next` objects to see if any *strong* references got removed, and if so, delete the referenced objects.
