@@ -89,7 +89,7 @@ export class Monitor {
 
     async backfill(limit = 100) {
         /* Run another round of backfilling: scan the next batch of source records, transform them into
-           destination-sequence mutations, and submit to the destination.
+           destination-sequence mutations, and submit to destination.
          */
         let records = this.src._scan({limit, gt: this.backfill_offset})
         let count = 0
@@ -99,12 +99,14 @@ export class Monitor {
             let obj = this.src.decode_object(key, val)
             if (obj instanceof Promise) obj = await obj
             ops.push(...this.derive_ops(key, null, obj))
+
+            assert(compare_uint8(this.backfill_offset, key) === -1, `next key retrieved during backfill was expected to be strictly greater than offset`)
             this.backfill_offset = key
             count++
         }
-        if (count < limit) this.backfill_offset = null
+        if (count < limit) this.backfill_offset = null      // clear the offset if no more records
         
-        // TODO: batch instructions addressed to the same block, for performance AND to prevent accidental reordering
+        // TODO: batch & compact instructions addressed to the same block, for performance AND to prevent accidental reordering
         return Promise.all(ops.map(op => op.submit()))
     }
 
