@@ -43,9 +43,10 @@ export class Sequence extends WebObject {
         // TODO: drop __load__() and perform lazy loading of blocks
         //  (but block.load() must only use lower rings to search for the block! otherwise infinite recursion occurs)
 
-        if (CLIENT) return                                  // don't initialize internals when on client
-        if (!this.ring) return                              // don't initialize internals when not yet assigned to a ring
-        if (!this.ring.is_loaded()) this.ring.load()        // intentionally not awaited to avoid deadlocks
+        if (CLIENT) return                              // don't initialize internals when on client
+
+        if (this.ring && !this.ring.is_loaded())
+            this.ring.load()                            // intentionally not awaited to avoid deadlocks
             // assert(this.ring.__meta.loading)
 
         await this.operator?.load()
