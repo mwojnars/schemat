@@ -722,9 +722,10 @@
         sequence and not overlap with neighboring blocks.
       "@": schemat/types/type.js:BINARY
     keys_stop:
-      info: The first key *above* the key range of this block, as a binary vector.
-        Should be compatible with split points (seq.splits) defined in the
-        parent sequence and not overlap with neighboring blocks.
+      info: The first key *above* the key range of this block, as a binary vector; or
+        null if no upper bound. Should be compatible with split points
+        (seq.splits) defined in the parent sequence and not overlap with
+        neighboring blocks.
       "@": schemat/types/type.js:BINARY
     "@": schemat:Catalog
   defaults:

@@ -176,6 +176,8 @@ export class Block extends Agent {
 
     sequence        // parent sequence
     storage         // storage type, e.g. "yaml", "json", "rocksdb", ... can be repeated (storage$) for dual writes
+    keys_start
+    keys_stop
     file_tag        // name of the local file/directory of this block, without a path nor extension; initialized during __setup__(),
                     // should not be modified later on; the upper part of the path may vary between nodes
 
