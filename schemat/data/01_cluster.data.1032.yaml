@@ -173,7 +173,7 @@
   file_tag: 00_kernel.idx-category
   storage: json
   __category:
-    "@": 34
+    "@": 18
 - id: 1027
   ring:
     "@": 1004
@@ -209,7 +209,7 @@
   file_tag: 02_app.idx-category.1030
   storage: json
   __category:
-    "@": 34
+    "@": 18
 - id: 1032
   sequence:
     "@": 1027
@@ -223,7 +223,7 @@
   file_tag: 01_cluster.idx-category.1033
   storage: json
   __category:
-    "@": 34
+    "@": 18
 - id: 1036
   tcp_port: 5829
   num_workers: 2
