@@ -571,6 +571,18 @@ export class WebObject {
         return obj
     }
 
+    static deaf(id, data) {
+        /* Synchronously create an object that only contains __data, but is not otherwise initialized in any way:
+           has no custom class, no loaded __category nor __prototype. Only the own property values stored in __data
+           can be accessed, but no other: no getters, no default values, no imputation, no inheritance, no __schema.
+           Deaf object is used for indexing and calculation of derived sequences from the main data sequence.
+         */
+        let obj = WebObject.stub(id)
+        obj._set_data(data)
+        obj.__meta.deaf = true
+        return obj
+    }
+
     static async inactive(id, data, opts = {}) {
         /* Create an inactive object - with no __load__/_activate() executed - that is seeded with pre-existing `data`,
            typically loaded from storage, or pending write. The ._initialize() is run and for this reason the method is async. */
@@ -932,6 +944,8 @@ export class WebObject {
         let proxy = this.__proxy
         let data  = this.__data
         if (!data) throw new NotLoaded(this)
+
+        if (this.__meta.deaf) return data.getAll(prop)      // no inheritance/imputation for deaf objects during DB indexing
 
         // check the Type of the property in this object's __schema; special handling for:
         // 1) __prototype: because it is used at an early stage of loading (_load_prototypes()), before the object's category (and schema) is fully loaded;
