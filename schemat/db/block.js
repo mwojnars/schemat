@@ -124,7 +124,7 @@ export class Monitor {
         fs.writeFileSync(this._backfill_path, report, {flush: true})
 
         // inform the destination sequence about new offset
-        this.dst.action.commit_backfill(prev, offset || this.src.upper_bound)
+        this.dst.action.commit_backfill(prev, offset || this.src.keys_stop)
         // await WebObject.editable(this.dst.id).edit.commit_backfill(...).save()
     }
 
