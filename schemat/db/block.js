@@ -375,14 +375,6 @@ export class Block extends Agent {
 
 /**********************************************************************************************************************/
 
-export class BinaryBlock extends Block {
-    /* A block of a derived sequence: index, aggregation. */
-
-}
-
-
-/**********************************************************************************************************************/
-
 export class DataBlock extends Block {
     /* A storage block that keeps web objects and implements high-level CRUD operations: insert/update/delete/upsave. */
 

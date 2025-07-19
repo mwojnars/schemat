@@ -1009,11 +1009,3 @@
     "@": 29
   __category:
     "@": 1
-- id: 34
-  name: BinaryBlock
-  info: "Block of a derived sequence: an index or aggregation."
-  class: schemat/db/block.js:BinaryBlock
-  __prototype:
-    "@": 18
-  __category:
-    "@": 1
