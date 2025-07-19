@@ -29,6 +29,8 @@ export class Sequence extends WebObject {
     flush_delay     // delay (in seconds) before flushing all recent updates in a block to disk (to combine multiple consecutive updates in one write)
     file_tag
     derived         // array of derived sequences that capture data from this one
+    filled
+    filled_ranges
 
     // get file_tag() { return 'index' }
 
@@ -159,6 +161,15 @@ export class Sequence extends WebObject {
         delete this.filled
         await Promise.all(this.blocks.map(b => b.$agent.erase()))
         return this.build(source)
+    }
+
+    'edit.commit_backfill'(left, right) {
+        /* Mark the [left,right] range of source binary keys as processed in the backfill process: the range is added to
+           filled_ranges array, or extends an existing range in this array. Both ends of the range are inclusive.
+           `right`=null indicates no upper bound.
+         */
+        // compare_bin()
+
     }
 
     capture_change(key, prev, next) {

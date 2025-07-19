@@ -621,7 +621,7 @@
         and can be used for read access.
       "@": schemat/types/type.js:BOOLEAN
     filled_ranges:
-      info: Array of [start,stop] pairs of binary keys that define ranges in the
+      info: Array of [left,right] pairs of binary keys that define ranges in the
         source sequence that have already been fed to this (derived) sequence in
         backfilling process. Empty array means the process hasn't started. A
         single entry of the form [binary-zero,null] (full range) means the
