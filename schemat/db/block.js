@@ -1,4 +1,4 @@
-import {assert, print, T, zip, arrayFromAsync, fileBaseName} from '../common/utils.js'
+import {assert, print, T, zip, arrayFromAsync, fileBaseName, trycatch} from '../common/utils.js'
 import {DataAccessError, DataConsistencyError, ObjectNotFound} from '../common/errors.js'
 import {Shard, ObjectsMap, Mutex, Mutexes} from "../common/structs.js"
 import {bin_to_hex, compare_bin, zero_binary} from "../common/binary.js";
@@ -127,7 +127,7 @@ export class Monitor {
     _finalize_backfill() {
         /* Finalize the backfill process: clear the offset, remove file. */
         this.backfill_offset = null
-        fs.unlinkSync(this._backfill_path)
+        trycatch(() => fs.unlinkSync(this._backfill_path))      // ignore errors, esp. ENOENT = "file not found"
     }
 
     _in_pending_zone(key) {
