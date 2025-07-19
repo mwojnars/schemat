@@ -726,6 +726,7 @@
         null if no upper bound. Should be compatible with split points
         (seq.splits) defined in the parent sequence and not overlap with
         neighboring blocks.
+      default: null
       "@": schemat/types/type.js:BINARY
     "@": schemat:Catalog
   defaults:
