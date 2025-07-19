@@ -1,8 +1,7 @@
 import {assert, print, T, zip, arrayFromAsync, fileBaseName} from '../common/utils.js'
 import {DataAccessError, DataConsistencyError, ObjectNotFound} from '../common/errors.js'
 import {Shard, ObjectsMap, Mutex, Mutexes} from "../common/structs.js"
-import {compare_bin, zero_binary} from "../common/binary.js";
-import {JSONx} from "../common/jsonx.js";
+import {bin_to_hex, compare_bin, hex_to_bin, zero_binary} from "../common/binary.js";
 import {Struct} from "../common/catalog.js"
 import {WebObject} from '../core/object.js'
 import {Agent} from "../server/agent.js"
@@ -74,8 +73,8 @@ export class Monitor {
         if (backfill) {
             // read current `backfill_offset` from local file .../data/backfill/<src>.<dst>.json, if present
             if (exists) {
-                let json = JSONx.parse(fs.readFileSync(path, 'utf8'))
-                this.backfill_offset = json.offset
+                let report = JSON.parse(fs.readFileSync(path, 'utf8'))
+                this.backfill_offset = hex_to_bin(report.offset)
             }
             else this.backfill_offset = zero_binary
         }
@@ -88,7 +87,7 @@ export class Monitor {
         return !!this.backfill_offset
     }
 
-    async backfill(limit = 2) {
+    async backfill(limit = 3) {
         /* Run another round of backfilling: scan the next batch of source records, transform them into
            destination-sequence mutations, and submit to destination.
          */
@@ -106,15 +105,15 @@ export class Monitor {
             count++
 
             let obj = this.src.decode_object(key, val)
-            // if (obj instanceof Promise) obj = await obj
             ops.push(...this.derive_ops(key, null, obj, false))
-            // this.src._print(`backfill() ... found key`, JSONx.encode(key), 'value', val.slice(0, 50))
+            this.src._print(`backfill() ... found key <${bin_to_hex(key)}> value`, val.slice(0, 50))
         }
         if (count < limit) this._finalize_backfill()        // terminate backfilling if no more records
         // this.src._print(`backfill() ... derived ${ops.length} ops`)
 
         // save this.backfill_offset to file
-        fs.writeFileSync(this._backfill_path, JSONx.stringify({offset: this.backfill_offset}), {flush: true})
+        let report = JSON.stringify({offset: bin_to_hex(this.backfill_offset)})
+        fs.writeFileSync(this._backfill_path, report, {flush: true})
 
         // TODO: batch & compact instructions addressed to the same block, for performance AND to prevent accidental reordering
         return Promise.all(ops.map(op => op.submit()))
