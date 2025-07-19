@@ -91,6 +91,8 @@ export class Monitor {
         /* Run another round of backfilling: scan the next batch of source records, transform them into
            destination-sequence mutations, and submit to destination.
          */
+        if (!this.dst.is_loaded()) await this.dst.load()    // for derive_ops() below
+
         let records = this.src._scan({limit, gt: this.backfill_offset})
         this.src._print(`backfill() to ${this.dst} ...`)
 
