@@ -109,19 +109,19 @@ export class Monitor {
             ops.push(...this.derive_ops(key, null, obj, false))
             this.src._print(`backfill() ... found key <${bin_to_hex(key)}> value`, val.slice(0, 50))
         }
-        if (count < limit) this._finalize_backfill()        // terminate backfilling if no more records
         // this.src._print(`backfill() ... derived ${ops.length} ops`)
 
-        // save this.backfill_offset to file
-        let report = JSONx.stringify({offset: this.backfill_offset})
-        fs.writeFileSync(this._backfill_path, report, {flush: true})
+        this._commit_backfill_offset()
+        if (count < limit) this._finalize_backfill()        // terminate backfilling if no more records
 
         // TODO: batch & compact instructions addressed to the same block, for performance AND to prevent accidental reordering
         return Promise.all(ops.map(op => op.submit()))
     }
 
-    _flush_backfill() {
-        // TODO: flush backfill_offset to file
+    _commit_backfill_offset() {
+        // save this.backfill_offset to file
+        let report = JSONx.stringify({offset: this.backfill_offset})
+        fs.writeFileSync(this._backfill_path, report, {flush: true})
     }
 
     _finalize_backfill() {
