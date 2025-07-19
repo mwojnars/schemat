@@ -620,6 +620,16 @@
         been completed. Only when filled=true, the sequence is fully initialized
         and can be used for read access.
       "@": schemat/types/type.js:BOOLEAN
+    filled_ranges:
+      info: Array of [start,stop] pairs of binary keys that define ranges in the
+        source sequence that have already been fed to this (derived) sequence in
+        backfilling process. Empty array means the process hasn't started. A
+        single entry of the form [binary-zero,null] (full range) means the
+        process is finished and `filled` can be set to true. The ranges in the
+        array are arranged in increasing order and do not overlap. The array
+        should only be modified via edit.commit_backfill().
+      default: []
+      "@": schemat/types/type.js:ARRAY
     derived:
       info: "Array of derived sequences: their content is a transformation of this
         sequence and they should receive notifications on every data change."
