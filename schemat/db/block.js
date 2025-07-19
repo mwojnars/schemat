@@ -107,10 +107,10 @@ export class Monitor {
             let obj = this.src.decode_object(key, val)
             // if (obj instanceof Promise) obj = await obj
             ops.push(...this.derive_ops(key, null, obj, false))
-            this.src._print(`backfill() ... found key`, JSONx.encode(key), 'value', val.slice(0, 50))
+            // this.src._print(`backfill() ... found key`, JSONx.encode(key), 'value', val.slice(0, 50))
         }
         if (count < limit) this._finalize_backfill()        // terminate backfilling if no more records
-        this.src._print(`backfill() ... derived ${ops.length} ops`, JSONx.encode(ops))
+        // this.src._print(`backfill() ... derived ${ops.length} ops`)
 
         // TODO: batch & compact instructions addressed to the same block, for performance AND to prevent accidental reordering
         return Promise.all(ops.map(op => op.submit()))
@@ -175,13 +175,15 @@ export class Block extends Agent {
     get schema()    { return this.sequence.operator.record_schema }
 
     async __setup__() {
-        print('Block.__setup__() ...')
+        this._print('__setup__() ...')
         if (!this.sequence.is_loaded()) await this.sequence.load()
         if (!this.ring.is_loaded()) await this.ring.load()
 
+        this._print('__setup__() props:', this.file_tag, this.ring.file_tag, this.sequence.file_tag, this.sequence.operator.file_tag, this.sequence.operator.name)
+
         let parts = [
             this.ring.file_tag,
-            this.sequence.file_tag || this.sequence.operator?.file_tag || this.sequence.operator?.name,
+            this.sequence.file_tag || this.sequence.operator.file_tag || this.sequence.operator.name,
             `${this.id}`,
         ]
         this.file_tag ??= parts.filter(p => p).join('.')
