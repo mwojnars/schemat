@@ -182,7 +182,7 @@ export class Block extends Agent {
         this._print('__setup__() props:', this.file_tag, this.ring.file_tag, this.sequence.file_tag, this.sequence.operator.file_tag, this.sequence.operator.name)
 
         let parts = [
-            this.ring.file_tag,
+            this.ring.file_tag || this.ring.name,
             this.sequence.file_tag || this.sequence.operator.file_tag || this.sequence.operator.name,
             `${this.id}`,
         ]

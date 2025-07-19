@@ -120,7 +120,7 @@ export class Sequence extends WebObject {
     async 'action.create_derived'(operator) {
         /* Create a derived sequence that will capture changes from this sequence and apply `operator` to them. */
 
-        let seq = await schemat.std.Sequence.new({ring: this.ring, operator})
+        let seq = schemat.std.Sequence.new({ring: this.ring, operator})
         this.derived = [...this.derived || [], seq]
         await schemat.save({ring: this.__ring, broadcast: true})
 
