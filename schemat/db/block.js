@@ -127,7 +127,7 @@ export class Monitor {
     _finalize_backfill() {
         /* Finalize the backfill process: clear the offset, remove file. */
         this.backfill_offset = null
-        // fs.unlinkSync(this._backfill_path)
+        fs.unlinkSync(this._backfill_path)
     }
 
     _in_pending_zone(key) {
