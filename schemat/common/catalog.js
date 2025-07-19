@@ -376,12 +376,16 @@ export class Struct {
         if (target instanceof Array)
             return target.map(value => Struct.clone(value))
 
-        if (typeof target === 'object' && !(target instanceof schemat.WebObject)) {
+        // if (typeof target === 'object' && !(target instanceof schemat.WebObject)) {
+        if (T.isPlain(target)) {
             // for plain object, clone its own attributes AND the class (prototype)
             let cloned = Object.create(Object.getPrototypeOf(target))
             for (let key of Object.keys(target)) cloned[key] = Struct.clone(target[key])
             return cloned
         }
+        if (typeof target === 'object' && !(target instanceof schemat.WebObject))
+            throw new Error(`cannot clone a non-plain object ${target}`)
+
         return target       // primitive values or unhandled types returned as-is
     }
 
