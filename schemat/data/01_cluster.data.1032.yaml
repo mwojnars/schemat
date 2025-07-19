@@ -18,6 +18,7 @@
     "@": 11
 - id: 1003
   name: ring-kernel
+  file_tag: 00_kernel
   main_sequence:
     "@": 1012
   readonly: false
@@ -34,6 +35,7 @@
     "@": 12
 - id: 1004
   name: ring-cluster
+  file_tag: 01_cluster
   base_ring:
     "@": 1003
   base_ring_readonly: false
@@ -94,6 +96,7 @@
     "@": 19
 - id: 1016
   name: ring-app
+  file_tag: 02_app
   base_ring:
     "@": 1004
   base_ring_readonly: false
