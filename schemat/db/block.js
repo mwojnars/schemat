@@ -98,15 +98,14 @@ export class Monitor {
         let ops = []
         
         for await (let [key, val] of records) {
-            count++
+            assert(compare_bin(this.backfill_offset, key) < 0, `next key retrieved during backfill was expected to be strictly greater than offset`)
             this.backfill_offset = key
+            count++
 
             let obj = this.src.decode_object(key, val)
             // if (obj instanceof Promise) obj = await obj
             ops.push(...this.derive_ops(key, null, obj, false))
-            this.src._print(`backfill() ... found key`, JSONx.encode(key), 'value', val)
-
-            assert(compare_bin(this.backfill_offset, key) < 0, `next key retrieved during backfill was expected to be strictly greater than offset`)
+            this.src._print(`backfill() ... found key`, JSONx.encode(key), 'value', val.slice(0, 50))
         }
         if (count < limit) this._finalize_backfill()        // terminate backfilling if no more records
         this.src._print(`backfill() ... derived ${ops.length} ops`, JSONx.encode(ops))
