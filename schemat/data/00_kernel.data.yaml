@@ -716,6 +716,16 @@
       info: "storage type: yaml, json, rocksdb (in the future), ..."
       repeated: true
       "@": schemat/types/type.js:STRING
+    keys_start:
+      info: The first key of the key range of this block, as a binary vector. Should
+        be compatible with split points (seq.splits) defined in the parent
+        sequence and not overlap with neighboring blocks.
+      "@": schemat/types/type.js:BINARY
+    keys_stop:
+      info: The first key *above* the key range of this block, as a binary vector.
+        Should be compatible with split points (seq.splits) defined in the
+        parent sequence and not overlap with neighboring blocks.
+      "@": schemat/types/type.js:BINARY
     "@": schemat:Catalog
   defaults:
     concurrent_calls: true
