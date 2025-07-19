@@ -175,7 +175,7 @@ export class Sequence extends WebObject {
            end can be inclusive or exclusive - this doesn't matter for merging. `right`=null means no upper bound.
            If a full range [zero,null) is obtained at the end, `filled` is set to true.
          */
-        this._add_range(left, right)
+        this.filled_ranges = this._add_range(left, right)
 
         if (this.filled_ranges.length === 1) {      // if the singleton range spans all keys from <zero> to null, set filled=true
             let [L,R] = this.filled_ranges[0]
@@ -185,8 +185,8 @@ export class Sequence extends WebObject {
     }
 
     _add_range(left, right) {
+        let ranges = [...this.filled_ranges]
         let range = [left, right]
-        let ranges = this.filled_ranges || []
         let pos = 0
 
         // find position of the first range [l,r] that overlaps with, or exceeds, `range` (r >= left) - insertion point
@@ -196,7 +196,7 @@ export class Sequence extends WebObject {
         // ...no such range? append `range` at the end and stop
         if (pos === ranges.length) {
             ranges.push(range)
-            return
+            return ranges
         }
 
         // check if we can extend the range at position `pos`
@@ -218,6 +218,7 @@ export class Sequence extends WebObject {
 
         // replace overlapping ranges with one, or insert unchanged [left, right] range if no overlap was found
         ranges.splice(merge_start, merge_end - merge_start, [left, right])
+        return ranges
 
         // if (merge_end > merge_start)            // replace overlapping ranges with one
         //     ranges.splice(merge_start, merge_end - merge_start, range)
