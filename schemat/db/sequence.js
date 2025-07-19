@@ -164,9 +164,14 @@ export class Sequence extends WebObject {
         return this.build(source)
     }
 
+    'action.commit_backfill'(left, right) {
+        // an action is needed (in addition to edit.*) only to open a transaction and make the object mutable
+        this.edit.commit_backfill(left, right)
+    }
+
     'edit.commit_backfill'(left, right) {
         /* Mark the [left,right] range of source binary keys as processed in the backfill process: the range is added to
-           filled_ranges array, or merged to an existing subrange. The `left` end is always inclusive, while the `right`
+           filled_ranges array, or merged with an existing subrange. The `left` end is always inclusive, while the `right`
            end can be inclusive or exclusive - this doesn't matter for merging. `right`=null means no upper bound.
            If a full range [zero,null) is obtained at the end, `filled` is set to true.
          */

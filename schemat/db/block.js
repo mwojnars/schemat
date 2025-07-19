@@ -93,10 +93,10 @@ export class Monitor {
            destination-sequence mutations, and submit to destination.
          */
         if (!this.dst.is_loaded()) await this.dst.load()    // for derive_ops() below
-
-        let records = this.src._scan({limit, gt: this.backfill_offset})
         this.src._print(`backfill() to ${this.dst} ...`)
 
+        let prev_offset = this.backfill_offset
+        let records = this.src._scan({limit, gt: prev_offset})
         let count = 0
         let ops = []
         
@@ -111,17 +111,21 @@ export class Monitor {
         }
         // this.src._print(`backfill() ... derived ${ops.length} ops`)
 
-        this._commit_backfill_offset()
+        this._commit_offset(prev_offset, this.backfill_offset)
         if (count < limit) this._finalize_backfill()        // terminate backfilling if no more records
 
         // TODO: batch & compact instructions addressed to the same block, for performance AND to prevent accidental reordering
         return Promise.all(ops.map(op => op.submit()))
     }
 
-    _commit_backfill_offset() {
-        // save this.backfill_offset to file
-        let report = JSONx.stringify({offset: this.backfill_offset})
+    _commit_offset(prev, offset) {
+        /* Save new offset to file and inform the destination sequence about it, so the sequence can ultimately be marked as `filled`. */
+        let report = JSONx.stringify({offset})
         fs.writeFileSync(this._backfill_path, report, {flush: true})
+
+        // inform the destination sequence about new offset
+        this.dst.action.commit_backfill(prev, offset || this.src.upper_bound)
+        // await WebObject.editable(this.dst.id).edit.commit_backfill(...).save()
     }
 
     _finalize_backfill() {

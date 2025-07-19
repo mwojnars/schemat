@@ -572,9 +572,9 @@ export class WebObject {
     }
 
     static deaf(id, data) {
-        /* Synchronously create an object that only contains __data, but is not otherwise initialized in any way:
-           has no custom class, no loaded __category nor __prototype. Only the own property values stored in __data
-           can be accessed, but no other: no getters, no default values, no imputation, no inheritance, no __schema.
+        /* Create an object that only contains __data, but is not initialized in any other way:
+           has no custom class, no loaded __category & __prototype. Only own property values stored in __data
+           can be accessed, and no getters, no default values, no imputation, no inheritance, no __schema.
            Deaf object is used for indexing and calculation of derived sequences from the main data sequence.
          */
         let obj = WebObject.stub(id)
