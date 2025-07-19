@@ -18,6 +18,7 @@
     "@": 11
 - id: 1003
   name: ring-kernel
+  file_tag: 00_kernel
   main_sequence:
     "@": 1012
   readonly: false
@@ -34,6 +35,7 @@
     "@": 12
 - id: 1004
   name: ring-cluster
+  file_tag: 01_cluster
   base_ring:
     "@": 1003
   base_ring_readonly: false
@@ -94,6 +96,7 @@
     "@": 19
 - id: 1016
   name: ring-app
+  file_tag: 02_app
   base_ring:
     "@": 1004
   base_ring_readonly: false
@@ -171,7 +174,7 @@
   file_tag: 00_kernel.idx-category
   storage: json
   __category:
-    "@": 34
+    "@": 18
 - id: 1027
   ring:
     "@": 1004
@@ -206,7 +209,7 @@
   file_tag: 02_app.idx-category.1030
   storage: json
   __category:
-    "@": 34
+    "@": 18
 - id: 1032
   sequence:
     "@": 1027
@@ -220,7 +223,7 @@
   file_tag: 01_cluster.idx-category.1033
   storage: json
   __category:
-    "@": 34
+    "@": 18
 - id: 1036
   tcp_port: 5821
   num_workers: 2
