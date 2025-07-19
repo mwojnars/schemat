@@ -1,9 +1,10 @@
-import {data_schema} from "./records.js";
 import {assert, print, T} from "../common/utils.js";
-import {BootDataBlock} from "./block.js";
-import {WebObject} from "../core/object.js";
 import {JSONx} from "../common/jsonx.js";
 import {Catalog} from "../common/catalog.js";
+import {compare_bin, zero_binary} from "../common/binary.js";
+import {data_schema} from "./records.js";
+import {WebObject} from "../core/object.js";
+import {BootDataBlock} from "./block.js";
 
 
 /**********************************************************************************************************************
@@ -29,8 +30,8 @@ export class Sequence extends WebObject {
     flush_delay     // delay (in seconds) before flushing all recent updates in a block to disk (to combine multiple consecutive updates in one write)
     file_tag
     derived         // array of derived sequences that capture data from this one
-    filled
-    filled_ranges
+    // filled
+    // filled_ranges
 
     // get file_tag() { return 'index' }
 
@@ -165,11 +166,60 @@ export class Sequence extends WebObject {
 
     'edit.commit_backfill'(left, right) {
         /* Mark the [left,right] range of source binary keys as processed in the backfill process: the range is added to
-           filled_ranges array, or extends an existing range in this array. Both ends of the range are inclusive.
-           `right`=null indicates no upper bound.
+           filled_ranges array, or merged to an existing subrange. Both ends of the range are inclusive.
+           `right`=null means no upper bound. If a full range [zero,null) is obtained at the end, `filled` is set to true.
          */
-        // compare_bin()
+        this._add_range(left, right)
 
+        if (this.filled_ranges.length === 1) {      // if the singleton range spans all keys from <zero> to null, set filled=true
+            let [L,R] = this.filled_ranges[0]
+            if (compare_bin(L, zero_binary) === 0 && R === null)
+                this.filled = true
+        }
+    }
+
+    _add_range(left, right) {
+        let range = [left, right]
+        let ranges = this.filled_ranges || []
+        let pos = 0
+
+        // find position where new range should be inserted or merged
+        // find position of the first range [l,r] that overlaps with, or exceeds, `range` (r >= left)
+        while (pos < ranges.length && compare_bin(ranges[pos][1], left) < 0)
+            pos++
+
+        // ...no such range? append `range` at the end
+        if (pos === ranges.length) {
+            ranges.push(range)
+            return
+        }
+
+        // check if we can extend the range at position `pos`
+        let merge_start = pos
+        let merge_end = pos
+
+        // check if we overlap with current range
+        if (compare_bin(ranges[pos][0], left) <= 0) {
+            // current range starts before our new range
+            left = ranges[pos][0]
+        }
+
+        // find the last range that overlaps with our new range
+        while (merge_end < ranges.length && 
+               (right === null || compare_bin(ranges[merge_end][0], right) <= 0))
+        {
+            if (right !== null && compare_bin(ranges[merge_end][1], right) > 0)
+                right = ranges[merge_end][1]
+            merge_end++
+        }
+
+        // merge `range` with neighboring ranges
+        range = [left, right]
+
+        if (merge_end > merge_start)            // replace overlapping ranges with one
+            ranges.splice(merge_start, merge_end - merge_start, range)
+        else
+            ranges.splice(pos, 0, range)        // insert new range without merging
     }
 
     capture_change(key, prev, next) {
