@@ -133,13 +133,12 @@ export class RocksDBStore extends Store {
         
         try {
             while (true) {
-                if (limit !== undefined && count >= limit) break
+                if (limit !== undefined && ++count > limit) break
                 let [key, value] = await new Promise((resolve, reject) =>
                     it.next((err, k, v) => err ? reject(err) : resolve([k, v]))
                 )
                 if (key === undefined && value === undefined) break
                 
-                count++
                 yield keys && values ? [key, value] : keys ? key : value
             }
         } finally {

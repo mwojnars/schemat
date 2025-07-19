@@ -102,7 +102,7 @@ export class MemoryStore extends Store {
         /* Iterate over records in this block whose keys are in the [start, stop) range, where `start` and `stop`
            are binary keys (Uint8Array). Yield [key, value] pairs.
          */
-        let {gt, gte, lt, lte} = this._normalize_scan_opts(opts)
+        let {gt, gte, lt, lte, limit} = this._normalize_scan_opts(opts)
 
         let sorted_keys = [...this._records.keys()].sort(compare_bin)
         let total = sorted_keys.length
@@ -127,15 +127,12 @@ export class MemoryStore extends Store {
             let pos = sorted_keys.findIndex(key => compare_bin(key, lte) > 0)
             if (pos >= 0) stop = pos
         }
+        let count = 0
 
-        // let start = gte ? sorted_keys.findIndex(key => compare_bin(key, gte) >= 0) : 0
-        // let stop  = lt  ? sorted_keys.findIndex(key => compare_bin(key, lt) >= 0) : total
-        //
-        // if (start < 0) start = total
-        // if (stop < 0) stop = total
-
-        for (let key of sorted_keys.slice(start, stop))
+        for (let key of sorted_keys.slice(start, stop)) {
+            if (limit !== undefined && ++count > limit) break
             yield [key, this._records.get(key)]
+        }
     }
 
     flush(delay = 0.1) {
