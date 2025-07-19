@@ -98,16 +98,19 @@ export class Monitor {
         let ops = []
         
         for await (let [key, val] of records) {
+            count++
+            this.backfill_offset = key
+
             let obj = this.src.decode_object(key, val)
             // if (obj instanceof Promise) obj = await obj
-            ops.push(...this.derive_ops(key, null, obj))
+            ops.push(...this.derive_ops(key, null, obj, false))
+            this.src._print(`backfill() ... found key`, JSONx.encode(key), 'value', val)
 
             assert(compare_bin(this.backfill_offset, key) < 0, `next key retrieved during backfill was expected to be strictly greater than offset`)
-            this.backfill_offset = key
-            count++
         }
         if (count < limit) this._finalize_backfill()        // terminate backfilling if no more records
-        
+        this.src._print(`backfill() ... derived ${ops.length} ops`, JSONx.encode(ops))
+
         // TODO: batch & compact instructions addressed to the same block, for performance AND to prevent accidental reordering
         return Promise.all(ops.map(op => op.submit()))
     }
@@ -127,12 +130,12 @@ export class Monitor {
         return this.backfill_offset && compare_bin(this.backfill_offset, key) < 0
     }
 
-    derive_ops(key, prev, next) {
+    derive_ops(key, prev, next, checked = true) {
         /* In response to a captured [prev > next] value change at a binary `key` in the source sequence, derive a list
            of low-level instructions that should be executed on the destination derived block to propagate the change.
            Arguments, prev/next, are records *decoded* into object representation (web objects, pseudo-objects).
          */
-        if (this._in_pending_zone(key)) return []
+        if (checked && this._in_pending_zone(key)) return []
         let ops = this.dst.operator.derive_ops(key, prev, next)
 
         // in each op, append info about the destination block
