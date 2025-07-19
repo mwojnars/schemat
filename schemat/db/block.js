@@ -99,7 +99,7 @@ export class Monitor {
         
         for await (let [key, val] of records) {
             let obj = this.src.decode_object(key, val)
-            if (obj instanceof Promise) obj = await obj
+            // if (obj instanceof Promise) obj = await obj
             ops.push(...this.derive_ops(key, null, obj))
 
             assert(compare_bin(this.backfill_offset, key) < 0, `next key retrieved during backfill was expected to be strictly greater than offset`)
@@ -399,9 +399,9 @@ export class DataBlock extends Block {
     encode_id(id)  { return this.sequence.encode_id(id) }
     decode_id(key) { return this.sequence.decode_id(key) }
 
-    async decode_object(key, json) {
+    decode_object(key, json) {
         let id = this.decode_id(key)
-        return WebObject.inactive(id, json)
+        return WebObject.deaf(id, json)
     }
 
     _annotate(json) {
