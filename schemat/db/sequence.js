@@ -166,8 +166,9 @@ export class Sequence extends WebObject {
 
     'edit.commit_backfill'(left, right) {
         /* Mark the [left,right] range of source binary keys as processed in the backfill process: the range is added to
-           filled_ranges array, or merged to an existing subrange. Both ends of the range are inclusive.
-           `right`=null means no upper bound. If a full range [zero,null) is obtained at the end, `filled` is set to true.
+           filled_ranges array, or merged to an existing subrange. The `left` end is always inclusive, while the `right`
+           end can be inclusive or exclusive - this doesn't matter for merging. `right`=null means no upper bound.
+           If a full range [zero,null) is obtained at the end, `filled` is set to true.
          */
         this._add_range(left, right)
 
@@ -183,12 +184,11 @@ export class Sequence extends WebObject {
         let ranges = this.filled_ranges || []
         let pos = 0
 
-        // find position where new range should be inserted or merged
-        // find position of the first range [l,r] that overlaps with, or exceeds, `range` (r >= left)
+        // find position of the first range [l,r] that overlaps with, or exceeds, `range` (r >= left) - insertion point
         while (pos < ranges.length && compare_bin(ranges[pos][1], left) < 0)
             pos++
 
-        // ...no such range? append `range` at the end
+        // ...no such range? append `range` at the end and stop
         if (pos === ranges.length) {
             ranges.push(range)
             return
@@ -198,13 +198,11 @@ export class Sequence extends WebObject {
         let merge_start = pos
         let merge_end = pos
 
-        // check if we overlap with current range
-        if (compare_bin(ranges[pos][0], left) <= 0) {
-            // current range starts before our new range
+        // push `left` downwards if it overlaps with current range
+        if (compare_bin(ranges[pos][0], left) < 0)
             left = ranges[pos][0]
-        }
 
-        // find the last range that overlaps with our new range
+        // find the last range that overlaps with our new range; push `right` upwards if needed
         while (merge_end < ranges.length && 
                (right === null || compare_bin(ranges[merge_end][0], right) <= 0))
         {
@@ -213,13 +211,13 @@ export class Sequence extends WebObject {
             merge_end++
         }
 
-        // merge `range` with neighboring ranges
-        range = [left, right]
+        // replace overlapping ranges with one, or insert unchanged [left, right] range if no overlap was found
+        ranges.splice(merge_start, merge_end - merge_start, [left, right])
 
-        if (merge_end > merge_start)            // replace overlapping ranges with one
-            ranges.splice(merge_start, merge_end - merge_start, range)
-        else
-            ranges.splice(pos, 0, range)        // insert new range without merging
+        // if (merge_end > merge_start)            // replace overlapping ranges with one
+        //     ranges.splice(merge_start, merge_end - merge_start, range)
+        // else
+        //     ranges.splice(pos, 0, range)        // insert new range without merging
     }
 
     capture_change(key, prev, next) {
