@@ -57,6 +57,9 @@ export class Monitor {
                         // so the monitor forwards insert/update/delete events occurring at keys <= backfill_offset,
                         // but ignores any events occurring above backfill_offset; set to null after backfill is finished
 
+    get _backfill_path() { return this.src._get_backfill_path(this.dst) }
+
+
     constructor(src, dst, backfill = false) {
         this.src = src
         this.dst = dst
@@ -80,14 +83,12 @@ export class Monitor {
             fs.unlinkSync(path)     // remove the backfill file when initialization of `seq` was completed
     }
 
-    get _backfill_path() { return this.src._get_backfill_path(this.dst) }
-
     is_backfilling() {
         /* True if the target sequence is not yet initialized and the backfill process from `src` is still ongoing. */
         return !!this.backfill_offset
     }
 
-    async backfill(limit = 100) {
+    async backfill(limit = 2) {
         /* Run another round of backfilling: scan the next batch of source records, transform them into
            destination-sequence mutations, and submit to destination.
          */
@@ -112,6 +113,9 @@ export class Monitor {
         if (count < limit) this._finalize_backfill()        // terminate backfilling if no more records
         // this.src._print(`backfill() ... derived ${ops.length} ops`)
 
+        // save this.backfill_offset to file
+        fs.writeFileSync(this._backfill_path, JSONx.stringify({offset: this.backfill_offset}), {flush: true})
+
         // TODO: batch & compact instructions addressed to the same block, for performance AND to prevent accidental reordering
         return Promise.all(ops.map(op => op.submit()))
     }
@@ -123,7 +127,7 @@ export class Monitor {
     _finalize_backfill() {
         /* Finalize the backfill process: clear the offset, remove file. */
         this.backfill_offset = null
-        // TODO: remove file...
+        // fs.unlinkSync(this._backfill_path)
     }
 
     _in_pending_zone(key) {
@@ -178,8 +182,6 @@ export class Block extends Agent {
         this._print('__setup__() ...')
         if (!this.sequence.is_loaded()) await this.sequence.load()
         if (!this.ring.is_loaded()) await this.ring.load()
-
-        this._print('__setup__() props:', this.file_tag, this.ring.file_tag, this.sequence.file_tag, this.sequence.operator.file_tag, this.sequence.operator.name)
 
         let parts = [
             this.ring.file_tag || this.ring.name,
@@ -340,7 +342,7 @@ export class Block extends Agent {
         for (let monitor of monitors)
             await monitor.backfill()
 
-        return 0.2
+        return 10 //0.2
     }
 
     async '$agent.backfill'(seq) {

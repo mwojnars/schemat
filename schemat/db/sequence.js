@@ -33,7 +33,7 @@ export class Sequence extends WebObject {
     // get file_tag() { return 'index' }
 
     __setup__() {
-        print('Sequence.__setup__() creating a block')
+        this._print('Sequence.__setup__() creating a block')
         let Block = schemat.std.Block
         this.blocks = [Block.new({sequence: this, storage: 'json'})]
         // this._print(`tx._staging:`, schemat.tx._staging)
