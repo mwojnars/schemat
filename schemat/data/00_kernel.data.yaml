@@ -720,7 +720,7 @@
   defaults:
     concurrent_calls: true
     "@": schemat:Catalog
-  class: schemat/db/block.js:BinaryBlock
+  class: schemat/db/block.js:Block
   __prototype:
     "@": 29
   __category:

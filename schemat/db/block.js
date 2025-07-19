@@ -111,15 +111,15 @@ export class Monitor {
         }
         // this.src._print(`backfill() ... derived ${ops.length} ops`)
 
-        this._commit_offset(prev_offset, this.backfill_offset)
+        this._commit_backfill(prev_offset, this.backfill_offset)
         if (count < limit) this._finalize_backfill()        // terminate backfilling if no more records
 
         // TODO: batch & compact instructions addressed to the same block, for performance AND to prevent accidental reordering
         return Promise.all(ops.map(op => op.submit()))
     }
 
-    _commit_offset(prev, offset) {
-        /* Save new offset to file and inform the destination sequence about it, so the sequence can ultimately be marked as `filled`. */
+    _commit_backfill(prev, offset) {
+        /* Save new offset to file and inform destination sequence about it, so the sequence can ultimately be marked as `filled`. */
         let report = JSONx.stringify({offset})
         fs.writeFileSync(this._backfill_path, report, {flush: true})
 
