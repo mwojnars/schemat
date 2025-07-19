@@ -719,7 +719,11 @@
     keys_start:
       info: The first key of the key range of this block, as a binary vector. Should
         be compatible with split points (seq.splits) defined in the parent
-        sequence and not overlap with neighboring blocks.
+        sequence and not overlap with neighboring blocks. The default is a
+        `zero` vector that is lower than any other binary vector.
+      default:
+        =: ""
+        "@": "%bin"
       "@": schemat/types/type.js:BINARY
     keys_stop:
       info: The first key *above* the key range of this block, as a binary vector; or
