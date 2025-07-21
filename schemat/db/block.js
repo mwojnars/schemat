@@ -478,12 +478,11 @@ export class DataBlock extends Block {
                 throw new DataConsistencyError(`record with this ID already exists`, {id})
         }
 
-        // assign IDs and convert entries to objects; each object is instantiated for validation,
-        // but not activated: __load__() & _activate() are NOT executed (performance)
+        // assign IDs and convert entries to objects; each object is instantiated for validation, but not activated:
+        // __load__() & _activate() are NOT executed (performance) unless a custom __setup__() needs to be called (below)
         let objects = await Promise.all(entries.map(([provisional, data]) => {
             let _id = id || this._assign_id(opts)
-            return WebObject.deaf(_id, data)
-            // return WebObject.from_data(_id, data, {mutable: true, provisional})
+            return WebObject.from_data(_id, data, {mutable: true, provisional})
             // return WebObject.inactive(_id, data, {mutable: true, provisional})
         }))
         let ids = objects.map(obj => obj.id)
@@ -505,6 +504,7 @@ export class DataBlock extends Block {
             let obj = objects[pos]
             if (obj.__setup__ === WebObject.prototype.__setup__) continue       // skip loading if no custom __setup__() present
 
+            this._print(`calling custom ${obj}.__setup__()`)
             if (!obj.is_loaded()) await obj.load()
             let setup = obj.__setup__()  //{}, {ring: this.ring, block: this})
             if (setup instanceof Promise) await setup
