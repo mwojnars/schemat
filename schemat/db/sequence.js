@@ -48,9 +48,9 @@ export class Sequence extends WebObject {
 
         if (CLIENT) return                              // don't initialize internals when on client
 
-        if (this.ring && !this.ring.is_loaded())
-            this.ring.load()                            // intentionally not awaited to avoid deadlocks
-            // assert(this.ring.__meta.loading)
+        // if (this.ring && !this.ring.is_loaded())
+        //     this.ring.load()                            // intentionally not awaited to avoid deadlocks
+        //     // assert(this.ring.__meta.loading)
 
         await this.operator?.load()
         if (this.derived) await Promise.all(this.derived.map(seq => seq.load()))
