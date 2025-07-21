@@ -128,7 +128,7 @@ export class Sequence extends WebObject {
         this.derived = [...this.derived || [], seq]
         await schemat.save({ring: this.__ring, broadcast: true})
 
-        // tx.no_rollback  -- whatever was saved to DB cannot be rolled back;
+        // tx.is_lite() / tx.no_rollback  -- whatever was saved to DB cannot be rolled back;
         // only in this mode it's allowed to perform mutating operations on the cluster within a DB transaction
         // schemat.tx.epilog(() => {})
 
@@ -182,12 +182,18 @@ export class Sequence extends WebObject {
             if (compare_bin(L, zero_binary) === 0 && R === null)
                 this.filled = true
         }
+
+        this._print(`edit.commit_backfill() left=${left} right=${right}`)
+        this._print(`edit.commit_backfill() filled_ranges`, this.filled_ranges, `filled`, this.filled)
     }
 
     _add_range(left, right) {
         let ranges = [...this.filled_ranges]
         let range = [left, right]
         let pos = 0
+
+        // this._print(`_add_range() left=${left} right=${right}`, left, right, JSONx.stringify(left), JSONx.stringify(right))
+        // this._print(`_add_range() ranges (${ranges.length})`, ranges)
 
         // find position of the first range [l,r] that overlaps with, or exceeds, `range` (r >= left) - insertion point
         while (pos < ranges.length && compare_bin(ranges[pos][1], left) < 0)
@@ -202,6 +208,8 @@ export class Sequence extends WebObject {
         // check if we can extend the range at position `pos`
         let merge_start = pos
         let merge_end = pos
+
+        // TODO: raise error on substantial overlap, as this indicates some keys were backfilled twice
 
         // push `left` downwards if it overlaps with current range
         if (compare_bin(ranges[pos][0], left) < 0)
