@@ -307,11 +307,15 @@ export class ServerTransaction extends Transaction {
 export class LiteTransaction extends ServerTransaction {
     /* A server-side transaction without TID that allows non-atomic save() of mutations, but not committing the transaction as a whole.
        This transaction is always open: it can exist for a long time and be reused for new groups of mutations.
+       For these reasons, and to avoid memory leaks or multiplication of the same records over and over again between nodes,
+       lite transaction does NOT dump nor capture records after save.
      */
 
     constructor()   { super({lite: true}) }
     commit()        { throw new Error(`lite transaction cannot be committed`) }
     dump_tx()       {}
+    dump_records()  {}
+    capture()       {}
 }
 
 /**********************************************************************************************************************/
