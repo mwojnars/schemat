@@ -129,9 +129,9 @@ export class Monitor {
         fs.writeFileSync(this._backfill_path, report, {flush: true})
 
         // inform the destination sequence about new offset
-        this.dst.action.commit_backfill(this.src.keys_start, offset || this.src.keys_stop)   //prev
+        // this.dst.action.commit_backfill(this.src.keys_start, offset || this.src.keys_stop)   //prev
+        WebObject.remote(this.dst.id).edit.commit_backfill(this.src.keys_start, offset || this.src.keys_stop).save()
         // this.dst.as_remote().edit.*
-        // WebObject.remote(this.dst.id).edit.commit_backfill(this.src.keys_start, offset || this.src.keys_stop).save()
     }
 
     // _finalize_backfill() {
