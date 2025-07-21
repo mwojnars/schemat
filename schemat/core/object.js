@@ -516,24 +516,17 @@ export class WebObject {
         return self.__proxy = Intercept.wrap(self)
     }
 
-    static editable(id, edits = null) {
+    static remote(id, edits = null) {
         /* An editable remote object: a mutable object with ID and __meta.edits, but no __data;
            it is an object that is *not* loaded, but still can be edited: the edits are recorded
            in the transaction and passed to DB upon .save() where they get applied to the object's content.
            Serves as a temporary container for `edits` or __status=DELETED within a transaction that is to be written to DB.
-           In this way, it allows manipulations (edits & delete) on a remote object *without* fully loading it.
+           In this way, it allows manipulations (edits & delete) on a remote object *without* fully loading it, and without
+           mirroring all edit operations on the client which may be costly in some cases.
            Since this object is not loaded, it cannot be used for property access.
          */
         return schemat.stage(this.stub(id, {mutable: true, edits}))
     }
-
-    // static newborn(data = null, {draft, ...opts} = {}) {
-    //     /* Create a newborn object (not yet in DB): a mutable object with __data but no ID.
-    //        Optionally, initialize its __data with `data`, but NO other initialization is done. */
-    //     let obj = this.stub(null, {mutable: true, ...opts})
-    //     obj.__data = (typeof data === 'string') ? Catalog.load(data) : new Catalog(data)
-    //     return obj
-    // }
 
     static _new(categories = [], props, args, {draft, ...opts} = {}) {
         /* Create a newborn web object and execute its __new__(...args) to perform caller-side initialization.
