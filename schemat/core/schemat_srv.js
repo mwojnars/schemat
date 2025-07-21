@@ -401,7 +401,7 @@ export class ServerSchemat extends Schemat {
          */
         assert(this === schemat)
         let tid = tx?.tid
-        tx = new ServerTransaction(tid)
+        tx = new ServerTransaction({tid})
         let result = await this._transaction.run(tx, async () => {
             let res = await callback()
             if (tid) await tx.flush(); else await tx.commit()

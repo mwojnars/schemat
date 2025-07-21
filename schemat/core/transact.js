@@ -38,11 +38,6 @@ export class Transaction {
     // captured DB changes after commit & save:
     _updated = []               // array of {id, data} records received from DB after committing the corresponding objects
 
-    // constructor(lite = false) {
-    //     if (schemat.debug) this.debug = true
-    //     // if (lite) return
-    //     // this.tid = 1 + randint(10000) /* 1 + randint() */
-    // }
 
     get_mutable(obj) {
         /* Return an object's mutable copy that's unique transaction-wide: multiple calls return the same copy,
@@ -236,11 +231,11 @@ export class Transaction {
 export class ServerTransaction extends Transaction {
     /* Server-side transaction object. */
 
-    constructor(tid = null, lite = false) {
+    constructor({tid, lite} = {}) {
+        /* If `tid` is provided by the caller, this instance is a part of a broader parent transaction that created the TID value. */
         super()
-        this.tid = tid ||  (1 + randint(10000)) /* 1 + randint() */
-        // if (schemat.debug) this.debug = true
-        // if (lite) return
+        if (lite) return
+        this.tid = tid || (1 + randint(10000)) /* 1 + randint() */
     }
 
     enter_insert_mode(on_newborn_created /*callback*/) {
@@ -309,14 +304,14 @@ export class ServerTransaction extends Transaction {
     }
 }
 
-// export class LiteTransaction extends Transaction {
-//     /* A transaction without TID that allows non-atomic saving of mutations (save()), but not committing the transaction as a whole.
-//        This means the transaction is always open: it can exist for a long time and be reused for new groups of mutations.
-//      */
-//
-//     constructor() { super(true) }
-//     commit() { throw new Error(`lite transaction cannot be committed`) }
-// }
+export class LiteTransaction extends ServerTransaction {
+    /* A server-side transaction without TID that allows non-atomic save() of mutations, but not committing the transaction as a whole.
+       This transaction is always open: it can exist for a long time and be reused for new groups of mutations.
+     */
+
+    constructor() { super({lite: true}) }
+    commit() { throw new Error(`lite transaction cannot be committed`) }
+}
 
 /**********************************************************************************************************************/
 
