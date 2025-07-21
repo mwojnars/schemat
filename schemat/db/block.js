@@ -306,9 +306,9 @@ export class Block extends Agent {
         return this.$state.stores.map(s => s.erase())[0]
     }
 
-    async '$agent.flush'() {
-        return this.$state.stores.map(s => s.flush(false))[0]
-    }
+    // async '$agent.flush'() {
+    //     return this.$state.stores.map(s => s.flush(false))[0]
+    // }
 
     async _sync_stores() {
         /* Copy all data from $state.store to other stores (if present) after erasing them. */
