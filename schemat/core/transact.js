@@ -309,8 +309,9 @@ export class LiteTransaction extends ServerTransaction {
        This transaction is always open: it can exist for a long time and be reused for new groups of mutations.
      */
 
-    constructor() { super({lite: true}) }
-    commit() { throw new Error(`lite transaction cannot be committed`) }
+    constructor()   { super({lite: true}) }
+    commit()        { throw new Error(`lite transaction cannot be committed`) }
+    dump_tx()       {}
 }
 
 /**********************************************************************************************************************/

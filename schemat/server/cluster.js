@@ -120,7 +120,7 @@ export class Cluster extends Agent {
            2) The $state should only be modified outside a transaction, otherwise the DB changes could be rolled back
               at the end by the caller, leaving $state incompatible with DB.
         */
-        assert(!schemat.tx, `$state should only be modified outside a transaction`)
+        assert(!schemat.tx?.tid, `$state should only be modified outside a transaction`)
 
         // this._print_stack()
         this._print(`$leader.create_node() context: ${schemat.db}, ${schemat.app}, ${schemat.tx}`)
