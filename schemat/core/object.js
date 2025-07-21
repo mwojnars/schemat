@@ -517,13 +517,13 @@ export class WebObject {
     }
 
     static remote(id, edits = null) {
-        /* An editable remote object: a mutable object with ID and __meta.edits, but no __data;
-           it is an object that is *not* loaded, but still can be edited: the edits are recorded
-           in the transaction and passed to DB upon .save() where they get applied to the object's content.
-           Serves as a temporary container for `edits` or __status=DELETED within a transaction that is to be written to DB.
+        /* An editable remote object: a mutable object with ID and __meta.edits, but no __data; it is *not* loaded,
+           but still can be edited: the edits are recorded in the transaction and passed to DB upon .save()
+           where they get applied to the object's content. An editable remote object serves as a temporary container
+           for `edits` or __status=DELETED within a transaction that is to be written to DB.
            In this way, it allows manipulations (edits & delete) on a remote object *without* fully loading it, and without
            mirroring all edit operations on the client which may be costly in some cases.
-           Since this object is not loaded, it cannot be used for property access.
+           Since this object is not loaded, it should not be used for property access.
          */
         return schemat.stage(this.stub(id, {mutable: true, edits}))
     }
