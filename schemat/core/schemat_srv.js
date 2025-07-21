@@ -4,7 +4,7 @@ import {AsyncLocalStorage} from 'node:async_hooks'
 import {assert, print, copy, fluctuate} from '../common/utils.js'
 import {Schemat} from './schemat.js'
 import {RequestContext} from "../web/request.js";
-import {ServerTransaction} from "./transact.js";
+import {LiteTransaction, ServerTransaction} from "./transact.js";
 import {Struct} from "../common/catalog.js";
 
 
@@ -31,12 +31,13 @@ export class ServerSchemat extends Schemat {
     _cluster        // Cluster object of the previous generation, remembered here to keep the .cluster() getter operational during complete cache erasure
     _generation     // current generation number: 1,2,3... increased during complete cache erasure
     _transaction    // AsyncLocalStorage that holds a Transaction describing the currently executed DB action
+    _lite_tx        // LiteTransaction object, global to this Schemat context, used as a fallback when no request-specific transaction is present
 
     // on_exit = new Set()     // callbacks to be executed when this process is exiting
 
 
     get db()        { return this._boot_db || this._db }
-    get tx()        { return this._transaction.getStore() }
+    get tx()        { return this._transaction.getStore() || this._lite_tx }
     get node()      { return this.kernel?.node }        // host Node (web object) of the current process; initialized and periodically reloaded in Server
     get cluster()   { return this.get_if_loaded(this._cluster?.id, obj => {this._cluster = obj}) || this._cluster }
     get std()       { return this.root_category.std }   // standard categories and objects from ring-kernel
@@ -84,6 +85,7 @@ export class ServerSchemat extends Schemat {
 
         this._generation = 1
         this._transaction = new AsyncLocalStorage()
+        this._lite_tx = new LiteTransaction()
         // this.loader = new Loader(import.meta.url)
     }
 
