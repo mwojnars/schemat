@@ -70,6 +70,7 @@ export class Monitor {
 
         if (backfill && dst.filled) throw new Error(`sequence ${dst} is already filled, no need to start backfilling`)
         backfill ||= !dst.filled
+        // TODO: above, `dst.filled` may have an OUTDATED value !!
 
         let path = this._backfill_path
         let exists = fs.existsSync(path)
@@ -83,8 +84,8 @@ export class Monitor {
             else this.backfill_offset = zero_binary
             this.src._print(`Monitor.constructor() backfill_offset`, this.backfill_offset)
         }
-        else if (exists)
-            fs.unlinkSync(path)     // remove the backfill file when initialization of `seq` was completed
+        // else if (exists)
+        //     fs.unlinkSync(path)     // remove the backfill file when initialization of `seq` was completed and confirmed in dst.filled
     }
 
     is_backfilling() {
@@ -114,7 +115,8 @@ export class Monitor {
         }
         // this.src._print(`backfill() ... derived ${ops.length} ops`)
 
-        if (count < limit) this._finalize_backfill()        // terminate backfilling if no more records
+        // if (count < limit) this._finalize_backfill()        // terminate backfilling if no more records
+        if (count < limit) this.backfill_offset = null         // terminate backfilling if no more records
         this._commit_backfill(prev_offset, this.backfill_offset)
 
         // TODO: batch & compact instructions addressed to the same block, for performance AND to prevent accidental reordering
@@ -131,11 +133,11 @@ export class Monitor {
         // await WebObject.remote(this.dst.id).edit.commit_backfill(...).save()
     }
 
-    _finalize_backfill() {
-        /* Finalize the backfill process: clear the offset, remove file. */
-        this.backfill_offset = null
-        trycatch(() => fs.unlinkSync(this._backfill_path))      // ignore errors, esp. ENOENT = "file not found"
-    }
+    // _finalize_backfill() {
+    //     /* Finalize the backfill process: clear the offset, remove file. */
+    //     this.backfill_offset = null
+    //     trycatch(() => fs.unlinkSync(this._backfill_path))      // ignore errors, esp. ENOENT = "file not found"
+    // }
 
     _in_pending_zone(key) {
         /* During backfilling, changes in the pending zone (above offset, unprocessed yet) are ignored. */
