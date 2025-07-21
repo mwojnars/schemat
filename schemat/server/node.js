@@ -400,8 +400,8 @@ export class Node extends Agent {
             return RPC_Response.parse(response)
         }
         catch (ex) {
-            // this._print("rpc() of request", JSONx.stringify(request), "FAILED...")
-            ex.request = JSONx.stringify(request)
+            // this._print("rpc() of request", JSON.stringify(request), "FAILED...")
+            ex.request = JSON.stringify(request)
             throw ex
         }
     }
