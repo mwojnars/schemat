@@ -479,7 +479,8 @@ export class DataBlock extends Block {
         // but not activated: __load__() & _activate() are NOT executed (performance)
         let objects = await Promise.all(entries.map(([provisional, data]) => {
             let _id = id || this._assign_id(opts)
-            return WebObject.inactive(_id, data, {mutable: true, provisional})
+            return WebObject.from_data(_id, data, {mutable: true, provisional})
+            // return WebObject.inactive(_id, data, {mutable: true, provisional})
         }))
         let ids = objects.map(obj => obj.id)
 
