@@ -68,9 +68,9 @@ export class Monitor {
         assert(src.is_loaded())
         assert(dst.is_loaded())
 
+        // here, dst.filled=undefined may be OUTDATED, that's why removing the file (below) must be delayed long after backfill()
         if (backfill && dst.filled) throw new Error(`sequence ${dst} is already filled, no need to start backfilling`)
         backfill ||= !dst.filled
-        // TODO: above, `dst.filled` may have an OUTDATED value !!
 
         let path = this._backfill_path
         let exists = fs.existsSync(path)
