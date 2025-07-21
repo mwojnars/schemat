@@ -164,10 +164,10 @@ export class Sequence extends WebObject {
         return this.build(source)
     }
 
-    'action.commit_backfill'(left, right) {
-        // an action is needed (in addition to edit.*) only to open a transaction and make the object mutable
-        this.edit.commit_backfill(left, right)
-    }
+    // 'action.commit_backfill'(left, right) {
+    //     // an action is needed (in addition to edit.*) only to open a transaction and make the object mutable
+    //     this.edit.commit_backfill(left, right)
+    // }
 
     'edit.commit_backfill'(left, right) {
         /* Mark the [left,right] range of source binary keys as processed in the backfill process of this derived sequence:
