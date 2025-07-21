@@ -170,10 +170,10 @@ export class Sequence extends WebObject {
     }
 
     'edit.commit_backfill'(left, right) {
-        /* Mark the [left,right] range of source binary keys as processed in the backfill process: the range is added to
-           filled_ranges array, or merged with an existing subrange. The `left` end is always inclusive, while the `right`
-           end can be inclusive or exclusive - this doesn't matter for merging. `right`=null means no upper bound.
-           If a full range [zero,null) is obtained at the end, `filled` is set to true.
+        /* Mark the [left,right] range of source binary keys as processed in the backfill process of this derived sequence:
+           the range is added to filled_ranges array, or merged with an existing subrange. The `left` end is always inclusive,
+           while the `right` end can be inclusive or exclusive - this doesn't matter for merging. `right`=null means no upper bound.
+           If a full range [zero,null) is obtained, `filled` is set to true.
          */
         this.filled_ranges = this._add_range(left, right)
 
