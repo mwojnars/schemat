@@ -141,7 +141,7 @@ export class mActionResult extends MessageEncoder {
     }
     decode(msg) {
         let {status, result, records} = JSON.parse(msg)
-        schemat.register_changes(...records)
+        schemat.register_changes(...records)        // on client, put records returned from server into Registry
         return JSONx.decode_checked(result)
     }
 }
