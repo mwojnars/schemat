@@ -68,7 +68,7 @@ export class Monitor {
         assert(src.is_loaded())
         assert(dst.is_loaded())
 
-        // here, dst.filled=undefined may be OUTDATED, that's why removing the file (below) must be delayed long after backfill()
+        // here, dst.filled=true may arrive with a delay, that's why removing the file, below, must be delayed long after backfill()
         if (backfill && dst.filled) throw new Error(`sequence ${dst} is already filled, no need to start backfilling`)
         backfill ||= !dst.filled
 
@@ -84,8 +84,8 @@ export class Monitor {
             else this.backfill_offset = zero_binary
             this.src._print(`Monitor.constructor() backfill_offset`, this.backfill_offset)
         }
-        // else if (exists)
-        //     fs.unlinkSync(path)     // remove the backfill file when initialization of `seq` was completed and confirmed in dst.filled
+        else if (exists)
+            fs.unlinkSync(path)     // remove the backfill file when initialization of `seq` was completed and confirmed in dst.filled
     }
 
     is_backfilling() {
