@@ -155,9 +155,10 @@ export class Schemat {
     async _init_classpath() {
         let builtin = this.builtin = new Classpath()
 
-        builtin.set(":Map", Map)                                    // standard JS classes have an empty file part of the path
-        builtin.set(":Error", Error)
-        builtin.set(":TypeError", TypeError)
+        // standard JS classes have an empty file part of the path (e.g., ":Map")
+        let std_objects = [Map, Error, TypeError, RangeError]
+        for (let obj of std_objects)
+            builtin.set(`:${obj.name}`, obj)
 
         await builtin.fetch("../index.js", {path: 'schemat'})       // Schemat core classes, e.g., "schemat:WebObject"
         await builtin.fetch("../common/structs.js")
