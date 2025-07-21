@@ -53,13 +53,6 @@
     "@": schemat/common/structs.js:Shard
   __category:
     "@": 12
-- id: 1010
-  sequence:
-    "@": 1017
-  file_tag: 02_app.data.1010
-  storage: yaml
-  __category:
-    "@": 19
 - id: 1011
   name: db-cluster
   top_ring:
@@ -122,7 +115,6 @@
     - "@": 1018
   blocks:
     - "@": 1029
-    - "@": 1010
   __category:
     "@": 14
 - id: 1018
@@ -156,8 +148,6 @@
       id: 1033
     - worker: 2
       id: 1029
-    - worker: 1
-      id: 1010
     - worker: 1
       id: 1001
       role: $leader
