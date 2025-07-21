@@ -65,6 +65,9 @@ export class Monitor {
         this.dst = dst
         this.backfill_offset = null
 
+        assert(src.is_loaded())
+        assert(dst.is_loaded())
+
         if (backfill && dst.filled) throw new Error(`sequence ${dst} is already filled, no need to start backfilling`)
         backfill ||= !dst.filled
 
@@ -93,7 +96,6 @@ export class Monitor {
         /* Run another round of backfilling: scan the next batch of source records, transform them into
            destination-sequence mutations, and submit to destination.
          */
-        if (!this.dst.is_loaded()) await this.dst.load()    // for derive_ops() below
         this.src._print(`backfill() to ${this.dst} ...`)
 
         let prev_offset = this.backfill_offset
@@ -364,6 +366,7 @@ export class Block extends Agent {
         let monitor = monitors.get(seq)
         if (monitor) return
 
+        await seq.load()
         monitors.set(seq, monitor = new Monitor(this, seq, true))
     }
 
@@ -479,7 +482,8 @@ export class DataBlock extends Block {
         // but not activated: __load__() & _activate() are NOT executed (performance)
         let objects = await Promise.all(entries.map(([provisional, data]) => {
             let _id = id || this._assign_id(opts)
-            return WebObject.from_data(_id, data, {mutable: true, provisional})
+            return WebObject.deaf(_id, data)
+            // return WebObject.from_data(_id, data, {mutable: true, provisional})
             // return WebObject.inactive(_id, data, {mutable: true, provisional})
         }))
         let ids = objects.map(obj => obj.id)
@@ -499,6 +503,9 @@ export class DataBlock extends Block {
 
         for (let pos = 0; pos < objects.length; pos++) {
             let obj = objects[pos]
+            if (obj.__setup__ === WebObject.prototype.__setup__) continue       // skip loading if no custom __setup__() present
+
+            if (!obj.is_loaded()) await obj.load()
             let setup = obj.__setup__()  //{}, {ring: this.ring, block: this})
             if (setup instanceof Promise) await setup
         }

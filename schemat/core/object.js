@@ -819,6 +819,7 @@ export class WebObject {
         let __meta = this.__meta
         __meta.expire_at = __meta.loaded_at + this.__ttl * 1000
         __meta.active = true
+        delete __meta.deaf
 
         if (this.__ver && !this.__meta.mutable) schemat.register_version(this)
     }
