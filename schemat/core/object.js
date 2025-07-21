@@ -474,7 +474,9 @@ export class WebObject {
          */
         return this.id !== undefined && ((typeof other === 'object' && this.id === other?.id) || this.id === other)
     }
-    is_not(other) { return !this.is(other) }
+    is_not(other)   { return !this.is(other) }
+
+    get_remote()    { return WebObject.remote(this.id) }
 
 
     /***  Instantiation  ***/
