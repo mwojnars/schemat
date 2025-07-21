@@ -78,6 +78,7 @@ export class Monitor {
                 this.backfill_offset = report.offset
             }
             else this.backfill_offset = zero_binary
+            this.src._print(`Monitor.constructor() backfill_offset`, this.backfill_offset)
         }
         else if (exists)
             fs.unlinkSync(path)     // remove the backfill file when initialization of `seq` was completed
@@ -111,8 +112,8 @@ export class Monitor {
         }
         // this.src._print(`backfill() ... derived ${ops.length} ops`)
 
-        this._commit_backfill(prev_offset, this.backfill_offset)
         if (count < limit) this._finalize_backfill()        // terminate backfilling if no more records
+        this._commit_backfill(prev_offset, this.backfill_offset)
 
         // TODO: batch & compact instructions addressed to the same block, for performance AND to prevent accidental reordering
         return Promise.all(ops.map(op => op.submit()))
@@ -124,8 +125,8 @@ export class Monitor {
         fs.writeFileSync(this._backfill_path, report, {flush: true})
 
         // inform the destination sequence about new offset
-        this.dst.action.commit_backfill(prev, offset || this.src.keys_stop)
-        // await WebObject.editable(this.dst.id).edit.commit_backfill(...).save()
+        this.dst.action.commit_backfill(this.src.keys_start, offset || this.src.keys_stop)   //prev
+        // await WebObject.remote(this.dst.id).edit.commit_backfill(...).save()
     }
 
     _finalize_backfill() {
