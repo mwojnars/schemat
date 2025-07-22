@@ -379,14 +379,17 @@ export class Struct {
         if (target instanceof Uint8Array)
             return new Uint8Array(target)
 
+        if (target instanceof Struct) {     // e.g., Type extends Struct
+            // clone own attributes AND the class (prototype) ... TODO: use getstate/setstate() if the object supports
+            let cloned = Object.create(Object.getPrototypeOf(target))
+            for (let key of Object.keys(target)) cloned[key] = Struct.clone(target[key])
+            return cloned
+        }
+
         if (T.isPlain(target)) return Object.assign({}, target)
 
-        if (typeof target === 'object' && !(target instanceof schemat.WebObject)) {
+        if (typeof target === 'object' && !(target instanceof schemat.WebObject))
             throw new Error(`cannot clone a non-plain object (${target})`)
-            // // for objects, clone own attributes AND the class (prototype)
-            // let cloned = Object.create(Object.getPrototypeOf(target))
-            // for (let key of Object.keys(target)) cloned[key] = Struct.clone(target[key])
-        }
 
         return target       // primitive values or unhandled types returned as-is
     }
