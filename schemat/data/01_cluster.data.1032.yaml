@@ -140,14 +140,19 @@
   agents:
     - worker: 2
       id: 1015
+#      role: $master
     - worker: 1
       id: 1026
+#      role: $master
     - worker: 1
       id: 1032
+#      role: $master
     - worker: 2
       id: 1033
+#      role: $master
     - worker: 2
       id: 1029
+#      role: $agent
     - worker: 1
       id: 1001
       role: $leader
@@ -220,14 +225,19 @@
   agents:
     - worker: 1
       id: 1015
+#      role: $replica
     - worker: 2
       id: 1026
+#      role: $replica
     - worker: 2
       id: 1032
+#      role: $replica
     - worker: 1
       id: 1033
+#      role: $replica
     - worker: 1
       id: 1030
+#      role: $master
     - worker: 2
       id: 1037
     - worker: 1
