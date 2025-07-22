@@ -1,6 +1,9 @@
 /*
-    Global variables accessible to all application code. Declared here for clarity and consistency.
+    Global variables & settings accessible to all application code. Declared here for clarity and consistency.
  */
+
+
+Error.stackTraceLimit = Infinity    // don't truncate stack traces at 10 lines
 
 
 // global Schemat object on the server:
