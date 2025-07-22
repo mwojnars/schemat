@@ -36,14 +36,11 @@ export class Mailbox {
        Here, "requests" are messages followed by a response, while "notifications" are fire-and-forget messages (no response).
      */
 
-    // constructor(callback, timeout = null) {
     constructor(callback, timeout = 10 * 1000) {   //schemat.debug ? null : 5000
         this.callback = callback        // processing function for incoming messages
-        this.pending = new Map()        // [resolve, reject] pairs of callbacks for requests sent and awaiting a response
+        this.pending = new Map()        // stores [resolve, reject, timestamp, msg] for requests awaiting response
         this.message_id = 0             // last message ID sent
-
         this.timeout = timeout          // timeout for waiting for a response
-        this.timestamps = new Map()     // timestamps for pending requests
         this.interval = timeout ? setInterval(() => this._check_timeouts(), timeout).unref() : null
     }
 
@@ -56,12 +53,9 @@ export class Mailbox {
             if (this.message_id >= Number.MAX_SAFE_INTEGER) this.message_id = 0
 
             this._send([id, msg])
-            this.pending.set(id, [resolve, reject])
-            if (this.timeout) this.timestamps.set(id, {timestamp: Date.now(), reject, msg: JSON.stringify(msg)})
 
-            // schemat.on_exit.add(reject)
-            // if (schemat.on_exit.size > 1000)
-            //     schemat._print(`WARNING schemat.on_exit.size = ${schemat.on_exit.size}`)
+            let entry = this.timeout ? [resolve, reject] : [resolve, reject, Date.now(), JSON.stringify(msg)]
+            this.pending.set(id, entry)
         })
     }
 
@@ -71,12 +65,13 @@ export class Mailbox {
     }
 
     _check_timeouts() {
+        if (this.pending.size > 1000)
+            schemat._print(`WARNING: high number of unresolved IPC requests (${this.pending.size})`)
+
         const now = Date.now()
-        for (const [id, {timestamp, reject, msg}] of this.timestamps.entries()) {
-            if (now - timestamp > this.timeout) {
-                // schemat.on_exit.delete(reject)   // WARN: here, `schemat` may be a different object than in send(), such deletion is incorrect!!
+        for (const [id, [resolve, reject, timestamp, msg]] of this.pending.entries()) {
+            if (timestamp && now - timestamp > this.timeout) {
                 this.pending.delete(id)
-                this.timestamps.delete(id)
                 reject(new Error(`response timeout for message no. ${id}, msg = ${msg}`))
             }
         }
@@ -100,8 +95,8 @@ export class Mailbox {
         // if undefined was returned from the call; `error` and `result` are JSONx-encoded objects;
         // negative ID indicates this is a response not a message
         try {
-            result = this.callback(msg)
-            if (result instanceof Promise) result = await result
+            result = await this.callback(msg)
+            // if (result instanceof Promise) result = await result
         }
         catch (ex) {
             if (id === 0) schemat._print(`IPC notification ${JSON.stringify(msg)} ended with error on recipient:`, ex)
@@ -122,8 +117,6 @@ export class Mailbox {
         if (!resolve) return console.warn(`unknown IPC response id: ${id}`)
 
         this.pending.delete(id)
-        this.timestamps.delete(id)
-
         if (error) reject(JSONx.decode(error))      // return result or error to the caller
         else resolve(result)
     }
@@ -494,7 +487,7 @@ export class Node extends Agent {
 
         // locate the agent by its `agent_id`, should be running here in this process
         let frame = schemat.get_frame(agent_id, role)
-        if (!frame) throw new Error(`[${agent_id}].${role} not found on this process`)
+        if (!frame) throw new Error(`[${agent_id}].${role} not found on this process (worker #${this.worker_id})`)
 
         return frame.exec(cmd, args, ctx, tx, (out, err) => RPC_Response.create(out, err))
     }
