@@ -1,8 +1,6 @@
 import {assert, print, timeout, sleep} from '../common/utils.js'
 import {IPC_Error, RPC_Error} from "../common/errors.js";
 import {JSONx} from "../common/jsonx.js";
-import {Catalog} from "../common/catalog.js";
-import {WebObject} from "../core/object.js";
 import {Agent} from "./agent.js";
 import {TCP_Receiver, TCP_Sender} from "./tcp.js";
 import {Counter} from "../common/structs.js";
@@ -10,20 +8,6 @@ import {Counter} from "../common/structs.js";
 
 const MASTER = 0        // ID of the master process; workers are numbered 1,2,...,N
 
-
-/**********************************************************************************************************************/
-
-// class Config extends WebObject {
-//     /* Global server-side configuration that can be defined separately at cluster/node/app/command-line level
-//        and then combined in a particular Schemat process to control high-level behaviour of the node.
-//      */
-//     merge(...others) {
-//         /* The expected order of `others` is from least to most specific: [node config, app config, command-line config]. */
-//         let configs = [...others.reverse(), this]
-//         let catalogs = configs.map(obj => obj.__data || new Catalog(obj))
-//         return Catalog.merge(catalogs)
-//     }
-// }
 
 /**********************************************************************************************************************/
 
