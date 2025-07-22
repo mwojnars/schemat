@@ -202,11 +202,12 @@ class RPC_Response {
     static parse(response) {
         if (response === undefined) throw new Error(`missing RPC response`)
         let {ret, err, records} = JSONx.decode(response)
-        if (err) {
-            let err2 = new RPC_Error('')
-            err2.cause = err    // passing this in constructor ({cause: err}) pollutes the stack trace and makes it unreadable
-            throw err2
-        }
+        if (err) throw RPC_Error.with_cause('error returned by RPC recipient', err)
+        // if (err) {
+        //     let err2 = new RPC_Error('error returned by RPC recipient')
+        //     err2.cause = err    // passing this in constructor ({cause: err}) pollutes the stack trace and makes it unreadable
+        //     throw err2
+        // }
         if (records?.length) schemat.register_changes(...records)
         // TODO: above, use register_changes() only for important records that should be stored in TX and passed back to the originator
         return ret

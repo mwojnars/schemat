@@ -41,6 +41,14 @@ export class BaseError extends Error {
         }
     }
 
+    static with_cause(msg, cause) {
+        // passing cause in constructor, BaseError(msg, {cause}), pollutes the stack trace and makes it unreadable
+        // - probably the constructor should be fixed to properly handle {cause} param
+        let err = new this(msg)
+        err.cause = cause
+        return err
+    }
+
     toString() {}
 }
 
@@ -81,6 +89,7 @@ export class ValueError extends ValidationError { static message = "incorrect va
 
 export class ClusterError extends BaseError {}
 export class RPC_Error extends ClusterError {}
+export class IPC_Error extends ClusterError {}
 export class StoppingNow extends ClusterError {}
 
 /**********************************************************************************************************************/
