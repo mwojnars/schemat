@@ -598,21 +598,22 @@ export class WebObject {
     toString() { return this.__label }
 
     _print(...args) { schemat._print(this.__label, ...args) }
+    _print_error(title, ex) { schemat._print_error(`${this.__label} ${title}`, ex) }
 
-    _print_error(title, ex) {
-        /* Print an error together with its .cause chain of errors. */
-        let errors = [], first = true
-        while (ex) {
-            errors.push([ex.stack, ex.request, ex.node, ex.worker])
-            ex = ex.cause
-        }
-        for (let [stack, request, node, worker] of errors) {
-            if (first) schemat._print(this.__label, title, stack)
-            else print(`  caused at ${node}/#${worker} by`, stack)
-            if (request) print('    request:\x1b[32m', request, '\x1b[0m')
-            first = false
-        }
-    }
+    // _print_error(title, ex) {
+    //     /* Print an error together with its .cause chain of errors. */
+    //     let errors = [], first = true
+    //     while (ex) {
+    //         errors.push([ex.stack, ex.request, ex.node, ex.worker])
+    //         ex = ex.cause
+    //     }
+    //     for (let [stack, request, node, worker] of errors) {
+    //         if (first) schemat._print(this.__label, title, stack)
+    //         else print(`  caused at ${node}/#${worker} by`, stack)
+    //         if (request) print('    request:\x1b[32m', request, '\x1b[0m')
+    //         first = false
+    //     }
+    // }
 
     _print_stack(...args) {
         /* Print the current stack trace with detailed header information: node ID, worker process, current object. */
