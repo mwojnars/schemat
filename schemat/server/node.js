@@ -49,8 +49,9 @@ export class Mailbox {
 
     send(msg, {wait = true} = {}) {
         /* Send `msg` to the peer. Wait for the response if wait=true. */
-        if (!wait) this._send([0, msg])
-        else return new Promise((resolve, reject) => {
+        if (!wait) return this._send([0, msg])
+
+        return new Promise((resolve, reject) => {
             let id = ++this.message_id
             if (this.message_id >= Number.MAX_SAFE_INTEGER) this.message_id = 0
 
@@ -92,7 +93,7 @@ export class Mailbox {
     async _handle_message([id, msg, err]) {
         /* Handle a request OR response received from the peer. */
         if (id < 0) return this._handle_response([id, msg, err])    // received a response not a request
-        let result, error
+        let result, error, resp
 
         // received a request message: run the callback, send back the result or error;
         // response format: [-id, result, error], where error is missing if `result` is present, and `result` can be missing
@@ -101,8 +102,6 @@ export class Mailbox {
         try {
             result = this.callback(msg)
             if (result instanceof Promise) result = await result
-            // resp = (result === undefined) ? [-id] : [-id, result]       // this check is needed so undefined is not replaced with null during IPC
-            // if (id !== 0) return this._send(resp)      // only with non-zero ID, a response is expected by the caller
         }
         catch (ex) {
             if (id === 0) schemat._print(`IPC notification ${JSON.stringify(msg)} ended with error on recipient:`, ex)
@@ -110,10 +109,8 @@ export class Mailbox {
         }
 
         if (id === 0) return                            // only when non-zero ID, a response is expected by the caller
-        let resp
-
         if (error) resp = [-id, null, error]
-        else if (result === undefined) resp = [-id]     // this check is needed so undefined is not replaced with null during IPC
+        else if (result === undefined) resp = [-id]     // this is needed so undefined is _not_ replaced with null during IPC
         else resp = [-id, result]
 
         return this._send(resp)
