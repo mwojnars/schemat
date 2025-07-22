@@ -287,6 +287,8 @@ export class MasterProcess extends Kernel {
         let num_workers = this.workers.length
         for (let {worker, id, role} of agents) {
             assert(id)
+            role ??= schemat.GENERIC_ROLE
+
             // adjust the `worker` index if it does not match a valid worker ID (should be in 1,2,...,num_workers)
             if (worker < 1 || worker > num_workers) {
                 let new_worker = (worker-1) % num_workers + 1
