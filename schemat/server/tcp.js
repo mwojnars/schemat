@@ -114,6 +114,8 @@ export class TCP_Sender {
         this.message_id = 0             // last message ID sent
 
         this.retry_timer = setInterval(() => {
+            if (this.pending.size > 1000)
+                schemat._print(`WARNING: high number of unresolved TCP requests (${this.pending.size})`)
             for (let [id, entry] of this.pending) {
                 entry.retries++
                 let socket = this.sockets.get(entry.address)
