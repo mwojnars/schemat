@@ -140,13 +140,16 @@
   agents:
     - worker: 2
       id: 1015
-#      role: $master
+      role: $master
     - worker: 1
       id: 1026
-#      role: $master
+      role: $master
     - worker: 1
       id: 1032
-#      role: $master
+      role: $master
+    - worker: 1
+      id: 1032
+      role: $agent
     - worker: 2
       id: 1033
 #      role: $master
