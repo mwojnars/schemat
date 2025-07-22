@@ -1,5 +1,5 @@
 import {assert, print, timeout, sleep} from '../common/utils.js'
-import {RPC_Error} from "../common/errors.js";
+import {IPC_Error, RPC_Error} from "../common/errors.js";
 import {JSONx} from "../common/jsonx.js";
 import {Catalog} from "../common/catalog.js";
 import {WebObject} from "../core/object.js";
@@ -117,7 +117,12 @@ export class Mailbox {
         if (!resolve) return console.warn(`unknown IPC response id: ${id}`)
 
         this.pending.delete(id)
-        if (error) reject(JSONx.decode(error))      // return result or error to the caller
+
+        // return result or error to the caller
+        if (error) {
+            let cause = JSONx.decode(error)
+            reject(IPC_Error.with_cause('error in IPC peer', cause))
+        }
         else resolve(result)
     }
 
@@ -202,12 +207,7 @@ class RPC_Response {
     static parse(response) {
         if (response === undefined) throw new Error(`missing RPC response`)
         let {ret, err, records} = JSONx.decode(response)
-        if (err) throw RPC_Error.with_cause('error returned by RPC recipient', err)
-        // if (err) {
-        //     let err2 = new RPC_Error('error returned by RPC recipient')
-        //     err2.cause = err    // passing this in constructor ({cause: err}) pollutes the stack trace and makes it unreadable
-        //     throw err2
-        // }
+        if (err) throw RPC_Error.with_cause('error in RPC peer', err)
         if (records?.length) schemat.register_changes(...records)
         // TODO: above, use register_changes() only for important records that should be stored in TX and passed back to the originator
         return ret
