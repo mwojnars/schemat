@@ -57,7 +57,7 @@ export class Mailbox {
 
             this._send([id, msg])
             this.pending.set(id, [resolve, reject])
-            if (this.timeout) this.timestamps.set(id, {timestamp: Date.now(), reject, msg})
+            if (this.timeout) this.timestamps.set(id, {timestamp: Date.now(), reject, msg: JSON.stringify(msg)})
 
             // schemat.on_exit.add(reject)
             // if (schemat.on_exit.size > 1000)
@@ -77,7 +77,7 @@ export class Mailbox {
                 // schemat.on_exit.delete(reject)   // WARN: here, `schemat` may be a different object than in send(), such deletion is incorrect!!
                 this.pending.delete(id)
                 this.timestamps.delete(id)
-                reject(new Error(`response timeout for message no. ${id}, msg = ${JSON.stringify(msg)}`))
+                reject(new Error(`response timeout for message no. ${id}, msg = ${msg}`))
             }
         }
     }
