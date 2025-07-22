@@ -394,6 +394,8 @@ export class Node extends Agent {
         }
         catch (ex) {
             // this._print("rpc() of request", JSON.stringify(request), "FAILED...")
+            ex.node = this.id
+            ex.worker = this.worker_id
             ex.request = JSON.stringify(request)
             throw ex
         }
@@ -480,27 +482,28 @@ export class Node extends Agent {
 
     /* IPC: vertical communication between master/worker processes */
 
-    async ipc_send(process_id = 0, message) {
-        /* Send an IPC message from master down to a worker process, or the other way round. */
+    async ipc_send(process_id = 0, request) {
+        /* Send an IPC request from master down to a worker process, or the other way round. */
 
-        // this._print(`ipc_send() process_id=${process_id} worker_id=${this.worker_id} message=${message}`)
+        // this._print(`ipc_send() process_id=${process_id} worker_id=${this.worker_id} request=${request}`)
         try {
             if (process_id === this.worker_id)      // shortcut when sending to itself, on master or worker
-                return process_id ? await this.ipc_worker(message) : await this.ipc_master(message)
+                return process_id ? await this.ipc_worker(request) : await this.ipc_master(request)
 
             if (process_id) {
                 assert(this.is_master())
                 let worker = this.get_worker(process_id)
-                return await worker.mailbox.send(message)
+                return await worker.mailbox.send(request)
             }
             else {
                 assert(this.is_worker())
-                return await schemat.kernel.mailbox.send(message)
+                return await schemat.kernel.mailbox.send(request)
             }
         }
         catch (ex) {
-            // this._print(`ipc_send() FAILED request to proc #${process_id}:`, JSON.stringify(message))
-            ex.request = JSON.stringify(message)
+            // this._print(`ipc_send() FAILED request to proc #${process_id}:`, JSON.stringify(request))
+            ex.worker = this.worker_id
+            ex.request = JSON.stringify(request)
             throw ex
         }
     }
@@ -535,7 +538,7 @@ export class Node extends Agent {
            `msg` is a plain object/array whose elements may still need to be JSONx-decoded.
          */
         assert(this.is_master())
-        if (RPC_Request.is_private(message)) throw new Error(`cannot handle private message received from another node`)
+        if (RPC_Request.is_private(message)) throw new Error(`cannot handle a private message received from another node`)
         return this.rpc_recv(message)
     }
 
