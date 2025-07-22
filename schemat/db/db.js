@@ -188,12 +188,12 @@ export class Ring extends WebObject {
     }
 
     async delete(id, req) {
-        return this._find_block(id).$agent.delete(id, req || new DataRequest())
+        return this._find_block(id).$master.delete(id, req || new DataRequest())
     }
 
     async insert(data, opts = {}) {
         let block = opts.id ? this._find_block(opts.id) : this._random_block()
-        return block.$agent.insert(data, opts)
+        return block.$master.insert(data, opts)
     }
 
     async update(id, edits, req) {
@@ -203,11 +203,11 @@ export class Ring extends WebObject {
                    even without changing the record's data.
          */
         if (!edits?.length) return
-        return this._find_block(id).$agent.update(id, edits, req || new DataRequest())
+        return this._find_block(id).$master.update(id, edits, req || new DataRequest())
     }
 
     async upsave(id, data, req) {
-        return this._find_block(id).$agent.upsave(id, data, req || new DataRequest())
+        return this._find_block(id).$master.upsave(id, data, req || new DataRequest())
     }
 
 
