@@ -172,7 +172,7 @@ export class JsonStore extends MemoryStore {
 
     _flush() {
         /* Save the entire database (this.records) to a file. */
-        // print(`YamlIndexStorage flushing ${this._records.size} records to ${this.filename}...`)
+        // schemat._print(`YamlIndexStorage flushing ${this._records.size} records to ${this.filename}...`)
 
         let lines = [...this.scan()].map(([key_binary, val_json]) => {
             let key = this.block.decode_key(key_binary)
@@ -239,7 +239,7 @@ export class YamlDataStore extends MemoryStore {
 
     _flush() {
         /* Save the entire database (this.records) to a file. */
-        print(`YamlDataStore flushing ${this._records.size} items to ${this.filename}...`)
+        schemat._print(`YamlDataStore flushing ${this._records.size} items to ${this.filename}...`)
         let recs = [...this.scan()].map(([key, data_json]) => {
             let id = data_schema.decode_key(key)[0]
             let data = JSON.parse(data_json)
