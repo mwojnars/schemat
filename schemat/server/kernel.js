@@ -158,18 +158,24 @@ export class Kernel {
 
     async start_agent(id, role) {
         if (this.frames.has([id, role])) throw new Error(`agent [${id}] in role ${role} is already running`)
-
-        let agent = await schemat.get_loaded(id)
         role ??= schemat.GENERIC_ROLE           // "$agent" role is the default for running agents
 
-        // schemat._print(`start_agent(): ${agent}`, agent.__content)
-        assert(agent.is_loaded())
-        assert(agent instanceof Agent)
+        try {
+            let agent = await schemat.get_loaded(id)
 
-        let frame = new Frame(agent, role)
-        this.frames.set([id, role], frame)      // the frame must be assigned to `frames` already before .start()
-        await frame.start()
-        return frame
+            // schemat._print(`start_agent(): ${agent}`, agent.__content)
+            assert(agent.is_loaded())
+            assert(agent instanceof Agent)
+
+            let frame = new Frame(agent, role)
+            this.frames.set([id, role], frame)      // the frame must be assigned to `frames` already before .start()
+            await frame.start()
+            return frame
+        }
+        catch (ex) {
+            schemat._print_error(`starting agent [${id}].${role} FAILED with`, ex)
+            throw ex
+        }
     }
 
     async stop() {
