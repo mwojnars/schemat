@@ -1,4 +1,5 @@
 import {assert, print, sleep_ms} from '../common/utils.js';
+import {JSONx} from "../common/jsonx.js";
 
 let net = await server_import('node:net')
 
@@ -166,13 +167,21 @@ export class TCP_Sender {
         return new BinaryParser((id, resp) => {
             try {
                 // schemat._print(`TCP client response ${id} recv:`, _json(resp))
-                let entry = this.pending.get(id)
-                if (entry) {
-                    entry.resolve(resp)
-                    this.pending.delete(id)
-                } else schemat._print('WARNING TCP response received for unknown request:', id)
+                let {resolve, reject} = this.pending.get(id) || {}
+                if (!resolve) {
+                    schemat._print('WARNING TCP response received for unknown request:', id)
+                    return
+                }
+                this.pending.delete(id)
+
+                if (resp === undefined) resolve()
+                else {
+                    let [result, error] = resp
+                    if (error) reject(JSONx.decode(error))
+                    else resolve(result)
+                }
             }
-            catch (e) { console.error('Invalid response:', e) }
+            catch (ex) { schemat._print('invalid TCP response:', ex) }
         })
     }
 }
@@ -207,13 +216,19 @@ async function _tcp_connect(address, attempts = 5, delay = 1000) {
 /**********************************************************************************************************************/
 
 export class TCP_Receiver {
-    /* Receive messages from other nodes in the cluster, send replies and acknowledgements. */
+    /* Receive messages from other nodes in the cluster, send replies and acknowledgements.
+       Response format:
+       - [id, undefined] on success with result === undefined
+       - [id, [result]] on success with result !== undefined
+       - [id, [null, error]] on failure
+     */
 
     async start(port) {
         this.server = net.createServer(socket => {
             // per-connection state
             let processed_offset = 0
             let msg_parser = new BinaryParser(async (id, msg) => {
+                let resp
                 try {
                     // schemat.node._print(`TCP server message  ${id} recv:`, _json(msg))
                     let result
@@ -222,11 +237,15 @@ export class TCP_Receiver {
                         result = this._handle_message(msg)
                         if (result instanceof Promise) result = await result
                     }
-                    socket.write(BinaryParser.create_message(id, result))
+                    if (result !== undefined) result = [result]
+                    resp = BinaryParser.create_message(id, result)
                     // schemat.node._print(`TCP server response ${id} sent:`, _json(result))
 
-                } catch (e) { throw e }
-                // } catch (e) { console.error('Error while processing TCP message:', e) }
+                } catch (ex) {
+                    // console.error('Error while processing TCP message:', e)
+                    resp = BinaryParser.create_message(id, [null, JSONx.encode(ex)])
+                }
+                socket.write(resp)
             })
 
             socket.on('data', schemat.with_context(data => msg_parser.feed(data)))
@@ -242,12 +261,6 @@ export class TCP_Receiver {
     }
 
     _handle_message(message) {
-        try {
-            return schemat.node.tcp_recv(message)
-        }
-        catch (ex) {
-            // TODO ...
-            throw ex
-        }
+        return schemat.node.tcp_recv(message)
     }
 }
