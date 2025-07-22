@@ -89,12 +89,13 @@ export class FramesMap extends CustomMap {
         return super.delete(key)
     }
 
-    get_any_role(id, unique = true) {
+    get_any_role(id) {
         /* Return any frame that has a given agent ID, no matter the role. */
-        let frames = this._frames_by_id.get(id)
-        if (frames)
-            if (unique && frames.length > 1) throw new Error(`multiple frames found for agent [${id}]`)
-            else return frames[0]
+        return this._frames_by_id.get(id)?.[0]
+        // let frames = this._frames_by_id.get(id)
+        // if (frames)
+        //     if (unique && frames.length > 1) throw new Error(`multiple frames found for agent [${id}]`)
+        //     else return frames[0]
     }
 }
 
