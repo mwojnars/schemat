@@ -105,7 +105,7 @@ export class Mailbox {
         // return result or error to the caller
         if (error) {
             let cause = JSONx.decode(error)
-            reject(IPC_Error.with_cause('error in IPC peer process', cause))
+            reject(IPC_Error.with_cause('error processing request', cause))
         }
         else resolve(result)
     }
@@ -191,7 +191,7 @@ class RPC_Response {
     static parse(response) {
         if (response === undefined) throw new Error(`missing RPC response`)
         let {ret, err, records} = JSONx.decode(response)
-        if (err) throw RPC_Error.with_cause('error in RPC peer node or process', err)
+        if (err) throw RPC_Error.with_cause('error processing request', err)
         if (records?.length) schemat.register_changes(...records)
         // TODO: above, use register_changes() only for important records that should be stored in TX and passed back to the originator
         return ret
