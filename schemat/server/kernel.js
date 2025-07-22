@@ -93,7 +93,7 @@ export class Kernel {
     }
 
     async init(opts) {
-        print('Kernel WORKER_ID:', process.env.WORKER_ID || 0)
+        schemat._print('Kernel WORKER_ID:', process.env.WORKER_ID || 0)
 
         process.on('SIGTERM', () => this.stop())        // listen for TERM signal, e.g. kill
         process.on('SIGINT', () => this.stop())         // listen for INT signal, e.g. Ctrl+C
@@ -135,6 +135,7 @@ export class Kernel {
     async start() {
         try {
             await schemat._boot_done()
+            schemat._print(`boot done`)
             await this.start_node_agent()
         }
         catch (ex) {
@@ -252,7 +253,7 @@ export class MasterProcess extends Kernel {
     }
 
     async start() {
-        print(`starting node:`, this.node_id)
+        schemat._print(`starting node:`, this.node_id)
         let node = await schemat.load(this.node_id)
 
         this._start_workers(node.num_workers)
@@ -261,7 +262,7 @@ export class MasterProcess extends Kernel {
     }
 
     _start_workers(num_workers) {
-        print(`starting ${num_workers} worker(s) in the master process (PID=${process.pid})...`)
+        schemat._print(`spawning ${num_workers} worker(s) from master process (PID=${process.pid})...`)
 
         this.workers = []
         this.worker_pids = new Map()
@@ -319,7 +320,7 @@ export class WorkerProcess extends Kernel {
     mailbox     // IPC_Mailbox for communication with the master process
 
     async start() {
-        print(`starting worker #${this.worker_id} (PID=${process.pid})...`)
+        schemat._print(`starting worker #${this.worker_id} (PID=${process.pid})...`)
         this.mailbox = new IPC_Mailbox(process, msg => this.node.ipc_worker(msg))    // IPC requests from master to this worker
         // await sleep(3.0)            // wait for master to provide an initial list of agents; delay here must be longer than in MasterProcess.start()
         await super.start()
