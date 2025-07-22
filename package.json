@@ -30,6 +30,7 @@
     "esm-module-alias": "^2.2.1",
     "express": "^4.17.1",
     "kafkajs": "^2.2.4",
+    "longjohn": "^0.2.12",
     "mysql2": "^2.3.3",
     "pegjs": "^0.10.0",
     "postcss": "^8.4.41",

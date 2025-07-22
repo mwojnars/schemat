@@ -16,7 +16,10 @@ Error.stackTraceLimit = Infinity    // don't truncate stack traces at 10 lines
 //
 
 
-// global flags:
+// global flags...
+
+globalThis.DEBUG = true         // may impede performance; turn to false in production
+
 globalThis.SERVER = (typeof window === 'undefined')
 globalThis.CLIENT = !globalThis.SERVER
 
@@ -29,6 +32,10 @@ globalThis.server_import = function(path) {
     /* Backend-only version of import(). On browser, returns undefined. */
     return SERVER ? import(path) : undefined
 }
+
+// if (DEBUG)
+//     await server_import('longjohn')     // long stack traces across async boundaries
+
 
 /**********************************************************************************************************************/
 
