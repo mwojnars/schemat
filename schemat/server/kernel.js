@@ -133,8 +133,13 @@ export class Kernel {
     // }
 
     async start() {
-        await schemat._boot_done()
-        await this.start_node_agent()
+        try {
+            await schemat._boot_done()
+            await this.start_node_agent()
+        }
+        catch (ex) {
+            schemat._print_error(`start() of node process FAILED with`, ex)
+        }
     }
 
     async start_node_agent() {
@@ -288,7 +293,12 @@ export class MasterProcess extends Kernel {
                 this._print(`_start_agents(): adjusted worker process index of agent [${id}] from #${worker} to #${new_worker}`)
                 worker = new_worker
             }
-            await this.node.$worker({worker})._start_agent(id, role)    // scope='node' is deduced from _xxx command name
+
+            // below, the limited scope='node' for RPC routing is deduced from _xxx() command name
+            try { await this.node.$worker({worker})._start_agent(id, role) }
+            catch (ex) {
+                this.node._print_error(`starting agent [${id}].${role} FAILED with`, ex)
+            }
         }
     }
 }
