@@ -262,7 +262,10 @@ export class JSONx {
 
     encode_error(err) {
         /* Attributes of Error are not enumerable and need preprocessing to serialize properly. */
-        let state = {node: schemat.kernel.node_id, worker: schemat.kernel.worker_id}
+        let state = {
+            node:   err.node ?? schemat.kernel?.node_id,
+            worker: err.worker ?? schemat.kernel?.worker_id
+        }
         if (err.message) state.message = err.message
         if (err.stack) state.stack = err.stack
         if (err.code) state.code = err.code
