@@ -87,6 +87,7 @@ export class Cluster extends Agent {
            If `agent` is deployed here on the current node, this location is always returned.
            If role is the generic "$agent", every target deployment is accepted no matter its declared role.
          */
+        role ??= schemat.GENERIC_ROLE
         agent = schemat.as_object(agent)
         let agent_role = _agent_role(agent.id, role)
         let nodes = (role === schemat.GENERIC_ROLE) ? this.agent_placements[agent.id] : this.agent_placements[agent_role]
