@@ -52,8 +52,8 @@ export class Mailbox {
         if (this.pending.size > 1000)
             schemat._print(`WARNING: high number of unresolved IPC requests (${this.pending.size})`)
 
-        const now = Date.now()
-        for (const [id, [resolve, reject, timestamp, msg]] of this.pending.entries()) {
+        let now = Date.now()
+        for (let [id, [resolve, reject, timestamp, msg]] of this.pending.entries()) {
             if (timestamp && now - timestamp > this.timeout) {
                 this.pending.delete(id)
                 reject(new Error(`response timeout for message no. ${id}, msg = ${msg}`))
@@ -105,7 +105,7 @@ export class Mailbox {
         // return result or error to the caller
         if (error) {
             let cause = JSONx.decode(error)
-            reject(IPC_Error.with_cause('error in IPC peer', cause))
+            reject(IPC_Error.with_cause('error in IPC peer process', cause))
         }
         else resolve(result)
     }
@@ -191,7 +191,7 @@ class RPC_Response {
     static parse(response) {
         if (response === undefined) throw new Error(`missing RPC response`)
         let {ret, err, records} = JSONx.decode(response)
-        if (err) throw RPC_Error.with_cause('error in RPC peer', err)
+        if (err) throw RPC_Error.with_cause('error in RPC peer node or process', err)
         if (records?.length) schemat.register_changes(...records)
         // TODO: above, use register_changes() only for important records that should be stored in TX and passed back to the originator
         return ret
