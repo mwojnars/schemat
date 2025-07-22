@@ -81,7 +81,7 @@ export class Kernel {
 
     get worker_id() {
         /* Numeric ID (1, 2, 3, ...) of the node's current worker process; 0 for the master process. */
-        return process.env.WORKER_ID || 0
+        return Number(process.env.WORKER_ID) || 0
     }
 
     is_master() { return !this.worker_id}
