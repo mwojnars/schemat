@@ -85,11 +85,11 @@ export class Cluster extends Agent {
         /* Return the node where the `agent` running in a given `role` can be found. If `agent` is deployed
            on multiple nodes, one of them is chosen at random, or by hashing (TODO), or according to a routing policy...
            If `agent` is deployed here on the current node, this location is always returned.
-           If role is the generic "$agent", every target deployment is accepted no matter its role.
+           If role is the generic "$agent", every target deployment is accepted no matter its declared role.
          */
         agent = schemat.as_object(agent)
         let agent_role = _agent_role(agent.id, role)
-        let nodes = this.agent_placements[agent_role]
+        let nodes = (role === schemat.GENERIC_ROLE) ? this.agent_placements[agent.id] : this.agent_placements[agent_role]
 
         if (!nodes?.length) throw new Error(`agent ${agent}.${role} not deployed on any node`)
         if (nodes.some(node => node.id === this.id)) return this
