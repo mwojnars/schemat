@@ -143,7 +143,7 @@ export class Frame {
     async start() {
         /* Start this.agent by calling its __start__(). */
         let {agent, tag} = this
-        schemat._print(`starting agent ${tag} ...`)
+        schemat._print(`starting ${tag} ...`)
 
         let state = await agent.app_context(() => agent.__start__(this)) || {}
         this.set_state(state)
@@ -154,7 +154,7 @@ export class Frame {
         // schedule recurrent agent restarts after the agent's TTL expires
         this._task_restart = new Recurrent(this.restart.bind(this), {delay: agent.__ttl, name: `${agent}.$frame.restart()`})
 
-        schemat._print(`starting agent ${tag} done`)
+        schemat._print(`starting ${tag} done`)
         return state
     }
 
@@ -177,7 +177,7 @@ export class Frame {
         await this.pause()                      // wait for termination of ongoing RPC calls
         if (this.stopping) return
 
-        schemat._print(`restarting agent ${tag} ...`)
+        schemat._print(`restarting ${tag} ...`)
         try {
             let stop    = () => this._frame_context(prev,  () => prev.__stop__(this.state))
             let restart = () => this._frame_context(agent, () => agent.__restart__(stop))
@@ -186,11 +186,11 @@ export class Frame {
             this.agent = agent
         }
         catch (ex) {
-            schemat._print(`error restarting agent ${tag}:`, ex, `- using previous instance`)
+            schemat._print(`error restarting ${tag}:`, ex, `- using previous instance`)
         }
 
         if (was_running) await this.resume()    // resume RPC calls unless the agent was already paused
-        schemat._print(`restarting agent ${tag} done`)
+        schemat._print(`restarting ${tag} done`)
 
         // return updated time interval to the next execution of restart()
         let ttl = agent.__ttl
@@ -213,11 +213,11 @@ export class Frame {
             await Promise.all(calls)
         }
         let {agent} = this
-        schemat._print(`stopping agent ${tag} ...`)
+        schemat._print(`stopping ${tag} ...`)
 
         let stop = () => agent.__stop__(this.state)
         await agent.app_context(() => this._frame_context(agent, stop))
-        schemat._print(`stopping agent ${tag} done`)
+        schemat._print(`stopping ${tag} done`)
     }
 
     async background() {
