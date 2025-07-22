@@ -119,7 +119,7 @@ class Intercept {
            permanently on specific nodes in the cluster, maintain local state and accept RPC calls.
         */
         let id = target.id
-        assert(id, `trying to target a newborn object like an agent`)
+        assert(id, `trying to access a newborn object as agent`)
 
         // `current_opts`: opts from $ROLE(opts) remembered here (shared variable!) until $ROLE(opts).fun is accessed;
         // WARNING: never separate $ROLE(opts) from *.fun, as this may result in wrong `opts` being passed to `fun` (!)
@@ -1067,7 +1067,7 @@ export class WebObject {
     }
 
     get $_wrap() {
-        /* RPC mock-up triggers: $_wrap.X() Calls $agent.X() as a plain method with this.$state explicitly supplied. For internal use only. */
+        /* RPC mock-up triggers: $_wrap.X() calls $agent.X() as a plain method with this.$state explicitly supplied. For internal use only. */
         let id = this.id
         let obj = this
         return new Proxy({}, {
