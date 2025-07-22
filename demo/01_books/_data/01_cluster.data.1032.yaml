@@ -138,7 +138,7 @@
   tcp_port: 5820
   num_workers: 2
   agents:
-    - {worker: 1, id: 1030}
+    - {worker: 1, id: 1030, role: $master}
     - worker: 2
       id: 1015
       role: $master
@@ -223,22 +223,22 @@
   tcp_port: 5821
   num_workers: 2
   agents:
-    - {worker: 1, id: 1030}
+    - {worker: 1, id: 1030, role: $master}
     - worker: 1
       id: 1015
-#      role: $replica
+      role: $replica
     - worker: 2
       id: 1026
-#      role: $replica
+      role: $replica
     - worker: 2
       id: 1032
-#      role: $replica
+      role: $replica
     - worker: 1
       id: 1033
-#      role: $replica
+      role: $replica
     - worker: 1
       id: 1030
-#      role: $master
+      role: $master
     - worker: 2
       id: 1037
     - worker: 1
