@@ -39,7 +39,7 @@ export class Mailbox {
     // constructor(callback, timeout = null) {
     constructor(callback, timeout = 10 * 1000) {   //schemat.debug ? null : 5000
         this.callback = callback        // processing function for incoming messages
-        this.pending = new Map()        // requests sent awaiting a response
+        this.pending = new Map()        // [resolve, reject] pairs of callbacks for requests sent and awaiting a response
         this.message_id = 0             // last message ID sent
 
         this.timeout = timeout          // timeout for waiting for a response
@@ -55,7 +55,7 @@ export class Mailbox {
             if (this.message_id >= Number.MAX_SAFE_INTEGER) this.message_id = 0
 
             this._send([id, msg])
-            this.pending.set(id, resolve)
+            this.pending.set(id, [resolve, reject])
             if (this.timeout) this.timestamps.set(id, {timestamp: Date.now(), reject, msg})
 
             // schemat.on_exit.add(reject)
@@ -89,28 +89,46 @@ export class Mailbox {
         }
     }
 
-    _handle_response([id, result]) {
-        id = -id
-        if (this.pending.has(id)) {
-            this.pending.get(id)(result)        // resolve the promise with the returned result (can be undefined)
-            this.pending.delete(id)
-            // schemat.on_exit.delete(this.timestamps.get(id)?.reject)
-            this.timestamps.delete(id)
+    async _handle_message([id, msg, err]) {
+        /* Handle a request OR response received from the peer. */
+        if (id < 0) return this._handle_response([id, msg, err])    // received a response not a request
+        let result, error
+
+        // received a request message: run the callback, send back the result or error;
+        // response format: [-id, result, error], where error is missing if `result` is present, and `result` can be missing
+        // if undefined was returned from the call; `error` and `result` are JSONx-encoded objects;
+        // negative ID indicates this is a response not a message
+        try {
+            result = this.callback(msg)
+            if (result instanceof Promise) result = await result
+            // resp = (result === undefined) ? [-id] : [-id, result]       // this check is needed so undefined is not replaced with null during IPC
+            // if (id !== 0) return this._send(resp)      // only with non-zero ID, a response is expected by the caller
         }
-        else console.warn(`unknown response id: ${id}`)
+        catch (ex) {
+            if (id === 0) schemat._print(`IPC notification ${JSON.stringify(msg)} ended with error on recipient:`, ex)
+            else error = JSONx.encode(ex)
+        }
+
+        if (id === 0) return                            // only when non-zero ID, a response is expected by the caller
+        let resp
+
+        if (error) resp = [-id, null, error]
+        else if (result === undefined) resp = [-id]     // this check is needed so undefined is not replaced with null during IPC
+        else resp = [-id, result]
+
+        return this._send(resp)
     }
 
-    async _handle_message([id, msg]) {
-        if (id < 0) return this._handle_response([id, msg])     // received a response from the peer
+    _handle_response([id, result, error]) {
+        id = -id
+        let [resolve, reject] = this.pending.get(id) || []
+        if (!resolve) return console.warn(`unknown IPC response id: ${id}`)
 
-        let result = this.callback(msg)                         // received a message: run the callback, send back the result
-        if (id === 0) return
+        this.pending.delete(id)
+        this.timestamps.delete(id)
 
-        // send response to the peer, negative ID indicates this is a response not a message
-        if (result instanceof Promise) result = await result
-        let response = (result === undefined) ? [-id] : [-id, result]   // this check is needed so undefined is not replaced with null during IPC
-
-        return this._send(response)
+        if (error) reject(JSONx.decode(error))      // return result or error to the caller
+        else resolve(result)
     }
 
     _listen()       { throw new Error('not implemented') }
@@ -125,9 +143,9 @@ export class IPC_Mailbox extends Mailbox {
         this.peer = peer
         this._listen()
     }
-    
-    _listen()       { this.peer.on("message", schemat.with_context(message => this._handle_message(message))) }
+
     _send(message)  { return this.peer.send(message) }
+    _listen()       { this.peer.on("message", schemat.with_context(message => this._handle_message(message))) }
 }
 
 
@@ -506,7 +524,8 @@ export class Node extends Agent {
             }
         }
         catch (ex) {
-            this._print(`ipc_send() FAILED request to proc #${process_id}:`, JSON.stringify(message))
+            // this._print(`ipc_send() FAILED request to proc #${process_id}:`, JSON.stringify(message))
+            ex.request = JSON.stringify(message)
             throw ex
         }
     }
