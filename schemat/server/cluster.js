@@ -58,17 +58,21 @@ export class Cluster extends Agent {
 
     get agent_placements() {
         /* Map of agent_role --> array of nodes where this agent is deployed, where `agent_role` is a string
-           of the form `${id}_${role}`, like "1234_$agent".
+           of the form `${id}_${role}`, like "1234_$leader". Additionally, generic placements by ID only are included
+           to support role-agnostic requests (i.e., when role="$agent").
          */
         let placements = {}
 
+        // index regular agents and their deployment nodes
         for (let node of this.nodes)
             for (let {id, role} of node.agents) {
                 assert(id)
                 let agent_role = _agent_role(id, role);
-                (placements[agent_role] ??= []).push(node)
+                (placements[agent_role] ??= []).push(node);
+                (placements[id] ??= []).push(node);
             }
 
+        // index Node objects running as agents, they're excluded from node.agents lists
         for (let node of this.nodes) {
             let agent_role = _agent_role(node.id, '$master')    // there are $worker deployments, too, but they shouldn't be needed
             assert(placements[agent_role] === undefined)
@@ -81,6 +85,7 @@ export class Cluster extends Agent {
         /* Return the node where the `agent` running in a given `role` can be found. If `agent` is deployed
            on multiple nodes, one of them is chosen at random, or by hashing (TODO), or according to a routing policy...
            If `agent` is deployed here on the current node, this location is always returned.
+           If role is the generic "$agent", every target deployment is accepted no matter its role.
          */
         agent = schemat.as_object(agent)
         let agent_role = _agent_role(agent.id, role)
