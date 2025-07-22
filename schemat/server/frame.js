@@ -285,8 +285,7 @@ export class Frame {
             let error, result = await this._tracked(this._frame_context(agent, callA)).catch(ex => {
                 if (!callback) throw ex
                 let s_args = JSONx.stringify(args).slice(1,-1)
-                agent._print_error(`exec() of ${method}(${s_args}) FAILED with`, ex)
-                // agent._print(`exec() of ${method}(${args}) FAILED, propagating to caller:`, ex)
+                agent._print_error(`${method}(${s_args}) FAILED with`, ex)
                 error = ex
             })
             return callback ? callback(result, error) : result

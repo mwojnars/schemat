@@ -174,7 +174,7 @@ export class Kernel {
             return frame
         }
         catch (ex) {
-            schemat._print_error(`starting agent [${id}].${role} FAILED with`, ex)
+            // schemat._print_error(`starting agent [${id}].${role} FAILED with`, ex)
             throw ex
         }
     }
@@ -306,7 +306,7 @@ export class MasterProcess extends Kernel {
             // below, the limited scope='node' for RPC routing is deduced from _xxx() command name
             try { await this.node.$worker({worker})._start_agent(id, role) }
             catch (ex) {
-                this.node._print_error(`starting agent [${id}].${role} FAILED with`, ex)
+                this.node._print_error(`boot start of agent [${id}].${role} at worker #${worker} FAILED with`, ex)
             }
         }
     }
