@@ -242,6 +242,12 @@ export class TCP_Receiver {
     }
 
     _handle_message(message) {
-        return schemat.node.tcp_recv(message)
+        try {
+            return schemat.node.tcp_recv(message)
+        }
+        catch (ex) {
+            // TODO ...
+            throw ex
+        }
     }
 }

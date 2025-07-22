@@ -369,6 +369,13 @@ export class Node extends Agent {
     //     }
     // }
 
+    _rich_exception(ex, request) {
+        ex.node = this.id
+        ex.worker = this.worker_id
+        ex.request = JSON.stringify(request)
+        return ex
+    }
+
 
     /* RPC: remote calls to agents */
 
@@ -394,10 +401,7 @@ export class Node extends Agent {
         }
         catch (ex) {
             // this._print("rpc() of request", JSON.stringify(request), "FAILED...")
-            ex.node = this.id
-            ex.worker = this.worker_id
-            ex.request = JSON.stringify(request)
-            throw ex
+            throw this._rich_exception(ex, request)
         }
     }
 
@@ -502,9 +506,7 @@ export class Node extends Agent {
         }
         catch (ex) {
             // this._print(`ipc_send() FAILED request to proc #${process_id}:`, JSON.stringify(request))
-            ex.worker = this.worker_id
-            ex.request = JSON.stringify(request)
-            throw ex
+            throw this._rich_exception(ex, request)
         }
     }
 
