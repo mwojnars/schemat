@@ -86,7 +86,7 @@ export class Cluster extends Agent {
         let agent_role = _agent_role(agent.id, role)
         let nodes = this.agent_placements[agent_role]
 
-        if (!nodes?.length) throw new Error(`agent ${agent} not deployed on any node`)
+        if (!nodes?.length) throw new Error(`agent ${agent}.${role} not deployed on any node`)
         if (nodes.some(node => node.id === this.id)) return this
         return nodes[0]
         // return nodes.random()
