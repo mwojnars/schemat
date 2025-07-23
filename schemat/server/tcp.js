@@ -249,52 +249,39 @@ export class TCP_Receiver {
     _accept_connection(socket) {
         /* Accept new incoming connection. */
         this.watermarks[socket] = 0
-
-        let msg_parser = new BinaryParser(async (id, req) => {
-            let resp
-            try {
-                // schemat.node._print(`TCP server message  ${id} recv:`, _json(req))
-                let watermark = this.watermarks[socket]
-                let result
-
-                if (id <= watermark) {
-                    schemat._print(`TCP request ${id} received again, message ${_json(req)}, ignoring`)
-                    // TODO: ACK should be sent again, but this can only be done when a response object is not expected (fire-and-forget requests, FF),
-                    //       which means that on sender, the retry mechanism should only apply to FF requests, not to request-response ones
-                    return
-                }
-
-                result = this._handle_request(req)
-                if (result instanceof Promise) result = await result
-
-                if (result !== undefined) result = [result]
-                resp = BinaryParser.create_message(id, result)
-                // schemat.node._print(`TCP server response ${id} to be sent:`, _json(result))
-                this.watermarks[socket] = id
-
-            } catch (ex) {
-                // console.error('Error while processing TCP message:', e)
-                resp = BinaryParser.create_message(id, [null, JSONx.encode(ex)])
-            }
-            socket.write(resp)
-        })
-
+        let msg_parser = new BinaryParser((id, req) => this._parse_request(socket, id, req))
         socket.on('data', schemat.with_context(data => msg_parser.feed(data)))
         socket.on('error', () => socket.destroy())
     }
 
-    // async _parse_request(id, req, processed_offset) {
-    //     // schemat.node._print(`TCP server message  ${id} recv:`, _json(msg))
-    //     let result
-    //     if (id > processed_offset) {
-    //         processed_offset = id
-    //         result = this._handle_request(req)
-    //         if (result instanceof Promise) result = await result
-    //     }
-    //     if (result !== undefined) result = [result]
-    //     // schemat.node._print(`TCP server response ${id}:`, _json(result))
-    //     return BinaryParser.create_message(id, result)
-    // }
+    async _parse_request(socket, id, req) {
+        let resp
+        try {
+            // schemat.node._print(`TCP server message  ${id} recv:`, _json(req))
+            let watermark = this.watermarks[socket]
+            let result
+
+            if (id <= watermark) {
+                schemat._print(`TCP request ${id} received again, message ${_json(req)}, ignoring`)
+                // TODO: ACK should be sent again, but this can only be done when a response object is not expected (fire-and-forget requests, FF),
+                //       which means that on sender, the retry mechanism should only apply to FF requests, not to request-response ones
+                return
+            }
+
+            result = this._handle_request(req)
+            if (result instanceof Promise) result = await result
+
+            if (result !== undefined) result = [result]
+            resp = BinaryParser.create_message(id, result)
+            // schemat.node._print(`TCP server response ${id} to be sent:`, _json(result))
+            this.watermarks[socket] = id
+
+        } catch (ex) {
+            // console.error('Error while processing TCP message:', e)
+            resp = BinaryParser.create_message(id, [null, JSONx.encode(ex)])
+        }
+        socket.write(resp)
+    }
 
     _handle_request(request) {
         return schemat.node.tcp_recv(request)
