@@ -4,10 +4,38 @@ import {JSONx} from "../common/jsonx.js";
 let net = await server_import('node:net')
 
 
+/**********************************************************************************************************************/
+
 function _json(msg) {
     if (typeof msg === 'string') return msg
     if (msg === undefined) return ''
     return JSON.stringify(msg)
+}
+
+async function _tcp_connect(address, attempts = 5, delay = 1000) {
+    /* Connect to a TCP peer and return a socket. Retry in case of ECONNREFUSED error. */
+    let [host, port] = address.split(':')
+    port = parseInt(port)
+
+    for (let attempt = 1; attempt <= attempts; attempt++)
+        try {
+            let conn = net.createConnection({host, port})
+            return await new Promise((resolve, reject) => {
+                conn.on('connect', () => {
+                    conn.removeAllListeners('error')
+                    resolve(conn)
+                })
+                conn.on('error', (err) => {
+                    conn.removeAllListeners('connect')
+                    reject(err)
+                })
+            })
+        } catch (err) {
+            if (err.code === 'ECONNREFUSED' && attempt < attempts) {
+                schemat._print(`TCP error ${err.code} when connecting to ${address}, retrying after a delay of ${delay}ms ...`)
+                await sleep_ms(delay)
+            } else throw err
+        }
 }
 
 /**********************************************************************************************************************/
@@ -195,32 +223,6 @@ export class TCP_Sender {
     }
 }
 
-async function _tcp_connect(address, attempts = 5, delay = 1000) {
-    /* Connect to a TCP peer and return a socket. Retry in case of ECONNREFUSED error. */
-    let [host, port] = address.split(':')
-    port = parseInt(port)
-
-    for (let attempt = 1; attempt <= attempts; attempt++) {
-        try {
-            let conn = net.createConnection({host, port})
-            return await new Promise((resolve, reject) => {
-                conn.on('connect', () => {
-                    conn.removeAllListeners('error')
-                    resolve(conn)
-                })
-                conn.on('error', (err) => {
-                    conn.removeAllListeners('connect')
-                    reject(err)
-                })
-            })
-        } catch (err) {
-            if (err.code === 'ECONNREFUSED' && attempt < attempts) {
-                schemat._print(`TCP error ${err.code} when connecting to ${address}, retrying after a delay of ${delay}ms ...`)
-                await sleep_ms(delay)
-            } else throw err
-        }
-    }
-}
 
 /**********************************************************************************************************************/
 
