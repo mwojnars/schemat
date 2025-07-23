@@ -211,7 +211,7 @@ export class TCP_Sender {
     _parse_response(id, resp) {
         // schemat._print(`TCP client response ${id} recv:`, _json(resp))
         let {resolve, reject} = this.pending.get(id) || {}
-        if (!resolve) return schemat._print(`WARNING TCP response received for unknown request no. ${id}:`, _json(resp))
+        if (!resolve) return schemat._print(`WARNING TCP response received for unknown request ${id}:`, _json(resp))
         this.pending.delete(id)
 
         if (resp === undefined) resolve()
@@ -258,7 +258,7 @@ export class TCP_Receiver {
                 let result
 
                 if (id <= watermark) {
-                    schemat._print(`request ${id} received again, message ${_json(req)}, ignoring`)
+                    schemat._print(`TCP request ${id} received again, message ${_json(req)}, ignoring`)
                     return
                 }
 
