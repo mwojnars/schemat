@@ -31,7 +31,7 @@ export class Recurrent {
             try {
                 await this.tick()
             }
-            catch (ex) { schemat._print(`error executing recurrent task ${this.name || this.fn}:`, ex) }
+            catch (ex) { schemat._print_error(`error executing recurrent task ${this.name || this.fn}:`, ex) }
             finally { this.schedule() }
         }, delay * 1000).unref()
     }
