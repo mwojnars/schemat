@@ -131,7 +131,7 @@ export class Kernel {
         try {
             await schemat._boot_done()
             schemat._print(`boot done`)
-            await this.start_node_agent()
+            await this.start_agents()
             delete this._node
         }
         catch (ex) {
@@ -139,10 +139,10 @@ export class Kernel {
         }
     }
 
-    async start_node_agent() {
-        // start this node's own agent and all agents in workers
+    async start_agents() {
+        // start this node's own agent
         let role = this.is_master() ? '$master' : '$worker'
-        let {state} = this.root_frame = await this.start_agent(this.node_id, role)
+        this.root_frame = await this.start_agent(this.node_id, role)
         assert(this.frames.size === 1)
         assert(this.root_frame.agent)
 
@@ -154,9 +154,10 @@ export class Kernel {
 
         let node = this._node
 
-        // agents to be started at this process (master or worker)
+        // agents to be started at this process
         let agents = node.agents.filter(({worker}) => worker === this.worker_id)
 
+        // start ordinary agents
         for (let {id, role} of agents) {
             assert(id)
             role ??= schemat.GENERIC_ROLE
