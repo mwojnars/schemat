@@ -185,13 +185,13 @@ export class Kernel {
 
         process.removeAllListeners('message')       // don't accept new IPC messages
 
-        let delay = this.node.agent_refresh_interval
-        if (cluster.isPrimary) schemat._print(`Received kill signal, shutting down gracefully in approx. ${delay} seconds...`)
+        // let delay = this.node.agent_refresh_interval
+        let timeout = 3
+        if (cluster.isPrimary) schemat._print(`Received kill signal, shutting down gracefully in approx. ${timeout} seconds...`)
 
-        let timeout = 1 * delay         // exceeding this timeout may indicate a deadlock in one of child processes
         setTimeout(() => {
             // why()
-            schemat._print(`exceeded timeout of ${timeout} seconds for shutting down`)
+            schemat._print(`exceeded timeout of ${timeout} seconds, shutting down forcefully`)
             process.exit(1)
         }, timeout * 1000)
 
