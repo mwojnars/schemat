@@ -259,16 +259,18 @@ export class TCP_Receiver {
 
                 if (id <= watermark) {
                     schemat._print(`TCP request ${id} received again, message ${_json(req)}, ignoring`)
+                    // TODO: ACK should be sent again, but this can only be done when a response object is not expected (fire-and-forget requests, FF),
+                    //       which means that on sender, the retry mechanism should only apply to FF requests, not to request-response ones
                     return
                 }
 
                 result = this._handle_request(req)
                 if (result instanceof Promise) result = await result
-                this.watermarks[socket] = id
 
                 if (result !== undefined) result = [result]
                 resp = BinaryParser.create_message(id, result)
-                // schemat.node._print(`TCP server response ${id} sent:`, _json(result))
+                // schemat.node._print(`TCP server response ${id} to be sent:`, _json(result))
+                this.watermarks[socket] = id
 
             } catch (ex) {
                 // console.error('Error while processing TCP message:', e)
