@@ -127,17 +127,11 @@ export class Kernel {
     //     return node
     // }
 
-    // _boot_done() {
-    //     this._booting_resolve()     // resolve this.booting promise and replace it with false
-    //     this.booting = false
-    // }
-
     async start() {
         try {
             await schemat._boot_done()
             schemat._print(`boot done`)
             await this.start_node_agent()
-            await this._start_agents_2()
             delete this._node
         }
         catch (ex) {
@@ -157,13 +151,10 @@ export class Kernel {
         //     await this._start_agents(state.agents)
         //     // await tcp_receiver.start(this.node.tcp_port)
         //     // this._boot_done()
-    }
 
-    async _start_agents_2() {
-        // let node = await schemat.load(this.node_id)
         let node = this._node
 
-        // agents to be started at this worker
+        // agents to be started at this process (master or worker)
         let agents = node.agents.filter(({worker}) => worker === this.worker_id)
 
         for (let {id, role} of agents) {
