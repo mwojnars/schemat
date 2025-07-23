@@ -238,14 +238,14 @@ export class TCP_Receiver {
         this.server = net.createServer(socket => {
             // per-connection state
             let processed_offset = 0
-            let msg_parser = new BinaryParser(async (id, msg) => {
+            let msg_parser = new BinaryParser(async (id, req) => {
                 let resp
                 try {
                     // schemat.node._print(`TCP server message  ${id} recv:`, _json(msg))
                     let result
                     if (id > processed_offset) {
                         processed_offset = id
-                        result = this._handle_message(msg)
+                        result = this._handle_request(req)
                         if (result instanceof Promise) result = await result
                     }
                     if (result !== undefined) result = [result]
@@ -271,7 +271,7 @@ export class TCP_Receiver {
         this.server?.close()
     }
 
-    _handle_message(message) {
-        return schemat.node.tcp_recv(message)
+    _handle_request(request) {
+        return schemat.node.tcp_recv(request)
     }
 }
