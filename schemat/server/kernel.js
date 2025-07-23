@@ -183,6 +183,8 @@ export class Kernel {
         if (this._closing) return
         this._closing = true
 
+        process.removeAllListeners('message')       // don't accept new IPC messages
+
         let delay = this.node.agent_refresh_interval
         if (cluster.isPrimary) schemat._print(`Received kill signal, shutting down gracefully in approx. ${delay} seconds...`)
 
