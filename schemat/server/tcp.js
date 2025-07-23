@@ -109,6 +109,8 @@ export class TCP_Sender {
     /* Send messages to other nodes in the cluster via persistent connections. Generate unique identifiers
        for WRITE messages, process acknowledgements and resend un-acknowledged messages. */
 
+    OVERFLOW = 0xFFFFFFFF
+
     async start(retry_interval) {
         this.retry_interval = retry_interval
         this.sockets = new Map()        // Map<address, net.Socket or promise>
@@ -149,7 +151,7 @@ export class TCP_Sender {
 
         let id = ++this.message_id
         let message = BinaryParser.create_message(id, msg)
-        if (this.message_id >= 0xFFFFFFFF) this.message_id = 0      // check for 4-byte overflow
+        if (this.message_id >= this.OVERFLOW) this.message_id = 0      // check for 4-byte overflow
 
         return new Promise((resolve, reject) => {
             this.pending.set(id, {message, address, timestamp: Date.now(), retries: 0, resolve, reject})
