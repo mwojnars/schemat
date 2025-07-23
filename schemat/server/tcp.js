@@ -110,26 +110,30 @@ export class TCP_Sender {
        for WRITE messages, process acknowledgements and resend un-acknowledged messages. */
 
     async start(retry_interval) {
+        this.retry_interval = retry_interval
         this.sockets = new Map()        // Map<address, net.Socket or promise>
         this.pending = new Map()        // Map<id, {message, address, timestamp, retries, resolve, reject}>
         this.message_id = 0             // last message ID sent
 
-        this.retry_timer = setInterval(() => {
-            if (this.pending.size > 100)
-                schemat._print(`WARNING: high number of unresolved TCP requests (${this.pending.size})`)
-            let now = Date.now()
-            for (let [id, entry] of this.pending) {
-                let {timestamp, address, message} = entry
-                if (now - timestamp < retry_interval) continue      // "break" would do instead, as entries should be ordered by timestamp (?)
+        this.retry_timer = setInterval(() => this._resend_pending(), retry_interval).unref()
+    }
 
-                entry.retries++
-                schemat._print(`retry no. ${entry.retries} at sending TCP message id=${id} ${message} to ${address}`)
+    _resend_pending() {
+        if (this.pending.size > 100)
+            schemat._print(`WARNING: high number of unresolved TCP requests (${this.pending.size})`)
 
-                let socket = this.sockets.get(address)
-                assert(socket && !(socket instanceof Promise))
-                socket.write(message)
-            }
-        }, retry_interval).unref()
+        let now = Date.now()
+        for (let [id, entry] of this.pending) {
+            let {timestamp, address, message} = entry
+            if (now - timestamp < this.retry_interval) continue     // "break" would do instead, as entries should be ordered by timestamp (?)
+
+            entry.retries++
+            schemat._print(`retry no. ${entry.retries} at sending TCP message id=${id} ${message} to ${address}`)
+
+            let socket = this.sockets.get(address)
+            assert(socket && !(socket instanceof Promise))
+            socket.write(message)
+        }
     }
 
     async stop() {
