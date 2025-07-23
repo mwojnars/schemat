@@ -298,6 +298,6 @@ export class TCP_Receiver {
         let node_id = req
         this.senders.set(socket, node_id)
         this.watermarks.set(node_id, 0)
-        schemat._print(`TCP handshake request received from node ${node_id}`)
+        schemat._print(`handshake received from node ${node_id}`)
     }
 }
