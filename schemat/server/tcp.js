@@ -235,40 +235,42 @@ export class TCP_Receiver {
      */
 
     async start(port) {
-        this.server = net.createServer(socket => {
-            // per-connection state
-            let watermark = 0
-            let msg_parser = new BinaryParser(async (id, req) => {
-                let resp
-                try {
-                    // schemat.node._print(`TCP server message  ${id} recv:`, _json(msg))
-                    let result
-                    if (id > watermark) {
-                        watermark = id
-                        result = this._handle_request(req)
-                        if (result instanceof Promise) result = await result
-                    }
-                    if (result !== undefined) result = [result]
-                    resp = BinaryParser.create_message(id, result)
-                    // schemat.node._print(`TCP server response ${id} sent:`, _json(result))
-
-                } catch (ex) {
-                    // console.error('Error while processing TCP message:', e)
-                    resp = BinaryParser.create_message(id, [null, JSONx.encode(ex)])
-                }
-                socket.write(resp)
-            })
-
-            socket.on('data', schemat.with_context(data => msg_parser.feed(data)))
-            socket.on('error', () => socket.destroy())
-        })
-
+        this.server = net.createServer(socket => this._accept_connection(socket))
         this.server.listen(port)
         schemat._print(`listening at TCP port`, port)
     }
 
     async stop() {
         this.server?.close()
+    }
+
+    _accept_connection(socket) {
+        /* Accept new incoming connection. */
+        let watermark = 0       // per-connection state
+
+        let msg_parser = new BinaryParser(async (id, req) => {
+            let resp
+            try {
+                // schemat.node._print(`TCP server message  ${id} recv:`, _json(msg))
+                let result
+                if (id > watermark) {
+                    watermark = id
+                    result = this._handle_request(req)
+                    if (result instanceof Promise) result = await result
+                }
+                if (result !== undefined) result = [result]
+                resp = BinaryParser.create_message(id, result)
+                // schemat.node._print(`TCP server response ${id} sent:`, _json(result))
+
+            } catch (ex) {
+                // console.error('Error while processing TCP message:', e)
+                resp = BinaryParser.create_message(id, [null, JSONx.encode(ex)])
+            }
+            socket.write(resp)
+        })
+
+        socket.on('data', schemat.with_context(data => msg_parser.feed(data)))
+        socket.on('error', () => socket.destroy())
     }
 
     // async _parse_request(id, req, processed_offset) {
