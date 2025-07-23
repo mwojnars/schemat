@@ -201,9 +201,13 @@ export class Frame {
         //       and call explicitly __stop__ + triggers + __start__() instead of __restart__()
     }
 
-    async stop() {
+    async stop(shutdown = false) {
         /* Let running calls complete, then stop the agent by calling its __stop__(). */
         this.stopping = true                // prevent new calls from being executed on the agent
+        if (this.starting)
+            if (shutdown) return            // start may never complete if already shutting down
+            else await this.starting
+
         this._task_restart?.stop()          // clear all scheduled tasks
         this._task_background?.stop()
 

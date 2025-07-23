@@ -223,10 +223,10 @@ export class Kernel {
     // }
 
     async stop_agents() {
-        /* Stop all agents. Do it in reverse order, because newer agents may depend on the older ones. */
+        /* Stop all agents at shutdown. Do it in reverse order, because newer agents may depend on the older ones. */
         // return Promise.all([...this.frames.values()].reverse().map(frame => frame.stop()))
         for (let [[id, role], frame] of [...this.frames.entries()].reverse()) {
-            await frame.stop()
+            await frame.stop(true)
             this.frames.delete([id, role])
         }
     }
