@@ -120,10 +120,10 @@ export class TCP_Sender {
             let now = Date.now()
             for (let [id, entry] of this.pending) {
                 let {timestamp, address, message} = entry
-                if (now - timestamp < retry_interval) continue      // could "break" instead, possibly, as entries should be ordered by timestamp (?)
+                if (now - timestamp < retry_interval) continue      // "break" would do instead, as entries should be ordered by timestamp (?)
 
                 entry.retries++
-                schemat._print(`retry #${entry.retries} at sending TCP message ${message} to ${address}`)
+                schemat._print(`retry no. ${entry.retries} at sending TCP message id=${id} ${message} to ${address}`)
 
                 let socket = this.sockets.get(address)
                 assert(socket && !(socket instanceof Promise))
