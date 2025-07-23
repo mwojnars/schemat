@@ -144,7 +144,7 @@ export class Sequence extends WebObject {
     async deploy() {
         assert(this.blocks.length === 1, this.id, this.blocks)
         // assert(!this.blocks[0].get_placement())
-        await schemat.cluster.$leader.deploy(this.blocks[0])
+        await schemat.cluster.$leader.deploy(this.blocks[0], '$master')
     }
 
     async build(source) {
