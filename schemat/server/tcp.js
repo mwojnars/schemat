@@ -234,6 +234,8 @@ export class TCP_Receiver {
        - [id, [null, error]] on failure
      */
 
+    watermarks = new Map()      // socket -> watermark pair; TODO: use sender's node.id as keys
+
     async start(port) {
         this.server = net.createServer(socket => this._accept_connection(socket))
         this.server.listen(port)
@@ -246,15 +248,17 @@ export class TCP_Receiver {
 
     _accept_connection(socket) {
         /* Accept new incoming connection. */
-        let watermark = 0       // per-connection state
+        this.watermarks[socket] = 0
 
         let msg_parser = new BinaryParser(async (id, req) => {
             let resp
             try {
                 // schemat.node._print(`TCP server message  ${id} recv:`, _json(msg))
+                let watermark = this.watermarks[socket]
                 let result
+
                 if (id > watermark) {
-                    watermark = id
+                    this.watermarks[socket] = id
                     result = this._handle_request(req)
                     if (result instanceof Promise) result = await result
                 }
