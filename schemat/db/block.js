@@ -360,10 +360,10 @@ export class Block extends Agent {
         return 10 //0.2
     }
 
-    async '$agent.backfill'(seq) {
+    async '$master.backfill'(seq) {
         /* Start a monitor that will perform the initial scan of this (source) sequence, compute derived records
-           and send them to the destination sequence `seq` as a part of its backfilling (initialization) procedure.
-           The monitor then stays to continue feeding updates to `seq`.
+           and send them to destination sequence, `seq`, as a part of its backfilling (initialization) procedure.
+           The monitor then continues feeding regular updates to `seq`.
          */
         let {monitors} = this.$state
         let monitor = monitors.get(seq)

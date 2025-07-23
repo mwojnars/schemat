@@ -150,7 +150,7 @@ export class Sequence extends WebObject {
     async build(source) {
         /* Start the backfill process to populate this derived sequence with initial data from source. */
         // request all source blocks to send initial data + set up data capture for future changes
-        source.blocks.map(block => block.$agent.backfill(this))
+        source.blocks.map(block => block.$master.backfill(this))
     }
 
     async 'action.erase'() {
