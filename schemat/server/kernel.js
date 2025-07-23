@@ -206,7 +206,6 @@ export class Kernel {
         try {
             let frames = [...this.frames.values()].reverse()
             await Promise.all(frames.map(f => f.stop()))
-            await sleep(1.0)
         }
         catch (ex) {
             if (!(ex instanceof StoppingNow)) throw ex

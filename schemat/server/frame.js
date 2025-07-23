@@ -201,12 +201,12 @@ export class Frame {
         //       and call explicitly __stop__ + triggers + __start__() instead of __restart__()
     }
 
-    async stop(shutdown = false) {
+    async stop() {
         /* Let running calls complete, then stop the agent by calling its __stop__(). */
+        if (this.stopping) return
         this.stopping = true                // prevent new calls from being executed on the agent
-        if (shutdown) return                // ongoing calls may never complete if already shutting down
-
         if (this.starting) await this.starting
+
         this._task_restart?.stop()          // clear all scheduled tasks
         this._task_background?.stop()
 
@@ -232,6 +232,7 @@ export class Frame {
                 await Promise.all(this.calls)           // wait for termination of ongoing calls
                 await sleep()                           // let pending calls jump in and execute
             }
+        if (this.stopping) return
 
         let interval = await this.exec('background')
         interval ||= 60     // 60 sec by default if no specific interval was returned
