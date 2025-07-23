@@ -249,12 +249,12 @@ export class TCP_Receiver {
     _accept_connection(socket) {
         /* Accept new incoming connection. */
         this.watermarks[socket] = 0
-        let msg_parser = new BinaryParser((id, req) => this._parse_request(socket, id, req))
+        let msg_parser = new BinaryParser((id, req) => this._tcp_handle_request(socket, id, req))
         socket.on('data', schemat.with_context(data => msg_parser.feed(data)))
         socket.on('error', () => socket.destroy())
     }
 
-    async _parse_request(socket, id, req) {
+    async _tcp_handle_request(socket, id, req) {
         let resp
         try {
             // schemat.node._print(`TCP server message  ${id} recv:`, _json(req))
@@ -268,7 +268,7 @@ export class TCP_Receiver {
                 return
             }
 
-            result = this._handle_request(req)
+            result = schemat.node.tcp_recv(req)
             if (result instanceof Promise) result = await result
 
             if (result !== undefined) result = [result]
@@ -281,9 +281,5 @@ export class TCP_Receiver {
             resp = BinaryParser.create_message(id, [null, JSONx.encode(ex)])
         }
         socket.write(resp)
-    }
-
-    _handle_request(request) {
-        return schemat.node.tcp_recv(request)
     }
 }
