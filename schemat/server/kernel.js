@@ -152,10 +152,8 @@ export class Kernel {
         //     // await tcp_receiver.start(this.node.tcp_port)
         //     // this._boot_done()
 
-        let node = this._node
-
         // agents to be started at this process
-        let agents = node.agents.filter(({worker}) => worker === this.worker_id)
+        let agents = this._node.agents.filter(({worker}) => worker === this.worker_id)
 
         // start ordinary agents
         for (let {id, role} of agents) {
@@ -247,11 +245,9 @@ export class KernelMaster extends Kernel {
 
     async start() {
         schemat._print(`starting node:`, this.node_id)
-        let node = await schemat.load(this.node_id)
-
+        let {num_workers} = this._node
         await super.start()
-        this._start_workers(node.num_workers)
-        // await sleep(2.0)            // wait for workers to start their IPC before sending requests
+        this._start_workers(num_workers)
     }
 
     _start_workers(num_workers) {
@@ -314,7 +310,6 @@ export class KernelWorker extends Kernel {
     async start() {
         schemat._print(`starting worker #${this.worker_id} (PID=${process.pid})...`)
         this.mailbox = new IPC_Mailbox(process, msg => this.node.ipc_worker(msg))    // IPC requests from master to this worker
-        // await sleep(3.0)            // wait for master to provide an initial list of agents; delay here must be longer than in KernelMaster.start()
         await super.start()
     }
 }
