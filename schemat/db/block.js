@@ -129,7 +129,7 @@ export class Monitor {
         fs.writeFileSync(this._backfill_path, report, {flush: true})
 
         // inform the destination sequence about new offset
-        let start = this.src.keys_start     //prev
+        let start = prev    //this.src.keys_start
         let stop  = offset || this.src.keys_stop
         this.dst.get_remote().edit.commit_backfill(start, stop).save()
     }
