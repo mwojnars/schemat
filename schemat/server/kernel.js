@@ -5,7 +5,7 @@ import yaml from 'yaml'
 
 import "../common/globals.js"           // global flags: CLIENT, SERVER
 
-import {print, assert, T, sleep} from "../common/utils.js";
+import {print, assert, T} from "../common/utils.js";
 import {StoppingNow} from "../common/errors.js";
 import {ServerSchemat} from "../core/schemat_srv.js";
 import {BootDatabase} from "../db/db.js";
