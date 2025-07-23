@@ -204,8 +204,9 @@ export class Kernel {
             })))
 
         try {
-            // this.stop_calls()
-            await this.stop_agents()
+            let frames = [...this.frames.values()].reverse()
+            await Promise.all(frames.map(f => f.stop()))
+            await sleep(1.0)
         }
         catch (ex) {
             if (!(ex instanceof StoppingNow)) throw ex
@@ -213,22 +214,6 @@ export class Kernel {
 
         schemat._print(`process closed`)
         process.exit(0)
-    }
-
-    // stop_calls() {
-    //     /* Terminate ongoing IPC/RPC calls. */
-    //     let ex = new StoppingNow(`the process is closing`)
-    //     for (let _schemat of globalThis._contexts.values())
-    //         [..._schemat.on_exit].reverse().map(fn => fn(ex))
-    // }
-
-    async stop_agents() {
-        /* Stop all agents at shutdown. Do it in reverse order, because newer agents may depend on the older ones. */
-        // return Promise.all([...this.frames.values()].reverse().map(frame => frame.stop()))
-        for (let [[id, role], frame] of [...this.frames.entries()].reverse()) {
-            await frame.stop(true)
-            this.frames.delete([id, role])
-        }
     }
 
     async stop_agent(id, role) {
