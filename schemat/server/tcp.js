@@ -183,10 +183,7 @@ export class TCP_Sender {
     _parse_response(id, resp) {
         // schemat._print(`TCP client response ${id} recv:`, _json(resp))
         let {resolve, reject} = this.pending.get(id) || {}
-        if (!resolve) {
-            schemat._print('WARNING TCP response received for unknown request:', id)
-            return
-        }
+        if (!resolve) return schemat._print(`WARNING TCP response received for unknown request no. ${id}:`, _json(resp))
         this.pending.delete(id)
 
         if (resp === undefined) resolve()
