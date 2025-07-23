@@ -229,9 +229,9 @@ export class Block extends Agent {
 
     decode_object(key, val) { return this.schema.decode_object(key, val) }
 
-    async __start__() {
+    async __start__({role}) {
         let stores = await Promise.all(this.storage$.map(s => this._create_store(s)))
-        let monitors = new ObjectsMap(this.sequence.derived.map(seq => [seq, new Monitor(this, seq)]))
+        let monitors = (role === '$master') ? new ObjectsMap(this.sequence.derived.map(seq => [seq, new Monitor(this, seq)])) : null
         let _mutex = new Mutex()
         let global_lock = (fn) => _mutex.run_exclusive(fn)
         return {stores, store: stores[0], monitors, global_lock}
@@ -329,8 +329,10 @@ export class Block extends Agent {
 
     _derive(key, prev = null, next = null) {
         let ops = []
-        for (let monitor of this.$state.monitors.values())
-            ops.push(...monitor.derive_ops(key, prev, next))
+        let {monitors} = this.$state
+        if (monitors)
+            for (let monitor of monitors.values())
+                ops.push(...monitor.derive_ops(key, prev, next))
         return ops
     }
     
@@ -349,15 +351,17 @@ export class Block extends Agent {
     async '$agent.background'(seq) {
         /* */
         this._print(`background job...`)
+        let {monitors} = this.$state
+        if (!monitors) return
 
         // identify the monitors that perform backfilling right now
-        let monitors = [...this.$state.monitors.values()].filter(m => m.is_backfilling())
+        monitors = [...monitors.values()].filter(m => m.is_backfilling())
         if (!monitors.length) return 10.0       // increase the delay between background job calls if no backfilling
 
         for (let monitor of monitors)
             await monitor.backfill()
 
-        return 10 //0.2
+        return 1.0
     }
 
     async '$master.backfill'(seq) {
@@ -395,8 +399,8 @@ export class DataBlock extends Block {
         return this.shard || this.ring.shard3
     }
 
-    async __start__() {
-        let state = await super.__start__()
+    async __start__(frame) {
+        let state = await super.__start__(frame)
         let autoincrement = state.store.get_max_id()    // current max ID of records in this block
         let reserved = new Set()                        // IDs that were already assigned during insert(), for correct "compact" insertion of many objects at once
         let _locks = new Mutexes()                      // row-level locks for updates & deletes
