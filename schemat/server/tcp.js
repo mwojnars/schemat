@@ -177,13 +177,13 @@ export class TCP_Sender {
             (await socket).end()
     }
 
-    async send(msg, address) {
+    async send(req, address) {
         /* `msg` is a plain object/array whose elements are JSONx-encoded already if needed. */
         let socket = this.sockets.get(address) || await this._connect(address, new BinaryParser(this._tcp_handle_response))
         if (socket instanceof Promise) socket = await socket
 
         let id = ++this.message_id
-        let message = BinaryParser.create_message(id, msg)
+        let message = BinaryParser.create_message(id, req)
         if (this.message_id >= this.OVERFLOW) this.message_id = 0      // check for 4-byte overflow
 
         return new Promise((resolve, reject) => {
@@ -197,6 +197,9 @@ export class TCP_Sender {
         let promise = _tcp_connect(address)
         this.sockets.set(address, promise)
         let socket = await promise
+
+        // send handshake request with this node's ID first; no response expected
+        socket.write(BinaryParser.create_message(0, schemat.node.id))
 
         socket.setNoDelay(false)
         socket.on('data', data => response_parser.feed(data))
@@ -234,7 +237,8 @@ export class TCP_Receiver {
        - [id, [null, error]] on failure
      */
 
-    watermarks = new Map()      // socket -> watermark pair; TODO: use sender's node.id as keys
+    senders = new Map()         // socket -> node_id
+    watermarks = new Map()      // socket -> watermark  ... TODO: use sender's node.id as keys
 
     async start(port) {
         this.server = net.createServer(socket => this._accept_connection(socket))
@@ -252,16 +256,19 @@ export class TCP_Receiver {
         let msg_parser = new BinaryParser((id, req) => this._tcp_handle_request(socket, id, req))
         socket.on('data', schemat.with_context(data => msg_parser.feed(data)))
         socket.on('error', () => socket.destroy())
-    }
+        socket.on('close', () => this.senders.delete(socket))
+     }
 
     async _tcp_handle_request(socket, id, req) {
         let resp
         try {
             // schemat.node._print(`TCP server message  ${id} recv:`, _json(req))
+            if (id === 0) return this._handshake_request(socket, req)       // message ID = 0 is reserved for handshake request
+
             let watermark = this.watermarks.get(socket)
             let result
 
-            // TODO: support OVERFLOW with watermark
+            // TODO: handle watermark's OVERFLOW
             if (id <= watermark) {
                 schemat._print(`TCP request ${id} received again, message ${_json(req)}, ignoring`)
                 // TODO: ACK should be sent again, but this can only be done when a response object is not expected (fire-and-forget requests, FF),
@@ -282,5 +289,13 @@ export class TCP_Receiver {
             resp = BinaryParser.create_message(id, [null, JSONx.encode(ex)])
         }
         socket.write(resp)
+    }
+
+    _handshake_request(socket, req) {
+        /* Initial request sent by a new incoming TCP connection. Contains node ID of the sender. */
+        let node_id = req
+        this.senders.set(socket, node_id)
+        this.watermarks.set(socket, 0)
+        schemat._print(`TCP handshake request received from node ${node_id}`)
     }
 }
