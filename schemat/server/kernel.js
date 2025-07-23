@@ -242,7 +242,7 @@ export class Kernel {
 
 /**********************************************************************************************************************/
 
-export class MasterProcess extends Kernel {
+export class KernelMaster extends Kernel {
     /* Top-level Schemat kernel process that manages a given node. Spawns and manages worker processes. */
 
     workers         // array of Node.js Worker instances (child processes); each item has .mailbox (IPC_Mailbox) for communication with this worker
@@ -316,7 +316,7 @@ export class MasterProcess extends Kernel {
 
 /**********************************************************************************************************************/
 
-export class WorkerProcess extends Kernel {
+export class KernelWorker extends Kernel {
     /* Descendant Schemat kernel process that executes agents: web servers, data nodes (blocks), load balancers etc. */
 
     mailbox     // IPC_Mailbox for communication with the master process
@@ -324,7 +324,7 @@ export class WorkerProcess extends Kernel {
     async start() {
         schemat._print(`starting worker #${this.worker_id} (PID=${process.pid})...`)
         this.mailbox = new IPC_Mailbox(process, msg => this.node.ipc_worker(msg))    // IPC requests from master to this worker
-        // await sleep(3.0)            // wait for master to provide an initial list of agents; delay here must be longer than in MasterProcess.start()
+        // await sleep(3.0)            // wait for master to provide an initial list of agents; delay here must be longer than in KernelMaster.start()
         await super.start()
     }
 }

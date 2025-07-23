@@ -2,7 +2,7 @@ import cluster from "node:cluster"
 import yargs from 'yargs'
 import {hideBin} from 'yargs/helpers'
 
-import {boot_schemat, MasterProcess, WorkerProcess} from "./kernel.js"
+import {boot_schemat, KernelMaster, KernelWorker} from "./kernel.js"
 
 
 const HOST    = '127.0.0.1'
@@ -31,8 +31,8 @@ await (async function run() {
     // let loader = new Loader(import.meta.url)
 
     // TODO: this line must be uncommented if dynamic code loading is needed (!!!); however, currently the dynamic loading causes errors for unknown reasons
-    // let {WorkerProcess} = await loader.import('/$/local/schemat/server/kernel.js')
+    // let {KernelWorker} = await loader.import('/$/local/schemat/server/kernel.js')
 
-    let kernel_process = cluster.isPrimary ? new MasterProcess() : new WorkerProcess()
+    let kernel_process = cluster.isPrimary ? new KernelMaster() : new KernelWorker()
     await boot_schemat(opts, () => kernel_process.run(opts))
 })()
