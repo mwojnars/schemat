@@ -826,8 +826,8 @@
       "@": schemat/types/type.js:INTEGER
     tcp_retry_interval:
       default: 5
-      info: Delay [in seconds] before a TCP message is resent if no acknowledgement
-        has been received.
+      info: Minimum delay [in seconds] before a TCP message is resent if no 
+        acknowledgement or response has been received.
       "@": schemat/types/type.js:NUMBER
     kafka_host:
       default: localhost

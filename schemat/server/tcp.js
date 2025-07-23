@@ -111,17 +111,23 @@ export class TCP_Sender {
 
     async start(retry_interval) {
         this.sockets = new Map()        // Map<address, net.Socket or promise>
-        this.pending = new Map()        // Map<id, {message, retries, address, resolve, reject}>
+        this.pending = new Map()        // Map<id, {message, address, timestamp, retries, resolve, reject}>
         this.message_id = 0             // last message ID sent
 
         this.retry_timer = setInterval(() => {
-            if (this.pending.size > 1000)
+            if (this.pending.size > 100)
                 schemat._print(`WARNING: high number of unresolved TCP requests (${this.pending.size})`)
+            let now = Date.now()
             for (let [id, entry] of this.pending) {
+                let {timestamp, address, message} = entry
+                if (now - timestamp < retry_interval) continue      // could "break" instead, possibly, as entries should be ordered by timestamp (?)
+
                 entry.retries++
-                let socket = this.sockets.get(entry.address)
+                schemat._print(`retry #${entry.retries} at sending TCP message ${message} to ${address}`)
+
+                let socket = this.sockets.get(address)
                 assert(socket && !(socket instanceof Promise))
-                socket.write(entry.message)
+                socket.write(message)
             }
         }, retry_interval).unref()
     }
@@ -142,7 +148,7 @@ export class TCP_Sender {
         if (this.message_id >= 0xFFFFFFFF) this.message_id = 0      // check for 4-byte overflow
 
         return new Promise((resolve, reject) => {
-            this.pending.set(id, {message, retries: 0, address, resolve, reject})
+            this.pending.set(id, {message, address, timestamp: Date.now(), retries: 0, resolve, reject})
             socket.write(message)
             // schemat.node._print(`TCP client message  ${id} sent:`, message.slice(9).toString())
         })
