@@ -93,7 +93,7 @@ export class Monitor {
         return !!this.backfill_offset
     }
 
-    async backfill(limit = 3) {
+    async backfill(limit = 100) {
         /* Run another round of backfilling: scan the next batch of source records, transform them into
            destination-sequence mutations, and submit to destination.
          */
