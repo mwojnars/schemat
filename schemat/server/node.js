@@ -188,8 +188,11 @@ class RPC_Response {
         return JSONx.encode(response)
     }
 
-    static parse(response) {
-        if (response === undefined) throw new Error(`missing RPC response`)
+    static parse(response, request) {
+        if (response === undefined) {
+            schemat.node._print_stack(`missing RPC response to request ${JSON.stringify(request)}`)
+            throw new Error(`missing RPC response to request ${JSON.stringify(request)}`)
+        }
         let {ret, err, records} = JSONx.decode(response)
         if (err) throw RPC_Error.with_cause('error processing request', err)
         if (records?.length) schemat.register_changes(...records)
@@ -393,11 +396,11 @@ export class Node extends Agent {
 
         let agent_id = (typeof agent === 'object') ? agent.id : agent
         let request = RPC_Request.create(agent_id, cmd, args, opts)
-        // this._print("rpc():", JSON.stringify(message))
+        // this._print("rpc():", JSON.stringify(request))
 
         try {
             let response = await this.rpc_send(request)
-            return RPC_Response.parse(response)
+            return RPC_Response.parse(response, request)
         }
         catch (ex) {
             // this._print("rpc() of request", JSON.stringify(request), "FAILED...")
