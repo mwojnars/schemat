@@ -122,6 +122,7 @@ export class TCP_Sender {
         this.message_id = 0             // last message ID sent
 
         this.retry_timer = setInterval(() => this._resend_pending(), retry_interval).unref()
+        this._parse_response = this._parse_response.bind(this)
     }
 
     _resend_pending() {
@@ -150,7 +151,7 @@ export class TCP_Sender {
 
     async send(msg, address) {
         /* `msg` is a plain object/array whose elements are JSONx-encoded already if needed. */
-        let socket = this.sockets.get(address) || await this._connect(address, this._response_parser())
+        let socket = this.sockets.get(address) || await this._connect(address, new BinaryParser(this._parse_response))
         if (socket instanceof Promise) socket = await socket
 
         let id = ++this.message_id
@@ -177,10 +178,6 @@ export class TCP_Sender {
         })
         this.sockets.set(address, socket)
         return socket
-    }
-
-    _response_parser() {
-        return new BinaryParser((id, resp) => this._parse_response(id, resp))
     }
 
     _parse_response(id, resp) {
