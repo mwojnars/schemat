@@ -237,14 +237,14 @@ export class TCP_Receiver {
     async start(port) {
         this.server = net.createServer(socket => {
             // per-connection state
-            let processed_offset = 0
+            let watermark = 0
             let msg_parser = new BinaryParser(async (id, req) => {
                 let resp
                 try {
                     // schemat.node._print(`TCP server message  ${id} recv:`, _json(msg))
                     let result
-                    if (id > processed_offset) {
-                        processed_offset = id
+                    if (id > watermark) {
+                        watermark = id
                         result = this._handle_request(req)
                         if (result instanceof Promise) result = await result
                     }
@@ -270,6 +270,19 @@ export class TCP_Receiver {
     async stop() {
         this.server?.close()
     }
+
+    // async _parse_request(id, req, processed_offset) {
+    //     // schemat.node._print(`TCP server message  ${id} recv:`, _json(msg))
+    //     let result
+    //     if (id > processed_offset) {
+    //         processed_offset = id
+    //         result = this._handle_request(req)
+    //         if (result instanceof Promise) result = await result
+    //     }
+    //     if (result !== undefined) result = [result]
+    //     // schemat.node._print(`TCP server response ${id}:`, _json(result))
+    //     return BinaryParser.create_message(id, result)
+    // }
 
     _handle_request(request) {
         return schemat.node.tcp_recv(request)
