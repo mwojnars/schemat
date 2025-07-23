@@ -253,15 +253,19 @@ export class TCP_Receiver {
         let msg_parser = new BinaryParser(async (id, req) => {
             let resp
             try {
-                // schemat.node._print(`TCP server message  ${id} recv:`, _json(msg))
+                // schemat.node._print(`TCP server message  ${id} recv:`, _json(req))
                 let watermark = this.watermarks[socket]
                 let result
 
-                if (id > watermark) {
-                    this.watermarks[socket] = id
-                    result = this._handle_request(req)
-                    if (result instanceof Promise) result = await result
+                if (id <= watermark) {
+                    schemat._print(`request ${id} received again, message ${_json(req)}, ignoring`)
+                    return
                 }
+
+                result = this._handle_request(req)
+                if (result instanceof Promise) result = await result
+                this.watermarks[socket] = id
+
                 if (result !== undefined) result = [result]
                 resp = BinaryParser.create_message(id, result)
                 // schemat.node._print(`TCP server response ${id} sent:`, _json(result))
