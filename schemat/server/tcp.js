@@ -91,8 +91,12 @@ class BinaryParser {
                 let binary  = this.buffer.slice(9, 9 + this.expected_length)
                 let content = binary.toString()
                 let msg     = (!is_json) ? content : (content ? JSON.parse(content) : undefined)
-                this.callback(this.current_id, msg)
-                
+
+                try { this.callback(this.current_id, msg) }
+                catch (ex) {
+                    schemat._print_error(`error in BinaryParser while processing incoming message id=${this.current_id} "${content}":`, ex)
+                }
+
                 // remove processed message from buffer
                 this.buffer = this.buffer.slice(9 + this.expected_length)
                 this.expected_length = 0
@@ -176,25 +180,24 @@ export class TCP_Sender {
     }
 
     _response_parser() {
-        return new BinaryParser((id, resp) => {
-            try {
-                // schemat._print(`TCP client response ${id} recv:`, _json(resp))
-                let {resolve, reject} = this.pending.get(id) || {}
-                if (!resolve) {
-                    schemat._print('WARNING TCP response received for unknown request:', id)
-                    return
-                }
-                this.pending.delete(id)
+        return new BinaryParser((id, resp) => this._parse_response(id, resp))
+    }
 
-                if (resp === undefined) resolve()
-                else {
-                    let [result, error] = resp
-                    if (error) reject(JSONx.decode(error))
-                    else resolve(result)
-                }
-            }
-            catch (ex) { schemat._print('invalid TCP response:', ex) }
-        })
+    _parse_response(id, resp) {
+        // schemat._print(`TCP client response ${id} recv:`, _json(resp))
+        let {resolve, reject} = this.pending.get(id) || {}
+        if (!resolve) {
+            schemat._print('WARNING TCP response received for unknown request:', id)
+            return
+        }
+        this.pending.delete(id)
+
+        if (resp === undefined) resolve()
+        else {
+            let [result, error] = resp
+            if (error) reject(JSONx.decode(error))
+            else resolve(result)
+        }
     }
 }
 
