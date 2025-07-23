@@ -253,7 +253,7 @@ export class TCP_Receiver {
         })
 
         this.server.listen(port)
-        print(`listening at TCP port`, port)
+        schemat._print(`listening at TCP port`, port)
     }
 
     async stop() {
