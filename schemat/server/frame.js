@@ -204,8 +204,8 @@ export class Frame {
     async stop() {
         /* Let running calls complete, then stop the agent by calling its __stop__(). */
         this.stopping = true                // prevent new calls from being executed on the agent
-        this._task_restart.stop()           // clear all scheduled tasks
-        this._task_background.stop()
+        this._task_restart?.stop()          // clear all scheduled tasks
+        this._task_background?.stop()
 
         let {calls, tag} = this
         if (calls.length > 0) {             // wait for pending calls to complete before stopping
