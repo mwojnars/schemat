@@ -261,6 +261,7 @@ export class TCP_Receiver {
             let watermark = this.watermarks[socket]
             let result
 
+            // TODO: support OVERFLOW with watermark
             if (id <= watermark) {
                 schemat._print(`TCP request ${id} received again, message ${_json(req)}, ignoring`)
                 // TODO: ACK should be sent again, but this can only be done when a response object is not expected (fire-and-forget requests, FF),
