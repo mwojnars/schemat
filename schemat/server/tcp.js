@@ -150,7 +150,7 @@ export class TCP_Sender {
         this.message_id = 0             // last message ID sent
 
         this.retry_timer = setInterval(() => this._resend_pending(), retry_interval).unref()
-        this._parse_response = this._parse_response.bind(this)
+        this._tcp_handle_response = this._tcp_handle_response.bind(this)
     }
 
     _resend_pending() {
@@ -179,7 +179,7 @@ export class TCP_Sender {
 
     async send(msg, address) {
         /* `msg` is a plain object/array whose elements are JSONx-encoded already if needed. */
-        let socket = this.sockets.get(address) || await this._connect(address, new BinaryParser(this._parse_response))
+        let socket = this.sockets.get(address) || await this._connect(address, new BinaryParser(this._tcp_handle_response))
         if (socket instanceof Promise) socket = await socket
 
         let id = ++this.message_id
@@ -208,10 +208,10 @@ export class TCP_Sender {
         return socket
     }
 
-    _parse_response(id, resp) {
+    _tcp_handle_response(id, resp) {
         // schemat._print(`TCP client response ${id} recv:`, _json(resp))
         let {resolve, reject} = this.pending.get(id) || {}
-        if (!resolve) return schemat._print(`WARNING TCP response received for unknown request ${id}:`, _json(resp))
+        if (!resolve) return schemat._print(`WARNING TCP response received for processed or unknown request ${id}:`, _json(resp))
         this.pending.delete(id)
 
         if (resp === undefined) resolve()
