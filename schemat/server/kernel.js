@@ -104,7 +104,7 @@ export class Kernel {
 
         schemat.set_kernel(this)
         this.node_id = Number(opts['node'].split('.').pop())
-        this._node = await schemat.load(this.node_id)
+        this._node = await schemat.load(this.node_id)   // temporary attribute, only exists during boot
 
         // let node_file = './schemat/node.id'
         // let node_id = opts.node || Number(opts['node-dir'].split('.').pop()) || this._read_node_id(node_file)
@@ -145,12 +145,6 @@ export class Kernel {
         this.root_frame = await this.start_agent(this.node_id, role)
         assert(this.frames.size === 1)
         assert(this.root_frame.agent)
-
-        // // on master, wait for other agents (in child processes) to start; only then the TCP receiver can be started, as the last step of boot up
-        // if (this.is_master())
-        //     await this._start_agents(state.agents)
-        //     // await tcp_receiver.start(this.node.tcp_port)
-        //     // this._boot_done()
 
         // agents to be started at this process
         let agents = this._node.agents.filter(({worker}) => worker === this.worker_id)

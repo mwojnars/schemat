@@ -267,16 +267,14 @@ export class Node extends Agent {
 
     /* This node as an agent (on master only!) */
 
-    async __start__({role}) {
+    async __start__() {
         /* On master only. */
-        // this._print(`Node.__start__() role:`, role)
         if (this.is_worker()) return
 
         let tcp_sender = new TCP_Sender()
         let tcp_receiver = new TCP_Receiver()
-        await tcp_sender.start(this.tcp_retry_interval * 1000)
 
-        // await sleep(1.0)        // wait for worker processes to start before external RCP requests are received
+        await tcp_sender.start(this.tcp_retry_interval * 1000)
         await tcp_receiver.start(this.tcp_port)
 
         return {tcp_sender, tcp_receiver, agents: this.agents}
