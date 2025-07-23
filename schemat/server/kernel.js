@@ -77,7 +77,7 @@ export class Kernel {
     _closing                    // true if .stop() was called and the process is shutting down right now
 
     // web object of [Node] category that represents the physical node this process is running on
-    get node() { return this.root_frame?.agent || this._node }
+    get node() { return this.root_frame.agent }
 
     get worker_id() {
         /* Numeric ID (1, 2, 3, ...) of the node's current worker process; 0 for the master process. */
@@ -138,6 +138,7 @@ export class Kernel {
             schemat._print(`boot done`)
             await this.start_node_agent()
             await this._start_agents_2()
+            delete this._node
         }
         catch (ex) {
             schemat._print_error(`start() of node process FAILED with`, ex)
@@ -288,27 +289,27 @@ export class KernelMaster extends Kernel {
         return worker
     }
 
-    async _start_agents(agents) {
-        /* Inform worker processes what `agents` to start. */
-        let num_workers = this.workers.length
-        for (let {worker, id, role} of agents) {
-            assert(id)
-            role ??= schemat.GENERIC_ROLE
-
-            // adjust the `worker` index if it does not match a valid worker ID (should be in 1,2,...,num_workers)
-            if (worker < 1 || worker > num_workers) {
-                let new_worker = (worker-1) % num_workers + 1
-                this._print(`_start_agents(): adjusted worker process index of agent [${id}] from #${worker} to #${new_worker}`)
-                worker = new_worker
-            }
-
-            // below, the limited scope='node' for RPC routing is deduced from _xxx() command name
-            try { await this.node.$worker({worker})._start_agent(id, role) }
-            catch (ex) {
-                this.node._print_error(`boot start of agent [${id}].${role} at worker #${worker} FAILED with`, ex)
-            }
-        }
-    }
+    // async _start_agents(agents) {
+    //     /* Inform worker processes what `agents` to start. */
+    //     let num_workers = this.workers.length
+    //     for (let {worker, id, role} of agents) {
+    //         assert(id)
+    //         role ??= schemat.GENERIC_ROLE
+    //
+    //         // adjust the `worker` index if it does not match a valid worker ID (should be in 1,2,...,num_workers)
+    //         if (worker < 1 || worker > num_workers) {
+    //             let new_worker = (worker-1) % num_workers + 1
+    //             this._print(`_start_agents(): adjusted worker process index of agent [${id}] from #${worker} to #${new_worker}`)
+    //             worker = new_worker
+    //         }
+    //
+    //         // below, the limited scope='node' for RPC routing is deduced from _xxx() command name
+    //         try { await this.node.$worker({worker})._start_agent(id, role) }
+    //         catch (ex) {
+    //             this.node._print_error(`boot start of agent [${id}].${role} at worker #${worker} FAILED with`, ex)
+    //         }
+    //     }
+    // }
 }
 
 /**********************************************************************************************************************/
