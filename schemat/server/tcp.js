@@ -252,7 +252,6 @@ export class TCP_Receiver {
 
     _accept_connection(socket) {
         /* Accept new incoming connection. */
-        this.watermarks.set(socket, 0)
         let msg_parser = new BinaryParser((id, req) => this._tcp_handle_request(socket, id, req))
         socket.on('data', schemat.with_context(data => msg_parser.feed(data)))
         socket.on('error', () => socket.destroy())
@@ -265,8 +264,10 @@ export class TCP_Receiver {
             // schemat.node._print(`TCP server message  ${id} recv:`, _json(req))
             if (id === 0) return this._handshake_request(socket, req)       // message ID = 0 is reserved for handshake request
 
-            let watermark = this.watermarks.get(socket)
-            let result
+            let sender = this.senders.get(socket)
+            if (!sender) throw new Error(`missing handshake before TCP request ${id}: ${_json(req)}`)
+
+            let watermark = this.watermarks.get(sender)
 
             // TODO: handle watermark's OVERFLOW
             if (id <= watermark) {
@@ -276,13 +277,14 @@ export class TCP_Receiver {
                 return
             }
 
-            result = schemat.node.tcp_recv(req)
+            let result = schemat.node.tcp_recv(req)
             if (result instanceof Promise) result = await result
 
             if (result !== undefined) result = [result]
             resp = BinaryParser.create_message(id, result)
+
             // schemat.node._print(`TCP server response ${id} to be sent:`, _json(result))
-            this.watermarks.set(socket, id)
+            this.watermarks.set(sender, id)
 
         } catch (ex) {
             // console.error('Error while processing TCP message:', e)
@@ -295,7 +297,7 @@ export class TCP_Receiver {
         /* Initial request sent by a new incoming TCP connection. Contains node ID of the sender. */
         let node_id = req
         this.senders.set(socket, node_id)
-        this.watermarks.set(socket, 0)
+        this.watermarks.set(node_id, 0)
         schemat._print(`TCP handshake request received from node ${node_id}`)
     }
 }
