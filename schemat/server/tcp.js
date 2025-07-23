@@ -248,7 +248,7 @@ export class TCP_Receiver {
 
     _accept_connection(socket) {
         /* Accept new incoming connection. */
-        this.watermarks[socket] = 0
+        this.watermarks.set(socket, 0)
         let msg_parser = new BinaryParser((id, req) => this._tcp_handle_request(socket, id, req))
         socket.on('data', schemat.with_context(data => msg_parser.feed(data)))
         socket.on('error', () => socket.destroy())
@@ -258,7 +258,7 @@ export class TCP_Receiver {
         let resp
         try {
             // schemat.node._print(`TCP server message  ${id} recv:`, _json(req))
-            let watermark = this.watermarks[socket]
+            let watermark = this.watermarks.get(socket)
             let result
 
             // TODO: support OVERFLOW with watermark
@@ -275,7 +275,7 @@ export class TCP_Receiver {
             if (result !== undefined) result = [result]
             resp = BinaryParser.create_message(id, result)
             // schemat.node._print(`TCP server response ${id} to be sent:`, _json(result))
-            this.watermarks[socket] = id
+            this.watermarks.set(socket, id)
 
         } catch (ex) {
             // console.error('Error while processing TCP message:', e)
