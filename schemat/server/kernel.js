@@ -185,7 +185,6 @@ export class Kernel {
 
         process.removeAllListeners('message')       // don't accept new IPC messages
 
-        // let delay = this.node.agent_refresh_interval
         let timeout = 3
         if (cluster.isPrimary) schemat._print(`Received kill signal, shutting down gracefully in approx. ${timeout} seconds...`)
 

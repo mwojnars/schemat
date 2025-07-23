@@ -794,12 +794,6 @@
         "@": schemat/types/type.js:GENERIC
       inline: false
       "@": schemat/types/type.js:ARRAY
-    agent_refresh_interval:
-      default: 11
-      info: Duration [in seconds] of a single iteration of the agent execution loop in
-        run(). After each iteration, agent refresh is attempted, which may
-        trigger agent restart as a consequence.
-      "@": schemat/types/type.js:NUMBER
     data_directory:
       default: ./schemat/data
       info: Local directory where data blocks should be kept.

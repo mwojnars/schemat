@@ -220,7 +220,6 @@ export class Node extends Agent {
 
     num_workers
     agents                  // array of AgentState objects
-    agent_refresh_interval
     http_host
     http_port
     https_port
