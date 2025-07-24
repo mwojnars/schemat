@@ -111,7 +111,7 @@ export class Monitor {
 
             let obj = this.src.decode_object(key, val)
             ops.push(...this.derive_ops(key, null, obj, false))
-            this.src._print(`backfill() ... found key <${bin_to_hex(key)}> value`, val.slice(0, 50))
+            // this.src._print(`backfill() ... found key <${bin_to_hex(key)}> value`, val.slice(0, 50))
         }
         // this.src._print(`backfill() ... derived ${ops.length} ops`)
 

@@ -177,9 +177,7 @@ export class Sequence extends WebObject {
             if (compare_bin(L, zero_binary) === 0 && R === null)
                 this.filled = true
         }
-
-        this._print(`edit.commit_backfill() left=${left} right=${right}`)
-        this._print(`edit.commit_backfill() filled_ranges`, this.filled_ranges, `filled`, this.filled)
+        // this._print(`edit.commit_backfill() left=${left} right=${right} filled_ranges`, this.filled_ranges, `filled`, this.filled)
     }
 
     _add_range(left, right) {
