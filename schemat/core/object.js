@@ -518,7 +518,7 @@ export class WebObject {
         return self.__proxy = Intercept.wrap(self)
     }
 
-    static remote(id, edits = null) {
+    static remote(id, edits = null) {   // proxy virtual ghost dummy
         /* An editable remote object: a mutable object with ID and __meta.edits, but no __data; it is *not* loaded,
            but still can be edited: the edits are recorded in the transaction and passed to DB upon .save()
            where they get applied to the object's content. An editable remote object serves as a temporary container
