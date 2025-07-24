@@ -88,8 +88,8 @@ export class Kernel {
 
 
     async run(opts) {
-        await this.init(opts)
-        return this.start()
+        let node = await this.init(opts)
+        return this.start(node)
     }
 
     async init(opts) {
@@ -104,7 +104,7 @@ export class Kernel {
 
         schemat.set_kernel(this)
         this.node_id = Number(opts['node'].split('.').pop())
-        this._node = await schemat.load(this.node_id)   // temporary attribute, only exists during boot
+        return await schemat.load(this.node_id)
 
         // let node_file = './schemat/node.id'
         // let node_id = opts.node || Number(opts['node-dir'].split('.').pop()) || this._read_node_id(node_file)
@@ -127,19 +127,18 @@ export class Kernel {
     //     return node
     // }
 
-    async start() {
+    async start(node) {
         try {
             await schemat._boot_done()
             schemat._print(`boot done`)
-            await this.start_agents()
-            delete this._node
+            await this.start_agents(node)
         }
         catch (ex) {
             schemat._print_error(`start() of node process FAILED with`, ex)
         }
     }
 
-    async start_agents() {
+    async start_agents(node) {
         // start this node's own agent
         let role = this.is_master() ? '$master' : '$worker'
         this.root_frame = await this.start_agent(this.node_id, role)
@@ -147,7 +146,7 @@ export class Kernel {
         assert(this.root_frame.agent)
 
         // agents to be started at this process
-        let agents = this._node.agents.filter(({worker}) => worker === this.worker_id)
+        let agents = node.agents.filter(({worker}) => worker === this.worker_id)
 
         // start ordinary agents
         for (let {id, role} of agents) {
@@ -237,11 +236,11 @@ export class KernelMaster extends Kernel {
         return this.workers[process_id - 1]     // workers 1,2,3... stored under indices 0,1,2...
     }
 
-    async start() {
-        schemat._print(`starting node:`, this.node_id)
-        let {num_workers} = this._node
-        await super.start()
-        this._start_workers(num_workers)
+    async start(node) {
+        schemat._print(`starting node:`, node.id)
+        await super.start(node)
+        this._start_workers(node.num_workers)
+        // TODO: rearrange agents and save back to boot DB if they don't fit in `num_workers` workers
     }
 
     _start_workers(num_workers) {
@@ -301,10 +300,10 @@ export class KernelWorker extends Kernel {
 
     mailbox     // IPC_Mailbox for communication with the master process
 
-    async start() {
+    async start(node) {
         schemat._print(`starting worker #${this.worker_id} (PID=${process.pid})...`)
         this.mailbox = new IPC_Mailbox(process, msg => this.node.ipc_worker(msg))    // IPC requests from master to this worker
-        await super.start()
+        await super.start(node)
     }
 }
 
