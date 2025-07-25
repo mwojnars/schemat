@@ -49,16 +49,16 @@ export class DerivedOperator extends Operator {
         for (let [key, val] of put_records || [])
             ops.push(this._op_put(key, val))
 
-        // for (let key of del_records?.keys() || [])
-        //     ops.push(new OP('del', key))                // could be represented as "put" with val=<tombstone> (?)
-        // for (let [key, val] of put_records || [])
-        //     ops.push(new OP('put', key, val))
-
         return ops
     }
 
-    _op_del(key, val) { return new OP('del', key) }
+    _op_del(key, val) { return new OP('del', key) }         // alternative: "put" with <tombstone> (?)
     _op_put(key, val) { return new OP('put', key, val) }
+
+    compactify(ops) {
+        /* Merge & compactify, if possible, a batch of `ops` produced from a number of different source records. */
+        return ops
+    }
 }
 
 export class IndexOperator extends DerivedOperator {
@@ -229,7 +229,10 @@ export class AggregationOperator extends Operator {
                         // and switches automatically to BigInt when the absolute value (shifted left/right by decimals)
                         // gets too large; if decimals[f] is null/undefined, the sum uses floating-point arithmetic on Number
 
-
+    compactify(ops) {
+        /* Merge & compactify, if possible, a batch of `ops` produced from a number of different source records. */
+        return ops
+    }
 }
 
 // export class COUNT_Operator extends AggregationOperator {}
