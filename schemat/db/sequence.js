@@ -87,7 +87,7 @@ export class Sequence extends WebObject {
     }
 
     bind_ops(ops) {
-        /* Assign target `block` in each operation of `ops`; the ops are to be executed on this sequence. */
+        /* In each op, append info about the destination block; the ops are to be executed on this sequence. */
         ops.forEach(op => {op.block = this.find_block(op.key)})
         return ops
     }
