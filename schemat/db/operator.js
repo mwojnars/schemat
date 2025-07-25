@@ -65,17 +65,17 @@ export class IndexOperator extends Operator {
         return [del_records, put_records]
     }
 
-    _make_records(key, entity) {
-        /* Map a source-sequence entity (typically, a web object) to a list of destination-sequence (index) records. */
-        if (!entity) return
-        let records = [...this.map_record(key, entity)]
+    _make_records(key, obj) {
+        /* Map a source-sequence object (a web object or pseudo-object) to a list of destination-sequence (index) records. */
+        if (!obj) return
+        let records = [...this.map_record(key, obj)]
         return new BinaryMap(records)
         // NOTE: duplicate destination keys may be created along the way, like when indexing all outgoing REFs per object
         // and the same reference occurs several times; duplicates get removed when creating BinaryMap above
     }
 
-    *map_record(key, entity) {
-        /* Perform transformation of the source entity and yield any number (0+) of output Records to be stored in the index. */
+    *map_record(key, obj) {
+        /* Perform transformation of the source object and yield any number (0+) of output Records to be stored in the index. */
         throw new Error('not implemented')
     }
 
@@ -154,7 +154,7 @@ export class ObjectIndexOperator extends IndexOperator {
 
     accept(obj) {
         // check __category (__cid) directly, because inheritance is NOT available for deaf objects (pseudo-objects) anyway
-        return !this.category || obj.__cid$.includes(this.category.id)
+        return !this.category || obj.__cid$?.includes(this.category.id)
     }
 
     generate_value(obj) {
