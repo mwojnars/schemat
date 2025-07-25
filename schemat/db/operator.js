@@ -58,29 +58,6 @@ export class DerivedOperator extends Operator {
     _op_rmv(key, val) { return new OP('del', key) }         // alternative: "put" with <tombstone> (?)
     _op_ins(key, val) { return new OP('put', key, val) }
 
-    compactify(ops) {
-        /* Merge & compactify, if possible, a batch of `ops` produced from a number of different source records. */
-        return ops
-    }
-}
-
-export class IndexOperator extends DerivedOperator {
-    /* Operator that pulls data from a source sequence and creates records in a destination sequence. */
-
-    _make_records(key, obj) {
-        /* Map a source-sequence object (a web object or pseudo-object) to a list of destination-sequence (index) records. */
-        if (!obj) return
-        let records = [...this.map_record(key, obj)]
-        return new BinaryMap(records)
-        // NOTE: duplicate destination keys may be created along the way, like when indexing all outgoing REFs per object
-        // and the same reference occurs several times; duplicates get removed when creating BinaryMap above
-    }
-
-    *map_record(key, obj) {
-        /* Perform transformation of the source object and yield any number (0+) of output Records to be stored in the index. */
-        throw new Error('not implemented')
-    }
-
     _prune_plan(rmv_records, ins_records, implicit_override = false) {
         /* Prune the destination sequence update plan:
            1) skip the records that are identical in `rmv_records` and `ins_records` (the property didn't change in source during update);
@@ -102,6 +79,29 @@ export class IndexOperator extends DerivedOperator {
                     rmv_records.delete(key)     // when the destination is an index (del/put ops), it is safe to drop "del" when followed by "put"
             }
     }
+
+    compactify(ops) {
+        /* Merge & compactify, if possible, a batch of `ops` produced from a number of different source records. */
+        return ops
+    }
+
+    _make_records(key, obj) {
+        /* Map a source-sequence object (a web object or pseudo-object) to a list of destination-sequence (index) records. */
+        if (!obj) return
+        let records = [...this.map_record(key, obj)]
+        return new BinaryMap(records)
+        // NOTE: duplicate destination keys may be created along the way, like when indexing all outgoing REFs per object
+        // and the same reference occurs several times; duplicates get removed when creating BinaryMap above
+    }
+
+    *map_record(key, obj) {
+        /* Perform transformation of the source object and yield any number (0+) of output Records to be stored in the index. */
+        throw new Error('not implemented')
+    }
+}
+
+export class IndexOperator extends DerivedOperator {
+    /* Operator that pulls data from a source sequence and creates records in a destination sequence. */
 }
 
 /**********************************************************************************************************************/
