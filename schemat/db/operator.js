@@ -47,26 +47,12 @@ export class IndexOperator extends Operator {
         let ops = []
 
         for (let key of del_records?.keys() || [])
-            ops.push(new OP('del', key))
+            ops.push(new OP('del', key))                // could be represented as "put" with val=<tombstone> (?)
         for (let [key, val] of put_records || [])
             ops.push(new OP('put', key, val))
 
         return ops
     }
-
-    // derive(key, prev, next) {
-    //     /* Calculate what records should be deleted or put in the destination sequence in response to [prev > next] change
-    //        in the source sequence that occurred at a binary `key`. Return a pair, [del_records, put_records], where both
-    //        elements are BinaryMaps of destination records to be del/put respectively, {key-binary: val-json/binary/undefined}.
-    //        (TODO: result could be merged to one BinaryMap if "tombstone" values are used)
-    //      */
-    //     // del_records and put_records are BinaryMaps or undefined
-    //     let del_records = this._make_records(key, prev)
-    //     let put_records = this._make_records(key, next)
-    //
-    //     this._prune_plan(del_records, put_records)
-    //     return [del_records, put_records]
-    // }
 
     _make_records(key, obj) {
         /* Map a source-sequence object (a web object or pseudo-object) to a list of destination-sequence (index) records. */
