@@ -229,6 +229,9 @@ export class AggregationOperator extends Operator {
                         // and switches automatically to BigInt when the absolute value (shifted left/right by decimals)
                         // gets too large; if decimals[f] is null/undefined, the sum uses floating-point arithmetic on Number
 
+    _op_del(key, val) { return new OP('dec', key, val) }
+    _op_put(key, val) { return new OP('inc', key, val) }
+
     compactify(ops) {
         /* Merge & compactify, if possible, a batch of `ops` produced from a number of different source records. */
         return ops
