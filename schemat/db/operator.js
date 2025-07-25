@@ -153,8 +153,8 @@ export class ObjectIndexOperator extends IndexOperator {
     }
 
     accept(obj) {
-        // TODO: only check __category directly, because inheritance is NOT available for deaf objects (pseudo-objects) anyway
-        return !this.category || obj.instanceof(this.category)
+        // check __category (__cid) directly, because inheritance is NOT available for deaf objects (pseudo-objects) anyway
+        return !this.category || obj.__cid$.includes(this.category.id)
     }
 
     generate_value(obj) {
