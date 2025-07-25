@@ -170,7 +170,7 @@ export class ObjectIndexOperator extends IndexOperator {
             if (!values?.length) return             // no value (missing field), or not an array? skip this object
 
             if (values.length >= 2 && field_values.length)
-                throw new Error(`key field ${field} has multiple values, which is allowed only for the first field in the index`)
+                throw new Error(`key field ${field} has multiple values, which is allowed only for the first field`)
 
             field_values.push(values)
         }
@@ -213,11 +213,13 @@ export class AggregationOperator extends Operator {
     // key_fields
     // val_fields       // ['__count', f1, f2, ...]
 
-    val_decimals        // {val_field -> integer}; no. of decimal digits that should be maintained for a given field
-                        // when calculating the sum; can be positive, zero, or negative; if provided (not null/undefined),
-                        // the sum uses integer arithmetic on Number and switches automatically to BigInt when
-                        // the absolute value (shifted left/right by decimals) gets too large; if null/undefined,
-                        // the sum uses floating-point arithmetic on Number
+    val_decimals        // {val_field -> integer}; no. of decimal digits that should be maintained for a given value field
+                        // when calculating the sum; can be positive (places after comma), zero, negative (zeros before comma),
+                        // or null/undefined; if decimals[f] is not null/undefined the sum uses integer arithmetic on Number
+                        // and switches automatically to BigInt when the absolute value (shifted left/right by decimals)
+                        // gets too large; if decimals[f] is null/undefined, the sum uses floating-point arithmetic on Number
+
+
 }
 
 // export class COUNT_Operator extends AggregationOperator {}
