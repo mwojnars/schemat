@@ -33,9 +33,7 @@ export class DataOperator extends Operator {
 
 /**********************************************************************************************************************/
 
-export class IndexOperator extends Operator {
-    /* Operator that pulls data from a source sequence and creates records in a destination sequence. */
-
+export class DerivedOperator extends Operator {
     derive_ops(key, prev, next) {
         /* Generate a list of low-level instructions ("ops") to be executed on the destination sequence in response
            to [prev > next] change in the source sequence that occurred at a binary `key`.
@@ -53,6 +51,11 @@ export class IndexOperator extends Operator {
 
         return ops
     }
+
+}
+
+export class IndexOperator extends DerivedOperator {
+    /* Operator that pulls data from a source sequence and creates records in a destination sequence. */
 
     _make_records(key, obj) {
         /* Map a source-sequence object (a web object or pseudo-object) to a list of destination-sequence (index) records. */
