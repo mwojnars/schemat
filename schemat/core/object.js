@@ -287,18 +287,18 @@ export class WebObject {
     __base                  virtual category: either the __category itself (if 1x present), or a newly created Category object (TODO)
                             that inherits (like from prototypes) from all __category$ listed in this object or inherited
 
-    __schema                schema of this item's data, as a SCHEMA object
+    __schema                schema of this object's data, as a SCHEMA object
 
     __prototype             direct ancestor (prototype) of this object; there can be multiple __prototype$ for an object
     __ancestors             array of all ancestors, deduplicated and linearized, with `this` at the first position
     __ancestors_ids         a Set of all IDs in the __prototype inheritance chain/graph of this object, including self; for .instanceof() checks
 
-    __std                   shortcut for __category.std: standard related objects (categories) that might be needed in __new__(), __setup__() etc
+    __category              category of this object, as a Category instance; there can be multiple __category$; can be inherited from __prototype$
+    __class                 JS class (or its class path) for this object; assigned AFTER object creation during .load()
 
-    __class                 JS class (or its class path) for this item; assigned AFTER object creation during .load()
-    __category              category of this item, as a Category object; there can be multiple __category$; they can be inherited from __prototype$
-    __container             Container of this item, for canonical URL generation
+    __container             Container of this object, for canonical URL generation
     __status                a string describing the current state of this object in the DB, e.g., "DELETED"; undefined means normal state
+    __std                   shortcut for __category.std: standard related objects (categories) that might be needed in __new__(), __setup__() etc
 
     __ttl                   time-to-live of this object in the registry, in seconds; 0 = immediate eviction on the next cache purge
     __ttl_ms                same as __ttl, but in milliseconds

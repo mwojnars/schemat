@@ -21,25 +21,12 @@ export class Operator extends WebObject {
         /* RecordSchema that defines the schema (composite key + payload) of output records produced by this operator. */
         return new RecordSchema(this.key_fields, this.val_fields)
     }
-
-    // encode_key(key) {
-    //     /* Encode an array of field values [f1,f2,...] to binary representation (Uint8Array). */
-    //     return this.record_schema.encode_key(key)
-    // }
-    //
-    // decode_key(bin) {
-    //     /* Decode binary representation of a key back to an array of field values. */
-    //     return this.record_schema.decode_key(bin)
-    // }
-
-    // async min(seq)
-    // async max(seq)
 }
 
 /**********************************************************************************************************************/
 
 export class DataOperator extends Operator {
-    /* Special type of Operator that has no source and represents the main data sequence. */
+    /* Special type of Operator that has no source and represents the main data sequence, so it is basically a schema holder. */
 
     get record_schema() { return data_schema }
 }
@@ -166,6 +153,7 @@ export class ObjectIndexOperator extends IndexOperator {
     }
 
     accept(obj) {
+        // TODO: only check __category directly, because inheritance is NOT available for deaf objects (pseudo-objects) anyway
         return !this.category || obj.instanceof(this.category)
     }
 
@@ -210,8 +198,16 @@ export class ObjectIndexOperator extends IndexOperator {
 /**********************************************************************************************************************/
 
 export class AggregationOperator extends Operator {
-    /* Map continuous subgroups of source records onto single records in output sequence, doing aggregation of the original
-       group along the way. The group is defined as a range of records that share the same key on all fields
+    /* A derived operator that generates "inc" ops from source records instead of "put" or "del" like in indexing operator.
+       As usual, aggregation's schema is composed of key and value fields. Unlike in indexes:
+       - the key does not contain a back-reference to the source object, as typically we want to sum over multiple objects;
+       - value fields must be numeric, so that sum += x incrementation makes sense;
+       - there is an implicit `__count` field prepended to value fields that is always incremented/decremented by 1;
+         when there are no explicit value fields given, the aggregation only computes the count; otherwise, it also computes
+         sums over explicit fields, which allows retrieval of these sums or averages at the end, when accessing the record.
+     */
+    /* An operator that maps continuous subgroups of source records onto single records in output sequence, doing aggregation
+       of the original group along the way. The group is defined as a range of records that share the same key on all fields
        *except* the last one. In other words, merging and aggregation is always done over the last field of the key,
        and the output key is made by removing the last field from the source key.
 
