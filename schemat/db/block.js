@@ -18,6 +18,7 @@ export class OP {
     constructor(op, ...args) {
         this.op = op        // put, del, inc, ???
         this.args = args
+        // this.block       // target block where the operation should be executed
     }
 
     async submit() {
