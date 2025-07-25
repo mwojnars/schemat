@@ -229,10 +229,10 @@ export class AggregationOperator extends Operator {
     // key_fields
     // val_fields       // ['__count', f1, f2, ...]
 
-    val_decimals        // {val_field -> integer}; no. of decimal digits that should be maintained for a given value field
+    val_decimals        // {val_field -> scale}; no. of decimal digits after comma that should be maintained for a given field
                         // when calculating the sum; can be positive (places after comma), zero, negative (zeros before comma),
-                        // or null/undefined; if decimals[f] is not null/undefined the sum uses integer arithmetic on Number
-                        // and switches automatically to BigInt when the absolute value (shifted left/right by decimals)
+                        // or null/undefined; if decimals[f] is not null/undefined, the sum uses integer arithmetic on Number
+                        // and switches automatically to BigInt when the absolute value (shifted left/right by `decimals`)
                         // gets too large; if decimals[f] is null/undefined, the sum uses floating-point arithmetic on Number
 
     _op_rmv(key, val) { return new OP('dec', key, val) }
