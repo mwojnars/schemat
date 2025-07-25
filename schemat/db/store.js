@@ -92,10 +92,10 @@ export class MemoryStore extends Store {
 
     _records = new BinaryMap()      // preloaded records, {binary-key: json-data}; unordered, sorting is done during scan()
 
-    _reopen() { this.open() }       // temporary solution to sync block "replicas" on different nodes that share the same data file
-                                    // TODO: drop _reopen() & restore delay=0.1 in flush() when proper block replicas are implemented
+    // _reopen() { this.open() }       // temporary solution to sync block "replicas" on different nodes that share the same data file
+    //                                 // TODO: drop _reopen() & restore delay=0.1 in flush() when proper block replicas are implemented
 
-    get(key)            { this._reopen(); return this._records.get(key) }
+    get(key)            { /*this._reopen();*/ return this._records.get(key) }
     put(key, value)     { this._records.set(key, value); this.flush() }
     del(key)            { if (this._records.delete(key)) {this.flush(); return true} return false }
     erase()             { this._records.clear(); this.flush(0) }
@@ -138,7 +138,7 @@ export class MemoryStore extends Store {
         }
     }
 
-    flush(delay = 0) {  //0.1
+    flush(delay = 0.1) {
         /* Write unsaved modifications to disk, possibly with a `delay` seconds to combine multiple consecutive updates in one write. */
         if (!delay) {
             this._pending_flush = false
