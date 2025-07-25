@@ -44,7 +44,7 @@ export class DerivedOperator extends Operator {
         let rmv_records = this._make_records(key, prev)
         let ins_records = this._make_records(key, next)
 
-        this._prune_plan(rmv_records, ins_records)
+        this._prune_plan(rmv_records, ins_records, true)
         let ops = []
 
         for (let [key, val] of rmv_records || [])
@@ -81,22 +81,25 @@ export class IndexOperator extends DerivedOperator {
         throw new Error('not implemented')
     }
 
-    _prune_plan(del_records, put_records) {
-        /* Prune the del/put index update plan:
-           1) skip the records that are identical in `del_records` and `put_records`;
-           2) don't explicitly delete records that will be overwritten with a new value anyway
+    _prune_plan(rmv_records, ins_records, implicit_override = false) {
+        /* Prune the destination sequence update plan:
+           1) skip the records that are identical in `rmv_records` and `ins_records` (the property didn't change in source during update);
+           2) don't explicitly delete records that will be overwritten with a new value anyway (valid for indexes only, not aggregations).
          */
-        if (!del_records?.size || !put_records?.size) return
-        for (let key of del_records.keys())
-            if (put_records.has(key)) {
-                let vdel = del_records.get(key)
-                let vput = put_records.get(key)
+        if (!rmv_records?.size || !ins_records?.size) return
+        for (let key of rmv_records.keys())
+            if (ins_records.has(key)) {
+                let v_rmv = rmv_records.get(key)
+                let v_ins = ins_records.get(key)
+                // assert(!(v_ins instanceof Uint8Array))
 
-                // "put" not needed when old & new values are equal; values are strings
-                if (vput === vdel)  // || (vput instanceof Uint8Array && compare_bin(vput, vdel) === 0))
-                    put_records.delete(key)
-
-                del_records.delete(key)     // in either case, do NOT explicitly delete the previous record
+                // plus/minus ops cancel out when old & new values are equal (string comparison)
+                if (v_ins === v_rmv) {          // || (v_ins instanceof Uint8Array && compare_bin(v_ins, v_rmv) === 0))
+                    ins_records.delete(key)
+                    rmv_records.delete(key)
+                }
+                else if (implicit_override)
+                    rmv_records.delete(key)     // when the destination is an index (del/put ops), it is safe to drop "del" when followed by "put"
             }
     }
 }
