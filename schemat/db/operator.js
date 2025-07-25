@@ -187,12 +187,12 @@ export class ObjectIndexOperator extends IndexOperator {
 /**********************************************************************************************************************/
 
 export class AggregationOperator extends Operator {
-    /* A derived operator that generates "inc" ops from source records instead of "put" or "del" like in indexing operator.
-       As usual, aggregation's schema is composed of key and value fields. Unlike in indexes:
-       - the key does not contain a back-reference to the source object, as typically we want to sum over multiple objects;
-       - value fields must be numeric, so that sum += x incrementation makes sense;
-       - there is an implicit `__count` field prepended to value fields that is always incremented/decremented by 1;
-         when there are no explicit value fields given, the aggregation only computes the count; otherwise, it also computes
+    /* A derived operator that generates "inc" ops from source records instead of "put" or "del" like in index operator.
+       Aggregation's schema is composed of key and value fields, like in indexes, but contrary to indexes:
+       - the key does not contain a back-reference to the source object, because typically we want to sum over multiple objects;
+       - all value fields must be numeric, so that sum += x incrementation makes sense;
+       - there is an implicit `__count` field always prepended to value fields that is incremented/decremented by 1;
+         when no explicit value fields are specified, the aggregation only computes the count; otherwise, it also computes
          sums over explicit fields, which allows retrieval of these sums or averages at the end, when accessing the record.
      */
     /* An operator that maps continuous subgroups of source records onto single records in output sequence, doing aggregation
@@ -210,16 +210,14 @@ export class AggregationOperator extends Operator {
        Aggregation's monitor working at source block performs pre-aggregation and only sends compacted +/- "inc" records.
      */
 
-    function = 'COUNT'      // COUNT, SUM, AVG
-    sum_type                // Type of the sum's output value: INTEGER(), NUMBER(), BIGINT(), ...
-    sum_precision           // input value is shifted to the left by this no. of decimal digits before SUM
+    // key_fields
+    // val_fields       // ['__count', f1, f2, ...]
 
-    // output = {'count': 'COUNT', 'sum_views': 'SUM(views)'}
-    // types = {'sum_views': new NUMBER()}
-
-    // aggregation = 'COUNT() as count'
-    // aggregation = 'SUM(views) AS sum_views'
-    // aggregations = ['COUNT', 'SUM(views) AS sum_views', ...]
+    val_decimals        // {val_field -> integer}; no. of decimal digits that should be maintained for a given field
+                        // when calculating the sum; can be positive, zero, or negative; if provided (not null/undefined),
+                        // the sum uses integer arithmetic on Number and switches automatically to BigInt when
+                        // the absolute value (shifted left/right by decimals) gets too large; if null/undefined,
+                        // the sum uses floating-point arithmetic on Number
 }
 
 // export class COUNT_Operator extends AggregationOperator {}
