@@ -44,14 +44,21 @@ export class DerivedOperator extends Operator {
         this._prune_plan(del_records, put_records)
         let ops = []
 
-        for (let key of del_records?.keys() || [])
-            ops.push(new OP('del', key))                // could be represented as "put" with val=<tombstone> (?)
+        for (let [key, val] of del_records || [])
+            ops.push(this._op_del(key, val))
         for (let [key, val] of put_records || [])
-            ops.push(new OP('put', key, val))
+            ops.push(this._op_put(key, val))
+
+        // for (let key of del_records?.keys() || [])
+        //     ops.push(new OP('del', key))                // could be represented as "put" with val=<tombstone> (?)
+        // for (let [key, val] of put_records || [])
+        //     ops.push(new OP('put', key, val))
 
         return ops
     }
 
+    _op_del(key, val) { return new OP('del', key) }
+    _op_put(key, val) { return new OP('put', key, val) }
 }
 
 export class IndexOperator extends DerivedOperator {
@@ -190,7 +197,7 @@ export class ObjectIndexOperator extends IndexOperator {
 /**********************************************************************************************************************/
 
 export class AggregationOperator extends Operator {
-    /* A derived operator that generates "inc" ops from source records instead of "put" or "del" like in index operator.
+    /* A derived operator that generates "inc"/"dec" ops from source records instead of "put"/"del" as in index operator.
        Aggregation's schema is composed of key and value fields, like in indexes, but contrary to indexes:
        - the key does not contain a back-reference to the source object, because typically we want to sum over multiple objects;
        - all value fields must be numeric, so that sum += x incrementation makes sense;
