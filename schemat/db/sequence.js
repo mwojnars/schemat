@@ -87,7 +87,7 @@ export class Sequence extends WebObject {
     }
 
     bind_ops(ops) {
-        /* In each op, append info about the destination block; the ops are to be executed on this sequence. */
+        /* In each instruction, `op`, append info about the destination block; the ops are to be executed on this sequence. */
         ops.forEach(op => {op.block = this.find_block(op.key)})
         return ops
     }
@@ -223,14 +223,9 @@ export class Sequence extends WebObject {
             merge_end++
         }
 
-        // replace overlapping ranges with one, or insert unchanged [left, right] range if no overlap was found
+        // replace overlapping ranges with a merge; or insert unchanged [left, right] range if no overlap was found
         ranges.splice(merge_start, merge_end - merge_start, [left, right])
         return ranges
-
-        // if (merge_end > merge_start)            // replace overlapping ranges with one
-        //     ranges.splice(merge_start, merge_end - merge_start, range)
-        // else
-        //     ranges.splice(pos, 0, range)        // insert new range without merging
     }
 
     async capture_change(key, prev, next) {

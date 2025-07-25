@@ -37,10 +37,13 @@ export class IndexOperator extends Operator {
     /* Operator that pulls data from a source sequence and creates records in a destination sequence. */
 
     derive_ops(key, prev, next) {
-        /* Generate a list of binary instructions ("ops") to be executed on the destination sequence in response
+        /* Generate a list of low-level instructions ("ops") to be executed on the destination sequence in response
            to [prev > next] change in the source sequence that occurred at a binary `key`.
          */
-        let [del_records, put_records] = this.derive(key, prev, next)
+        let del_records = this._make_records(key, prev)     // BinaryMap or undefined
+        let put_records = this._make_records(key, next)     // BinaryMap or undefined
+
+        this._prune_plan(del_records, put_records)
         let ops = []
 
         for (let key of del_records?.keys() || [])
@@ -51,19 +54,19 @@ export class IndexOperator extends Operator {
         return ops
     }
 
-    derive(key, prev, next) {
-        /* Calculate what records should be deleted or put in the destination sequence in response to [prev > next] change
-           in the source sequence that occurred at a binary `key`. Return a pair, [del_records, put_records], where both
-           elements are BinaryMaps of destination records to be del/put respectively, {key-binary: val-json/binary/undefined}.
-           (TODO: result could be merged to one BinaryMap if "tombstone" values are used)
-         */
-        // del_records and put_records are BinaryMaps or undefined
-        let del_records = this._make_records(key, prev)
-        let put_records = this._make_records(key, next)
-
-        this._prune_plan(del_records, put_records)
-        return [del_records, put_records]
-    }
+    // derive(key, prev, next) {
+    //     /* Calculate what records should be deleted or put in the destination sequence in response to [prev > next] change
+    //        in the source sequence that occurred at a binary `key`. Return a pair, [del_records, put_records], where both
+    //        elements are BinaryMaps of destination records to be del/put respectively, {key-binary: val-json/binary/undefined}.
+    //        (TODO: result could be merged to one BinaryMap if "tombstone" values are used)
+    //      */
+    //     // del_records and put_records are BinaryMaps or undefined
+    //     let del_records = this._make_records(key, prev)
+    //     let put_records = this._make_records(key, next)
+    //
+    //     this._prune_plan(del_records, put_records)
+    //     return [del_records, put_records]
+    // }
 
     _make_records(key, obj) {
         /* Map a source-sequence object (a web object or pseudo-object) to a list of destination-sequence (index) records. */
