@@ -132,16 +132,16 @@ export class DerivedOperator extends Operator {
     }
 
     *map_record(key, obj) {
-        /* Perform transformation of the source object and yield any number (0+) of output [key,val] pairs to be stored
-           in the destination sequence. The result can be of any size, including:
+        /* Perform transformation of the source object and yield any number (0+) of output [key,val] pairs that will
+           update the destination sequence. The result can be of any size, including:
            - 0: if the input object is filtered out, or doesn't contain the required fields;
            - 2+: if some of the fields in the key contain repeated values.
          */
         if (!this.accept(obj)) return undefined
 
         let schema = this.record_schema
-        let value = this.generate_value(obj)
-        let val_encoded = schema.encode_value(value)    // json or binary
+        let value = this.generate_value(obj)            // TODO: here, `value` should already be a vector, not object
+        let val_encoded = schema.encode_value(value)    // json
 
         for (let key of this.generate_keys(obj)) {
             let key_binary = schema.encode_key(key)
@@ -166,16 +166,6 @@ export class ObjectIndexOperator extends IndexOperator {
     accept(obj) {
         // check __category (__cid) directly, because inheritance is NOT available for deaf objects (pseudo-objects) anyway
         return !this.category || obj.__cid$?.includes(this.category.id)
-    }
-
-    generate_value(obj) {
-        /* Generate a JS object that will be stringified through JSON and stored as `value` in this sequence's record.
-           If undefined is returned, the record will consist of a key only.
-         */
-        let schema = this.record_schema
-        if (!schema.val_fields?.length) return undefined
-        let entries = schema.val_fields.map(prop => [prop, obj[prop]])
-        return Object.fromEntries(entries)
     }
 
     *generate_keys(obj) {
@@ -204,6 +194,16 @@ export class ObjectIndexOperator extends IndexOperator {
         for (let head of field_values[0])
             yield [head, ...tail]
     }
+
+    generate_value(obj) {
+        /* Generate a JS object that will be stringified through JSON and stored as `value` in this sequence's record.
+           If undefined is returned, the record will consist of a key only.
+         */
+        let schema = this.record_schema
+        if (!schema.val_fields?.length) return undefined
+        let entries = schema.val_fields.map(prop => [prop, obj[prop]])
+        return Object.fromEntries(entries)
+    }
 }
 
 /**********************************************************************************************************************/
@@ -215,7 +215,13 @@ export class AggregationOperator extends Operator {
        - all value fields must be numeric, so that sum += x incrementation makes sense;
        - there is an implicit `__count` field always prepended to value fields that is incremented/decremented by 1;
          when no explicit value fields are specified, the aggregation only computes the count; otherwise, it also computes
-         sums over explicit fields, which allows retrieval of these sums or averages at the end, when accessing the record.
+         sums over explicit fields, which allows retrieval of these sums or averages at the end, when accessing the record;
+         only the explicit field names need to be given in new().
+
+       Use:   AggregationOperator.new({name}, ['f1', 'f2'])
+        or:   AggregationOperator.new({name}, {'f1': 3, 'f2': null}) -- syntax with "decimals after comma"
+
+       If no "decimals" are given, 0 is assumed (summing up to an integer of arbitrary size); null means floating-point.
      */
     /* An operator that maps continuous subgroups of source records onto single records in output sequence, doing aggregation
        of the original group along the way. The group is defined as a range of records that share the same key on all fields
@@ -241,12 +247,26 @@ export class AggregationOperator extends Operator {
                         // and switches automatically to BigInt when the absolute value (shifted left/right by `decimals`)
                         // gets too large; if decimals[f] is null/undefined, the sum uses floating-point arithmetic on Number
 
+    get _sum_fields() { return [...this.val_decimals?.keys() || []] }
+
     _op_rmv(key, val) { return new OP('dec', key, val) }
     _op_ins(key, val) { return new OP('inc', key, val) }
 
     compactify(ops) {
         /* Merge & compactify, if possible, a batch of `ops` produced from a number of different source records. */
         return ops
+    }
+
+    generate_value(obj) {
+        /* Generate a JS object that will be stringified through JSON and stored as `value` in this sequence's record.
+           If undefined is returned, the record will consist of a key only.
+         */
+        let entries = this._sum_fields.map(field => {
+            let v = obj[field]
+            let t = typeof v
+            return (t === 'number' || t === 'bigint') ? v : 0       // every non-numeric or missing value is replaced with zero
+        })
+        return [1, ...entries]  // TODO: let generate_value() return array not object
     }
 }
 
