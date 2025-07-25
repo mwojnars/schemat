@@ -36,24 +36,27 @@ export class DataOperator extends Operator {
 export class DerivedOperator extends Operator {
     derive_ops(key, prev, next) {
         /* Generate a list of low-level instructions ("ops") to be executed on the destination sequence in response
-           to [prev > next] change in the source sequence that occurred at a binary `key`.
+           to [prev > next] change in the source sequence that occurred at a binary `key`. Every change is modeled
+           as two independent steps: (1) removing `prev` from the source sequence, (2) inserting `next` in this place.
+           Missing `prev` represents insertion; missing `next` represents deletion; both present = update.
          */
-        let del_records = this._make_records(key, prev)     // BinaryMap or undefined
-        let put_records = this._make_records(key, next)     // BinaryMap or undefined
+        // BinaryMap of destination [key,val] pairs created/removed after addition/removal of a source object; can be undefined
+        let rmv_records = this._make_records(key, prev)
+        let ins_records = this._make_records(key, next)
 
-        this._prune_plan(del_records, put_records)
+        this._prune_plan(rmv_records, ins_records)
         let ops = []
 
-        for (let [key, val] of del_records || [])
-            ops.push(this._op_del(key, val))
-        for (let [key, val] of put_records || [])
-            ops.push(this._op_put(key, val))
+        for (let [key, val] of rmv_records || [])
+            ops.push(this._op_rmv(key, val))
+        for (let [key, val] of ins_records || [])
+            ops.push(this._op_ins(key, val))
 
         return ops
     }
 
-    _op_del(key, val) { return new OP('del', key) }         // alternative: "put" with <tombstone> (?)
-    _op_put(key, val) { return new OP('put', key, val) }
+    _op_rmv(key, val) { return new OP('del', key) }         // alternative: "put" with <tombstone> (?)
+    _op_ins(key, val) { return new OP('put', key, val) }
 
     compactify(ops) {
         /* Merge & compactify, if possible, a batch of `ops` produced from a number of different source records. */
@@ -229,8 +232,8 @@ export class AggregationOperator extends Operator {
                         // and switches automatically to BigInt when the absolute value (shifted left/right by decimals)
                         // gets too large; if decimals[f] is null/undefined, the sum uses floating-point arithmetic on Number
 
-    _op_del(key, val) { return new OP('dec', key, val) }
-    _op_put(key, val) { return new OP('inc', key, val) }
+    _op_rmv(key, val) { return new OP('dec', key, val) }
+    _op_ins(key, val) { return new OP('inc', key, val) }
 
     compactify(ops) {
         /* Merge & compactify, if possible, a batch of `ops` produced from a number of different source records. */
