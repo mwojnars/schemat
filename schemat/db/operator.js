@@ -210,11 +210,11 @@ export class IndexOperator extends DerivedOperator {
 
 /**********************************************************************************************************************/
 
-export class AggregationOperator extends Operator {
+export class AggregationOperator extends DerivedOperator {
     /* A derived operator that generates "inc"/"dec" ops from source records instead of "put"/"del" as in index operator,
        effectively building counts and sums across groups of source records sharing the same key in the destination.
-       After count & sum are calculated, it is possible to calculate average outside the sequence.
-       It is *not* possible to calculate min/max per group, these operations require an index, not aggregation.
+       After count & sum are calculated, it is possible to calculate an average outside the sequence.
+       It is *not* possible to calculate min/max per group: these operations require an index, not aggregation.
 
        Aggregation's schema is composed of key and value fields, like in indexes, but contrary to indexes:
        - the key does not contain a back-reference to the source object, because typically we want to sum over multiple objects;
