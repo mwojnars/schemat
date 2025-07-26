@@ -14,6 +14,10 @@ export class Operator extends WebObject {
     /* Specification of a data processing operator: schema of output records + derivation methods.
        The same operator can be applied to multiple rings, producing different physical sequences in each ring.
      */
+
+    // key     // specification of the key: list of field names with optional type and/or generation function;
+    //         // if generation functions are given, the names do NOT have to map 1:1 to source object's properties
+
     key_fields
     val_fields
     file_tag

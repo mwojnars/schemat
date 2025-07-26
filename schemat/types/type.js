@@ -49,7 +49,7 @@ export class Type extends Struct {
         inherited: true,            // if false, inheritance is disabled for this field (applied to certain system fields)
         merged   : undefined,       // if true, and repeated=false, inherited values of this type get merged (merge_inherited()) rather than being replaced with the youngest one;
 
-        impute   : undefined,       // function object, or a name of method, that should be used to impute the value if missing; inside the function, `this` references the containing object;
+        impute   : undefined,       // function or name of method that should be called, f(obj), to impute the value if missing;
                                     // only called for non-repeated properties, when `default` is undefined and there are no inherited values;
                                     // the function must be *synchronous* and cannot return a Promise; if the property value is present in DB, no imputation is done (!),
                                     // unlike with a getter method (getter=true) which overshadows all in-DB values simply because the getter uses the same JS attribute name
@@ -203,12 +203,11 @@ export class Type extends Struct {
         let {default: default_, impute, getter} = this.options
 
         if (impute) {
-            if (typeof impute === 'function')
-                return impute.call(obj, obj)                // impute() function may take `obj` via `this` or via regular argument
+            if (typeof impute === 'function') return impute(obj)
             if (typeof impute === 'string') {
                 let method = obj[impute]
                 if (typeof method === 'function') return method.call(obj)
-                if (method !== undefined) throw new Error(`incorrect value of 'impute' option (${impute}), expected a method name`)
+                if (method !== undefined) throw new Error(`impute option does not point to a method (${impute})`)
             }
             else throw new Error(`incorrect type of 'impute' option (${typeof impute})`)
         }
