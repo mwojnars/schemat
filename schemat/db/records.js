@@ -80,20 +80,20 @@ export class RecordSchema {
         return obj
     }
 
-    encode_value(obj) {
-        /* Encode an object into a JSONx-stringified vector of field values, with surrounding brackets stripped.
-           Undefined values are replaced with null.
-
-           TODO: use CBOR encoding (https://github.com/kriszyp/cbor-x)
-           import cbor from 'cbor-x'
-           let buf = cbor.encode(obj)
-           let obj = cbor.decode(buf)
-         */
-        let {val_fields} = this
-        if (!val_fields.length || obj === undefined) return ''
-        let vector = val_fields.map(field => {let val = obj[field]; return val === undefined ? null : val})
-        return JSONx.stringify(vector).slice(1, -1)
-    }
+    // encode_value(obj) {
+    //     /* Encode an object into a JSONx-stringified vector of field values, with surrounding brackets stripped.
+    //        Undefined values are replaced with null.
+    //
+    //        TODO: use CBOR encoding (https://github.com/kriszyp/cbor-x)
+    //        import cbor from 'cbor-x'
+    //        let buf = cbor.encode(obj)
+    //        let obj = cbor.decode(buf)
+    //      */
+    //     let {val_fields} = this
+    //     if (!val_fields.length || obj === undefined) return ''
+    //     let vector = val_fields.map(field => {let val = obj[field]; return val === undefined ? null : val})
+    //     return JSONx.stringify(vector).slice(1, -1)
+    // }
 
     decode_value(val_json) {
         if (!val_json) return {}

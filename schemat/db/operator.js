@@ -5,6 +5,7 @@ import {Catalog} from "../common/catalog.js";
 import {WebObject} from "../core/object.js";
 import {data_schema, RecordSchema} from "./records.js";
 import {OP} from "./block.js";
+import {JSONx} from "../common/jsonx.js";
 
 
 /**********************************************************************************************************************/
@@ -151,6 +152,8 @@ export class DerivedOperator extends Operator {
     }
 }
 
+/**********************************************************************************************************************/
+
 export class IndexOperator extends DerivedOperator {
     /* Operator that pulls data from a source sequence and creates records in a destination sequence. */
 }
@@ -197,8 +200,21 @@ export class ObjectIndexOperator extends IndexOperator {
     }
 
     generate_value(obj) {
-        return this.record_schema.encode_value(obj)
+        /* Extract a vector of field values from source object, `obj`, and stringify it via JSONx, surrounding brackets stripped.
+           Undefined values are replaced with null. If no value fields are declared (val_fields), empty string is returned.
+           The returned string is used as a "value" part of the record to be applied to the destination sequence.
+
+           TODO: use CBOR encoding (https://github.com/kriszyp/cbor-x)
+           import cbor from 'cbor-x'
+           let buf = cbor.encode(obj)
+           let obj = cbor.decode(buf)
+         */
+        let {val_fields} = this
+        if (!val_fields?.length) return ''
+        let vector = val_fields.map(f => {let v = obj[f]; return v === undefined ? null : v})
+        return JSONx.stringify(vector).slice(1, -1)
     }
+
     // generate_value(obj) {
     //     /* Generate a JS object that will be stringified through JSON and stored as `value` in this sequence's record.
     //        If undefined is returned, the record will consist of a key only.
