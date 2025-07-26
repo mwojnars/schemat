@@ -667,7 +667,8 @@
     "@": 1
 - id: 15
   name: IndexOperator
-  info: Base category for indexes over the data sequence.
+  info: Derived operator defining an index sequence.
+  class: schemat/db/operator.js:IndexOperator
   __prototype:
     "@": 16
   __category:
