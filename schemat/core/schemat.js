@@ -94,6 +94,7 @@ export class Schemat {
     get app()           { return this.get_if_loaded(this.app_id, obj => {this._app = obj}) || this._app }
     get global()        { return this.app?.__global }
     get terminating()   { return this.kernel?._closing }
+    get std()           { return this.root_category.std }   // standard categories and objects from ring-kernel
 
     // defined on server only:
     kernel

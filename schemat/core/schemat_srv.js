@@ -40,7 +40,6 @@ export class ServerSchemat extends Schemat {
     get tx()        { return this._transaction.getStore() || this._lite_tx }
     get node()      { return this.kernel?.node }        // host Node (web object) of the current process; initialized and periodically reloaded in Server
     get cluster()   { return this.get_if_loaded(this._cluster?.id, obj => {this._cluster = obj}) || this._cluster }
-    get std()       { return this.root_category.std }   // standard categories and objects from ring-kernel
 
     kernel_context          // db.id of the kernel database, initialized in the kernel's ServerSchemat and inherited by child contexts
     get current_context()   { return this._db.id }
