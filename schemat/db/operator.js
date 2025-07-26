@@ -128,13 +128,13 @@ export class DerivedOperator extends Operator {
     _make_records(key, obj) {
         /* Map a source-sequence object (a web object or pseudo-object) to a list of destination-sequence (index) records. */
         if (!obj) return
-        let records = [...this.map_record(key, obj)]
+        let records = [...this.map_object(key, obj)].reverse()
         return new BinaryMap(records)
         // NOTE: duplicate destination keys may be created along the way, like when indexing all outgoing REFs per object
         // and the same reference occurs several times; duplicates get removed when creating BinaryMap above
     }
 
-    *map_record(key, obj) {
+    *map_object(key, obj) {
         /* Perform transformation of the source object and yield any number (0+) of output [key,val] pairs that will
            update the destination sequence. The result can be of any size, including:
            - 0: if the input object is filtered out, or doesn't contain the required fields;
@@ -238,6 +238,9 @@ export class AggregationOperator extends Operator {
 
        If no "decimals" are given, 0 is assumed (the sum is an integer); null means floating-point.
        Aggregation's monitor working at source block performs pre-aggregation and only sends compacted +/- "inc" records. (TODO)
+
+       WARNING: _make_records() up in a super class deduplicates records via BinaryMap, which removes duplicate keys
+                produced from the same source object; this may influence aggregations (!)
 
        The object returned by scan() has the shape: {...key_fields, count, sum_f1, sum_f2, ..., avg_f1, avg_f2, ...}
      */

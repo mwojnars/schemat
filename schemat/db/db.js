@@ -404,8 +404,8 @@ export class Database extends WebObject {
         let compare = ([key1], [key2]) => compare_bin(key1, key2)
 
         // convert `start` and `stop` to binary keys (Uint8Array)
-        if (start !== undefined) start = schema.encode_key(start)
-        if (stop !== undefined) stop = schema.encode_key(stop)
+        if (start !== undefined) start = operator.encode_key(start)
+        if (stop !== undefined) stop = operator.encode_key(stop)
         opts = {...opts, start, stop}
 
         let streams = this.rings.map(r => r.scan_binary(operator, opts))
