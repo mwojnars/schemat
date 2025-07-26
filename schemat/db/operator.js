@@ -140,9 +140,9 @@ export class DerivedOperator extends Operator {
         if (!this.accept(obj)) return undefined
 
         let schema = this.record_schema
+        let val_encoded = this.generate_value(obj)
         // let value = this.generate_value(obj)            // TODO: here, `value` should already be a vector, not object
         // let val_encoded = schema.encode_value(value)    // json
-        let val_encoded = schema.encode_value(obj)
 
         for (let key of this.generate_keys(obj)) {
             let key_binary = schema.encode_key(key)
@@ -197,14 +197,17 @@ export class ObjectIndexOperator extends IndexOperator {
     }
 
     generate_value(obj) {
-        /* Generate a JS object that will be stringified through JSON and stored as `value` in this sequence's record.
-           If undefined is returned, the record will consist of a key only.
-         */
-        let schema = this.record_schema
-        if (!schema.val_fields?.length) return undefined
-        let entries = schema.val_fields.map(prop => [prop, obj[prop]])
-        return Object.fromEntries(entries)
+        return this.record_schema.encode_value(obj)
     }
+    // generate_value(obj) {
+    //     /* Generate a JS object that will be stringified through JSON and stored as `value` in this sequence's record.
+    //        If undefined is returned, the record will consist of a key only.
+    //      */
+    //     let schema = this.record_schema
+    //     if (!schema.val_fields?.length) return undefined
+    //     let entries = schema.val_fields.map(prop => [prop, obj[prop]])
+    //     return Object.fromEntries(entries)
+    // }
 }
 
 /**********************************************************************************************************************/
@@ -223,6 +226,8 @@ export class AggregationOperator extends Operator {
         or:   AggregationOperator.new({name}, {'f1': 3, 'f2': null}) -- syntax with "decimals after comma"
 
        If no "decimals" are given, 0 is assumed (summing up to an integer of arbitrary size); null means floating-point.
+
+       The object returned by scan() has the shape: {...key_fields, count, sum_f1, sum_f2, ..., avg_f1, avg_f2, ...}
      */
     /* An operator that maps continuous subgroups of source records onto single records in output sequence, doing aggregation
        of the original group along the way. The group is defined as a range of records that share the same key on all fields
@@ -244,9 +249,9 @@ export class AggregationOperator extends Operator {
 
     val_decimals        // {val_field -> scale}; no. of decimal digits after comma that should be maintained for a given field
                         // when calculating the sum; can be positive (places after comma), zero, negative (zeros before comma),
-                        // or null/undefined; if decimals[f] is not null/undefined, the sum uses integer arithmetic on Number
-                        // and switches automatically to BigInt when the absolute value (shifted left/right by `decimals`)
-                        // gets too large; if decimals[f] is null/undefined, the sum uses floating-point arithmetic on Number
+                        // or null/undefined; if decimals[f] is null/undefined, the sum uses floating-point arithmetic on Number;
+                        // otherwise, it uses integer arithmetic on Number, switching automatically to BigInt when
+                        // the absolute value (shifted left/right by `decimals`) gets large;
 
     get _sum_fields() { return [...this.val_decimals?.keys() || []] }
 
@@ -267,7 +272,7 @@ export class AggregationOperator extends Operator {
             let t = typeof v
             return (t === 'number' || t === 'bigint') ? v : 0       // every non-numeric or missing value is replaced with zero
         })
-        return [1, ...values]       // TODO: let generate_value() return array not object
+        return [1, ...values]
     }
 }
 
