@@ -875,7 +875,7 @@
         "@": schemat/types/type.js:STRING
       value_type:
         "@": schemat/types/type.js:TYPE
-      "@": schemat/types/catalog_type.js:CATALOG
+      "@": schemat/types/type.js:MAP
     val_fields:
       info: Names of properties comprising the payload (value) of this operator's
         output records.
