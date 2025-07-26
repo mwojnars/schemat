@@ -247,6 +247,11 @@ export class AggregationOperator extends DerivedOperator {
 
     get _sum_fields() { return [...this.val_decimals?.keys() || []] }
 
+
+    __new__() {
+        //
+    }
+
     _op_rmv(key, val) { return new OP('dec', key, val) }
     _op_ins(key, val) { return new OP('inc', key, val) }
 

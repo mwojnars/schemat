@@ -114,6 +114,12 @@
     strong_ref:
       strong: true
       "@": schemat/types/type.js:REF
+    value_x:
+      repeated: true
+      "@": schemat/types/type.js:NUMBER
+    value_y:
+      repeated: true
+      "@": schemat/types/type.js:NUMBER
     "@": schemat:Catalog
   __category:
     "@": 1
