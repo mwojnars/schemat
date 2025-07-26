@@ -141,13 +141,11 @@ export class DerivedOperator extends Operator {
         if (!this.accept(obj)) return undefined
 
         let schema = this.record_schema
-        let val_encoded = this.generate_value(obj)
-        // let value = this.generate_value(obj)            // TODO: here, `value` should already be a vector, not object
-        // let val_encoded = schema.encode_value(value)    // json
+        let val = this.generate_value(obj)
 
         for (let key of this.generate_keys(obj)) {
             let key_binary = schema.encode_key(key)
-            yield [key_binary, val_encoded]
+            yield [key_binary, val]
         }
     }
 }
@@ -214,16 +212,6 @@ export class ObjectIndexOperator extends IndexOperator {
         let vector = val_fields.map(f => {let v = obj[f]; return v === undefined ? null : v})
         return JSONx.stringify(vector).slice(1, -1)
     }
-
-    // generate_value(obj) {
-    //     /* Generate a JS object that will be stringified through JSON and stored as `value` in this sequence's record.
-    //        If undefined is returned, the record will consist of a key only.
-    //      */
-    //     let schema = this.record_schema
-    //     if (!schema.val_fields?.length) return undefined
-    //     let entries = schema.val_fields.map(prop => [prop, obj[prop]])
-    //     return Object.fromEntries(entries)
-    // }
 }
 
 /**********************************************************************************************************************/
