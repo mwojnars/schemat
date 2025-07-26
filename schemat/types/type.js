@@ -49,10 +49,10 @@ export class Type extends Struct {
         inherited: true,            // if false, inheritance is disabled for this field (applied to certain system fields)
         merged   : undefined,       // if true, and repeated=false, inherited values of this type get merged (merge_inherited()) rather than being replaced with the youngest one;
 
-        impute   : undefined,       // function or name of method that should be called, f(obj), to impute the value if missing;
+        impute   : undefined,       // a function or method name that should be called to impute the value if missing (f(obj) or obj.f());
                                     // only called for non-repeated properties, when `default` is undefined and there are no inherited values;
-                                    // the function must be *synchronous* and cannot return a Promise; if the property value is present in DB, no imputation is done (!),
-                                    // unlike with a getter method (getter=true) which overshadows all in-DB values simply because the getter uses the same JS attribute name
+                                    // the function must be synchronous; if the property has value in DB, no imputation is done, unlike with
+                                    // a getter method (getter=true) which overshadows all in-DB values simply because the getter occupies the same JS attribute
 
         getter   : undefined,       // if true, the value of the object's corresponding property is imputed from the same-named getter method of the object;
                                     // similar to impute=true, but does not require explicit function designation, and the function is implemented as a getter which can be more intuitive;
