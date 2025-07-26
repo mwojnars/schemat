@@ -840,6 +840,7 @@
     "@": 1
 - id: 22
   name: AggregationOperator
+  class: schemat/db/operator.js:AggregationOperator
   __prototype:
     "@": 16
   __category:
