@@ -261,12 +261,12 @@ export class AggregationOperator extends Operator {
         /* Generate a JS object that will be stringified through JSON and stored as `value` in this sequence's record.
            If undefined is returned, the record will consist of a key only.
          */
-        let entries = this._sum_fields.map(field => {
+        let values = this._sum_fields.map(field => {
             let v = obj[field]
             let t = typeof v
             return (t === 'number' || t === 'bigint') ? v : 0       // every non-numeric or missing value is replaced with zero
         })
-        return [1, ...entries]  // TODO: let generate_value() return array not object
+        return [1, ...values]       // TODO: let generate_value() return array not object
     }
 }
 
