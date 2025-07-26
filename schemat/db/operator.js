@@ -1,7 +1,6 @@
 import {is_plural, drop_plural} from "../common/globals.js";
 import {assert, print, T} from "../common/utils.js";
 import {BinaryMap, compare_bin} from "../common/binary.js"
-import {Catalog} from "../common/catalog.js";
 import {WebObject} from "../core/object.js";
 import {data_schema, RecordSchema} from "./records.js";
 import {OP} from "./block.js";
@@ -15,10 +14,21 @@ export class Operator extends WebObject {
        The same operator can be applied to multiple rings, producing different physical sequences in each ring.
      */
 
+    fields  // {field: type}, names and value Types of fields in output records, key & value part combined;
+            // if .field_xxx(obj) method is present in this operator's class, it is used to generate values of `xxx` field;
+            // otherwise, the field is extracted directly from object when generating a record: value=obj.field
+
+    key     // names of fields that comprise the key part of record
+    value   // names of fields that comprise the value part of record
+
     // key     // specification of the key: list of field names with optional type and/or generation function;
     //         // if generation functions are given, the names do NOT have to map 1:1 to source object's properties
+    //         // ??? generation functions must be given as import paths, otherwise they could not be serialized (!)
+    //         //     maybe the function path may map to operator's class method, not object's? this would imply that
+    //         //     custom [operator].__class is set up, so the operator can provide custom .field_xxx(obj) methods
+    //         // types are needed for .binary_encode/decode() ONLY, so some of their options can be removed
 
-    key_fields
+    key_fields      // TODO: impute `key_fields` in new() and save explicitly to DB
     val_fields
     file_tag
 
@@ -59,6 +69,10 @@ export class DerivedOperator extends Operator {
     category        // category of objects allowed in this index (optional), also used for field type inference if `key_names` is given instead of `key_fields`
     key_names       // array of names of object properties to be included in the (compound) key of this index; plural names (xyz$) and deep paths (x.y.z) allowed
 
+    get extractors() {
+        /* Plain object that maps field names to functions, f(obj), extracting/generating value of this field from `obj`. */
+    }
+
     __new__() {
         if (Array.isArray(this.key_fields)) {
             this.key_names = this.key_fields
@@ -78,7 +92,9 @@ export class DerivedOperator extends Operator {
             if (!type) throw new Error(`unknown field in 'key': ${field}`)
             entries.push([field, type])
         }
-        return new Catalog(entries)
+        let key_fields = new Map(entries)
+        // this._print(`key_fields:`, JSONx.stringify(key_fields))
+        return key_fields
     }
 
     derive_ops(key, prev, next) {
@@ -214,9 +230,9 @@ export class IndexOperator extends DerivedOperator {
 
 /**********************************************************************************************************************/
 
-export class AggregationOperator extends DerivedOperator {
+export class AggregationOperator extends DerivedOperator {      // SumOperator
     /* A derived operator that generates "inc"/"dec" ops from source records instead of "put"/"del" as in index operator,
-       effectively building counts and sums across groups of source records sharing the same key in the destination.
+       effectively building counts and sums (aggregations) across groups of source records sharing the same key in the destination.
        After count & sum are calculated, it is possible to calculate an average outside the sequence.
        It is *not* possible to calculate min/max per group: these operations require an index, not aggregation.
 
@@ -240,14 +256,14 @@ export class AggregationOperator extends DerivedOperator {
        The object returned by scan() has the shape: {...key_fields, count, sum_f1, sum_f2, ..., avg_f1, avg_f2, ...}
      */
 
-    // key_fields
     // val_fields       // ['__count', f1, f2, ...]
+                        // decimals passed in the field's type: type.options.decimal_precision ??
 
-    val_decimals        // {val_field -> scale}; no. of decimal digits after comma that should be maintained for a given field
-                        // when calculating the sum; can be positive (places after comma), zero, negative (zeros before comma),
-                        // or null/undefined; if decimals[f] is null/undefined, the sum uses floating-point arithmetic on Number;
-                        // otherwise, it uses integer arithmetic on Number, switching automatically to BigInt when
-                        // the absolute value (shifted left/right by `decimals`) gets large;
+    // val_decimals        // {val_field: precision}; no. of decimal digits after comma that should be maintained for a given field
+    //                     // when calculating the sum; can be positive (places after comma), zero, negative (zeros before comma),
+    //                     // or null/undefined; if decimals[f] is null/undefined, the sum uses floating-point arithmetic on Number;
+    //                     // otherwise, it uses integer arithmetic on Number, switching automatically to BigInt when
+    //                     // the absolute value (shifted left/right by `decimals`) gets large;
 
     get _sum_fields() { return [...this.val_decimals?.keys() || []] }
 

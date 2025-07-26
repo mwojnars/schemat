@@ -348,7 +348,7 @@ export class Block extends Agent {
 
     async '$agent.background'(seq) {
         /* */
-        this._print(`background job...`)
+        // this._print(`background job...`)
         let {monitors} = this.$state
         if (!monitors) return
 
