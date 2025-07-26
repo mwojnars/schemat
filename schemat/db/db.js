@@ -445,8 +445,8 @@ export class Database extends WebObject {
         if (this.top_ring.operators.has(name)) throw new Error(`'${name}' is already used as an operator name`)
 
         // create operator for the derived sequence
-        let ObjectIndexOperator = this.__std.ObjectIndexOperator
-        let operator = await ObjectIndexOperator.new({name, key_fields, val_fields, category}).save({ring})
+        let IndexOperator = schemat.std.IndexOperator
+        let operator = await IndexOperator.new({name, key_fields, val_fields, category}).save({ring})
 
         // create sequences that will apply `operator` to the "main" sequence, in `ring` and all higher rings
         let pos = this.rings.indexOf(ring)

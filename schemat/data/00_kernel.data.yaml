@@ -263,7 +263,7 @@
       "@": 12
     IndexOperator:
       "@": 15
-    ObjectIndexOperator:
+    DerivedOperator:
       "@": 16
     Sequence:
       "@": 13
@@ -509,9 +509,6 @@
         "@": 2
       "@": schemat/types/type.js:REF
     "@": schemat:Catalog
-  std:
-    ObjectIndexOperator:
-      "@": 16
   class: schemat/db/db.js:Database
   __category:
     "@": 1
@@ -672,11 +669,11 @@
   name: IndexOperator
   info: Base category for indexes over the data sequence.
   __prototype:
-    "@": 24
+    "@": 16
   __category:
     "@": 1
 - id: 16
-  name: ObjectIndexOperator
+  name: DerivedOperator
   info: An index that receives record updates from the main data sequence, so
     input records represent objects.
   schema:
@@ -692,9 +689,9 @@
         "@": schemat/types/type.js:STRING
       "@": schemat/types/type.js:ARRAY
     "@": schemat:Catalog
-  class: schemat/db/operator.js:ObjectIndexOperator
+  class: schemat/db/operator.js:DerivedOperator
   __prototype:
-    "@": 15
+    "@": 24
   __category:
     "@": 1
 - id: 17
@@ -848,7 +845,7 @@
     - __cid$
     - id
   __category:
-    "@": 16
+    "@": 15
 - id: 24
   name: Operator
   schema:
