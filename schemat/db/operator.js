@@ -140,8 +140,9 @@ export class DerivedOperator extends Operator {
         if (!this.accept(obj)) return undefined
 
         let schema = this.record_schema
-        let value = this.generate_value(obj)            // TODO: here, `value` should already be a vector, not object
-        let val_encoded = schema.encode_value(value)    // json
+        // let value = this.generate_value(obj)            // TODO: here, `value` should already be a vector, not object
+        // let val_encoded = schema.encode_value(value)    // json
+        let val_encoded = schema.encode_value(obj)
 
         for (let key of this.generate_keys(obj)) {
             let key_binary = schema.encode_key(key)
