@@ -268,20 +268,15 @@ export class AggregationOperator extends Operator {
     }
 
     generate_value(obj) {
-        /* Generate a JS object that will be stringified through JSON and stored as `value` in this sequence's record.
-           If undefined is returned, the record will consist of a key only.
+        /* Extract from source `obj` a vector of components to be added to destination-sequence aggregations; the first
+           element is always 1 for the overall __count. The vector is JSONx-stringified, with surrounding brackets stripped.
          */
         let values = this._sum_fields.map(field => {
             let v = obj[field]
             let t = typeof v
             return (t === 'number' || t === 'bigint') ? v : 0       // every non-numeric or missing value is replaced with zero
         })
-        return [1, ...values]
+        let vector = [1, ...values]
+        return JSONx.stringify(vector).slice(1, -1)
     }
 }
-
-// export class COUNT_Operator extends AggregationOperator {}
-// export class SUM_Operator extends AggregationOperator {}
-// export class AVG_Operator extends AggregationOperator {}
-
-
