@@ -219,35 +219,26 @@ export class ObjectIndexOperator extends IndexOperator {
 /**********************************************************************************************************************/
 
 export class AggregationOperator extends Operator {
-    /* A derived operator that generates "inc"/"dec" ops from source records instead of "put"/"del" as in index operator.
+    /* A derived operator that generates "inc"/"dec" ops from source records instead of "put"/"del" as in index operator,
+       effectively building counts and sums across groups of source records sharing the same key in the destination.
+       After count & sum are calculated, it is possible to calculate average outside the sequence.
+       It is *not* possible to calculate min/max per group, these operations require an index, not aggregation.
+
        Aggregation's schema is composed of key and value fields, like in indexes, but contrary to indexes:
        - the key does not contain a back-reference to the source object, because typically we want to sum over multiple objects;
-       - all value fields must be numeric, so that sum += x incrementation makes sense;
-       - there is an implicit `__count` field always prepended to value fields that is incremented/decremented by 1;
+       - all value fields must be numeric, so that incrementation (sum += x) makes sense;
+       - there is an implicit `__count` field prepended to value fields that is incremented/decremented by 1;
          when no explicit value fields are specified, the aggregation only computes the count; otherwise, it also computes
-         sums over explicit fields, which allows retrieval of these sums or averages at the end, when accessing the record;
-         only the explicit field names need to be given in new().
+         sums over explicit fields, which allows retrieval of these sums or averages at the end when accessing the record;
+         only the explicit field names are passed to .new().
 
        Use:   AggregationOperator.new({name}, ['f1', 'f2'])
         or:   AggregationOperator.new({name}, {'f1': 3, 'f2': null}) -- syntax with "decimals after comma"
 
-       If no "decimals" are given, 0 is assumed (summing up to an integer of arbitrary size); null means floating-point.
+       If no "decimals" are given, 0 is assumed (the sum is an integer); null means floating-point.
+       Aggregation's monitor working at source block performs pre-aggregation and only sends compacted +/- "inc" records. (TODO)
 
        The object returned by scan() has the shape: {...key_fields, count, sum_f1, sum_f2, ..., avg_f1, avg_f2, ...}
-     */
-    /* An operator that maps continuous subgroups of source records onto single records in output sequence, doing aggregation
-       of the original group along the way. The group is defined as a range of records that share the same key on all fields
-       *except* the last one. In other words, merging and aggregation is always done over the last field of the key,
-       and the output key is made by removing the last field from the source key.
-
-       Aggregation function(s) must be additive (reversible): it must allow adding/removing individual source records from the group,
-       and incrementally updating the output, *without* evaluating the entire group. In general, only two functions
-       satisfy this requirement: COUNT and SUM; and AVG which calculates SUM & COUNT combined to divide them afterward.
-       Note that MIN/MAX over records are *not* additive (not aggregations) and should be calculated from original sorted index.
-       Alternatively, we'd have to guarantee that the source sequence is append-only (no updates/deletes), and in such case,
-       min/max operations could be done via aggregation.
-
-       Aggregation's monitor working at source block performs pre-aggregation and only sends compacted +/- "inc" records.
      */
 
     // key_fields
