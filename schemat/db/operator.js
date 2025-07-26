@@ -22,6 +22,11 @@ export class Operator extends WebObject {
         /* RecordSchema that defines the schema (composite key + payload) of output records produced by this operator. */
         return new RecordSchema(this.key_fields, this.val_fields)
     }
+
+    encode_key(key) {
+        /* Convert an array of key-field values to a binary key (Uint8Array). */
+        return this.record_schema.encode_key(key)
+    }
 }
 
 /**********************************************************************************************************************/
@@ -136,14 +141,10 @@ export class DerivedOperator extends Operator {
            - 2+: if some of the fields in the key contain repeated values.
          */
         if (!this.accept(obj)) return undefined
-
-        let schema = this.record_schema
         let val = this.generate_value(obj)
 
-        for (let key of this.generate_keys(obj)) {
-            let key_binary = schema.encode_key(key)
-            yield [key_binary, val]
-        }
+        for (let key of this.generate_keys(obj))
+            yield [key, val]
     }
 
     accept(obj) {
@@ -175,7 +176,7 @@ export class DerivedOperator extends Operator {
 
         // iterate over the first field's values to produce all key combinations
         for (let head of field_values[0])
-            yield [head, ...tail]
+            yield this.encode_key([head, ...tail])
     }
 }
 
