@@ -19,35 +19,34 @@ export class Recurrent {
         this.schedule()
     }
 
-    schedule() {
-        /* Schedule the next tick() at the interval. */
-        if (this.timeout) clearTimeout(this.timeout)
-
-        let delay = this.interval
+    schedule(delay = this.interval) {
+        /* Schedule the next run() after `delay` seconds. */
         if (!delay || delay < 0) delay = 1.0
         if (this.randomize) delay = fluctuate(delay, this.randomize)
 
         this.timeout = setTimeout(async () => {
-            try {
-                await this.tick()
+            try { await this.run() }
+            catch (ex) {
+                schemat._print_error(`error executing recurrent task ${this.name || this.fn}:`, ex)
+                this.schedule()
             }
-            catch (ex) { schemat._print_error(`error executing recurrent task ${this.name || this.fn}:`, ex) }
-            finally { this.schedule() }
         }, delay * 1000).unref()
     }
 
-    async tick() {
+    async run() {
         /* Execute this.fn() and update the interval. */
-        this.timeout = null
+        if (this.timeout) this._clear()
         let interval = await this.fn()
         this.interval = interval ?? this.interval
+        this.schedule()
     }
 
     stop() {
         /* Stop the recurrent task. */
-        if (this.timeout) clearTimeout(this.timeout)
-        this.timeout = null
+        if (this.timeout) this._clear()
     }
+
+    _clear() { clearTimeout(this.timeout); this.timeout = null }
 }
 
 /**********************************************************************************************************************/
