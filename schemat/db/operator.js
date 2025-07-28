@@ -25,7 +25,7 @@ export class Operator extends WebObject {
     //         //     custom [operator].__class is set up, so the operator can provide custom .field_xxx(obj) methods
     //         // types are needed for .binary_encode/decode() ONLY, so some of their options can be removed
 
-    key_fields      // TODO: impute `key_fields` in new() and save explicitly to DB
+    key_fields
     val_fields
     file_tag
 
@@ -68,6 +68,7 @@ export class DerivedOperator extends Operator {
 
     category        // category of objects allowed in this index (optional), also used for field type inference if `key_names` is given instead of `key_fields`
     key_names       // array of names of object properties to be included in the (compound) key of this index; plural names (xyz$) and deep paths (x.y.z) allowed
+                    // TODO: remove `key_names` from schema, only use `key_fields`
 
     // get extractors() {
     //     /* Mapping of field names to functions, f(obj), that extract/generate value of this field from `obj`. */
@@ -78,10 +79,11 @@ export class DerivedOperator extends Operator {
             this.key_names = this.key_fields
             delete this.key_fields
         }
+        this.key_fields ??= this.impute_key_fields()
     }
 
     impute_key_fields() {
-        /* A catalog of {field: type} pairs generated from `key_names` array of field names. */
+        /* Create a Map of {field: type} from an array of field names, `key_names`, combined with types from category.schema. */
         let schema = this.category?.schema || schemat.root_category['defaults.schema']
         // print('schema:', schema)
 
