@@ -42,9 +42,9 @@ export class Type extends Struct {
 
         blank    : undefined,       // "empty" value that should be treated similar as null and rejected when required=true, like sometimes '' for strings or [] for arrays
         required : undefined,       // if true, the field described by this type must be present and contain a not-null and non-blank value
-        repeated : undefined,       // if true, the field described by this type can have multiple occurrences, typically inside a CATALOG/RECORD/SCHEMA
-                                    // - all the values (incl. inherited ones) can be retrieved via .field$ then; note that setting repeated=true has performance impact,
-                                    // as the inheritance chain must be inspected every time, even when an occurrence was already found in the child object
+        repeated : undefined,       // if true, the field described by this type can have multiple occurrences, typically inside a CATALOG/RECORD/SCHEMA, and
+                                    // all values (incl. inherited ones) can be retrieved via .field$; note that setting repeated=true has performance impact,
+                                    // because inheritance chain must be inspected every time, even when an occurrence was already found in the child object
 
         inherited: true,            // if false, inheritance is disabled for this field (applied to certain system fields)
         merged   : undefined,       // if true, and repeated=false, inherited values of this type get merged (merge_inherited()) rather than being replaced with the youngest one;
