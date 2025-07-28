@@ -14,12 +14,9 @@ export class Operator extends WebObject {
        The same operator can be applied to multiple rings, producing different physical sequences in each ring.
      */
 
-    fields  // {field: type}, names and value Types of fields in output records, key & value part combined;
-            // if .field_xxx(obj) method is present in this operator's class, it is used to generate values of `xxx` field;
-            // otherwise, the field is extracted directly from object when generating a record: value=obj.field
-
-    key     // names of fields that comprise the key part of record
-    value   // names of fields that comprise the value part of record
+    fields      // {field: type}, names and Types of fields in output records, key & value part combined
+    key         // names of fields that comprise the key part of record
+    value       // names of fields that comprise the value part of record
 
     // key     // specification of the key: list of field names with optional type and/or generation function;
     //         // if generation functions are given, the names do NOT have to map 1:1 to source object's properties
@@ -46,7 +43,7 @@ export class Operator extends WebObject {
 /**********************************************************************************************************************/
 
 export class DataOperator extends Operator {
-    /* Special type of Operator that has no source and represents the main data sequence, so it is basically a schema holder. */
+    /* Operator that represents schema of the main data sequence. */
 
     get record_schema() { return data_schema }
 }
@@ -55,7 +52,7 @@ export class DataOperator extends Operator {
 
 export class DerivedOperator extends Operator {
     /* Operator that maps objects from one sequence (source) to records of another (destination). Source objects
-       can be either web objects (deaf), or pseudo-objects restored from the binary record representation.
+       can be either web objects (deaf), or pseudo-objects recreated from binary record representation.
 
        Output records are created as [key,val] pairs, where `key` is a binary vector (Uint8Array), and optional `val`
        is a JSONx string; later, such pairs are converted to low-level OP instructions (ops) for the destination sequence.
@@ -64,14 +61,17 @@ export class DerivedOperator extends Operator {
        according to the operator's schema declaration (`record_schema`), and assembling them into vectors (arrays),
        which are then converted to binary or JSON strings via the schema. Multiple records can be generated from
        a single object when a plural field (obj.xxx$) with multiple values is used in the key.
+
+       If .field_xxx(obj) method is present in this operator's class, it is used to generate values of `xxx` field;
+       otherwise, the field is extracted directly from object when generating a record (value=obj.field).
      */
 
     category        // category of objects allowed in this index (optional), also used for field type inference if `key_names` is given instead of `key_fields`
     key_names       // array of names of object properties to be included in the (compound) key of this index; plural names (xyz$) and deep paths (x.y.z) allowed
 
-    get extractors() {
-        /* Plain object that maps field names to functions, f(obj), extracting/generating value of this field from `obj`. */
-    }
+    // get extractors() {
+    //     /* Mapping of field names to functions, f(obj), that extract/generate value of this field from `obj`. */
+    // }
 
     __new__() {
         if (Array.isArray(this.key_fields)) {
