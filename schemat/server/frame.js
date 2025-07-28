@@ -317,7 +317,7 @@ export class Frame {
         return agent.$frame === this ? call() : agent.__frame.run(this, call)
     }
 
-    _tracked(promise) {
+    async _tracked(promise) {
         /* Track the running call represented by `promise` by saving it in this.calls and removing upon its completion. */
         if (!(promise instanceof Promise)) return promise
 
