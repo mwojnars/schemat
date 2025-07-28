@@ -20,7 +20,8 @@ export class Recurrent {
     }
 
     schedule(delay = this.interval) {
-        /* Schedule the next run() after `delay` seconds. */
+        /* Schedule (reschedule) the next run() after `delay` seconds. */
+        if (this.timeout) this._clear()
         if (!delay || delay < 0) delay = 1.0
         if (this.randomize) delay = fluctuate(delay, this.randomize)
 
