@@ -213,7 +213,7 @@ export class YamlDataStore extends MemoryStore {
 
         for (let record of records) {
             let id = T.pop(record, 'id')
-            let key = data_schema.encode_key([id])
+            let key = data_schema.encode_id(id)
 
             // ring.assert_valid_id(id, `item ID loaded from ${this.filename} is outside the valid bounds for this ring`)
             // await this.block.assert_unique(key, id, `duplicate item ID loaded from ${this.filename}`)
@@ -231,7 +231,7 @@ export class YamlDataStore extends MemoryStore {
          */
         let max = 0
         for (let key of this._records.keys()) {
-            let id = data_schema.decode_key(key)[0]
+            let id = data_schema.decode_id(key)
             if (max < id) max = id
         }
         return max
@@ -241,7 +241,7 @@ export class YamlDataStore extends MemoryStore {
         /* Save the entire database (this.records) to a file. */
         schemat._print(`YamlDataStore flushing ${this._records.size} items to ${this.filename}...`)
         let recs = [...this.scan()].map(([key, data_json]) => {
-            let id = data_schema.decode_key(key)[0]
+            let id = data_schema.decode_id(key)
             let data = JSON.parse(data_json)
             assert(data.id === undefined)       // there must be no `id` included as a plain attribute
             return T.isPOJO(data) ? {id, ...data} : {id, __data: data}
