@@ -77,9 +77,9 @@ export class DerivedOperator extends Operator {
     __new__() {
         if (Array.isArray(this.key_fields)) {
             this.key_names = this.key_fields
-            delete this.key_fields
+            this.key_fields = this.impute_key_fields()
         }
-        this.key_fields ??= this.impute_key_fields()
+        // this._print(`DerivedOperator.__new__(): key_names=${this.key_names} key_fields=${this.key_fields}`)
     }
 
     impute_key_fields() {
