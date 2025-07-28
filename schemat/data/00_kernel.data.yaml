@@ -854,6 +854,13 @@
   key_names:
     - __cid$
     - id
+  key_fields:
+    __cid:
+      repeated: true
+      "@": schemat/types/type.js:ID
+    id:
+      "@": schemat/types/type.js:ID
+    "@": :Map
   __category:
     "@": 15
 - id: 24
