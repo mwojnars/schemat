@@ -107,12 +107,11 @@ export class Frame {
     agent               // web object that created this frame, replaced with a new reference on every refresh
     role                // name of the role this agent is running in
     state               // state object returned by agent.__start__()
-
     calls = []          // promises for currently executing (concurrent) calls on this agent
-    exclusive           // if true in a given moment, any new call to this agent will wait until existing calls terminate; configured by lock() on per-call basis
 
     starting            // a Promise that gets resolved when .state is assigned after the agent's __start__() is finished; false after that
     paused              // after the agent was paused with $agent.pause(), `paused` contains a Promise that will be resolved by $agent.resume()
+    locked              // set by lock() to inform incoming calls that the current call executes in exclusive lock, and they must wait until its completion
     stopping            // if true, the agent is stopping now and no more requests/calls should be accepted
     stopped             // if true, the agent is permanently stopped and should not be restarted even after node restart unless explicitly requested by its creator/supervisor [UNUSED]
     migrating_to        // node ID where this agent is migrating to right now; all new requests are forwarded to that node
@@ -272,7 +271,7 @@ export class Frame {
         if (this.starting) await this.starting
 
         // wait for running call(s) to complete if in exclusive mode
-        while ((this.exclusive || !agent.concurrent_calls) && this.calls.length > 0)
+        while ((this.locked || !agent.concurrent_calls) && this.calls.length > 0)
             // print(`... ${agent}.${method}() waits for a previous call(s) to complete`)
             await Promise.all(this.calls)
 
@@ -343,13 +342,13 @@ export class Frame {
            Note that lock() must NOT be preceded by any asynchronous instruction (await), nor be used in recursive RPC methods,
            as both these cases will cause a deadlock. Ideally, lock() should be the first instruction in the method body.
          */
-        if (this.exclusive) throw new Error(`another call is already executing in exclusive lock`)
+        if (this.locked) throw new Error(`another call is already executing in exclusive lock`)
 
-        this.exclusive = true
+        this.locked = true
         while (this.calls.length > 0)
             await Promise.all(this.calls)
 
-        let unlock = () => {this.exclusive = false}
+        let unlock = () => {this.locked = false}
         if (!fn) return unlock
 
         try { return await fn() }
