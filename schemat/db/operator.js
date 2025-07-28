@@ -15,7 +15,7 @@ export class Operator extends WebObject {
      */
 
     fields      // {field: type}, names and Types of fields in output records, key & value part combined
-    key         // names of fields that comprise the key part of record
+    key         // names of fields that comprise the key part of record; plural form (xxx$) allowed for the first field
     value       // names of fields that comprise the value part of record
 
     // key     // specification of the key: list of field names with optional type and/or generation function;
@@ -66,7 +66,7 @@ export class DerivedOperator extends Operator {
        otherwise, the field is extracted directly from object when generating a record (value=obj.field).
      */
 
-    category        // category of objects allowed in this index (optional), also used for field type inference if `key_names` is given instead of `key_fields`
+    category        // category of objects allowed in this index (optional), also used for field type inference if names only are provided
     key_names       // array of names of object properties to be included in the (compound) key of this index; plural names (xyz$) and deep paths (x.y.z) allowed
                     // TODO: remove `key_names` from schema, only use `key_fields`
 

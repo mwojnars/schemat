@@ -851,9 +851,6 @@
   name: idx-category
   info: "Index of all objects by their category: the key is [category ID, item
     ID], no payload."
-  key_names:
-    - __cid$
-    - id
   key_fields:
     __cid:
       repeated: true
