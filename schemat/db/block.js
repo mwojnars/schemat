@@ -186,6 +186,7 @@ export class Block extends Agent {
                     // should not be modified later on; the upper part of the path may vary between nodes
 
     get ring()      { return this.sequence.ring }
+    get operator()  { return this.sequence.operator }
     get schema()    { return this.sequence.operator.record_schema }
 
     async __setup__() {
@@ -222,10 +223,10 @@ export class Block extends Agent {
         //                                 // it's assumed that `sequence` WILL get fully loaded before any CRUD operation (ins/upd/del) starts
     }
 
-    encode_key(key) { return this.schema.encode_key(key) }
-    decode_key(bin) { return this.schema.decode_key(bin) }
+    encode_key(key) { return this.operator.encode_key(key) }
+    decode_key(bin) { return this.operator.decode_key(bin) }
 
-    decode_object(key, val) { return this.schema.decode_object(key, val) }
+    decode_object(key, val) { return this.operator.decode_object(key, val) }
 
     async __start__({role}) {
         let stores = await Promise.all(this.storage$.map(s => this._create_store(s)))

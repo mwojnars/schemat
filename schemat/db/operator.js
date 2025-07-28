@@ -38,6 +38,8 @@ export class Operator extends WebObject {
         /* Convert an array of key-field values to a binary key (Uint8Array). */
         return this.record_schema.encode_key(key)
     }
+    decode_key(bin) { return this.record_schema.decode_key(bin) }
+    decode_object(key, val) { return this.record_schema.decode_object(key, val) }
 }
 
 /**********************************************************************************************************************/

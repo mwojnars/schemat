@@ -243,7 +243,7 @@ export class Ring extends WebObject {
         await Promise.all(derived.map(seq => seq.action.erase()))
 
         for await (let {id, data} of this.main_sequence.scan_objects()) {
-            let key = data_schema.encode_key([id])
+            let key = data_schema.encode_id(id)
             let obj = await WebObject.inactive(id, data)
             await Promise.all(derived.map(seq => seq.capture_change(key, null, obj)))
         }
@@ -400,14 +400,12 @@ export class Database extends WebObject {
         let operator = this.top_ring.operators.get(name)
         if (!operator) throw new Error(`unknown derived sequence '${name}'`)
 
-        let schema = operator.record_schema
-        let compare = ([key1], [key2]) => compare_bin(key1, key2)
-
         // convert `start` and `stop` to binary keys (Uint8Array)
         if (start !== undefined) start = operator.encode_key(start)
         if (stop !== undefined) stop = operator.encode_key(stop)
         opts = {...opts, start, stop}
 
+        let compare = ([key1], [key2]) => compare_bin(key1, key2)
         let streams = this.rings.map(r => r.scan_binary(operator, opts))
         let merged = merge(compare, ...streams)
         let {limit} = opts
@@ -421,7 +419,7 @@ export class Database extends WebObject {
         let count = 0
         for await (let [key, val] of merged)
             if (limit != null && ++count > limit) break
-            else yield schema.decode_object(key, val)
+            else yield operator.decode_object(key, val)
 
         // TODO: apply `batch_size` to the merged stream and yield in batches
     }
