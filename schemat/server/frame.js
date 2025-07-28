@@ -270,13 +270,14 @@ export class Frame {
         // wait for the agent to start
         if (this.starting) await this.starting
 
-        // wait for running call(s) to complete if in exclusive mode
-        while ((this.locked || !agent.concurrent_calls) && this.calls.length > 0)
-            // print(`... ${agent}.${method}() waits for a previous call(s) to complete`)
-            await Promise.all(this.calls)
-
-        // handle paused/stopping state
-        if (this.paused && command !== 'resume') await this.paused
+        while (true) {
+            if ((this.locked || !agent.concurrent_calls) && this.calls.length > 0)
+                // print(`... ${agent}.${method}() waits for a previous call(s) to complete`)
+                await Promise.all(this.calls)                   // wait for ongoing call(s) to complete if in exclusive mode
+            else if (this.paused && command !== 'resume')
+                await this.paused                               // wait if explicitly paused
+            else break
+        }
         if (this.stopping) throw new StoppingNow(`agent ${tag} is in the process of stopping`)
 
         agent = this.agent
