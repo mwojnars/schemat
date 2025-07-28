@@ -48,6 +48,9 @@ export class DataOperator extends Operator {
     /* Operator that represents schema of the main data sequence. */
 
     get record_schema() { return data_schema }
+
+    encode_id(id)  { return data_schema.encode_id(id) }
+    decode_id(key) { return data_schema.decode_id(key) }
 }
 
 /**********************************************************************************************************************/

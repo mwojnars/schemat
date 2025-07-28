@@ -2,9 +2,10 @@ import {assert, print, T} from "../common/utils.js";
 import {JSONx} from "../common/jsonx.js";
 import {Catalog} from "../common/catalog.js";
 import {compare_bin, zero_binary} from "../common/binary.js";
-import {data_schema} from "./records.js";
+// import {data_schema} from "./records.js";
 import {WebObject} from "../core/object.js";
 import {BootDataBlock} from "./block.js";
+import {DataOperator} from "./operator.js";
 
 
 /**********************************************************************************************************************
@@ -251,6 +252,7 @@ export class DataSequence extends Sequence {
     get filled() { return true }
 
     async __draft__(boot_file) {
+        this.operator = await DataOperator.draft()
         this.blocks = [await BootDataBlock.draft({sequence: this}, boot_file)]
     }
 
@@ -259,8 +261,8 @@ export class DataSequence extends Sequence {
         this.blocks = [DataBlock.new({sequence: this, storage: 'yaml'})]
     }
 
-    encode_id(id)  { return data_schema.encode_id(id) }
-    decode_id(key) { return data_schema.decode_id(key) }
+    encode_id(id)  { return this.operator.encode_id(id) }
+    decode_id(key) { return this.operator.decode_id(key) }
 
     find_block_id(id) {
         let key = this.encode_id(id)
