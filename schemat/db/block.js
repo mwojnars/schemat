@@ -70,7 +70,7 @@ export class Monitor {
         assert(dst.is_loaded())
 
         // here, dst.filled=true may arrive with a delay, that's why removing the file, below, must be delayed long after backfill()
-        if (backfill && dst.filled) throw new Error(`sequence ${dst} is already filled, no need to start backfilling`)
+        if (backfill && dst.filled) throw new Error(`sequence ${dst} is already filled, cannot start backfilling`)
         backfill ||= !dst.filled
 
         let path = this._backfill_path
@@ -377,16 +377,12 @@ export class Block extends Agent {
     }
 
     async '$master.restart_backfill'(seq) {
-        seq = await seq.reload()        // pull fresh sequence data
-        assert(!seq.filled)
+        return this.$frame.lock(async () => {
+            seq = await seq.reload()        // pull fresh sequence data
+            assert(!seq.filled)
+            this.$state.monitors.set(seq, new Monitor(this, seq, true))
+        })
     }
-
-    // _propagate(key, prev = null, next = null) {
-    //     /* Push a change in this block to all derived sequences. */
-    //     assert(this.ring?.is_loaded())
-    //     let ops = this._derive(key, prev, next)
-    //     ops.forEach(op => op.submit())
-    // }
 }
 
 
