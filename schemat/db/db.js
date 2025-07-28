@@ -3,7 +3,6 @@ import {DataAccessError, DatabaseError, ObjectNotFound} from "../common/errors.j
 import {compare_bin} from "../common/binary.js";
 import {Struct} from "../common/catalog.js";
 import {WebObject} from "../core/object.js"
-import {data_schema} from "./records.js";
 import {DataRequest} from "./data_request.js";
 import {DataSequence} from "./sequence.js";
 import {DataBlock} from "./block.js";
@@ -243,7 +242,7 @@ export class Ring extends WebObject {
         await Promise.all(derived.map(seq => seq.action.erase()))
 
         for await (let {id, data} of this.main_sequence.scan_objects()) {
-            let key = data_schema.encode_id(id)
+            let key = this.main_sequence.encode_id(id)
             let obj = await WebObject.inactive(id, data)
             await Promise.all(derived.map(seq => seq.capture_change(key, null, obj)))
         }
