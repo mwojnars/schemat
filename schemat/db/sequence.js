@@ -164,10 +164,13 @@ export class Sequence extends WebObject {
     }
 
     async 'action.rebuild'(source) {
-        /* Erase this sequence and build again from `source`. */
+        /* Erase this sequence and build again from `source`. For development use only. */
+        assert(this.filled)
         delete this.filled
+        delete this.filled_ranges
         await Promise.all(this.blocks.map(b => b.$agent.erase()))
-        return this.build(source)
+        source.blocks.map(block => block.$master.restart_monitor(this))     // let monitors know that they should pick up new
+        // return this.build(source)
     }
 
     'edit.commit_backfill'(left, right) {
