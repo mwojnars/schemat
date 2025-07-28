@@ -344,11 +344,12 @@ export class Frame {
            Note that lock() must NOT be preceded by any asynchronous instruction (await), nor be used in recursive RPC methods,
            as both these cases will cause a deadlock. Ideally, lock() should be the first instruction in the method body.
          */
-        // if (this.locked) throw new Error(`another call is already executing in exclusive lock`)
-        assert(!this.locked)
-        assert(!this.calls.length)
+        if (this.locked) throw new Error(`another call is already executing in exclusive lock`)
 
-        this.locked = true
+        this.locked = true                      // make incoming calls await in exec()
+        while (this.calls.length > 1)           // wait for ongoing concurrent calls to terminate
+            await Promise.all(this.calls)
+
         let unlock = () => {this.locked = false}
         if (!fn) return unlock
 
