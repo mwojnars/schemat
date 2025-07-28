@@ -92,6 +92,10 @@ export class DerivedOperator extends Operator {
             field = drop_plural(field)
             let type = schema.get(field)
             if (!type) throw new Error(`unknown field in 'key': ${field}`)
+
+            type = type.clone()
+            type.remove_option('info', 'getter')    // some options are irrelevant for record's schema
+
             entries.push([field, type])
         }
         let key_fields = new Map(entries)
