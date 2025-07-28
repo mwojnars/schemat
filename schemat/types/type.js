@@ -108,6 +108,12 @@ export class Type extends Struct {
         this.options = {...this.constructor.default_props(), ...this._options}
     }
 
+    remove_option(...names) {
+        /* Remove an own option(s) and revert its value to default. */
+        for (let name of names) delete this._options[name]
+        this._init_options()
+    }
+
     instanceof(typeClass) {
         /* Check if this type is an instance of a particular `typeClass`, OR is a TypeWrapper
            around a `typeClass` (implemented in TypeWrapper.instanceof()). */
