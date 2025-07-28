@@ -377,11 +377,11 @@ export class Block extends Agent {
     }
 
     async '$master.restart_backfill'(seq) {
-        return this.$frame.lock(async () => {
+        // return this.$frame.lock(async () => {
             seq = await seq.reload()        // pull fresh sequence data
             assert(!seq.filled)
             this.$state.monitors.set(seq, new Monitor(this, seq, true))
-        })
+        // })
     }
 }
 

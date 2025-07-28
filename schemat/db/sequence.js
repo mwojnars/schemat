@@ -165,7 +165,7 @@ export class Sequence extends WebObject {
 
     async 'action.rebuild_derived'() {
         /* Erase derived sequences and build them from scratch. For development use only. */
-        for (let seq of this.derived) seq.action.rebuild(this)
+        await Promise.all(this.derived.map(seq => seq.action.rebuild(this)))
     }
 
     async 'action.rebuild'(source) {
@@ -178,7 +178,8 @@ export class Sequence extends WebObject {
         await this.save({broadcast: true})
         await sleep(2.0)    // workaround for missing broadcasting functionality
 
-        source.blocks.map(block => block.$master.restart_backfill(this))     // let monitors know that they should pick up new
+        await Promise.all(source.blocks.map(block => block.$master.restart_backfill(this)))
+        await sleep(1)
     }
 
     'edit.commit_backfill'(left, right) {
