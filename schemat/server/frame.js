@@ -312,11 +312,12 @@ export class Frame {
 
     _frame_context(agent, call) {
         /* Run call() on `agent` in the context of this frame (agent.__frame/$frame/$state is set up). */
+        assert(!this.locked, `starting a call when another one is executing in exclusive lock, internal management of this.locked is flawed :(`)
         agent.__frame ??= new AsyncLocalStorage()
         return agent.$frame === this ? call() : agent.__frame.run(this, call)
     }
 
-    async _tracked(promise) {
+    _tracked(promise) {
         /* Track the running call represented by `promise` by saving it in this.calls and removing upon its completion. */
         if (!(promise instanceof Promise)) return promise
 
