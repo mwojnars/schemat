@@ -77,18 +77,18 @@ export class DerivedOperator extends Operator {
     __new__() {
         if (Array.isArray(this.key_fields)) {
             this.key_names = this.key_fields
-            this.key_fields = this.impute_key_fields()
+            this.key_fields = this._infer_key_fields(this.key_names)
         }
         // this._print(`DerivedOperator.__new__(): key_names=${this.key_names} key_fields=${this.key_fields}`)
     }
 
-    impute_key_fields() {
+    _infer_key_fields(key_names) {
         /* Create a Map of {field: type} from an array of field names, `key_names`, combined with types from category.schema. */
         let schema = this.category?.schema || schemat.root_category['defaults.schema']
         // print('schema:', schema)
 
         let entries = []
-        for (let field of this.key_names) {     // find out the type of every field to build a catalog of {field: type} pairs
+        for (let field of key_names) {     // find out the type of every field to build a catalog of {field: type} pairs
             field = drop_plural(field)
             let type = schema.get(field)
             if (!type) throw new Error(`unknown field in 'key': ${field}`)
@@ -98,9 +98,7 @@ export class DerivedOperator extends Operator {
 
             entries.push([field, type])
         }
-        let key_fields = new Map(entries)
-        // this._print(`key_fields:`, JSONx.stringify(key_fields))
-        return key_fields
+        return new Map(entries)
     }
 
     derive_ops(key, prev, next) {
