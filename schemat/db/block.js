@@ -415,8 +415,8 @@ export class DataBlock extends Block {
         return super._detect_store_class(format)
     }
 
-    encode_id(id)  { return this.sequence.encode_id(id) }
-    decode_id(key) { return this.sequence.decode_id(key) }
+    encode_id(id)  { return this.operator.encode_id(id) }
+    decode_id(key) { return this.operator.decode_id(key) }
 
     decode_object(key, json) {
         let id = this.decode_id(key)

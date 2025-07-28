@@ -2,7 +2,6 @@ import {assert, print, T} from "../common/utils.js";
 import {JSONx} from "../common/jsonx.js";
 import {Catalog} from "../common/catalog.js";
 import {compare_bin, zero_binary} from "../common/binary.js";
-// import {data_schema} from "./records.js";
 import {WebObject} from "../core/object.js";
 import {BootDataBlock} from "./block.js";
 import {DataOperator} from "./operator.js";
