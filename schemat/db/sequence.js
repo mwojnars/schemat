@@ -1,4 +1,4 @@
-import {assert, print, T} from "../common/utils.js";
+import {assert, print, sleep, T} from "../common/utils.js";
 import {JSONx} from "../common/jsonx.js";
 import {Catalog} from "../common/catalog.js";
 import {compare_bin, zero_binary} from "../common/binary.js";
@@ -163,16 +163,22 @@ export class Sequence extends WebObject {
         return Promise.all(this.blocks.map(b => b.$agent.erase()))
     }
 
+    async 'action.rebuild_derived'() {
+        /* Erase derived sequences and build them from scratch. For development use only. */
+        for (let seq of this.derived) seq.action.rebuild(this)
+    }
+
     async 'action.rebuild'(source) {
         /* Erase this sequence and build again from `source`. For development use only. */
         assert(this.filled)
         delete this.filled
         delete this.filled_ranges
-        await this.save()
 
         await Promise.all(this.blocks.map(b => b.$agent.erase()))
+        await this.save({broadcast: true})
+        await sleep(2.0)    // workaround for missing broadcasting functionality
+
         source.blocks.map(block => block.$master.restart_backfill(this))     // let monitors know that they should pick up new
-        // return this.build(source)
     }
 
     'edit.commit_backfill'(left, right) {
