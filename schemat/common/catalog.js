@@ -82,6 +82,8 @@ export class Struct {
     child(key) {}       // element that corresponds to the primary structure's `key` element when this Struct is used
                         // as a twin in Struct.collect() .. the "keys" here are different than keys()/entries() below!
 
+    clone() { return Struct.clone(this) }
+
     // *keys() {}
     // *entries() {}
     // get(own_key) {}
