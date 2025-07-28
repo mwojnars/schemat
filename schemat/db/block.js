@@ -376,6 +376,11 @@ export class Block extends Agent {
         monitors.set(seq, monitor = new Monitor(this, seq, true))
     }
 
+    async '$master.restart_backfill'(seq) {
+        seq = await seq.reload()        // pull fresh sequence data
+        assert(!seq.filled)
+    }
+
     // _propagate(key, prev = null, next = null) {
     //     /* Push a change in this block to all derived sequences. */
     //     assert(this.ring?.is_loaded())

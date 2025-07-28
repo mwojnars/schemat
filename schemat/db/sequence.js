@@ -168,8 +168,10 @@ export class Sequence extends WebObject {
         assert(this.filled)
         delete this.filled
         delete this.filled_ranges
+        await this.save()
+
         await Promise.all(this.blocks.map(b => b.$agent.erase()))
-        source.blocks.map(block => block.$master.restart_monitor(this))     // let monitors know that they should pick up new
+        source.blocks.map(block => block.$master.restart_backfill(this))     // let monitors know that they should pick up new
         // return this.build(source)
     }
 
