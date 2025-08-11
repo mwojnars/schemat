@@ -14,7 +14,10 @@ export class Operator extends WebObject {
        The same operator can be applied to multiple rings, producing different physical sequences in each ring.
      */
 
-    fields      // {field: type}, names and Types of fields in output records, key & value part combined
+    fields      // {field: type}, names and Types of fields in output records, key & value part combined;
+                // schema of pseudo-objects represented by this operator's output records;
+                // null/missing fields are allowed, generic schema is assumed then
+
     key         // names of fields that comprise the key part of record; plural form (xxx$) allowed for the first field
     value       // names of fields that comprise the value part (payload) of record
 
@@ -25,8 +28,8 @@ export class Operator extends WebObject {
     //         //     custom [operator].__class is set up, so the operator can provide custom .field_xxx(obj) methods
     //         // types are needed for .binary_encode/decode() ONLY, so some of their options can be removed
 
-    key_fields
-    val_fields
+    key_fields  // map of {names -> Types} of fields comprising the (composite) key of this operator's output records
+    val_fields  // names of fields comprising the payload (value) of this operator's output records
     file_tag
 
     get record_schema() {
@@ -43,7 +46,6 @@ export class Operator extends WebObject {
     decode_object(key, val) {
         let schema = this.record_schema
         return {...schema.decode_key_object(key), ...schema.decode_value(val)}
-        // return this.record_schema.decode_object(key, val)
     }
 }
 
