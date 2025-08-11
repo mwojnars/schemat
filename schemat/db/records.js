@@ -101,10 +101,10 @@ export class RecordSchema {
         return Object.fromEntries(this.val_fields.map((field, i) => [field, vector[i]]))
     }
 
-    decode_object(key, val) {
-        /* Key & value fully decoded, then merged into an object that resembles original web object ("pseudo-object"). */
-        return {...this.decode_key_object(key), ...this.decode_value(val)}
-    }
+    // decode_object(key, val) {
+    //     /* Key & value fully decoded, then merged into an object that resembles original web object ("pseudo-object"). */
+    //     return {...this.decode_key_object(key), ...this.decode_value(val)}
+    // }
 
     // hash(key, val_json) {
     //     /* Hash computed from key & val_json combined; to be used for eviction/update of record cache in Registry ??? */
