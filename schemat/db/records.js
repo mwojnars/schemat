@@ -129,22 +129,22 @@ export class RecordSchema {
 
 /**********************************************************************************************************************/
 
-export class DataSchema extends RecordSchema {
-
-    constructor() {
-        super(new Map([['id', new INTEGER()]]))
-    }
-
-    encode_id(id) {
-        assert(id !== undefined)
-        return this.encode_key([id])
-    }
-
-    decode_id(key) {
-        return this.decode_key(key)[0]
-    }
-}
-
-// schema of the data sequence in every DB ring; value encoding is handled outside schema, through method overloading
-export const data_schema = new DataSchema()
+// export class DataSchema extends RecordSchema {
+//
+//     constructor() {
+//         super(new Map([['id', new INTEGER()]]))
+//     }
+//
+//     encode_id(id) {
+//         assert(id !== undefined)
+//         return this.encode_key([id])
+//     }
+//
+//     decode_id(key) {
+//         return this.decode_key(key)[0]
+//     }
+// }
+//
+// // schema of the data sequence in every DB ring; value encoding is handled outside schema, through method overloading
+// export const data_schema = new DataSchema()
 
