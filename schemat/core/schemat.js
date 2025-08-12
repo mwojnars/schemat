@@ -182,7 +182,6 @@ export class Schemat {
             await builtin.fetch("../db/operator.js")
             await builtin.fetch("../db/sequence.js")
             await builtin.fetch("../db/block.js")
-            await builtin.fetch("../db/records.js")
             await builtin.fetch("../db/data_request.js")
         }
     }
