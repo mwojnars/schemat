@@ -20,16 +20,16 @@ export class Operator extends WebObject {
     key         // names of fields that comprise the key part of record; plural form (xxx$) allowed for the first field
     value       // names of fields that comprise the value part (payload) of record
 
+    key_fields      // map of {names -> Types} of fields comprising the (composite) key of this operator's output records
+    val_fields      // names of fields comprising the payload (value) of this operator's output records
+    file_tag
+
     // key     // specification of the key: list of field names with optional type and/or generation function;
     //         // if generation functions are given, the names do NOT have to map 1:1 to source object's properties
     //         // ??? generation functions must be given as import paths, otherwise they could not be serialized (!)
     //         //     maybe the function path may map to operator's class method, not object's? this would imply that
     //         //     custom [operator].__class is set up, so the operator can provide custom .field_xxx(obj) methods
     //         // types are needed for .binary_encode/decode() ONLY, so some of their options can be removed
-
-    key_fields      // map of {names -> Types} of fields comprising the (composite) key of this operator's output records
-    val_fields      // names of fields comprising the payload (value) of this operator's output records
-    file_tag
 
     // get record_schema() {
     //     /* RecordSchema that defines the schema (composite key + payload) of output records produced by this operator. */
@@ -102,7 +102,7 @@ export class Operator extends WebObject {
 export class DataOperator extends Operator {
     /* Operator that represents schema of the main data sequence. */
 
-    get record_schema() { return data_schema }
+    // get record_schema() { return data_schema }
 
     encode_id(id)  { return data_schema.encode_id(id) }
     decode_id(key) { return data_schema.decode_id(key) }

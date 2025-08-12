@@ -2,9 +2,7 @@
     Low-level representation of objects and index records, for storage and transmission from/to the database.
  */
 
-import {drop_plural} from "../common/globals.js";
 import {assert, print, T} from "../common/utils.js";
-import {JSONx} from "../common/jsonx.js";
 import {BinaryInput, BinaryOutput} from "../common/binary.js";
 import {INTEGER} from "../types/type.js";
 
