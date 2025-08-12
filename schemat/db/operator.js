@@ -10,19 +10,20 @@ import {INTEGER} from "../types/type.js";
 /**********************************************************************************************************************/
 
 export class Operator extends WebObject {
-    /* Specification of a data processing operator: schema of output records + derivation methods.
+    /* Specification of a data processing operator: schema of output objects/records + derivation methods.
        The same operator can be applied to multiple rings, producing different physical sequences in each ring.
      */
 
     fields      // {field: type} schema of pseudo-objects represented by this operator's output records;
                 // null/missing fields are allowed, generic schema is assumed for them;
-                // types are needed for .binary_encode/decode() mainly, so some of their options can be removed
+                // types are mainly needed for .binary_encode/decode(), so some of their options can be removed compared to WebObject's schema
 
     key         // names of fields that comprise the key part of record; plural form (xxx$) allowed for the first field
     value       // names of fields that comprise the value part (payload) of record
 
     key_fields      // map of {names -> Types} of fields comprising the (composite) key of this operator's output records
     val_fields      // names of fields comprising the payload (value) of this operator's output records
+
     file_tag
 
     get key_names() { return [...this.key_fields.keys()] }
@@ -90,8 +91,6 @@ export class Operator extends WebObject {
 
 export class DataOperator extends Operator {
     /* Operator that represents schema of the main data sequence. */
-
-    // get record_schema() { return data_schema }
 
     async __draft__() {
         this.key_fields = new Map([['id', new INTEGER()]])
@@ -297,7 +296,7 @@ export class AggregationOperator extends DerivedOperator {      // SumOperator
        It is *not* possible to calculate min/max per group: these operations require an index, not aggregation.
 
        Aggregation's schema is composed of key and value fields, like in indexes, but contrary to indexes:
-       - the key does not contain a back-reference to the source object, because typically we want to sum over multiple objects;
+       - the key does not contain backreference to the source object, because typically we want to sum over multiple objects;
        - all value fields must be numeric, so that incrementation (sum += x) makes sense;
        - there is an implicit `__count` field prepended to value fields that is incremented/decremented by 1;
          when no explicit value fields are specified, the aggregation only computes the count; otherwise, it also computes
