@@ -31,17 +31,17 @@ export class Operator extends WebObject {
     val_fields      // names of fields comprising the payload (value) of this operator's output records
     file_tag
 
-    get record_schema() {
-        /* RecordSchema that defines the schema (composite key + payload) of output records produced by this operator. */
-        return new RecordSchema(this.key_fields, this.val_fields)
-    }
+    // get record_schema() {
+    //     /* RecordSchema that defines the schema (composite key + payload) of output records produced by this operator. */
+    //     return new RecordSchema(this.key_fields, this.val_fields)
+    // }
 
     get key_names() { return [...this.key_fields.keys()] }
     get key_types() { return [...this.key_fields.values()] }
 
     encode_key(key) {
         /* Convert an array, `key`, of key-field values to a binary key (Uint8Array). The array can be shorter than
-           this.key_fields ("partial key") - this may happen when the key is used for partial match as a lower bound in scan().
+           this.key_fields ("partial key") - this may happen when the key is used for a partial match as a lower/upper bound in scan().
          */
         let types  = this.key_types
         let output = new BinaryOutput()
@@ -56,7 +56,6 @@ export class Operator extends WebObject {
             output.write(bin)
         }
         return output.result()
-        // return this.record_schema.encode_key(key)
     }
 
     decode_key(key_binary) {
@@ -74,7 +73,6 @@ export class Operator extends WebObject {
         }
         assert(input.pos === key_binary.length)
         return key
-        // return this.record_schema.decode_key(bin)
     }
 
     decode_object(key, val) {
@@ -240,7 +238,7 @@ export class DerivedOperator extends Operator {
         // array of arrays of encoded field values to be used in the key(s); only the first field can have multiple values
         let field_values = []
 
-        for (let field of this.record_schema.key_names) {
+        for (let field of this.key_names) {
             let plural = is_plural(field)
             let values = obj[field]
 

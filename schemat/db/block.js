@@ -187,7 +187,7 @@ export class Block extends Agent {
 
     get ring()      { return this.sequence.ring }
     get operator()  { return this.sequence.operator }
-    get schema()    { return this.sequence.operator.record_schema }
+    // get schema()    { return this.sequence.operator.record_schema }
 
     async __setup__() {
         this._print('__setup__() ...')
