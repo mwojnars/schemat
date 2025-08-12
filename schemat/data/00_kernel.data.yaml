@@ -700,6 +700,12 @@
 - id: 17
   name: DataOperator
   class: schemat/db/operator.js:DataOperator
+  defaults:
+    key_fields:
+      id:
+        "@": schemat/types/type.js:INTEGER
+      "@": :Map
+    "@": schemat:Catalog
   __prototype:
     "@": 24
   __category:

@@ -2,9 +2,9 @@ import {is_plural, drop_plural} from "../common/globals.js";
 import {assert, print, T} from "../common/utils.js";
 import {BinaryInput, BinaryMap, BinaryOutput, compare_bin} from "../common/binary.js"
 import {WebObject} from "../core/object.js";
-import {data_schema, RecordSchema} from "./records.js";
 import {OP} from "./block.js";
 import {JSONx} from "../common/jsonx.js";
+import {INTEGER} from "../types/type.js";
 
 
 /**********************************************************************************************************************/
@@ -104,8 +104,21 @@ export class DataOperator extends Operator {
 
     // get record_schema() { return data_schema }
 
-    encode_id(id)  { return data_schema.encode_id(id) }
-    decode_id(key) { return data_schema.decode_id(key) }
+    async __draft__() {
+        this.key_fields = new Map([['id', new INTEGER()]])
+    }
+
+    encode_id(id) {
+        assert(id !== undefined)
+        return this.encode_key([id])
+    }
+
+    decode_id(key) {
+        return this.decode_key(key)[0]
+    }
+
+    // encode_id(id)  { return data_schema.encode_id(id) }
+    // decode_id(key) { return data_schema.decode_id(key) }
 }
 
 /**********************************************************************************************************************/
