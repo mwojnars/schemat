@@ -15,7 +15,8 @@ export class Operator extends WebObject {
      */
 
     fields      // {field: type} schema of pseudo-objects represented by this operator's output records;
-                // null/missing fields are allowed, generic schema is assumed for them
+                // null/missing fields are allowed, generic schema is assumed for them;
+                // types are needed for .binary_encode/decode() mainly, so some of their options can be removed
 
     key         // names of fields that comprise the key part of record; plural form (xxx$) allowed for the first field
     value       // names of fields that comprise the value part (payload) of record
@@ -23,18 +24,6 @@ export class Operator extends WebObject {
     key_fields      // map of {names -> Types} of fields comprising the (composite) key of this operator's output records
     val_fields      // names of fields comprising the payload (value) of this operator's output records
     file_tag
-
-    // key     // specification of the key: list of field names with optional type and/or generation function;
-    //         // if generation functions are given, the names do NOT have to map 1:1 to source object's properties
-    //         // ??? generation functions must be given as import paths, otherwise they could not be serialized (!)
-    //         //     maybe the function path may map to operator's class method, not object's? this would imply that
-    //         //     custom [operator].__class is set up, so the operator can provide custom .field_xxx(obj) methods
-    //         // types are needed for .binary_encode/decode() ONLY, so some of their options can be removed
-
-    // get record_schema() {
-    //     /* RecordSchema that defines the schema (composite key + payload) of output records produced by this operator. */
-    //     return new RecordSchema(this.key_fields, this.val_fields)
-    // }
 
     get key_names() { return [...this.key_fields.keys()] }
     get key_types() { return [...this.key_fields.values()] }
@@ -116,9 +105,6 @@ export class DataOperator extends Operator {
     decode_id(key) {
         return this.decode_key(key)[0]
     }
-
-    // encode_id(id)  { return data_schema.encode_id(id) }
-    // decode_id(key) { return data_schema.decode_id(key) }
 }
 
 /**********************************************************************************************************************/
@@ -135,8 +121,9 @@ export class DerivedOperator extends Operator {
        which are then converted to binary or JSON strings via the schema. Multiple records can be generated from
        a single object when a plural field (obj.xxx$) with multiple values is used in the key.
 
-       If .field_xxx(obj) method is present in this operator's class, it is used to generate values of `xxx` field;
-       otherwise, the field is extracted directly from object when generating a record (value=obj.field).
+       If .field_xxx(obj) method is present in this operator's subclass, it is used to generate values of `xxx` field
+       (this requires that a custom [operator].__class is configured); otherwise, the field is extracted directly
+       from object when generating a record (value=obj.field).
      */
 
     category        // category of objects allowed in this index (optional), also used for field type inference if names only are provided
