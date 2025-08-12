@@ -884,7 +884,7 @@
       value_type:
         "@": schemat/types/type.js:TYPE
       "@": schemat/types/type.js:MAP
-    val_fields:
+    payload:
       info: Names of properties comprising the payload (value) of this operator's
         output records.
       type:

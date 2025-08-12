@@ -22,7 +22,6 @@ export class Operator extends WebObject {
     payload     // names of fields that comprise the payload (value) part of record
 
     key_fields      // map of {names -> Types} of fields comprising the (composite) key of this operator's output records
-    val_fields      // names of fields comprising the payload (value) of this operator's output records
 
     file_tag
 
@@ -83,7 +82,7 @@ export class Operator extends WebObject {
     _decode_value(json) {
         if (!json) return {}
         let vector = JSONx.parse(`[${json}]`)
-        return Object.fromEntries(this.val_fields.map((field, i) => [field, vector[i]]))
+        return Object.fromEntries(this.payload.map((field, i) => [field, vector[i]]))
     }
 }
 
@@ -269,7 +268,7 @@ export class IndexOperator extends DerivedOperator {
 
     generate_value(obj) {
         /* Extract a vector of payload values from source object, `obj`, and stringify it via JSONx, surrounding brackets stripped.
-           Undefined values are replaced with null. If no payload fields are declared (val_fields), empty string is returned.
+           Undefined values are replaced with null. If no payload fields are declared, empty string is returned.
            The returned string is used as a "value" part of the record for the destination sequence.
 
            TODO: use CBOR encoding (https://github.com/kriszyp/cbor-x)
@@ -277,9 +276,9 @@ export class IndexOperator extends DerivedOperator {
            let buf = cbor.encode(obj)
            let obj = cbor.decode(buf)
          */
-        let {val_fields} = this
-        if (!val_fields?.length) return ''
-        let vector = val_fields.map(f => {let v = obj[f]; return v === undefined ? null : v})
+        let {payload} = this
+        if (!payload?.length) return ''
+        let vector = payload.map(f => {let v = obj[f]; return v === undefined ? null : v})
         return JSONx.stringify(vector).slice(1, -1)
     }
 }
@@ -313,8 +312,8 @@ export class AggregationOperator extends DerivedOperator {      // SumOperator
        The object returned by scan() has the shape: {...key_fields, count, sum_f1, sum_f2, ..., avg_f1, avg_f2, ...}
      */
 
-    // val_fields       // ['__count', f1, f2, ...]
-                        // decimals passed in the field's type: type.options.decimal_precision ??
+    // payload       // ['__count', f1, f2, ...]
+                     // decimals passed in the field's type: type.options.decimal_precision ??
 
     // val_decimals        // {val_field: precision}; no. of decimal digits after comma that should be maintained for a given field
     //                     // when calculating the sum; can be positive (places after comma), zero, negative (zeros before comma),
