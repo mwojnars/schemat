@@ -10,16 +10,16 @@ import {INTEGER} from "../types/type.js";
 /**********************************************************************************************************************/
 
 export class Operator extends WebObject {
-    /* Specification of a data processing operator: schema of output objects/records + derivation methods.
-       The same operator can be applied to multiple rings, producing different physical sequences in each ring.
+    /* Specification of a data processing operator: derivation methods + schema of output objects/records.
+       The same operator can be applied to multiple rings, producing different sequences in each ring.
      */
 
     fields      // {field: type} schema of pseudo-objects represented by this operator's output records;
                 // null/missing fields are allowed, generic schema is assumed for them;
                 // types are mainly needed for .binary_encode/decode(), so some of their options can be removed compared to WebObject's schema
 
-    key         // names of fields that comprise the key part of record; plural form (xxx$) allowed for the first field
-    value       // names of fields that comprise the value part (payload) of record
+    key         // array of field names that comprise the key part of record; plural form (xxx$) allowed for the first field; deep paths (x.y.z) allowed
+    payload     // names of fields that comprise the payload (value) part of record
 
     key_fields      // map of {names -> Types} of fields comprising the (composite) key of this operator's output records
     val_fields      // names of fields comprising the payload (value) of this operator's output records
@@ -80,9 +80,9 @@ export class Operator extends WebObject {
         return obj
     }
 
-    _decode_value(val_json) {
-        if (!val_json) return {}
-        let vector = JSONx.parse(`[${val_json}]`)
+    _decode_value(json) {
+        if (!json) return {}
+        let vector = JSONx.parse(`[${json}]`)
         return Object.fromEntries(this.val_fields.map((field, i) => [field, vector[i]]))
     }
 }
@@ -90,7 +90,7 @@ export class Operator extends WebObject {
 /**********************************************************************************************************************/
 
 export class DataOperator extends Operator {
-    /* Operator that represents schema of the main data sequence. */
+    /* Operator that represents schema of the main data sequence, no derivation methods. */
 
     async __draft__() {
         this.key_fields = new Map([['id', new INTEGER()]])
@@ -126,8 +126,6 @@ export class DerivedOperator extends Operator {
      */
 
     category        // category of objects allowed in this index (optional), also used for field type inference if names only are provided
-    key_names       // array of names of object properties to be included in the (compound) key of this index; plural names (xyz$) and deep paths (x.y.z) allowed
-                    // TODO: remove `key_names` from schema, only use `key_fields`
 
     __new__() {
         if (Array.isArray(this.key_fields)) {
