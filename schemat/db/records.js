@@ -68,18 +68,18 @@ export class RecordSchema {
         return key
     }
 
-    decode_key_object(key_binary) {
-        let fields = this.key_names
-        let key = this.decode_key(key_binary)
-        let obj = {}
-
-        for (let i = 0; i < fields.length; i++) {
-            let field = drop_plural(fields[i])
-            obj[field] = key[i]
-        }
-        return obj
-    }
-
+    // decode_key_object(key_binary) {
+    //     let fields = this.key_names
+    //     let key = this.decode_key(key_binary)
+    //     let obj = {}
+    //
+    //     for (let i = 0; i < fields.length; i++) {
+    //         let field = drop_plural(fields[i])
+    //         obj[field] = key[i]
+    //     }
+    //     return obj
+    // }
+    //
     // encode_value(obj) {
     //     /* Encode an object into a JSONx-stringified vector of field values, with surrounding brackets stripped.
     //        Undefined values are replaced with null.

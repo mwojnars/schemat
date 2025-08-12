@@ -36,21 +36,37 @@ export class Operator extends WebObject {
         return new RecordSchema(this.key_fields, this.val_fields)
     }
 
+    get key_names() { return [...this.key_fields.keys()] }
+    
     encode_key(key) {
         /* Convert an array of key-field values to a binary key (Uint8Array). */
         return this.record_schema.encode_key(key)
     }
-    decode_key(bin) { return this.record_schema.decode_key(bin) }
 
-    decode_value(val_json) {
-        if (!val_json) return {}
-        let vector = JSONx.parse(`[${val_json}]`)
-        return Object.fromEntries(this.val_fields.map((field, i) => [field, vector[i]]))
+    decode_key(bin) {
+        return this.record_schema.decode_key(bin)
     }
 
     decode_object(key, val) {
-        let schema = this.record_schema
-        return {...schema.decode_key_object(key), ...this.decode_value(val)}
+        // let schema = this.record_schema
+        return {...this._decode_key_object(key), ...this._decode_value(val)}
+    }
+
+    _decode_key_object(key_binary) {
+        let fields = this.key_names
+        let key = this.decode_key(key_binary)
+        let obj = {}
+        for (let i = 0; i < fields.length; i++) {
+            let field = drop_plural(fields[i])
+            obj[field] = key[i]
+        }
+        return obj
+    }
+
+    _decode_value(val_json) {
+        if (!val_json) return {}
+        let vector = JSONx.parse(`[${val_json}]`)
+        return Object.fromEntries(this.val_fields.map((field, i) => [field, vector[i]]))
     }
 }
 
