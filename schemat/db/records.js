@@ -94,13 +94,13 @@ export class RecordSchema {
     //     let vector = val_fields.map(field => {let val = obj[field]; return val === undefined ? null : val})
     //     return JSONx.stringify(vector).slice(1, -1)
     // }
-
-    decode_value(val_json) {
-        if (!val_json) return {}
-        let vector = JSONx.parse(`[${val_json}]`)
-        return Object.fromEntries(this.val_fields.map((field, i) => [field, vector[i]]))
-    }
-
+    //
+    // decode_value(val_json) {
+    //     if (!val_json) return {}
+    //     let vector = JSONx.parse(`[${val_json}]`)
+    //     return Object.fromEntries(this.val_fields.map((field, i) => [field, vector[i]]))
+    // }
+    //
     // decode_object(key, val) {
     //     /* Key & value fully decoded, then merged into an object that resembles original web object ("pseudo-object"). */
     //     return {...this.decode_key_object(key), ...this.decode_value(val)}

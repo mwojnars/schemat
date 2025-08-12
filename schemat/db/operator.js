@@ -42,9 +42,15 @@ export class Operator extends WebObject {
     }
     decode_key(bin) { return this.record_schema.decode_key(bin) }
 
+    decode_value(val_json) {
+        if (!val_json) return {}
+        let vector = JSONx.parse(`[${val_json}]`)
+        return Object.fromEntries(this.val_fields.map((field, i) => [field, vector[i]]))
+    }
+
     decode_object(key, val) {
         let schema = this.record_schema
-        return {...schema.decode_key_object(key), ...schema.decode_value(val)}
+        return {...schema.decode_key_object(key), ...this.decode_value(val)}
     }
 }
 

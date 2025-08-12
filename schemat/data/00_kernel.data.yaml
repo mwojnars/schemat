@@ -883,6 +883,8 @@
         output records.
       type:
         "@": schemat/types/type.js:STRING
+      default:
+        []
       "@": schemat/types/type.js:ARRAY
     file_tag:
       info: Prefix (infix) inserted in file names of all new blocks created in data
