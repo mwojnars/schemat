@@ -1,6 +1,6 @@
 import {is_plural, drop_plural} from "../common/globals.js";
 import {assert, print, T} from "../common/utils.js";
-import {BinaryMap, compare_bin} from "../common/binary.js"
+import {BinaryInput, BinaryMap, BinaryOutput, compare_bin} from "../common/binary.js"
 import {WebObject} from "../core/object.js";
 import {data_schema, RecordSchema} from "./records.js";
 import {OP} from "./block.js";
@@ -37,18 +37,47 @@ export class Operator extends WebObject {
     }
 
     get key_names() { return [...this.key_fields.keys()] }
-    
+    get key_types() { return [...this.key_fields.values()] }
+
     encode_key(key) {
-        /* Convert an array of key-field values to a binary key (Uint8Array). */
-        return this.record_schema.encode_key(key)
+        /* Convert an array, `key`, of key-field values to a binary key (Uint8Array). The array can be shorter than
+           this.key_fields ("partial key") - this may happen when the key is used for partial match as a lower bound in scan().
+         */
+        let types  = this.key_types
+        let output = new BinaryOutput()
+        let length = Math.min(types.length, key.length)
+
+        assert(key.length <= types.length, `key length ${key.length} > field types length ${types.length}`)
+
+        for (let i = 0; i < length; i++) {
+            const type = types[i]
+            const last = (i === types.length - 1)
+            const bin  = type.binary_encode(key[i], last)
+            output.write(bin)
+        }
+        return output.result()
+        // return this.record_schema.encode_key(key)
     }
 
-    decode_key(bin) {
-        return this.record_schema.decode_key(bin)
+    decode_key(key_binary) {
+        /* Decode a `key_binary` (Uint8Array) back into an array of field values. Partial keys are NOT supported here. */
+        let types  = this.key_types
+        let input  = new BinaryInput(key_binary)
+        let length = types.length
+        let key = []
+
+        for (let i = 0; i < length; i++) {
+            const type = types[i]
+            const last = (i === length - 1)
+            const val  = type.binary_decode(input, last)
+            key.push(val)
+        }
+        assert(input.pos === key_binary.length)
+        return key
+        // return this.record_schema.decode_key(bin)
     }
 
     decode_object(key, val) {
-        // let schema = this.record_schema
         return {...this._decode_key_object(key), ...this._decode_value(val)}
     }
 
