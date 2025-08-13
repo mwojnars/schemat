@@ -22,7 +22,7 @@
         listing them here removes the need for async schemat.import() from a web
         path later on. The loading is only invoked when on server, not on
         clients.
-      "@": schemat/types/type.js:DICT
+      "@": schemat/types/type.js:OBJECT
     defaults:
       value_type:
         "@": schemat/types/type.js:GENERIC
@@ -876,7 +876,7 @@
         "@": schemat/types/type.js:STRING
       value_type:
         "@": schemat/types/type.js:TYPE
-      "@": schemat/types/type.js:DICT
+      "@": schemat/types/type.js:OBJECT
     key:
       info: Names of fields in the key of this operator's output records.
       type:
