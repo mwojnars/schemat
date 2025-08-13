@@ -27,7 +27,8 @@ export class Operator extends WebObject {
 
     get fields() { return this.key_fields }
 
-    get key_names() { return [...this.key_fields.keys()] }
+    // get key_names() { return [...this.key_fields.keys()] }
+    get key_names() { return this.key }
     get key_types() { return [...this.key_fields.values()] }
 
     encode_key(key) {
@@ -94,6 +95,7 @@ export class DataOperator extends Operator {
     /* Operator that represents schema of the main data sequence, no derivation methods. */
 
     async __draft__() {
+        this.key = ['id']
         this.key_fields = new Map([['id', new INTEGER()]])
     }
 
