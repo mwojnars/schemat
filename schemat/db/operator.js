@@ -21,11 +21,11 @@ export class Operator extends WebObject {
     key         // array of field names that comprise the key part of record; plural form (xxx$) allowed for the first field; deep paths (x.y.z) allowed
     payload     // names of fields that comprise the payload (value) part of record
 
-    key_fields      // map of field name -> Type, for fields comprising the (composite) key of this operator's output records
+    fields      // map of field name -> Type, for fields comprising the (composite) key of this operator's output records
 
     file_tag
 
-    get key_types() { return this.key.map(f => this.key_fields.get(f)) }
+    get key_types() { return this.key.map(f => this.fields.get(f)) }
 
     encode_key(key) {
         /* Convert an array, `key`, of field values to a binary key (Uint8Array). The array can be shorter than this.key
@@ -92,7 +92,7 @@ export class DataOperator extends Operator {
 
     async __draft__() {
         this.key = ['id']
-        this.key_fields = new Map([['id', new INTEGER()]])
+        this.fields = new Map([['id', new INTEGER()]])
     }
 
     encode_id(id) {
@@ -127,11 +127,11 @@ export class DerivedOperator extends Operator {
     category        // category of objects allowed in this index (optional), also used for field type inference if names only are provided
 
     __new__() {
-        if (Array.isArray(this.key_fields)) {
-            this.key = this.key_fields
-            this.key_fields = this._infer_field_types(this.key)
+        if (Array.isArray(this.fields)) {
+            this.key = this.fields
+            this.fields = this._infer_field_types(this.key)
         }
-        // this._print(`DerivedOperator.__new__(): key=${this.key} key_fields=${this.key_fields}`)
+        // this._print(`DerivedOperator.__new__(): key=${this.key} fields=${this.fields}`)
     }
 
     _infer_field_types(fields) {

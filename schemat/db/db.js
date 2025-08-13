@@ -428,9 +428,9 @@ export class Database extends WebObject {
         return true
     }
 
-    async 'action.create_index'(name, key_fields, payload = undefined, {category, ring} = {}) {
+    async 'action.create_index'(name, fields, payload = undefined, {category, ring} = {}) {
         /* Add a new index in `ring` and all rings above. If not provided, `ring` is the bottom of the ring stack (ring-kernel).
-           Schema of the new index is defined by `key_fields` and `payload` (arrays of property names).
+           Schema of the new index is defined by `fields` and `payload` (arrays of property names).
          */
         ring = ring ? this.get_ring(ring) : this.bottom_ring
 
@@ -439,7 +439,7 @@ export class Database extends WebObject {
 
         // create operator for the derived sequence
         let IndexOperator = schemat.std.IndexOperator
-        let operator = await IndexOperator.new({name, key_fields, payload, category}).save({ring})
+        let operator = await IndexOperator.new({name, fields, payload, category}).save({ring})
 
         // create sequences that will apply `operator` to the "main" sequence, in `ring` and all higher rings
         let pos = this.rings.indexOf(ring)

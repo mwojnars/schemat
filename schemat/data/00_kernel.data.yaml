@@ -695,7 +695,7 @@
   class: schemat/db/operator.js:DataOperator
   defaults:
     key: ['id']
-    key_fields:
+    fields:
       id:
         "@": schemat/types/type.js:INTEGER
       "@": :Map
@@ -852,7 +852,7 @@
   info: "Index of all objects by their category: the key is [category ID, item
     ID], no payload."
   key: ['__cid','id']
-  key_fields:
+  fields:
     __cid:
       repeated: true
       "@": schemat/types/type.js:ID
@@ -871,9 +871,9 @@
       required: true
       blank: ""
       "@": schemat/types/type.js:STRING
-    key_fields:
-      info: Names and data types of fields comprising the (composite) key of this
-        operator's output records.
+    fields:
+      info: Names and data types of fields comprising the key and payload of
+        this operator's output records.
       key_type:
         "@": schemat/types/type.js:STRING
       value_type:
