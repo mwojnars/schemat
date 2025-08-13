@@ -21,16 +21,15 @@ export class Operator extends WebObject {
     key         // array of field names that comprise the key part of record; plural form (xxx$) allowed for the first field; deep paths (x.y.z) allowed
     payload     // names of fields that comprise the payload (value) part of record
 
-    key_fields      // map of {names -> Types} of fields comprising the (composite) key of this operator's output records
+    key_fields      // map of field name -> Type, for fields comprising the (composite) key of this operator's output records
 
     file_tag
 
-    get fields() { return this.key_fields }
-    get key_types() { return [...this.key_fields.values()] }
+    get key_types() { return this.key.map(f => this.key_fields.get(f)) }
 
     encode_key(key) {
-        /* Convert an array, `key`, of key-field values to a binary key (Uint8Array). The array can be shorter than
-           this.key_fields ("partial key") - this may happen when the key is used for a partial match as a lower/upper bound in scan().
+        /* Convert an array, `key`, of field values to a binary key (Uint8Array). The array can be shorter than this.key
+           ("partial key") - this may happen when the key is used for a partial match as a lower/upper bound in scan().
          */
         let types  = this.key_types
         let output = new BinaryOutput()
