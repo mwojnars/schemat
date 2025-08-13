@@ -61,6 +61,8 @@ export class Type extends Struct {
                                     // this option only has effect for top-level properties of web objects
 
         alias    : undefined,       // name of a property that this one is an alias for; all reads and writes are redirected to the aliased property; only for top-level properties of web objects
+
+        // setter                   // if true, the property's value is never saved in __data nor DB, but passed instead to a setter method, which may write to other props
         // derived
 
         // virtual  : undefined,       // if true, the field is never stored in DB and cannot be directly assigned to, impute() or default value is used instead;

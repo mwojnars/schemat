@@ -14,9 +14,9 @@ export class Operator extends WebObject {
        The same operator can be applied to multiple rings, producing different sequences in each ring.
      */
 
-    fields      // {field: type} schema of pseudo-objects represented by this operator's output records;
-                // null/missing fields are allowed, generic schema is assumed for them;
-                // types are mainly needed for .binary_encode/decode(), so some of their options can be removed compared to WebObject's schema
+    // fields      // {field: type} schema of pseudo-objects represented by this operator's output records;
+    //             // null/missing fields are allowed, generic schema is assumed for them;
+    //             // types are mainly needed for .binary_encode/decode(), so some of their options can be removed compared to WebObject's schema
 
     key         // array of field names that comprise the key part of record; plural form (xxx$) allowed for the first field; deep paths (x.y.z) allowed
     payload     // names of fields that comprise the payload (value) part of record
@@ -24,6 +24,8 @@ export class Operator extends WebObject {
     key_fields      // map of {names -> Types} of fields comprising the (composite) key of this operator's output records
 
     file_tag
+
+    get fields() { return this.key_fields }
 
     get key_names() { return [...this.key_fields.keys()] }
     get key_types() { return [...this.key_fields.values()] }
@@ -324,7 +326,7 @@ export class AggregationOperator extends DerivedOperator {      // SumOperator
     get _sum_fields() { return [...this.val_decimals?.keys() || []] }
 
 
-    __new__() {
+    __new__(aggregate = []) {
         //
     }
 
