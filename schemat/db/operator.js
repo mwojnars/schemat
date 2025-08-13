@@ -14,13 +14,10 @@ export class Operator extends WebObject {
        The same operator can be applied to multiple rings, producing different sequences in each ring.
      */
 
-    // fields      // {field: type} schema of pseudo-objects represented by this operator's output records;
-    //             // null/missing fields are allowed, generic schema is assumed for them;
-    //             // types are mainly needed for .binary_encode/decode(), so some of their options can be removed compared to WebObject's schema
-
     key         // array of field names that comprise the key part of record; plural form (xxx$) allowed for the first field; deep paths (x.y.z) allowed
     payload     // names of fields that comprise the payload (value) part of record
-    fields      // {field: type}, for fields comprising the (composite) key of this operator's output records
+    fields      // {field: type} schema of all fields in `key`, and possibly some in `payload` (esp. for aggregations);
+                // types are mainly needed for .binary_encode/decode(), so some of their options can be removed compared to WebObject's schema
     file_tag
 
     get key_types() { return this.key.map(f => this.fields[f]) }
@@ -91,7 +88,6 @@ export class DataOperator extends Operator {
     async __draft__() {
         this.key = ['id']
         this.fields = {'id': new INTEGER()}
-        // this.fields = new Map([['id', new INTEGER()]])
     }
 
     encode_id(id) {
@@ -127,11 +123,6 @@ export class DerivedOperator extends Operator {
 
     __new__() {
         this.fields ??= this._infer_field_types(this.key)
-
-        // if (Array.isArray(this.fields)) {
-        //     this.key = this.fields
-        //     this.fields = this._infer_field_types(this.key)
-        // }
         // this._print(`DerivedOperator.__new__(): key=${this.key} fields=${this.fields}`)
     }
 
@@ -326,7 +317,7 @@ export class AggregationOperator extends DerivedOperator {      // SumOperator
     get _sum_fields() { return [...this.val_decimals?.keys() || []] }
 
 
-    __new__(aggregate = []) {
+    __new__(aggregation = []) {
         //
     }
 
