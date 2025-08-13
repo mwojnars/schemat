@@ -20,10 +20,10 @@ export class Operator extends WebObject {
 
     key         // array of field names that comprise the key part of record; plural form (xxx$) allowed for the first field; deep paths (x.y.z) allowed
     payload     // names of fields that comprise the payload (value) part of record
-    fields      // map of field name -> Type, for fields comprising the (composite) key of this operator's output records
+    fields      // {field: type}, for fields comprising the (composite) key of this operator's output records
     file_tag
 
-    get key_types() { return this.key.map(f => this.fields.get(f)) }
+    get key_types() { return this.key.map(f => this.fields[f]) }
 
     encode_key(key) {
         /* Convert an array, `key`, of field values to a binary key (Uint8Array). The array can be shorter than this.key
@@ -90,7 +90,8 @@ export class DataOperator extends Operator {
 
     async __draft__() {
         this.key = ['id']
-        this.fields = new Map([['id', new INTEGER()]])
+        this.fields = {'id': new INTEGER()}
+        // this.fields = new Map([['id', new INTEGER()]])
     }
 
     encode_id(id) {
@@ -150,7 +151,8 @@ export class DerivedOperator extends Operator {
 
             entries.push([field, type])
         }
-        return new Map(entries)
+        return Object.fromEntries(entries)
+        // return new Map(entries)
     }
 
     derive_ops(key, prev, next) {

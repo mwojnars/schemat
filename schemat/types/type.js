@@ -621,7 +621,7 @@ export class BINARY extends Atomic {
 /**********************************************************************************************************************/
 
 export class CUSTOM_OBJECT extends Atomic {
-    /* Objects of a given `class` (Object by default) are accepted as atomic values, with optional validation of their attributes. */
+    /* Accept objects of specific `class` (Object by default) as atomic values, with optional validation of their attributes. */
     static options = {
         class:  Object,
         strict: true,           // if true, and `attrs` is defined, the object must not have any own attributes beyond those specified in attrs
