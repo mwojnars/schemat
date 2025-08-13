@@ -684,13 +684,6 @@
         membership is checked by __cid comparison, so the object must belong
         exactly to `category`, not a subcategory.
       "@": schemat/types/type.js:REF_CATEGORY
-    key_names:
-      info: Array of names of object properties to be included in the (compound) key
-        of this index. Plural names (xyz$) and deep paths (x.y.z; x.y.z$) are
-        allowed.
-      type:
-        "@": schemat/types/type.js:STRING
-      "@": schemat/types/type.js:ARRAY
     "@": schemat:Catalog
   class: schemat/db/operator.js:DerivedOperator
   __prototype:
