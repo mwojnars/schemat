@@ -20,9 +20,7 @@ export class Operator extends WebObject {
 
     key         // array of field names that comprise the key part of record; plural form (xxx$) allowed for the first field; deep paths (x.y.z) allowed
     payload     // names of fields that comprise the payload (value) part of record
-
     fields      // map of field name -> Type, for fields comprising the (composite) key of this operator's output records
-
     file_tag
 
     get key_types() { return this.key.map(f => this.fields.get(f)) }
@@ -127,10 +125,12 @@ export class DerivedOperator extends Operator {
     category        // category of objects allowed in this index (optional), also used for field type inference if names only are provided
 
     __new__() {
-        if (Array.isArray(this.fields)) {
-            this.key = this.fields
-            this.fields = this._infer_field_types(this.key)
-        }
+        this.fields ??= this._infer_field_types(this.key)
+
+        // if (Array.isArray(this.fields)) {
+        //     this.key = this.fields
+        //     this.fields = this._infer_field_types(this.key)
+        // }
         // this._print(`DerivedOperator.__new__(): key=${this.key} fields=${this.fields}`)
     }
 
