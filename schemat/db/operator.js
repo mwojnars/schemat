@@ -26,9 +26,6 @@ export class Operator extends WebObject {
     file_tag
 
     get fields() { return this.key_fields }
-
-    // get key_names() { return [...this.key_fields.keys()] }
-    get key_names() { return this.key }
     get key_types() { return [...this.key_fields.values()] }
 
     encode_key(key) {
@@ -72,7 +69,7 @@ export class Operator extends WebObject {
     }
 
     _decode_key_object(key_binary) {
-        let fields = this.key_names
+        let fields = this.key
         let key = this.decode_key(key_binary)
         let obj = {}
         for (let i = 0; i < fields.length; i++) {
@@ -132,19 +129,19 @@ export class DerivedOperator extends Operator {
 
     __new__() {
         if (Array.isArray(this.key_fields)) {
-            this.key_names = this.key_fields
-            this.key_fields = this._infer_key_fields(this.key_names)
+            this.key = this.key_fields
+            this.key_fields = this._infer_field_types(this.key)
         }
-        // this._print(`DerivedOperator.__new__(): key_names=${this.key_names} key_fields=${this.key_fields}`)
+        // this._print(`DerivedOperator.__new__(): key=${this.key} key_fields=${this.key_fields}`)
     }
 
-    _infer_key_fields(key_names) {
-        /* Create a Map of {field: type} from an array of field names, `key_names`, combined with types from category.schema. */
+    _infer_field_types(fields) {
+        /* Create a Map of {field: type} from an array of field names, `fields`, combined with types from category.schema. */
         let schema = this.category?.schema || schemat.root_category['defaults.schema']
         // print('schema:', schema)
 
         let entries = []
-        for (let field of key_names) {     // find out the type of every field to build a catalog of {field: type} pairs
+        for (let field of fields) {     // find out the type of every field to build a catalog of {field: type} pairs
             field = drop_plural(field)
             let type = schema.get(field)
             if (!type) throw new Error(`unknown field in 'key': ${field}`)
@@ -238,7 +235,7 @@ export class DerivedOperator extends Operator {
         // array of arrays of encoded field values to be used in the key(s); only the first field can have multiple values
         let field_values = []
 
-        for (let field of this.key_names) {
+        for (let field of this.key) {
             let plural = is_plural(field)
             let values = obj[field]
 
