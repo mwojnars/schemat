@@ -129,6 +129,8 @@ export class Sequence extends WebObject {
 
         let seq = schemat.std.Sequence.new({ring: this.ring, operator})
         this.derived = [...this.derived || [], seq]
+
+        assert(this.__ring)
         await schemat.save({ring: this.__ring, broadcast: true})
 
         // tx.is_lite() / tx.no_rollback  -- whatever was saved to DB cannot be rolled back;

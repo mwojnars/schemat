@@ -221,15 +221,7 @@ export class Ring extends WebObject {
     async 'action.create_derived'(source = 'main', operator) {
         // TODO SEC: check permissions
         if (this.readonly) throw new Error("the ring is read-only")
-        assert(this.__ring)
-
         await this.main_sequence.action.create_derived(operator)
-
-        // let opts = {ring: this.__ring, broadcast: true}
-        // let Sequence = this.__std.Sequence
-        // let seq = await Sequence.new({ring: this, operator}).save(opts)
-        // this.sequences = [...this.sequences, seq]
-        // await this.save(opts)
     }
 
     async rebuild_indexes() {
