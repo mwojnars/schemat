@@ -308,7 +308,7 @@ export class AggregationOperator extends DerivedOperator {      // SumOperator
        The object returned by scan() has the shape: {...key_fields, count, sum_f1, sum_f2, ..., avg_f1, avg_f2, ...}
      */
 
-    sum            // fields to be aggregated, as an array of field names; [] by default
+    sum            // fields to be aggregated (counted and summed up), in addition to global count; array of field names, [] by default
 
     // payload       // ['__count', f1, f2, ...]
                      // decimals passed in the field's type: type.options.decimal_precision ??
