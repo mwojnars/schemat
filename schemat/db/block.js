@@ -667,9 +667,9 @@ export class DataBlock extends Block {
            in this block (if the ring permits), or forward the write request back to a higher ring.
            The new record is recorded in the Registry and the current transaction. Nothing is returned.
          */
+        let key = this.encode_id(id)
         return this.$state.lock_row(id, async () =>
         {
-            let key = this.encode_id(id)
             let data = await this._get(key)
             if (data === undefined) return this._move_down(id, req).update(id, edits, req)
 
@@ -699,9 +699,9 @@ export class DataBlock extends Block {
 
     async '$agent.upsave'(id, data, req) {
         /* Update, or insert an updated object, after the request `req` has been forwarded to a higher ring. */
+        let key = this.encode_id(id)
         return this.$state.lock_row(id, async () =>
         {
-            let key = this.encode_id(id)
             if (await this._get(key))
                 throw new DataConsistencyError('newly-inserted object with same ID discovered in a higher ring during upward pass of update', {id})
 
@@ -728,9 +728,9 @@ export class DataBlock extends Block {
         /* Try deleting the `id`, forward to a lower ring if the id is not present here in this block.
            Log an error if the ring is read-only and the `id` is present here.
          */
+        let key = this.encode_id(id)
         return this.$state.lock_row(id, async () =>
         {
-            let key = this.encode_id(id)
             let data = await this._get(key)
             if (data === undefined) return this._move_down(id, req).delete(id, req)
 
