@@ -313,6 +313,12 @@ export class Block extends Agent {
         return this._update_acc(key, increments)
     }
 
+    async op_dec(key, increments) {
+        /* Same as op_inc(), but `increments` are subtracted from accumulators, not added. */
+        increments = increments.map(v => -v)    // TODO: support for decimals (v.neg() instead of "-")
+        return this._update_acc(key, increments)
+    }
+
     async _update_acc(key, increments) {
         return this.$state.global_lock(async () =>
         {
@@ -323,7 +329,7 @@ export class Block extends Agent {
         })
     }
 
-    _inc(json, increments, sign = 1) {
+    _inc(json, increments) {
         /* Decode current state of accumulators from `json` and add `increments`. Return an array. */
         if (!json) return increments
 
@@ -331,7 +337,7 @@ export class Block extends Agent {
         assert(accumulators.length === increments.length)
 
         for (let i = 0; i < accumulators.length; i++)
-            accumulators[i] += increments[i] * sign
+            accumulators[i] += increments[i]
             // TODO: use https://github.com/MikeMcl/decimal.js-light/ for decimals and .plus() instead of "+"
 
         return accumulators
