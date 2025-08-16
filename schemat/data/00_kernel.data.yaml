@@ -277,6 +277,8 @@
       "@": 17
     Node:
       "@": 21
+    AggregationOperator:
+      "@": 22
 - id: 2
   name: Application
   info: Top-level URL routing + global configuration of the application.
