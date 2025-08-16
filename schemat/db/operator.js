@@ -339,15 +339,16 @@ export class AggregationOperator extends DerivedOperator {      // SumOperator
     }
 
     generate_value(obj) {
-        /* Extract from source `obj` a vector of increments to be added to destination-sequence accumulators;
-           the first element is always 1 for __count. The vector is JSONx-stringified.
+        /* Extract from source `obj` a vector of increments to be added to destination-sequence accumulators.
+           The first element is always 1 for __count.
          */
         let values = this.sum.map(field => {
             let v = obj[field]
             let t = typeof v
             return (t === 'number' || t === 'bigint') ? v : 0       // every non-numeric or missing value is replaced with zero
         })
-        let vector = [1, ...values]
-        return JSONx.stringify(vector) //.slice(1, -1)
+        return [1, ...values]
+        // let vector = [1, ...values]
+        // return JSONx.stringify(vector).slice(1, -1)
     }
 }
