@@ -675,9 +675,6 @@ export class DataBlock extends Block {
         await this._apply([op_put, ...ops_derived])         // schedule `ops` for execution, either immediately or later with WAL
         this._cascade_delete(prev, obj)                     // remove objects linked to via a strong reference
 
-        // await this._put(key, data)
-        // this._propagate(key, prev, obj)
-
         data = this._annotate(data)
         schemat.register_changes({id, data})
     }
@@ -703,9 +700,6 @@ export class DataBlock extends Block {
             let ops_derived = this._derive(key, obj)        // instructions for derived sequences
             await this._apply([op_del, ...ops_derived])     // schedule `ops` for execution, either immediately or later with WAL
             this._cascade_delete(obj)                       // remove objects linked to via a strong reference
-
-            // let deleted = await this._del(key)
-            // this._propagate(key, obj)
 
             schemat.register_changes({id, data: {'__status': WebObject.Status.DELETED}})
             return 1
