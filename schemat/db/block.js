@@ -294,15 +294,15 @@ export class Block extends Agent {
 
     async exec_op(op, ...args) {
         assert(['put', 'del', 'inc', 'dec'].includes(op))
-        return this[`OP_${op}`](...args)
+        return this[`op_${op}`](...args)
     }
 
-    async OP_put(key, value) {
+    async op_put(key, value) {
         /* Write the [key, value] pair here in this block. No forward of the request to another ring. */
         return this.$state.stores.map(s => s.put(key, value))[0]    // write to all stores, but await the first one only
     }
 
-    async OP_del(key) {
+    async op_del(key) {
         return this.$state.stores.map(s => s.del(key))[0]           // delete from all stores, but return the first result only
     }
 
