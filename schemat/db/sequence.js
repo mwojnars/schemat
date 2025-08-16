@@ -92,17 +92,17 @@ export class Sequence extends WebObject {
         return ops
     }
 
-    async put(key, value) {
-        let block = this.find_block(key)
-        // if (!block.is_loaded()) block = await block.load()
-        return block.$agent.put(key, value)
-    }
-
-    async del(key) {
-        let block = this.find_block(key)
-        // if (!block.is_loaded()) block = await block.load()
-        return block.$agent.del(key)
-    }
+    // async put(key, value) {
+    //     let block = this.find_block(key)
+    //     // if (!block.is_loaded()) block = await block.load()
+    //     return block.$agent.put(key, value)
+    // }
+    //
+    // async del(key) {
+    //     let block = this.find_block(key)
+    //     // if (!block.is_loaded()) block = await block.load()
+    //     return block.$agent.del(key)
+    // }
 
 
     // encode_key(key) { return this.operator.encode_key(key) }    // app > binary representation
