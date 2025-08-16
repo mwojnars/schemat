@@ -306,11 +306,32 @@ export class Block extends Agent {
         return this.$state.stores.map(s => s.del(key))[0]           // delete from all stores, but return the first result only
     }
 
-    async op_inc(key, json) {
+    async op_inc(key, increments) {
+        /* Take an array of increments produced by AggregationOperator.generate_value()
+           and add them to accumulators at `key`.
+         */
         /* Decode an array of increments from JSONx string, `json`, and add to accumulators at `key`.
            The decoding is compatible with AggregationOperator.generate_value() output format.
          */
-        let vector = JSONx.parse(json)
+        return this.$state.global_lock(async () =>
+        {
+            let json = await this.$state.store.get(key)
+            let accumulators = this._update_acc(json, increments)
+            await this.$state.store.set(key, JSONx.stringify(accumulators))
+        })
+    }
+
+    _update_acc(json, increments, sign = 1) {
+        /* Decode current state of accumulators from `json` and add `increments`. Return an array. */
+        if (!json) return increments
+        let accumulators = JSONx.parse(json)
+        assert(accumulators.length === increments.length)
+
+        for (let i = 0; i < accumulators.length; i++)
+            accumulators[i] += increments[i] * sign
+            // TODO: use https://github.com/MikeMcl/decimal.js-light/ for decimals and .plus() instead of "+"
+
+        return accumulators
     }
 
 
