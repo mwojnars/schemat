@@ -317,8 +317,13 @@ export class AggregationOperator extends DerivedOperator {      // SumOperator
     get _sum_fields() { return [...this.val_decimals?.keys() || []] }
 
 
-    __new__(aggregation = []) {
-        //
+    __new__(agg = []) {
+        if (typeof agg === 'string') agg = [agg]
+        let agg_sums = agg.map(f => `sum_${f}`)
+        this.payload = ['__count', ...agg_sums]
+
+        // types of sum_X fields ???
+        // this.fields['__count'] = new BIGINT()
     }
 
     _op_rmv(key, val) { return new OP('dec', key, val) }
