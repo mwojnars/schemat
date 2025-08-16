@@ -306,17 +306,17 @@ export class Block extends Agent {
         return this.$state.stores.map(s => s.del(key))[0]           // delete from all stores, but return the first result only
     }
 
-    async op_inc(key, increments) {
+    async op_inc(key, deltas) {
         /* Take an array of increments produced by AggregationOperator.generate_value()
            and add them to accumulators at `key` in the local store(s).
          */
-        return this._update_acc(key, increments)
+        return this._update_acc(key, deltas)
     }
 
-    async op_dec(key, increments) {
-        /* Same as op_inc(), but `increments` are subtracted from accumulators, not added. */
-        increments = increments.map(v => -v)    // TODO: support for decimals (v.neg() instead of "-")
-        return this._update_acc(key, increments)
+    async op_dec(key, deltas) {
+        /* Same as op_inc(), but `deltas` are subtracted from accumulators, not added. */
+        deltas = deltas.map(v => -v)    // TODO: support for decimals (v.neg() instead of "-")
+        return this._update_acc(key, deltas)
     }
 
     async _update_acc(key, increments) {
