@@ -308,22 +308,25 @@ export class Block extends Agent {
 
     async op_inc(key, increments) {
         /* Take an array of increments produced by AggregationOperator.generate_value()
-           and add them to accumulators at `key`.
+           and add them to accumulators at `key` in the local store(s).
          */
-        /* Decode an array of increments from JSONx string, `json`, and add to accumulators at `key`.
-           The decoding is compatible with AggregationOperator.generate_value() output format.
-         */
+        return this._update_acc(key, increments)
+    }
+
+    async _update_acc(key, increments) {
         return this.$state.global_lock(async () =>
         {
             let json = await this.$state.store.get(key)
-            let accumulators = this._update_acc(json, increments)
-            await this.$state.store.set(key, JSONx.stringify(accumulators))
+            let accumulators = this._inc(json, increments)
+            json = JSONx.stringify(accumulators)
+            return this.$state.stores.map(s => s.put(key, json))[0]
         })
     }
 
-    _update_acc(json, increments, sign = 1) {
+    _inc(json, increments, sign = 1) {
         /* Decode current state of accumulators from `json` and add `increments`. Return an array. */
         if (!json) return increments
+
         let accumulators = JSONx.parse(json)
         assert(accumulators.length === increments.length)
 
