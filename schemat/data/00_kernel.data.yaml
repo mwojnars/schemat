@@ -844,6 +844,16 @@
 - id: 22
   name: AggregationOperator
   class: schemat/db/operator.js:AggregationOperator
+  schema:
+    sum:
+      info: Names of object fields to be counted and summed up during aggregation.
+        An average of each of these fields can be retrieved at the end, as well.
+      type:
+        "@": schemat/types/type.js:STRING
+      default:
+        []
+      "@": schemat/types/type.js:ARRAY
+    "@": schemat:Catalog
   __prototype:
     "@": 16
   __category:
