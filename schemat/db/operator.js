@@ -329,6 +329,7 @@ export class AggregationOperator extends DerivedOperator {      // SumOperator
         // this.fields['__count'] = new BIGINT()
     }
 
+    // below, `val` is a JSONx string from generate_value() containing an array of increments to be added to accumulators
     _op_rmv(key, val) { return new OP('dec', key, val) }
     _op_ins(key, val) { return new OP('inc', key, val) }
 
@@ -338,8 +339,8 @@ export class AggregationOperator extends DerivedOperator {      // SumOperator
     }
 
     generate_value(obj) {
-        /* Extract from source `obj` a vector of components to be added to destination-sequence aggregations;
-           the first element is always 1 for __count. The vector is JSONx-stringified, with surrounding brackets stripped.
+        /* Extract from source `obj` a vector of increments to be added to destination-sequence accumulators;
+           the first element is always 1 for __count. The vector is JSONx-stringified.
          */
         let values = this.sum.map(field => {
             let v = obj[field]
@@ -347,6 +348,6 @@ export class AggregationOperator extends DerivedOperator {      // SumOperator
             return (t === 'number' || t === 'bigint') ? v : 0       // every non-numeric or missing value is replaced with zero
         })
         let vector = [1, ...values]
-        return JSONx.stringify(vector).slice(1, -1)
+        return JSONx.stringify(vector) //.slice(1, -1)
     }
 }

@@ -297,13 +297,20 @@ export class Block extends Agent {
         return this[`op_${op}`](...args)
     }
 
-    async op_put(key, value) {
-        /* Write the [key, value] pair here in this block. No forward of the request to another ring. */
-        return this.$state.stores.map(s => s.put(key, value))[0]    // write to all stores, but await the first one only
+    async op_put(key, val) {
+        /* Write the [key, val] pair here in this block. No forward of the request to another ring. */
+        return this.$state.stores.map(s => s.put(key, val))[0]      // write to all stores, but await the first one only
     }
 
     async op_del(key) {
         return this.$state.stores.map(s => s.del(key))[0]           // delete from all stores, but return the first result only
+    }
+
+    async op_inc(key, json) {
+        /* Decode an array of increments from JSONx string, `json`, and add to accumulators at `key`.
+           The decoding is compatible with AggregationOperator.generate_value() output format.
+         */
+        let vector = JSONx.parse(json)
     }
 
 
