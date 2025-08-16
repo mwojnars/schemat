@@ -52,6 +52,7 @@ export class Sequence extends WebObject {
         //     this.ring.load()                            // intentionally not awaited to avoid deadlocks
         //     // assert(this.ring.__meta.loading)
 
+        // load operator and derived sequences, but NOT blocks of self
         await this.operator?.load()
         if (this.derived) await Promise.all(this.derived.map(seq => seq.load()))
 
@@ -103,10 +104,6 @@ export class Sequence extends WebObject {
     //     // if (!block.is_loaded()) block = await block.load()
     //     return block.$agent.del(key)
     // }
-
-
-    // encode_key(key) { return this.operator.encode_key(key) }    // app > binary representation
-    // decode_key(bin) { return this.operator.decode_key(bin) }    // binary > app representation
 
     async* scan_binary(opts = {}) {
         /* Scan this sequence in [`start`, `stop`) range and yield [key, value] pairs, where `key` is an Uint8Array
