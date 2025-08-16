@@ -320,7 +320,7 @@ export class AggregationOperator extends DerivedOperator {      // SumOperator
     __new__(agg = []) {
         this._print(`AggregationOperator.__new__() agg=${agg}`)
         if (typeof agg === 'string') agg = [agg]
-        let agg_sums = agg.map(f => `sum_${f}`)
+        let agg_sums = agg.map(f => `__sum_${f}`)
         this.payload = ['__count', ...agg_sums]
 
         // types of sum_X fields ???
