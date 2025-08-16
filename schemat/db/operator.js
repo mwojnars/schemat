@@ -306,6 +306,8 @@ export class AggregationOperator extends DerivedOperator {      // SumOperator
        The object returned by scan() has the shape: {...key_fields, count, sum_f1, sum_f2, ..., avg_f1, avg_f2, ...}
      */
 
+    sum            // fields to be aggregated, as an array of field names; [] by default
+
     // payload       // ['__count', f1, f2, ...]
                      // decimals passed in the field's type: type.options.decimal_precision ??
 
@@ -315,16 +317,13 @@ export class AggregationOperator extends DerivedOperator {      // SumOperator
     //                     // otherwise, it uses integer arithmetic on Number, switching automatically to BigInt when
     //                     // the absolute value (shifted left/right by `decimals`) gets large;
 
-    get _sum_fields() {
-        return [...this.val_decimals?.keys() || []]
-    }
+    __new__() {
+        this._print(`AggregationOperator.__new__() sum=${this.sum}`)
+        if (typeof this.sum === 'string') this.sum = [this.sum]
 
-
-    __new__(agg = []) {
-        this._print(`AggregationOperator.__new__() agg=${agg}`)
-        if (typeof agg === 'string') agg = [agg]
-        let agg_sums = agg.map(f => `__sum_${f}`)
-        this.payload = ['__count', ...agg_sums]
+        let sums = this.sum.map(f => `__sum_${f}`)
+        this.payload = ['__count', ...sums]
+        this._print(`AggregationOperator.__new__() payload=${this.payload}`)
 
         // types of sum_X fields ???
         // this.fields['__count'] = new BIGINT()
@@ -342,7 +341,7 @@ export class AggregationOperator extends DerivedOperator {      // SumOperator
         /* Extract from source `obj` a vector of components to be added to destination-sequence aggregations;
            the first element is always 1 for __count. The vector is JSONx-stringified, with surrounding brackets stripped.
          */
-        let values = this._sum_fields.map(field => {
+        let values = this.sum.map(field => {
             let v = obj[field]
             let t = typeof v
             return (t === 'number' || t === 'bigint') ? v : 0       // every non-numeric or missing value is replaced with zero
