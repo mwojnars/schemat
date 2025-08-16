@@ -232,8 +232,8 @@ export class Block extends Agent {
         let stores = await Promise.all(this.storage$.map(s => this._create_store(s)))
         let monitors = (role === '$master') ? new ObjectsMap(this.sequence.derived.map(seq => [seq, new Monitor(this, seq)])) : null
         let _mutex = new Mutex()
-        let global_lock = (fn) => _mutex.run_exclusive(fn)
-        return {stores, store: stores[0], monitors, global_lock}
+        let lock_all = (fn) => _mutex.run_exclusive(fn)
+        return {stores, store: stores[0], monitors, lock_all}
     }
 
     async __stop__() {
@@ -320,7 +320,7 @@ export class Block extends Agent {
     }
 
     async _update_acc(key, increments) {
-        return this.$state.global_lock(async () =>
+        return this.$state.lock_all(async () =>
         {
             let json = await this.$state.store.get(key)
             let accumulators = this._inc(json, increments)
@@ -357,7 +357,7 @@ export class Block extends Agent {
     
     async _apply(ops) {
         /* Schedule local or remote `ops` for execution, either immediately or later with WAL (TODO). */
-        return this.$state.global_lock(async () =>
+        return this.$state.lock_all(async () =>
         {
             let local = []
             for (let op of ops)
