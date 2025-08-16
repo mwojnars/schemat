@@ -218,7 +218,9 @@ export class DerivedOperator extends Operator {
 
     accept(obj) {
         // check __category (__cid) directly, because inheritance is NOT available for deaf objects (pseudo-objects) anyway
-        return !this.category || obj.__cid$?.includes(this.category.id)
+        let cid = this.category?.id
+        return !cid || obj.__cid === cid
+        // return !this.category || obj.__cid$?.includes(this.category.id)
     }
 
     *generate_keys(obj) {
