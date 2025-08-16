@@ -1,7 +1,7 @@
 import {assert, print, T, zip, arrayFromAsync, fileBaseName, trycatch} from '../common/utils.js'
 import {DataAccessError, DataConsistencyError, ObjectNotFound} from '../common/errors.js'
 import {Shard, ObjectsMap, Mutex, Mutexes} from "../common/structs.js"
-import {bin_to_hex, compare_bin, zero_binary} from "../common/binary.js";
+import {BinaryMap, compare_bin, zero_binary} from "../common/binary.js";
 import {JSONx} from "../common/jsonx.js";
 import {Struct} from "../common/catalog.js"
 import {WebObject} from '../core/object.js'
@@ -450,8 +450,8 @@ export class DataBlock extends Block {
         let state = await super.__start__(frame)
         let autoincrement = state.store.get_max_id()    // current max ID of records in this block
         let reserved = new Set()                        // IDs that were already assigned during insert(), for correct "compact" insertion of many objects at once
-        let _locks = new Mutexes()                      // row-level locks for updates & deletes
-        let lock_row = (id, fn) => _locks.run_exclusive(id, fn)
+        let _locks = new Mutexes(new BinaryMap())       // row-level locks for updates & deletes
+        let lock_row = (key, fn) => _locks.run_exclusive(key, fn)
         return {...state, autoincrement, reserved, lock_row}
     }
 
@@ -668,7 +668,7 @@ export class DataBlock extends Block {
            The new record is recorded in the Registry and the current transaction. Nothing is returned.
          */
         let key = this.encode_id(id)
-        return this.$state.lock_row(id, async () =>
+        return this.$state.lock_row(key, async () =>
         {
             let data = await this._get(key)
             if (data === undefined) return this._move_down(id, req).update(id, edits, req)
@@ -700,7 +700,7 @@ export class DataBlock extends Block {
     async '$agent.upsave'(id, data, req) {
         /* Update, or insert an updated object, after the request `req` has been forwarded to a higher ring. */
         let key = this.encode_id(id)
-        return this.$state.lock_row(id, async () =>
+        return this.$state.lock_row(key, async () =>
         {
             if (await this._get(key))
                 throw new DataConsistencyError('newly-inserted object with same ID discovered in a higher ring during upward pass of update', {id})
@@ -729,7 +729,7 @@ export class DataBlock extends Block {
            Log an error if the ring is read-only and the `id` is present here.
          */
         let key = this.encode_id(id)
-        return this.$state.lock_row(id, async () =>
+        return this.$state.lock_row(key, async () =>
         {
             let data = await this._get(key)
             if (data === undefined) return this._move_down(id, req).delete(id, req)
