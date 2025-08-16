@@ -286,8 +286,9 @@ export class AggregationOperator extends DerivedOperator {      // SumOperator
        It is *not* possible to calculate min/max per group: these operations require an index, not aggregation.
 
        Aggregation's schema is composed of key and value fields, like in indexes, but contrary to indexes:
-       - the key does not contain backreference to the source object, because typically we want to sum over multiple objects;
-       - all value fields must be numeric, so that incrementation (sum += x) makes sense;
+       - the key does not contain a backreference to the source object, because typically we want to sum over multiple objects;
+       - all value fields must be numeric, such that incrementation (sum += x) makes sense; if a value is missing
+         or non-numeric, zero is assumed, which doesn't change the sum, but impacts the average;
        - there is an implicit `__count` field prepended to value fields that is incremented/decremented by 1;
          when no explicit value fields are specified, the aggregation only computes the count; otherwise, it also computes
          sums over explicit fields, which allows retrieval of these sums or averages at the end when accessing the record;
@@ -314,7 +315,9 @@ export class AggregationOperator extends DerivedOperator {      // SumOperator
     //                     // otherwise, it uses integer arithmetic on Number, switching automatically to BigInt when
     //                     // the absolute value (shifted left/right by `decimals`) gets large;
 
-    get _sum_fields() { return [...this.val_decimals?.keys() || []] }
+    get _sum_fields() {
+        return [...this.val_decimals?.keys() || []]
+    }
 
 
     __new__(agg = []) {
@@ -336,8 +339,8 @@ export class AggregationOperator extends DerivedOperator {      // SumOperator
     }
 
     generate_value(obj) {
-        /* Extract from source `obj` a vector of components to be added to destination-sequence aggregations; the first
-           element is always 1 for the overall __count. The vector is JSONx-stringified, with surrounding brackets stripped.
+        /* Extract from source `obj` a vector of components to be added to destination-sequence aggregations;
+           the first element is always 1 for __count. The vector is JSONx-stringified, with surrounding brackets stripped.
          */
         let values = this._sum_fields.map(field => {
             let v = obj[field]
