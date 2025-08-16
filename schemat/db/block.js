@@ -231,9 +231,16 @@ export class Block extends Agent {
     async __start__({role}) {
         let stores = await Promise.all(this.storage$.map(s => this._create_store(s)))
         let monitors = (role === '$master') ? new ObjectsMap(this.sequence.derived.map(seq => [seq, new Monitor(this, seq)])) : null
-        let _mutex = new Mutex()
-        let lock_all = (fn) => _mutex.run_exclusive(fn)
-        return {stores, store: stores[0], monitors, lock_all}
+
+        // global lock
+        let _lock = new Mutex()
+        let lock_all = (fn) => _lock.run_exclusive(fn)
+
+        // row-level locks
+        let _locks = new Mutexes(new BinaryMap())
+        let lock_row = (key, fn) => _locks.run_exclusive(key, fn)
+
+        return {stores, store: stores[0], monitors, lock_all, lock_row}
     }
 
     async __stop__() {
@@ -450,9 +457,7 @@ export class DataBlock extends Block {
         let state = await super.__start__(frame)
         let autoincrement = state.store.get_max_id()    // current max ID of records in this block
         let reserved = new Set()                        // IDs that were already assigned during insert(), for correct "compact" insertion of many objects at once
-        let _locks = new Mutexes(new BinaryMap())       // row-level locks for updates & deletes
-        let lock_row = (key, fn) => _locks.run_exclusive(key, fn)
-        return {...state, autoincrement, reserved, lock_row}
+        return {...state, autoincrement, reserved}
     }
 
     async _detect_store_class(format) {
