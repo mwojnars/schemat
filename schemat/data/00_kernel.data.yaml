@@ -159,9 +159,8 @@
       __cid:
         getter: true
         repeated: true
-        info: Type definition for special properties, `obj.__cid` and `obj.__cid$`, of
-          every web object. These properties (getters) return ID(s) of the first
-          __category, or all __category$, or the web object.
+        info: Type definition for the special property, `obj.__cid`, which is 
+          a getter returning ID of the object's __category (if present), or undefined.
         "@": schemat/types/type.js:ID
       __category:
         info: Category of this object. Determines its behavior and the schema of its
