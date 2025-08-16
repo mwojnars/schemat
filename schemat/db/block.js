@@ -12,14 +12,16 @@ const fs = await server_import('node:fs')
 /**********************************************************************************************************************/
 
 export class OP {
-    /* Low-level binary operation (instruction) to be executed on a destination block or sequence.
-       Can be serialized to a WAL log for durability. (TODO)
+    /* Specification of a low-level binary operation (instruction) to be executed on a destination block
+       or sequence. Can be serialized to a WAL log for durability. (TODO)
      */
     constructor(op, ...args) {
         this.op = op        // put, del, inc, ???
         this.args = args
-        // this.block       // target block where the operation should be executed
+        // this.block       // target block where the operation should be executed; set in bind()
     }
+
+    bind(block) { this.block = block }
 
     async submit() {
         /* RPC execution on a derived block. */
