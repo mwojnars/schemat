@@ -139,6 +139,7 @@
   name: a
   strong_ref:
     "@": 2106
+  value_x: 123.4
   __category:
     "@": 2101
 - id: 2106
