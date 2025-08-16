@@ -137,6 +137,8 @@
   title: ąłęÓŁŻŹŚ
 - id: 2105
   name: a
+  ref:
+    "@": 2106
   strong_ref:
     "@": 2106
   value_x: 123.4
