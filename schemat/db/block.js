@@ -327,7 +327,7 @@ export class Block extends Agent {
     }
 
     async _update_acc(key, increments) {
-        return this.$state.lock_all(async () =>
+        return this.$state.lock_row(key, async () =>
         {
             let json = await this.$state.store.get(key)
             let accumulators = this._inc(json, increments)
