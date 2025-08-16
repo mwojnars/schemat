@@ -27,14 +27,12 @@ export class OP {
         /* RPC execution on a derived block. */
         let {block, op, args} = this
         return block.$agent.exec_op(op, ...args)
-        // return block.$agent[op](...args)
     }
 
     exec(block) {
         /* Immediate execution here on `block`. */
         let {op, args} = this
         return block.exec_op(op, ...args)
-        // return block[`OP_${op}`](...args)
     }
 }
 
@@ -281,8 +279,16 @@ export class Block extends Agent {
         return this.$state.store.get(key)
     }
 
-    // async '$agent.put'(key, value) { return this.OP_put(key, value) }
-    // async '$agent.del'(key) { return this.OP_del(key) }
+    async '$agent.scan'(opts = {}) {
+        /* Generator of binary records in a key range defined by `opts`. */
+        if (!this.sequence.filled) throw new Error(`sequence not initialized`)
+        return arrayFromAsync(this._scan(opts))
+    }
+
+    async *_scan(opts = {}) { yield* this.$state.store.scan(opts) }
+
+
+    /***  Record modifications (ops)  ***/
 
     async '$agent.exec_op'(op, ...args) { return this.exec_op(op, ...args) }
 
@@ -300,37 +306,6 @@ export class Block extends Agent {
         return this.$state.stores.map(s => s.del(key))[0]           // delete from all stores, but return the first result only
     }
 
-    async '$agent.scan'(opts = {}) {
-        /* Generator of binary records in a key range defined by `opts`. */
-        if (!this.sequence.filled) throw new Error(`sequence not initialized`)
-        return arrayFromAsync(this._scan(opts))
-    }
-
-    async *_scan(opts = {}) { yield* this.$state.store.scan(opts) }
-
-    async '$agent.erase'() {
-        /* Remove all records from this block. */
-        return this.$state.stores.map(s => s.erase())[0]
-    }
-
-    // async '$agent.flush'() {
-    //     return this.$state.stores.map(s => s.flush(false))[0]
-    // }
-
-    async _sync_stores() {
-        /* Copy all data from $state.store to other stores (if present) after erasing them. */
-        let others = this.$state.stores.slice(1)
-        if (!others.length) return
-
-        this._print(`_sync_stores() ...`)
-        await Promise.all(others.map(s => s.erase()))
-        let {store} = this.$state
-
-        for (let [k, v] of store.scan())
-            await Promise.all(others.map(s => s.put(k, v)))
-
-        this._print(`_sync_stores() done`)
-    }
 
     /***  Change propagation  ***/
 
@@ -390,6 +365,33 @@ export class Block extends Agent {
             assert(!seq.filled)
             this.$state.monitors.set(seq, new Monitor(this, seq, true))
         // })
+    }
+
+
+    /***  Bulk modifications  ***/
+
+    async '$agent.erase'() {
+        /* Remove all records from this block. */
+        return this.$state.stores.map(s => s.erase())[0]
+    }
+
+    // async '$agent.flush'() {
+    //     return this.$state.stores.map(s => s.flush(false))[0]
+    // }
+
+    async _sync_stores() {
+        /* Copy all data from $state.store to other stores (if present) after erasing them. */
+        let others = this.$state.stores.slice(1)
+        if (!others.length) return
+
+        this._print(`_sync_stores() ...`)
+        await Promise.all(others.map(s => s.erase()))
+        let {store} = this.$state
+
+        for (let [k, v] of store.scan())
+            await Promise.all(others.map(s => s.put(k, v)))
+
+        this._print(`_sync_stores() done`)
     }
 }
 
