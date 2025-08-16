@@ -26,15 +26,15 @@ export class OP {
     async submit() {
         /* RPC execution on a derived block. */
         let {block, op, args} = this
-        assert(['put', 'del'].includes(op))
-        return block.$agent[op](...args)
+        return block.$agent.exec_op(op, ...args)
+        // return block.$agent[op](...args)
     }
 
     exec(block) {
         /* Immediate execution here on `block`. */
         let {op, args} = this
-        assert(['put', 'del'].includes(op))
-        return block[`OP_${op}`](...args)
+        return block.exec_op(op, ...args)
+        // return block[`OP_${op}`](...args)
     }
 }
 
@@ -281,8 +281,15 @@ export class Block extends Agent {
         return this.$state.store.get(key)
     }
 
-    async '$agent.put'(key, value) { return this.OP_put(key, value) }
-    async '$agent.del'(key) { return this.OP_del(key) }
+    // async '$agent.put'(key, value) { return this.OP_put(key, value) }
+    // async '$agent.del'(key) { return this.OP_del(key) }
+
+    async '$agent.exec_op'(op, ...args) { return this.exec_op(op, ...args) }
+
+    async exec_op(op, ...args) {
+        assert(['put', 'del', 'inc', 'dec'].includes(op))
+        return this[`OP_${op}`](...args)
+    }
 
     async OP_put(key, value) {
         /* Write the [key, value] pair here in this block. No forward of the request to another ring. */
