@@ -37,7 +37,9 @@ export class Mutex {
 export class Mutexes {
     /* A map of Mutex locks, one for each key. */
     
-    _map = new Map()
+    constructor(map = new Map()) {
+        this._map = map
+    }
 
     async acquire(key) {
         /* Acquire the mutex and return a release() function. */
