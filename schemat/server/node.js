@@ -552,8 +552,9 @@ export class Node extends Agent {
         /* Install `agent` (object or ID) on this node, then find the least busy worker process and start `agent` there. */
         agent = schemat.as_object(agent)
 
-        // TODO: do *not* install if the agent is already deployed here on this node
-        await agent.__install__(role, this)
+        // install the agent unless it's already deployed here on this node
+        if (this._find_worker(agent.id, role) == null)
+            await agent.__install__(role, this)
 
         this._print(`$master.deploy() agent=${agent} role=${role}`)
         // this._print(`$master.deploy() agents:`, this.$state.agents.map(({worker, agent, role}) => ({worker, id: agent.id, role})))
