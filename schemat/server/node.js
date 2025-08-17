@@ -549,6 +549,7 @@ export class Node extends Agent {
 
     async '$master.deploy'(agent, role) {
         /* Install `agent` on this node, then find the least busy worker process and start `agent` there. */
+        // TODO: do *not* install if the agent is already deployed here on this node
         await agent.__install__(role, this)
         return this.$master.start_agent(agent, {role})
     }
