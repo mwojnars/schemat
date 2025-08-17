@@ -317,6 +317,7 @@ export class Frame {
     }
 
     _frame_context(agent, call) {
+        // TODO: remove this method
         /* Run call() on `agent` in the context of this frame (agent.__frame/$frame/$state is set up). */
         assert(!this.locked, `starting a call when another one is executing in exclusive lock, internal management of this.locked is flawed :(`)
         assert(agent.$frame === this)

@@ -337,27 +337,26 @@ export class Node extends Agent {
 
     /* Agent routing */
 
-    _find_node(agent_id, role) {
-        /* Return the node where `agent` is deployed in a given `role`. The current node has a priority:
-           if the agent is deployed on one of the local processes, `this` is returned.
+    _find_node(id, role) {
+        /* Return the node where agent is deployed in a given `role`. The current node has a priority:
+           if the agent is deployed on one of the local processes, `this` is always returned.
          */
-        if (this._find_worker(agent_id, role) != null) return this
-        return schemat.cluster.find_node(agent_id, role)
+        if (this._find_worker(id, role) != null) return this
+        return schemat.cluster.find_node(id, role)
     }
 
-    _find_worker(agent_id, role) {
+    _find_worker(id, role) {
         /* On master, look up the `agents` array of agent placements to find the local process where the agent runs
            in a given `role` (or in any role if `role` is missing or GENERIC_ROLE).
          */
         // let agents = this.$master.state?.agents
         // assert(agents, `array of running agents not yet initialized`)
 
-        if (agent_id === this.id) return 0      // the node agent itself is contacted at the master process
+        if (id === this.id) return 0        // the node agent itself is contacted at the master process
         if (role === schemat.GENERIC_ROLE) role = undefined
 
         assert(this.$state, `missing $frame binding`)
-        let {agents} = this.$state
-        let status = agents.find(status => status.id === agent_id && (!role || status.role === role))
+        let status = this.$state.agents.find(st => st.id === id && (!role || st.role === role))
         return status?.worker
     }
 
