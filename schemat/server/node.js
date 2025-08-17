@@ -547,21 +547,17 @@ export class Node extends Agent {
 
     /* Starting & stopping agents */
 
-    async '$master.deploy'(agent, role) {
-        /* Install `agent` on this node, then find the least busy worker process and start `agent` there. */
+    async '$master.deploy'(agent, role, {worker, replicas = 1} = {}) {
+        /* Install `agent` (object or ID) on this node, then find the least busy worker process and start `agent` there. */
+        agent = schemat.as_object(agent)
+
         // TODO: do *not* install if the agent is already deployed here on this node
         await agent.__install__(role, this)
-        return this.$master.start_agent(agent, {role})
-    }
-    // async '$master.remove'(agent, role) {}
 
-    async '$master.start_agent'(agent, {role, worker, replicas = 1} = {}) {
-        /* `agent` is a web object or ID. */
-        this._print(`$master.start_agent() agent=${agent} role=${role}`)
-        // this._print(`$master.start_agent() agents:`, this.$state.agents.map(({worker, agent, role}) => ({worker, id: agent.id, role})))
+        this._print(`$master.deploy() agent=${agent} role=${role}`)
+        // this._print(`$master.deploy() agents:`, this.$state.agents.map(({worker, agent, role}) => ({worker, id: agent.id, role})))
 
         let {agents} = this.$state
-        agent = schemat.as_object(agent)
         // if (agents.has(agent)) throw new Error(`agent ${agent} is already running on node ${this}`)
         // agents.set(agent, {params, role, workers})
 
@@ -578,11 +574,13 @@ export class Node extends Agent {
             assert(worker >= 1 && worker <= this.num_workers)
             agents.push({worker, id: agent.id, role})
 
-            // request the worker process to start the agent:
+            // request worker process to start the agent:
             await this.$worker({worker})._start_agent(agent.id, role)
         }
         await this.action.update({agents})
     }
+
+    // async '$master.remove'(agent, role) {}
 
     async '$master.stop_agent'(agent, {role, worker} = {}) {
         /* `agent` is a web object or ID. */
