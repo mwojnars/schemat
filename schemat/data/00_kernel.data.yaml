@@ -159,8 +159,8 @@
       __cid:
         getter: true
         repeated: true
-        info: Type definition for the special property, `obj.__cid`, which is 
-          a getter returning ID of the object's __category (if present), or undefined.
+        info: Type definition for the special property, `obj.__cid`, which is a getter
+          returning ID of the object's __category (if present), or undefined.
         "@": schemat/types/type.js:ID
       __category:
         info: Category of this object. Determines its behavior and the schema of its
@@ -695,7 +695,8 @@
   name: DataOperator
   class: schemat/db/operator.js:DataOperator
   defaults:
-    key: ['id']
+    key:
+      - id
     fields:
       id:
         "@": schemat/types/type.js:INTEGER
@@ -845,12 +846,11 @@
   class: schemat/db/operator.js:AggregationOperator
   schema:
     sum:
-      info: Names of object fields to be counted and summed up during aggregation.
-        An average of each of these fields can be retrieved at the end, as well.
+      info: Names of object fields to be counted and summed up during aggregation. An
+        average of each of these fields can be retrieved at the end, as well.
       type:
         "@": schemat/types/type.js:STRING
-      default:
-        []
+      default: []
       "@": schemat/types/type.js:ARRAY
     "@": schemat:Catalog
   __prototype:
@@ -861,7 +861,9 @@
   name: idx-category
   info: "Index of all objects by their category: the key is [category ID, item
     ID], no payload."
-  key: ['__cid','id']
+  key:
+    - __cid
+    - id
   fields:
     __cid:
       repeated: true
@@ -881,8 +883,8 @@
       blank: ""
       "@": schemat/types/type.js:STRING
     fields:
-      info: Names and data types of fields comprising the key and payload of
-        this operator's output records.
+      info: Names and data types of fields comprising the key and payload of this
+        operator's output records.
       key_type:
         "@": schemat/types/type.js:STRING
       value_type:
@@ -892,16 +894,14 @@
       info: Names of fields in the key of this operator's output records.
       type:
         "@": schemat/types/type.js:STRING
-      default:
-        []
+      default: []
       "@": schemat/types/type.js:ARRAY
     payload:
-      info: Names of fields comprising the payload (value) of this operator's
-        output records.
+      info: Names of fields comprising the payload (value) of this operator's output
+        records.
       type:
         "@": schemat/types/type.js:STRING
-      default:
-        []
+      default: []
       "@": schemat/types/type.js:ARRAY
     file_tag:
       info: Prefix (infix) inserted in file names of all new blocks created in data
