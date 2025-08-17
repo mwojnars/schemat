@@ -134,8 +134,9 @@ class Intercept {
 
                 let frame = schemat.get_frame(id, role)
 
-                // obj.$ROLE.state is a special field that gives access to the locally running agent's state (if present)
-                if (name === 'state') return frame?.state
+                // // obj.$ROLE.state is a special field that gives access to the locally running agent's state (if present)
+                // if (name === 'state') return frame?.state
+                assert(name !== 'state')
 
                 let opts = use_opts ? {...current_opts, role} : {role}
                 current_opts = null
