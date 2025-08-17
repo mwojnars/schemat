@@ -350,6 +350,8 @@ export class Node extends Agent {
            in a given `role` (or in any role if `role` is missing or GENERIC_ROLE).
          */
         let agents = this.$master.state?.agents
+        // let {agents} = this.$state || {}
+
         assert(agents, `array of running agents not yet initialized`)
         if (agent_id === this.id) return 0      // the node agent itself is contacted at the master process
 
@@ -580,7 +582,7 @@ export class Node extends Agent {
         await this.action.update({agents})
     }
 
-    // async '$master.remove'(agent, role) {}
+    // async '$master.dismiss'(agent, role) {}   // dismiss/discard/delete/displace/expel/expulse/evict/eject/remove
 
     async '$master.stop_agent'(agent, {role, worker} = {}) {
         /* `agent` is a web object or ID. */
