@@ -13,9 +13,11 @@ export class Agent extends WebObject {
        being allocated/deallocated in __install__/__uninstall__(), while some others (e.g., sockets) in __start__/__stop__().
     */
 
-    __frame         // AsyncLocalStorage that holds the current Frame of this agent while its agent-method(s) is being called
+    // __frame         // AsyncLocalStorage that holds the current Frame of this agent while its agent-method(s) is being called
+    //
+    // get $frame()    { return this.__frame?.getStore() }
 
-    get $frame()    { return this.__frame?.getStore() }
+    $frame
     get $state()    { return this.$frame?.state }
     get $role()     { return this.$frame?.role }
 

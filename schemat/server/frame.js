@@ -144,6 +144,10 @@ export class Frame {
         let {agent, tag} = this
         schemat._print(`starting ${tag} ...`)
 
+        assert(agent.is_loaded())
+        if (agent.$frame) this.agent = agent = await agent.reload()
+        agent.$frame = this
+
         let state = await agent.app_context(() => agent.__start__(this)) || {}
         this.set_state(state)
 
@@ -168,6 +172,7 @@ export class Frame {
             schemat._print(`error reloading agent ${tag}:`, ex, `- restart skipped`)
             return
         }
+        agent.$frame = this
         // if (agent === this.agent) return
         // assert(agent.id === this.agent.id)
         // assert(agent !== this.agent)
@@ -314,8 +319,10 @@ export class Frame {
     _frame_context(agent, call) {
         /* Run call() on `agent` in the context of this frame (agent.__frame/$frame/$state is set up). */
         assert(!this.locked, `starting a call when another one is executing in exclusive lock, internal management of this.locked is flawed :(`)
-        agent.__frame ??= new AsyncLocalStorage()
-        return agent.$frame === this ? call() : agent.__frame.run(this, call)
+        assert(agent.$frame === this)
+        return call()
+        // agent.__frame ??= new AsyncLocalStorage()
+        // return agent.$frame === this ? call() : agent.__frame.run(this, call)
     }
 
     async _tracked(promise) {
