@@ -548,7 +548,8 @@ export class Node extends Agent {
     /* Starting & stopping agents */
 
     async '$master.deploy'(agent, role) {
-        /* Find the least busy worker process and deploy `agent` there. */
+        /* Install `agent` on this node, then find the least busy worker process and start `agent` there. */
+        await agent.__install__(role, this)
         return this.$master.start_agent(agent, {role})
     }
     // async '$master.remove'(agent, role) {}

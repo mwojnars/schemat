@@ -228,6 +228,12 @@ export class Block extends Agent {
 
     decode_object(key, val) { return this.operator.decode_object(key, val) }
 
+    async __install__() {
+        await this._clear_files()       // remove the files (if any) left over by a previous instance with the same ID
+    }
+
+    async __uninstall__() { await this._clear_files() }
+
     async __start__({role}) {
         let stores = await Promise.all(this.storage$.map(s => this._create_store(s)))
         let monitors = (role === '$master') ? new ObjectsMap(this.sequence.derived.map(seq => [seq, new Monitor(this, seq)])) : null
@@ -248,10 +254,9 @@ export class Block extends Agent {
         await Promise.all(this.$state.stores.toReversed().map(store => store.close()))
     }
 
-    async _detect_store_class(format) {
-        let {JsonStore} = await import('./store.js')
-        if (format === 'json') return JsonStore
-        throw new Error(`unsupported store type '${format}' in ${this}`)
+    async _clear_files() {
+        /* Remove all files/folders of this block. */
+
     }
 
     async _create_store(storage, path = null) {
@@ -266,6 +271,12 @@ export class Block extends Agent {
         let ext = Block.STORAGE_TYPES[storage]
         if (!ext) throw new Error(`unknown storage type '${storage}' in ${this}`)
         return `${schemat.node.file_path}/${this.file_tag}.${ext}`
+    }
+
+    async _detect_store_class(format) {
+        let {JsonStore} = await import('./store.js')
+        if (format === 'json') return JsonStore
+        throw new Error(`unsupported store type '${format}' in ${this}`)
     }
 
     _get_backfill_path(seq) {
