@@ -735,7 +735,7 @@
       "@": schemat/types/type.js:BINARY
     "@": schemat:Catalog
   defaults:
-    concurrent_calls: true
+    concurrent: true
     "@": schemat:Catalog
   class: schemat/db/block.js:Block
   __prototype:
@@ -987,7 +987,7 @@
         need only one copy per node, or per cluster, but some others (like web
         servers) may benefit from concurrent execution on multiple workers.
       "@": schemat/types/type.js:INTEGER
-    concurrent_calls:
+    concurrent:
       info: If true, multiple calls to an agent instance may execute concurrently.
         Disabled by default, so every agent method runs in exclusive lock.
       "@": schemat/types/type.js:BOOLEAN

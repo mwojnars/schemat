@@ -271,7 +271,7 @@ export class Frame {
         if (this.starting) await this.starting
 
         while (true) {
-            if ((this.locked || !agent.concurrent_calls) && this.calls.length > 0)
+            if ((this.locked || !agent.concurrent) && this.calls.length > 0)
                 // print(`... ${agent}.${method}() waits for a previous call(s) to complete`)
                 await Promise.all(this.calls)                   // wait for ongoing call(s) to complete if in exclusive mode
             else if (this.paused && command !== 'resume')
