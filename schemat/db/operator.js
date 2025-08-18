@@ -20,7 +20,7 @@ export class Operator extends WebObject {
                 // types are mainly needed for .binary_encode/decode(), so some of their options can be removed compared to WebObject's schema
     file_tag
 
-    get key_types() { return this.key.map(f => this.fields[f]) }
+    get key_types() { return this.key.map(f => this.fields[drop_plural(f)]) }
 
     encode_key(key) {
         /* Convert an array, `key`, of field values to a binary key (Uint8Array). The array can be shorter than this.key
@@ -30,6 +30,7 @@ export class Operator extends WebObject {
         let output = new BinaryOutput()
         let length = Math.min(types.length, key.length)
 
+        // this._print(`key_types=${types} key=${this.key}`)
         assert(key.length <= types.length, `key length ${key.length} > field types length ${types.length}`)
 
         for (let i = 0; i < length; i++) {
