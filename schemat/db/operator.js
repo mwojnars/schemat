@@ -33,9 +33,9 @@ export class Operator extends WebObject {
         assert(key.length <= types.length, `key length ${key.length} > field types length ${types.length}`)
 
         for (let i = 0; i < length; i++) {
-            const type = types[i]
-            const last = (i === types.length - 1)
-            const bin  = type.binary_encode(key[i], last)
+            let type = types[i]
+            let last = (i === types.length - 1)
+            let bin  = type.binary_encode(key[i], last)
             output.write(bin)
         }
         return output.result()
