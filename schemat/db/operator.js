@@ -30,7 +30,6 @@ export class Operator extends WebObject {
         let output = new BinaryOutput()
         let length = Math.min(types.length, key.length)
 
-        // this._print(`key_types=${types} key=${this.key}`)
         assert(key.length <= types.length, `key length ${key.length} > field types length ${types.length}`)
 
         for (let i = 0; i < length; i++) {
