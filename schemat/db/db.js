@@ -434,6 +434,7 @@ export class Database extends WebObject {
         let IndexOperator = schemat.std.IndexOperator
         let operator = await IndexOperator.new({name, key, payload, category}).save({ring})
         await this._create_sequence(operator, {ring})
+        return operator
     }
 
     // async 'action.create_aggregation'(name, key, sum = [], {category, ring} = {}) {
@@ -449,6 +450,12 @@ export class Database extends WebObject {
             ring = this.rings[i]
             await ring.action.create_derived('main', operator)
         }
+    }
+
+    async 'action.remove_operator'(operator) {
+        /* Delete `operator` object and all sequences that implement this operator
+           across different rings, all the way up from operator.__ring.
+         */
     }
 
     async 'action.admin_reinsert'(ids, {id: new_id, ring, compact = false} = {}) {
