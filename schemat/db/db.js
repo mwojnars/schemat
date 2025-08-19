@@ -434,14 +434,10 @@ export class Database extends WebObject {
         let IndexOperator = schemat.std.IndexOperator
         let operator = await IndexOperator.new({name, key, payload, category}).save({ring})
         await this._create_sequence(operator, {ring})
-
-        // // create sequences that will apply `operator` to the "main" sequence, in `ring` and all higher rings
-        // let pos = this.rings.indexOf(ring)
-        // for (let i = pos; i < this.rings.length; i++) {
-        //     ring = this.rings[i]
-        //     await ring.action.create_derived('main', operator)
-        // }
     }
+
+    // async 'action.create_aggregation'(name, key, sum = [], {category, ring} = {}) {
+    // }
 
     async _create_sequence(operator, {ring} = {}) {
         /* Create sequence(s) in `ring` and all rings above that implement the `operator`.
