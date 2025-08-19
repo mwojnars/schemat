@@ -315,7 +315,7 @@ export class Database extends WebObject {
         return this.get_ring(ring).select(id)
     }
 
-    async insert(entries, {ring, ...opts} = {}) {
+    async _insert(entries, {ring, ...opts} = {}) {
         /* Find the top-most writable ring and insert a number of [provisional-id, data] entries. Return an array of {id, data} records.
            If `ring` is given (name/object/ID), the entry is inserted to this particular ring, or error is raised if read-only.
          */
@@ -327,14 +327,14 @@ export class Database extends WebObject {
         return ring.insert(entries, opts)
     }
 
-    async update(id_edits, {ring, ...opts} = {}) {
+    async _update(id_edits, {ring, ...opts} = {}) {
         /* Apply edits to records in the database. `id_edits` is an array of pairs: [id, array_of_edits], or one such pair. */
         if (!Array.isArray(id_edits)) id_edits = [id_edits]
         ring = this.get_ring(ring)
         await Promise.all(id_edits.map(([id, edits]) => ring.update(id, edits)))
     }
 
-    async delete(ids, {ring, ...opts} = {}) {
+    async _delete(ids, {ring, ...opts} = {}) {
         /* Delete a single ID (object), or an array of IDs/objects, from the database. */
         if (!Array.isArray(ids)) ids = [ids]
         ids = ids.map(id => (typeof id === 'object') ? id.id : id)
@@ -352,17 +352,17 @@ export class Database extends WebObject {
            All arguments except `opts` must be arrays or null/undefined.
          */
         let inserted, deleted
-        let deleting = deletes?.length ? this.delete(deletes, opts) : null      // deletions may run in parallel with inserts & updates
+        let deleting = deletes?.length ? this._delete(deletes, opts) : null      // deletions may run in parallel with inserts & updates
 
         // inserts must be done together and receive their IDs before the updates are processed, due to possible cross-references
         if (inserts?.length) {
-            inserted = await this.insert(inserts, opts)
+            inserted = await this._insert(inserts, opts)
 
             // scan argument lists of all edits in `updates` and replace provisional IDs in references with final IDs from `inserted`
             let edits = updates?.flatMap(([_, edits]) => edits)
             DataBlock.rectify_refs(edits, inserts, inserted)
         }
-        if (updates?.length) await this.update(updates, opts)
+        if (updates?.length) await this._update(updates, opts)
         if (deleting) deleted = await deleting
 
         // inserted = an array of IDs assigned to the inserted objects, in the same order as in `inserts`
