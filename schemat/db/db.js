@@ -310,6 +310,8 @@ export class Database extends WebObject {
         return ring
     }
 
+    /***  Data access & modification  ***/
+
     async select(id, {ring} = {}) {
         return this.get_ring(ring).select(id)
     }
@@ -368,9 +370,6 @@ export class Database extends WebObject {
         return {inserted, deleted}
     }
 
-
-    /***  Indexes  ***/
-
     async *scan(name, {offset, start, stop, ...opts} = {}) {
         /* Yield a stream of pseudo-objects loaded from a derived sequence, merge-sorted from all rings, and decoded.
            A pseudo-object resembles the original web object where field values for the record were sourced from,
@@ -414,6 +413,8 @@ export class Database extends WebObject {
         // TODO: apply `batch_size` to the merged stream and yield in batches
     }
 
+    /***  Administration  ***/
+
     async rebuild_indexes() {
         for (let ring of this.rings)
             await ring.rebuild_indexes()
@@ -453,8 +454,6 @@ export class Database extends WebObject {
             await ring.action.create_derived('main', operator)
         }
     }
-
-    /***  Administrative  ***/
 
     async 'action.admin_reinsert'(ids, {id: new_id, ring, compact = false} = {}) {
         /* Remove object(s) from its current ring and reinsert under new `id` into `ring` (if present), or to the top-most ring.
@@ -534,6 +533,7 @@ export class Database extends WebObject {
     }
 }
 
+/**********************************************************************************************************************/
 
 export class BootDatabase extends Database {
     async __draft__(ring_specs) {
