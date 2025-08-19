@@ -335,24 +335,22 @@ export class Database extends WebObject {
     }
 
     async _delete(ids, {ring, ...opts} = {}) {
-        /* Delete a single ID (object), or an array of IDs/objects, from the database. */
+        /* Delete a single ID, or an array of IDs, from the database. */
         if (!Array.isArray(ids)) ids = [ids]
-        ids = ids.map(id => (typeof id === 'object') ? id.id : id)
         ring = this.get_ring(ring)
         let counts = await Promise.all(ids.map(id => ring.delete(id)))
         return sum(counts)
     }
 
     async submit(inserts = null, updates = null, deletes = null, opts = {}) {
-        /* Perform multiple mutations of different types: insertions, updates, deletions.
-           This method is like insert() + update() + delete(), combined. Arguments:
+        /* Called by Transaction to perform a batch of mutations of mixed types. Arguments:
            - inserts = an array of [negative-provisional-id, data] entries to insert;
            - updates = an array of [id, array_of_edits] pairs for objects to be mutated;
            - deletes = an array of IDs to delete.
            All arguments except `opts` must be arrays or null/undefined.
          */
         let inserted, deleted
-        let deleting = deletes?.length ? this._delete(deletes, opts) : null      // deletions may run in parallel with inserts & updates
+        let deleting = deletes?.length ? this._delete(deletes, opts) : null     // deletions may run in parallel with inserts & updates
 
         // inserts must be done together and receive their IDs before the updates are processed, due to possible cross-references
         if (inserts?.length) {
@@ -459,15 +457,15 @@ export class Database extends WebObject {
         let __ring = operator.__ring
         assert(__ring, `unknown storage ring of ${operator}`)
 
-        // iterate over rings_reversed until __ring is found
+        // iterate from the top ring down to __ring (included)
         for (let ring of this.rings_reversed) {
             let seq = ring.sequence_by_operator.get(operator.id)
-            await this.delete(seq)
+            if (seq) await seq.delete_self().save()
             if (ring === __ring) break
         }
 
         // TODO: delete derived operators first (derived sequences are removed automatically)
-        await this.delete(operator)
+        await operator.delete_self().save()
     }
 
     async 'action.admin_reinsert'(ids, {id: new_id, ring, compact = false} = {}) {
