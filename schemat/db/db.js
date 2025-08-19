@@ -58,10 +58,9 @@ export class Ring extends WebObject {
     }
 
     get derived() {
-        /* All derived sequences, that is, .sequences without the main sequence. */
+        /* All derived sequences: like .sequences but without the main sequence. */
         return this.sequences.slice(1)
     }
-
 
     get operators() {
         /* Map of all operators in this ring stack keyed by operator's name. */
@@ -336,8 +335,9 @@ export class Database extends WebObject {
     }
 
     async delete(ids, {ring, ...opts} = {}) {
-        /* Delete a single ID, or an array of IDs, from the database. */
+        /* Delete a single ID (object), or an array of IDs/objects, from the database. */
         if (!Array.isArray(ids)) ids = [ids]
+        ids = ids.map(id => (typeof id === 'object') ? id.id : id)
         ring = this.get_ring(ring)
         let counts = await Promise.all(ids.map(id => ring.delete(id)))
         return sum(counts)
@@ -456,6 +456,18 @@ export class Database extends WebObject {
         /* Delete `operator` object and all sequences that implement this operator
            across different rings, all the way up from operator.__ring.
          */
+        let __ring = operator.__ring
+        assert(__ring, `unknown storage ring of ${operator}`)
+
+        // iterate over rings_reversed until __ring is found
+        for (let ring of this.rings_reversed) {
+            let seq = ring.sequence_by_operator.get(operator.id)
+            await this.delete(seq)
+            if (ring === __ring) break
+        }
+
+        // TODO: delete derived operators first (derived sequences are removed automatically)
+        await this.delete(operator)
     }
 
     async 'action.admin_reinsert'(ids, {id: new_id, ring, compact = false} = {}) {
