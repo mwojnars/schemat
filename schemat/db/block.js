@@ -1,4 +1,4 @@
-import {assert, print, T, zip, arrayFromAsync, fileBaseName, trycatch} from '../common/utils.js'
+import {assert, print, T, zip, arrayFromAsync, fileBaseName, trycatch, sleep} from '../common/utils.js'
 import {DataAccessError, DataConsistencyError, ObjectNotFound} from '../common/errors.js'
 import {Shard, ObjectsMap, Mutex, Mutexes} from "../common/structs.js"
 import {BinaryMap, compare_bin, zero_binary} from "../common/binary.js";
@@ -255,8 +255,15 @@ export class Block extends Agent {
     }
 
     async _clear_files() {
-        /* Remove all files/folders of this block. */
+        /* Remove all storage files/folders of this block. Backfill status files are NOT removed as of now. */
+        this._print(`_clear_files() start...`)
 
+        let paths = this.storage$.map(s => this._get_store_path(s))
+        // paths.push()
+
+        await Promise.all(paths.map(path => fs.rmSync(path, {recursive: true, force: true})))
+        // await sleep(1)
+        this._print(`_clear_files() stop`)
     }
 
     async _create_store(storage, path = null) {
