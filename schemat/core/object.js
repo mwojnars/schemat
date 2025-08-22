@@ -1096,7 +1096,7 @@ export class WebObject {
     __draft__() {}
         /* Async setup of a temporary object created with static draft(), typically during bootstrap. */
 
-    __setup__() {}  //config, {ring, block}) {}
+    __setup__() {}      // __insert__()
         /* Server-side setup of the object, launched during insert to a data block, right after the object received
            its final ID. Typically, it creates related sub-objects, esp. when doing this on a client would be too costly.
            __setup__() can be viewed as continuation of __new__(), but asynchronous, executed on a server (inside a data block)
@@ -1105,6 +1105,11 @@ export class WebObject {
            performance of insertions and future read access. NOTE: the objects created during __setup__() are not staged
            in the transaction, but inserted immediately to the block, with their own __setup__() being executed right away.
            For this reason, it is unnecessary and disallowed to save them explicitly with obj.save() or schemat.save(...).
+         */
+
+    __destroy__() {}    // __delete__/__teardown__/__finalize__()
+        /* Custom tear down executed when this object is to be permanently deleted from the database.
+           Typically, this method removes related objects and/or local resources and stops the agent.
          */
 
     __load__() {}
@@ -1117,11 +1122,6 @@ export class WebObject {
     __validate__() {}
         /* Validate this object's own properties during insert/update. Called *after* validation of individual values through their schema.
            Called on a NON-activated object: should NOT require that __load__() or _activate() was called beforehand!
-         */
-
-    __delete__() {}
-        /* Custom tear down executed when this object is permanently deleted from the database. Typically,
-           this method removes related objects that are no longer needed after the current one is removed.
          */
 
     // __done__() {}
