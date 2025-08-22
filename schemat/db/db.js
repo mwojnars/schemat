@@ -457,9 +457,10 @@ export class Database extends WebObject {
         let __ring = operator.__ring
         assert(__ring, `unknown storage ring of ${operator}`)
 
-        // iterate from the top ring down to __ring (included)
+        // iterate from the top ring down to __ring
         for (let ring of this.rings_reversed) {
             let seq = ring.sequence_by_operator.get(operator.id)
+            // TODO: how to run seq.__uninstall__(), who should do it?
             if (seq) await seq.delete_self().save()
             if (ring === __ring) break
         }
