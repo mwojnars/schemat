@@ -460,11 +460,11 @@ export class Database extends WebObject {
         // iterate from the top ring down to __ring (included)
         for (let ring of this.rings_reversed) {
             let seq = ring.sequence_by_operator.get(operator.id)
-            if (seq) await seq.delete_self().save()     // TODO: __destroy__() to stop agents
+            if (seq) await seq.delete_self().save()
             if (ring === __ring) break
         }
 
-        // TODO: delete derived operators first (derived sequences are removed automatically)
+        // TODO: delete derived operators (derived sequences are removed automatically)
         await operator.delete_self().save()
     }
 
