@@ -128,6 +128,8 @@ export class Sequence extends WebObject {
         /* Create a derived sequence that will capture changes from this sequence and apply `operator` to them. */
 
         let seq = schemat.std.Sequence.new({ring: this.ring, operator})
+
+        // TODO: update this.derived at the end, after `seq` is deployed
         this.derived = [...this.derived || [], seq]
 
         assert(this.__ring)

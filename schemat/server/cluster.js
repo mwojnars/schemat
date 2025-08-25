@@ -126,7 +126,7 @@ export class Cluster extends Agent {
            2) The $state should only be modified outside a transaction, otherwise the DB changes could be rolled back
               at the end by the caller, leaving $state incompatible with DB.
 
-              In general, agent operations can be executed inside a (non-atomic) action, but not inside a transaction.
+              In general, agent operations are allowed to execute inside a (non-atomic) action, but not in a transaction.
               Apart from $state consistency, there are also performance reasons: in some cases, agent operations
               may last for a long time, e.g., when install/uninstall of local environment is involved,
               so running them in a transaction might block other DB transactions.
