@@ -1291,7 +1291,11 @@ export class WebObject {
     /***  Database operations on self  ***/
 
     delete_self() {
-        /* Mark this object as to-be-deleted in its mutable copy (in transaction) and return this copy for easy chaining of a .save() call. */
+        /* Mark this object as to-be-deleted in its mutable copy (in transaction) and return this copy for easy chaining of a .save() call.
+           The object can be a stub (no __data), which allows marking an ID for deletion without loading its content.
+           This implies, however, that this method should *not* be overridden, because a subclass implementation
+           will *not* be detected when invoked on a stub object.
+         */
         let obj = this.get_mutable()
         obj.__self.__status = WebObject.Status.DELETED
         return obj
