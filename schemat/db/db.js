@@ -452,7 +452,7 @@ export class Database extends WebObject {
 
     async 'ax.remove_operator'(operator) {
         /* Delete `operator` object and all sequences that implement this operator across different rings
-           staring in operator.__ring and moving all the way up to the top ring.
+           starting in operator.__ring and moving up to the top ring.
          */
         let __ring = operator.__ring
         assert(__ring, `unknown storage ring of ${operator}`)
@@ -460,19 +460,8 @@ export class Database extends WebObject {
         // iterate from the top ring down to __ring
         for (let ring of this.rings_reversed) {
             let seq = ring.sequence_by_operator.get(operator.id)
-            
-            // remove `seq` from source.derived array
-            if (seq.source) {
-                let derived = seq.source.derived
-                let pos = derived.indexOf(seq)
-                assert(pos !== -1)
-                derived.splice(pos, 1)
-                seq.source.derived = derived
-                await seq.source.save()
-            }
-
             if (seq) await seq.delete_self().save()
-            // TODO: run seq.blocks[i].__uninstall__(), who should do it?
+            // TODO: run seq.blocks[i].__uninstall__()
 
             if (ring === __ring) break
         }

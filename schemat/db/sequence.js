@@ -44,6 +44,20 @@ export class Sequence extends WebObject {
         // this._print(`tx._staging:`, schemat.tx._staging)
     }
 
+    async __delete__() {
+        /* Upon delete, the sequence must take care to remove itself from source.derived array. */
+        if (!this.source) return
+
+        // this.source.edit.rmv_derived(this)
+
+        let derived = this.source.derived
+        let pos = derived.indexOf(this)
+        assert(pos !== -1)
+        derived.splice(pos, 1)
+        this.source.derived = derived
+        await this.source.save()
+    }
+
     async __load__() {
         // TODO: drop __load__() and perform lazy loading of blocks
         //  (but block.load() must only use lower rings to search for the block! otherwise infinite recursion occurs)
@@ -54,7 +68,7 @@ export class Sequence extends WebObject {
         //     this.ring.load()                            // intentionally not awaited to avoid deadlocks
         //     // assert(this.ring.__meta.loading)
 
-        // load operator and derived sequences, but NOT blocks of self
+        // load operator and derived sequences, but NOT blocks
         await this.operator?.load()
         if (this.derived) await Promise.all(this.derived.map(seq => seq.load()))
 
