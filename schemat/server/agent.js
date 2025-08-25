@@ -73,6 +73,10 @@ export class Agent extends WebObject {
         /* Stop the agent's execution. Release any local resources that were acquired during __start__() or __restart__(). */
     }
 
+    async delete_agent() {
+        /* Like .delete_self(), but first stops & uninstalls all running instances of this agent across the cluster. */
+    }
+
     async app_context(fn, caller_ctx = null) {
         /* Run fn() in the app/db context expected by this agent (this.__ctx). */
         assert(this.is_loaded())
