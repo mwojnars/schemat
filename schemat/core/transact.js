@@ -230,9 +230,12 @@ export class Transaction {
 export class ServerTransaction extends Transaction {
     /* Server-side transaction object. */
 
-    constructor({tid, lite} = {}) {
+    lite
+
+    constructor({tid, lite = false} = {}) {
         /* If `tid` is provided by the caller, this instance is a part of a broader parent transaction that created the TID value. */
         super()
+        this.lite = lite
         if (lite) return
         this.tid = tid || (1 + randint(10000)) /* 1 + randint() */
     }
