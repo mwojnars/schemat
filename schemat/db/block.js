@@ -761,13 +761,15 @@ export class DataBlock extends Block {
 
             let obj = await WebObject.inactive(id, data)
 
+            // TODO: if `obj` is an agent, stop and uninstall all of its running instances ??
+
             let op_del = new OP('del', key)
             let ops_derived = this._derive(key, obj)        // instructions for derived sequences
             await this._apply([op_del, ...ops_derived])     // schedule `ops` for execution, either immediately or later with WAL
             this._cascade_delete(obj)                       // remove objects linked to via a strong reference
 
-            // let destroy = obj.__destroy__()
-            // if (destroy instanceof Promise) await destroy
+            // let delete = obj.__delete__()
+            // if (delete instanceof Promise) await delete
 
             schemat.register_changes({id, data: {'__status': WebObject.Status.DELETED}})
             return 1

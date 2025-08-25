@@ -1107,9 +1107,9 @@ export class WebObject {
            For this reason, it is unnecessary and disallowed to save them explicitly with obj.save() or schemat.save(...).
          */
 
-    __destroy__() {}    // __delete__/__teardown__/__finalize__()
+    __delete__() {}    // __destroy__/__teardown__/__finalize__()
         /* Custom tear down executed when this object is to be permanently deleted from the database.
-           Typically, this method removes related objects and/or local resources and stops the agent.
+           Typically, this method removes related objects and/or local resources.
          */
 
     __load__() {}

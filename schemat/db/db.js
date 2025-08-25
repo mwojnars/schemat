@@ -466,12 +466,14 @@ export class Database extends WebObject {
                 let derived = seq.source.derived
                 let pos = derived.indexOf(seq)
                 assert(pos !== -1)
-                seq.source.derived = derived.toSpliced(pos, 1)
+                derived.splice(pos, 1)
+                seq.source.derived = derived
                 await seq.source.save()
             }
 
             if (seq) await seq.delete_self().save()
-            // TODO: run seq.__uninstall__(), who should do it?
+            // TODO: run seq.blocks[i].__uninstall__(), who should do it?
+
             if (ring === __ring) break
         }
 
