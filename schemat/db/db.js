@@ -460,7 +460,13 @@ export class Database extends WebObject {
         // iterate from the top ring down to __ring
         for (let ring of this.rings_reversed) {
             let seq = ring.sequence_by_operator.get(operator.id)
-            // TODO: remove `seq` from source_sequence.derived array
+            
+            // remove `seq` from source.derived array
+            let derived = seq.source.derived
+            let pos = derived.indexOf(seq)
+            if (pos !== -1) seq.source.derived = derived.toSpliced(pos, 1)
+            await seq.source.save()
+
             if (seq) await seq.delete_self().save()
             // TODO: run seq.__uninstall__(), who should do it?
             if (ring === __ring) break
