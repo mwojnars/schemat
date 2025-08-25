@@ -30,8 +30,8 @@ export class Sequence extends WebObject {
     flush_delay     // delay (in seconds) before flushing all recent updates in a block to disk (to combine multiple consecutive updates in one write)
     file_tag
     derived         // array of derived sequences that capture data from this one
-    // filled
-    // filled_ranges
+    filled          // true if the backfill procedure for this (derived) sequence was completed
+    filled_ranges   // array of [left,right] pairs of binary keys that define ranges in the source sequence already fed to this (derived) sequence during backfilling
 
     // get file_tag() { return 'index' }
 
