@@ -130,7 +130,7 @@ export class Sequence extends WebObject {
         /* Create a derived sequence that will capture changes from this sequence and apply `operator` to them. */
 
         assert(this.__ring)
-        assert(schemat.tx.lite, `action.create_derived() can only be executed in a lite transaction`)
+        // assert(schemat.tx.lite, `action.create_derived() can only be executed in a lite transaction`)
 
         let seq = schemat.std.Sequence.new({ring: this.ring, operator})
         seq = await seq.save({ring: this.__ring, broadcast: true})
