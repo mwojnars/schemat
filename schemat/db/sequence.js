@@ -100,18 +100,6 @@ export class Sequence extends WebObject {
         return ops
     }
 
-    // async put(key, value) {
-    //     let block = this.find_block(key)
-    //     // if (!block.is_loaded()) block = await block.load()
-    //     return block.$agent.put(key, value)
-    // }
-    //
-    // async del(key) {
-    //     let block = this.find_block(key)
-    //     // if (!block.is_loaded()) block = await block.load()
-    //     return block.$agent.del(key)
-    // }
-
     async* scan_binary(opts = {}) {
         /* Scan this sequence in [`start`, `stop`) range and yield [key, value] pairs, where `key` is an Uint8Array
            and `value` is a JSON string. The options, start/stop, should already be encoded as binary.
