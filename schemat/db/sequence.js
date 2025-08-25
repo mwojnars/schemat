@@ -24,11 +24,13 @@ export class Sequence extends WebObject {
      */
 
     ring            // parent Ring of this sequence
-    operator        // Operator that defines this sequence's name, record schema and sources; same operators are shared across rings
     splits          // array of split points between blocks
     blocks          // array of Blocks that make up this sequence, can be empty []
     flush_delay     // delay (in seconds) before flushing all recent updates in a block to disk (to combine multiple consecutive updates in one write)
     file_tag
+
+    operator        // Operator that defines this sequence's name, record schema and sources; same operators are shared across rings
+    source          // source sequence that feeds data to this one
     derived         // array of derived sequences that capture data from this one
     filled          // true if the backfill procedure for this (derived) sequence was completed
     filled_ranges   // array of [left,right] pairs of binary keys that define ranges in the source sequence already fed to this (derived) sequence during backfilling
