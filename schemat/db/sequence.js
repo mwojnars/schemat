@@ -125,14 +125,14 @@ export class Sequence extends WebObject {
         assert(this.__ring)
         // assert(schemat.tx.lite, `action create_derived() can only be executed in a lite transaction`)
 
-        let seq = schemat.std.Sequence.new({ring: this.ring, operator})
+        let seq = schemat.std.Sequence.new({ring: this.ring, source: this, operator})
         seq = await seq.save({ring: this.__ring, broadcast: true})
 
         // tx.is_lite() / tx.no_rollback  -- whatever was saved to DB cannot be rolled back;
         // only in this mode it's allowed to perform mutating operations on the cluster within a DB transaction
         // schemat.tx.epilog(() => {})
 
-        await seq._deploy(this)
+        await seq._deploy()
         this.derived = [...this.derived || [], seq]
 
         // this.blocks.map(b => b.edit.touch()) -- touch all blocks to let them know about the new derived sequence ??
@@ -140,16 +140,15 @@ export class Sequence extends WebObject {
         // schemat.tx.broadcast()       = commit + broadcast
     }
 
-    async _deploy(source) {
+    async _deploy() {
         /* Install the initial data block on a specific node in the cluster and start the backfill process
-           to populate this derived sequence with initial data from `source`.
+           to populate this derived sequence with initial data from this.source.
          */
         assert(this.blocks.length === 1, this.id, this.blocks)
-        // assert(!this.blocks[0].get_placement())
         await schemat.cluster.$leader.deploy(this.blocks[0], '$master')
 
         // request all source blocks to send initial data + set up data capture for future changes, NOT awaited!
-        source.blocks.map(block => block.$master.backfill(this))
+        this.source?.blocks.map(block => block.$master.backfill(this))
     }
 
     async 'ax.erase'() {

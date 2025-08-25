@@ -599,6 +599,11 @@
       category:
         "@": 24
       "@": schemat/types/type.js:REF
+    source:
+      info: Source sequence that feeds data to this one.
+      category:
+        "@": 13
+      "@": schemat/types/type.js:REF
     blocks:
       info: array of Blocks containing records of this sequence
       type:
