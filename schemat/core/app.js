@@ -130,7 +130,7 @@ export class Application extends WebObject {
     async resolve(path) { return this.root.resolve(path) }
 
 
-    /***  Endpoints  ***/
+    /***  Endpoints & Actions  ***/
 
     'POST.server'() {
         /* Run eval(code) on the server and return a JSONx-encoded result; `code` is a string.
@@ -170,14 +170,8 @@ export class Application extends WebObject {
     }
 
 
-    /***  Actions -- can be called via schemat.action.*()  ***/
-
-    // the actions below don't explicitly use a transaction, but they do run inside a TX, and updated DB records are captured at the end
-    async 'action.db_submit'(...args)        { return await schemat.db.submit(...args) }
-
-    // async 'action.db_insert'(entries, opts)  { return await schemat.db.insert(entries, opts) }
-    // async 'action.db_update'(id_edits, opts) { return await schemat.db.update(id_edits, opts) }
-    // async 'action.db_delete'(ids, opts)      { return await schemat.db.delete(ids, opts) }
+    // runs inside a TX, so updated DB records are captured at the end and returned to caller
+    async 'action.db_submit'(...args) { return await schemat.db.submit(...args) }
 
 
     /***  Dynamic imports  ***/
