@@ -498,20 +498,19 @@ export class DataBlock extends Block {
         return JSON.stringify(plain)
     }
 
-    _move_down(id, req) {
-        /* Return lower ring and update `req` before forwarding a select/update/delete operation downwards to the lower ring. */
+    _move_down(id, req, _throw = true) {
+        /* Return lower ring and update `req` before forwarding a select/update/delete operation downwards to the lower ring.
+           Return undefined if there is no lower ring, or throw an error if _throw is true.
+         */
         // this._print(`_move_down() id=${id}`)
-
         let ring = this.ring
         assert(ring.is_loaded())
-
-        // if (!ring.is_loaded()) await ring.load()    //ring = await schemat.get_loaded(ring.id)
-        // if (!ring.is_loaded()) throw new Error(`the owner ring ${ring} of the block ${this} is not loaded`)
-
         let base = ring.base_ring
-        if (!base) throw new ObjectNotFound(null, {id})
-        req.push_ring(ring)
-        return base
+        if (base) {
+            req.push_ring(ring)
+            return base
+        }
+        if (_throw) throw new ObjectNotFound(null, {id})
     }
 
     _move_up(req) {

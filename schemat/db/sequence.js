@@ -45,7 +45,7 @@ export class Sequence extends WebObject {
     }
 
     async __delete__() {
-        /* Upon delete, the sequence must take care to remove itself from source.derived array. */
+        /* Upon delete, the sequence must inform the `source` that its `derived` array should be updated. */
         if (!this.source) return
 
         // this.source.edit.rmv_derived(this)
