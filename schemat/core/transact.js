@@ -304,9 +304,12 @@ export class ServerTransaction extends Transaction {
 }
 
 export class LiteTransaction extends ServerTransaction {
-    /* A server-side transaction without TID that allows non-atomic save() of mutations, but not committing the transaction as a whole.
+    /* A server-side transaction without TID. It allows non-atomic save(), but no commit/rollback of transaction as a whole.
+       Lite transaction does *not* provide (and will never provide) atomicity, but it is (potentially) faster,
+       does not block other concurrent transactions, and is the only type of transaction that can be mixed
+       with agent operations: deploying, installing, stopping and uninstalling agents across the cluster.
        This transaction is always open: it can exist for a long time and be reused for new groups of mutations.
-       For these reasons, and to avoid memory leaks or multiplication of the same records over and over again between nodes,
+       For this reason, and to avoid memory leaks or multiplication of the same records over and over again between nodes,
        lite transaction resets the list of records (_updated) on every capture instead of accumulating them.
      */
 
