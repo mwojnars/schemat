@@ -451,7 +451,7 @@ export class Database extends WebObject {
     }
 
     async 'action.remove_operator'(operator) {
-        /* Delete `operator` object and all sequences that implement this operator across different rings,
+        /* Delete `operator` object and all sequences that implement this operator across different rings
            staring in operator.__ring and moving all the way up to the top ring.
          */
         let __ring = operator.__ring
@@ -462,10 +462,13 @@ export class Database extends WebObject {
             let seq = ring.sequence_by_operator.get(operator.id)
             
             // remove `seq` from source.derived array
-            let derived = seq.source.derived
-            let pos = derived.indexOf(seq)
-            if (pos !== -1) seq.source.derived = derived.toSpliced(pos, 1)
-            await seq.source.save()
+            if (seq.source) {
+                let derived = seq.source.derived
+                let pos = derived.indexOf(seq)
+                assert(pos !== -1)
+                seq.source.derived = derived.toSpliced(pos, 1)
+                await seq.source.save()
+            }
 
             if (seq) await seq.delete_self().save()
             // TODO: run seq.__uninstall__(), who should do it?
