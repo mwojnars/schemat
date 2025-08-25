@@ -686,7 +686,7 @@ export class WebObject {
     }
 
     async _load(opts = {}) {
-        /* Load this.__data from DB if missing. Set up the class and prototypes, load related objects with __load__() etc. */
+        /* Load this.__data from DB if not loaded yet. Set up the class and prototypes, load related objects with __load__() etc. */
 
         let {sealed = true, activate = true, custom_opts_allowed = false, ...db_opts} = opts
         let id = this.id

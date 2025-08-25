@@ -1,5 +1,5 @@
 import {assert, print, T, zip, arrayFromAsync, fileBaseName, trycatch, sleep} from '../common/utils.js'
-import {DataAccessError, DataConsistencyError, ObjectNotFound} from '../common/errors.js'
+import {DataAccessError, DataConsistencyError} from '../common/errors.js'
 import {Shard, ObjectsMap, Mutex, Mutexes} from "../common/structs.js"
 import {BinaryMap, compare_bin, zero_binary} from "../common/binary.js";
 import {JSONx} from "../common/jsonx.js";
@@ -498,9 +498,9 @@ export class DataBlock extends Block {
         return JSON.stringify(plain)
     }
 
-    _move_down(id, req, _throw = true) {
-        /* Return lower ring and update `req` before forwarding a select/update/delete operation downwards to the lower ring.
-           Return undefined if there is no lower ring, or throw an error if _throw is true.
+    _move_down(id, req) {
+        /* Return lower ring and update `req` before forwarding a select/update/delete operation downwards
+           to the lower ring. Return undefined if there is no lower ring.
          */
         // this._print(`_move_down() id=${id}`)
         let ring = this.ring
@@ -510,7 +510,6 @@ export class DataBlock extends Block {
             req.push_ring(ring)
             return base
         }
-        if (_throw) throw new ObjectNotFound(null, {id})
     }
 
     _move_up(req) {
@@ -529,7 +528,7 @@ export class DataBlock extends Block {
         let key = this.encode_id(id)
         let json = await this._get(key, true)
         if (json) return this._annotate(json)
-        return this._move_down(id, req).select(id, req)
+        return this._move_down(id, req)?.select(id, req)
     }
 
     async '$agent.insert'(entries, {id, ...opts} = {}) {
@@ -681,7 +680,7 @@ export class DataBlock extends Block {
     // _reclaim_id(...ids)
 
     async '$agent.update'(id, edits, req) {
-        /* Check if `id` is present in this block. If not, pass the request to a lower ring.
+        /* Check if `id` is present in this block. If not, pass the request to a lower ring, or do nothing if no more rings.
            Otherwise, load the data associated with `id`, apply `edits` to it, and save a modified item
            in this block (if the ring permits), or forward the write request back to a higher ring.
            The new record is recorded in the Registry and the current transaction. Nothing is returned.
@@ -690,7 +689,7 @@ export class DataBlock extends Block {
         return this.$state.lock_row(key, async () =>
         {
             let data = await this._get(key)
-            if (data === undefined) return this._move_down(id, req).update(id, edits, req)
+            if (data === undefined) return this._move_down(id, req)?.update(id, edits, req)
 
             let prev = await WebObject.inactive(id, data)
             let obj  = prev._clone()                // dependencies (category, container, prototypes) are loaded, but references NOT (!)
@@ -744,14 +743,14 @@ export class DataBlock extends Block {
     }
 
     async '$agent.delete'(id, req) {
-        /* Try deleting the `id`, forward to a lower ring if the id is not present here in this block.
-           Log an error if the ring is read-only and the `id` is present here.
+        /* Try deleting the `id` record. Forward to a lower ring if not present here in this block.
+           Throw an error if the `id` is found in a read-only ring. Do nothing if `id` is not found at all.
          */
         let key = this.encode_id(id)
         return this.$state.lock_row(key, async () =>
         {
             let data = await this._get(key)
-            if (data === undefined) return this._move_down(id, req).delete(id, req)
+            if (data === undefined) return this._move_down(id, req)?.delete(id, req)
 
             if (this.ring.readonly)
                 // TODO: find the first writable ring upwards from this one and write a tombstone for `id` there

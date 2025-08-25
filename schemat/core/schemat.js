@@ -1,4 +1,5 @@
 import {ROOT_ID} from "../common/globals.js";
+import {ObjectNotFound} from "../common/errors.js";
 import {T, print, assert, normalizePath, splitLast} from '../common/utils.js'
 import {DependenciesStack} from '../common/structs.js'
 import {WebObject} from './object.js'
@@ -346,6 +347,7 @@ export class Schemat {
         if (rec) return rec
 
         return this.db.select(id, opts).then(json => {
+            if (!json) throw new ObjectNotFound(`object id=${id} not found in the database`)
             if (!opts) this.register_record({id, data: json})
             return {json, loaded_at: Date.now()}
         })
