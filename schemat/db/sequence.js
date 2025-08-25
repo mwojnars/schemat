@@ -126,11 +126,11 @@ export class Sequence extends WebObject {
     // async erase()   { return Promise.all(this.blocks.map(b => b.$agent.erase())) }
     // async flush()   { return Promise.all(this.blocks.map(b => b.$agent.flush())) }
 
-    async 'action.create_derived'(operator) {
+    async 'ax.create_derived'(operator) {
         /* Create a derived sequence that will capture changes from this sequence and apply `operator` to them. */
 
         assert(this.__ring)
-        // assert(schemat.tx.lite, `action.create_derived() can only be executed in a lite transaction`)
+        // assert(schemat.tx.lite, `action create_derived() can only be executed in a lite transaction`)
 
         let seq = schemat.std.Sequence.new({ring: this.ring, operator})
         seq = await seq.save({ring: this.__ring, broadcast: true})
@@ -159,16 +159,16 @@ export class Sequence extends WebObject {
         source.blocks.map(block => block.$master.backfill(this))
     }
 
-    async 'action.erase'() {
+    async 'ax.erase'() {
         return Promise.all(this.blocks.map(b => b.$agent.erase()))
     }
 
-    async 'action.rebuild_derived'() {
+    async 'ax.rebuild_derived'() {
         /* Erase derived sequences and build them from scratch. For development use only. */
-        await Promise.all(this.derived.map(seq => seq.action.rebuild(this)))
+        await Promise.all(this.derived.map(seq => seq.ax.rebuild(this)))
     }
 
-    async 'action.rebuild'(source) {
+    async 'ax.rebuild'(source) {
         /* Erase this sequence and build again from `source`. For development use only. */
         assert(this.filled)
         delete this.filled

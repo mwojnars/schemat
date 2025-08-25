@@ -217,19 +217,19 @@ export class Ring extends WebObject {
         yield* seq.scan_binary(opts)
     }
 
-    async 'action.create_derived'(source = 'main', operator) {
+    async 'ax.create_derived'(source = 'main', operator) {
         // TODO SEC: check permissions
         if (this.readonly) throw new Error("the ring is read-only")
-        await this.main_sequence.action.create_derived(operator)
+        await this.main_sequence.ax.create_derived(operator)
     }
 
     async rebuild_indexes() {
         /* Rebuild all derived sequences by making full scan of the data sequence. */
 
-        // await this.main_sequence.action.rebuild_derived()
+        // await this.main_sequence.ax.rebuild_derived()
 
         let derived = this.derived
-        await Promise.all(derived.map(seq => seq.action.erase()))
+        await Promise.all(derived.map(seq => seq.ax.erase()))
 
         for await (let {id, data} of this.main_sequence.scan_objects()) {
             let key = this.main_sequence.encode_id(id)
@@ -419,7 +419,7 @@ export class Database extends WebObject {
         return true
     }
 
-    async 'action.create_index'(name, key, payload = undefined, {category, ring} = {}) {
+    async 'ax.create_index'(name, key, payload = undefined, {category, ring} = {}) {
         /* Add a new index in `ring` and all rings above. If not provided, `ring` is the bottom of the ring stack (ring-kernel).
            Schema of the new index is defined by `key` and `payload` (arrays of property names).
          */
@@ -435,7 +435,7 @@ export class Database extends WebObject {
         return operator
     }
 
-    // async 'action.create_aggregation'(name, key, sum = [], {category, ring} = {}) {
+    // async 'ax.create_aggregation'(name, key, sum = [], {category, ring} = {}) {
     // }
 
     async _create_sequence(operator, {ring} = {}) {
@@ -446,11 +446,11 @@ export class Database extends WebObject {
         let pos = this.rings.indexOf(ring)
         for (let i = pos; i < this.rings.length; i++) {
             ring = this.rings[i]
-            await ring.action.create_derived('main', operator)
+            await ring.ax.create_derived('main', operator)
         }
     }
 
-    async 'action.remove_operator'(operator) {
+    async 'ax.remove_operator'(operator) {
         /* Delete `operator` object and all sequences that implement this operator across different rings
            staring in operator.__ring and moving all the way up to the top ring.
          */
@@ -481,7 +481,7 @@ export class Database extends WebObject {
         await operator.delete_self().save()
     }
 
-    async 'action.admin_reinsert'(ids, {id: new_id, ring, compact = false} = {}) {
+    async 'ax.admin_reinsert'(ids, {id: new_id, ring, compact = false} = {}) {
         /* Remove object(s) from its current ring and reinsert under new `id` into `ring` (if present), or to the top-most ring.
            Only for development purposes, this operation may lead to data inconsistencies. Changing object IDs should never
            be done in production, especially that the entire database is scanned for references after each re-insert.

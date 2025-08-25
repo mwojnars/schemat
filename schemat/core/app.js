@@ -134,7 +134,7 @@ export class Application extends WebObject {
 
     'POST.server'() {
         /* Run eval(code) on the server and return a JSONx-encoded result; `code` is a string.
-           Does NOT start a transaction, use action.*() if the DB is to be modified.
+           Does NOT start a transaction, use ax.*() if the DB is to be modified.
          */
         return new JsonPOST({
             server: (code) => {
@@ -171,7 +171,7 @@ export class Application extends WebObject {
 
 
     // runs inside a TX, so updated DB records are captured at the end and returned to caller
-    async 'action.db_submit'(...args) { return await schemat.db.submit(...args) }
+    async 'ax.db_submit'(...args) { return await schemat.db.submit(...args) }
 
 
     /***  Dynamic imports  ***/

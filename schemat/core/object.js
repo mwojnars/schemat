@@ -1232,10 +1232,10 @@ export class WebObject {
 
     /***  Web Triggers  ***/
 
-    get action() {
+    get ax() {
         // TODO: rename to server() or remote() ?? ... use as: obj.server.method()
-        /* Triggers of server-side actions: obj.action.X(...args) invokes app.POST.action(id, 'X', args),
-           which forwards the call to obj['action.X'](...args) on server. Inside the 'action.X'() method,
+        /* Triggers of server-side actions: obj.ax.X(...args) invokes app.POST.action(id, 'X', args),
+           which forwards the call to obj['ax.X'](...args) on server. Inside the 'ax.X'() method,
            `this` object is made mutable, so it can be easily edited. Any modified records are returned to the caller
            and saved in Registry, so the caller can recreate corresponding objects with their most recent content
            by simply refreshing/reloading them. Action triggers can be called on stubs without fully loading the target object.
@@ -1247,7 +1247,7 @@ export class WebObject {
         return new Proxy({}, {
             get(target, name) {
                 if (typeof name === 'string')
-                    if (CLIENT && name[0] === '_') throw new Error(`private action.${name}() can only be invoked on server`)
+                    if (CLIENT && name[0] === '_') throw new Error(`private ax.${name}() can only be invoked on server`)
                     else return (...args) => SERVER ? schemat.execute_action(obj, name, args, false) : schemat.app.POST.action(id, name, args)
             }
         })
@@ -1514,12 +1514,12 @@ export class WebObject {
 
     // _execute_action(name, args, as_mutable = true) {
     //     let obj = as_mutable ? schemat.tx.get_mutable(this) : this
-    //     let func = obj.__self[`action.${name}`]
+    //     let func = obj.__self[`ax.${name}`]
     //     if (!func) throw new Error(`action method not found: '${name}'`)
     //     return func.call(obj, ...args)
     // }
 
-    async 'action.update'(props = {}) {
+    async 'ax.update'(props = {}) {
         /* Copy `props` entries into `this` and save changes automatically to DB. */
         // schemat.tx.config({capture: false, atomic: true})
         // schemat.tx.default({capture: false, atomic: true}) -- has effect unless the property was already configured by client
@@ -1527,7 +1527,7 @@ export class WebObject {
             this[key] = val
     }
 
-    async 'action.move_to'(directory, overwrite = false) {
+    async 'ax.move_to'(directory, overwrite = false) {
         /* Move this object from its current __container to `directory`, which must be a Directory object, or its URL. */
 
         if (typeof directory === 'number') directory = await schemat.get_loaded(directory)

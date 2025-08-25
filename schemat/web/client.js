@@ -50,17 +50,7 @@ export class Client extends Schemat {
             let {data} = await fetch(url).then(response => response.json())     // {id, data} encoded
             return JSON.stringify(data)
         },
-        async submit(...args) { return schemat.app.action.db_submit(...args) },
-
-        // async insert(datas, opts) {
-        //     return schemat.app.action.db_insert(datas, opts)
-        // },
-        // async delete(ids, opts) {
-        //     return schemat.app.action.db_delete(ids, opts)
-        // },
-        // async update(id_edits, opts) {
-        //     return schemat.app.action.db_update(id_edits, opts)
-        // },
+        async submit(...args) { return schemat.app.ax.db_submit(...args) },
     }
 }
 

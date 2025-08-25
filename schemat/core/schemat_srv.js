@@ -376,13 +376,13 @@ export class ServerSchemat extends Schemat {
     /***  Actions / Transactions  ***/
 
     async execute_action(obj, action, args, _return_tx = true) {
-        /* Server-side execution of an action. No network communication, no encoding/decoding of args & result.
+        /* Server-side execution of an action: no network communication, no encoding/decoding of args & result.
            Returns a pair: [result, tx], or `result` alone if _return_tx=false.
          */
         if (!obj.is_loaded()) await obj.load()
         // obj = obj.get_mutable()
 
-        let func = obj.__self[`action.${action}`]
+        let func = obj.__self[`ax.${action}`]
         if (!func) throw new Error(`action method not found: '${action}'`)
         obj._print(`execute_action(${action}) ...`)
 

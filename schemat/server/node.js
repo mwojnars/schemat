@@ -579,7 +579,7 @@ export class Node extends Agent {
             // request worker process to start the agent:
             await this.$worker({worker})._start_agent(agent.id, role)
         }
-        await this.action.update({agents})
+        await this.ax.update({agents})
     }
 
     // async '$master.dismiss'(agent, role) {}   // dismiss/discard/delete/displace/expel/expulse/evict/eject/remove
@@ -601,7 +601,7 @@ export class Node extends Agent {
         for (let {worker} of stop.reverse())
             await this.$worker({worker})._stop_agent(agent.id, role)
 
-        await this.action.update({agents})
+        await this.ax.update({agents})
     }
 
     _rank_workers(agents) {
