@@ -32,8 +32,8 @@ export class Sequence extends WebObject {
     operator        // Operator that defines this sequence's name, record schema and sources; same operators are shared across rings
     source          // source sequence that feeds data to this one
     derived         // array of derived sequences that capture data from this one
-    filled          // true if the backfill procedure for this (derived) sequence was completed
-    filled_ranges   // array of [left,right] pairs of binary keys that define ranges in the source sequence already fed to this (derived) sequence during backfilling
+    //filled        // true if the backfill procedure for this (derived) sequence was completed
+    //filled_ranges // array of [left,right] pairs of binary keys that define ranges in the source sequence already fed to this (derived) sequence during backfilling
 
     // get file_tag() { return 'index' }
 
