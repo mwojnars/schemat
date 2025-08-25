@@ -131,34 +131,35 @@ export class Sequence extends WebObject {
         let seq = schemat.std.Sequence.new({ring: this.ring, operator})
         seq = await seq.save({ring: this.__ring, broadcast: true})
 
-        // await schemat.save({ring: this.__ring, broadcast: true})
-        // seq = await seq.reload()        // seq.blocks gets loaded only now
-
         // tx.is_lite() / tx.no_rollback  -- whatever was saved to DB cannot be rolled back;
         // only in this mode it's allowed to perform mutating operations on the cluster within a DB transaction
         // schemat.tx.epilog(() => {})
 
-        await seq.deploy()
+        await seq.deploy(this)
         this.derived = [...this.derived || [], seq]
-
-        seq.build(this)
 
         // this.blocks.map(b => b.edit.touch()) -- touch all blocks to let them know about the new derived sequence ??
         // schemat.tx.save({broadcast: true})   -- broadcast performed AFTER commit
         // schemat.tx.broadcast()       = commit + broadcast
     }
 
-    async deploy() {
+    async deploy(source) {
         assert(this.blocks.length === 1, this.id, this.blocks)
         // assert(!this.blocks[0].get_placement())
-        await schemat.cluster.$leader.deploy(this.blocks[0], '$master')
-    }
 
-    async build(source) {
-        /* Start the backfill process to populate this derived sequence with initial data from source. */
-        // request all source blocks to send initial data + set up data capture for future changes
+        // install the initial data block on a specific node in the cluster
+        await schemat.cluster.$leader.deploy(this.blocks[0], '$master')
+
+        // start the backfill process to populate this derived sequence with initial data from `source`;
+        // request all source blocks to send initial data + set up data capture for future changes, NOT awaited!
         source.blocks.map(block => block.$master.backfill(this))
     }
+
+    // async build(source) {
+    //     /* Start the backfill process to populate this derived sequence with initial data from source. */
+    //     // request all source blocks to send initial data + set up data capture for future changes
+    //     source.blocks.map(block => block.$master.backfill(this))
+    // }
 
     async 'action.erase'() {
         return Promise.all(this.blocks.map(b => b.$agent.erase()))
