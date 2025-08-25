@@ -127,20 +127,20 @@ export class Sequence extends WebObject {
     async 'action.create_derived'(operator) {
         /* Create a derived sequence that will capture changes from this sequence and apply `operator` to them. */
 
-        let seq = schemat.std.Sequence.new({ring: this.ring, operator})
-
-        // TODO: update this.derived at the end, after `seq` is deployed
-        this.derived = [...this.derived || [], seq]
-
         assert(this.__ring)
-        await schemat.save({ring: this.__ring, broadcast: true})
+        let seq = schemat.std.Sequence.new({ring: this.ring, operator})
+        seq = await seq.save({ring: this.__ring, broadcast: true})
+
+        // await schemat.save({ring: this.__ring, broadcast: true})
+        // seq = await seq.reload()        // seq.blocks gets loaded only now
 
         // tx.is_lite() / tx.no_rollback  -- whatever was saved to DB cannot be rolled back;
         // only in this mode it's allowed to perform mutating operations on the cluster within a DB transaction
         // schemat.tx.epilog(() => {})
 
-        seq = await seq.reload()        // seq.blocks gets loaded only now
         await seq.deploy()
+        this.derived = [...this.derived || [], seq]
+
         seq.build(this)
 
         // this.blocks.map(b => b.edit.touch()) -- touch all blocks to let them know about the new derived sequence ??
