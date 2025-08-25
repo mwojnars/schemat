@@ -44,18 +44,9 @@ export class Sequence extends WebObject {
         // this._print(`tx._staging:`, schemat.tx._staging)
     }
 
-    async __delete__() {
-        /* Upon delete, the sequence must inform the `source` that its `derived` array should be updated. */
-        if (!this.source) return
-
-        // this.source.edit.rmv_derived(this)
-
-        let derived = this.source.derived
-        let pos = derived.indexOf(this)
-        assert(pos !== -1)
-        derived.splice(pos, 1)
-        this.source.derived = derived
-        await this.source.save()
+    __delete__() {
+        /* Upon delete, the sequence must delete itself from source.derived array. */
+        this.source?.edit.rmv_derived(this)
     }
 
     async __load__() {
@@ -194,6 +185,12 @@ export class Sequence extends WebObject {
 
         await Promise.all(source.blocks.map(block => block.$master.restart_backfill(this)))
         await sleep(1)
+    }
+
+    'edit.rmv_derived'(dest) {
+        /* Remove a destination sequence from `derived` array. */
+        let pos = this.derived.indexOf(dest)
+        if (pos !== -1) this.derived.splice(pos, 1)
     }
 
     'edit.commit_backfill'(left, right) {
