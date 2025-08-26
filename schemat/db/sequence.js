@@ -154,16 +154,14 @@ export class Sequence extends WebObject {
         }
     }
 
-    async 'ax.erase'() {
-        return Promise.all(this.blocks.map(b => b.$agent.erase()))
-    }
+    async erase() { return Promise.all(this.blocks.map(b => b.$agent.erase())) }
 
-    async 'ax.rebuild_derived'() {
+    async rebuild_derived() {
         /* Erase derived sequences and build them from scratch. For development use only. */
-        await Promise.all(this.derived.map(seq => seq.ax.rebuild(this)))
+        await Promise.all(this.derived.map(seq => seq.rebuild(this)))
     }
 
-    async 'ax.rebuild'(source) {
+    async rebuild(source) {
         /* Erase this sequence and build again from `source`. For development use only. */
         assert(this.filled)
         delete this.filled
