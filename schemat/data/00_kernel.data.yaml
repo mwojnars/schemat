@@ -796,6 +796,7 @@
         describing agents running on different processes of this node. `worker`
         = 0 means the master process and 1..N are indexes of actual worker
         processes.
+      default: []
       type:
         "@": schemat/types/type.js:GENERIC
       inline: false
