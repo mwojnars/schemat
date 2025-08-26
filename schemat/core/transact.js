@@ -83,11 +83,14 @@ export class Transaction {
         return this._staging.add(obj)
     }
 
+    is_empty()      { return !this._staging.size }
     has(obj)        { return this._staging.has(obj) }
     has_exact(obj)  { return this._staging.has_exact(obj) }
 
     _pending() {
-        /* Array of objects from _staging that actually have any modifications in them to be saved. */
+        /* Array of objects from _staging that actually have any modifications in them to be saved. This excludes objects
+           that were explicitly added to the transaction, but not modified by the caller yet.
+         */
         return [...this._staging].filter(obj =>
             (obj.__provisional_id && obj.__status !== DELETED) ||
             (obj.id && obj.__status === DELETED) ||
