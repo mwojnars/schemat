@@ -246,12 +246,11 @@ export class Schemat {
 
     get_object(id, {version = null} = {}) {
         /* Create a stub of an object with a given ID, or return an existing instance (a stub or loaded), if present in the cache.
-           If a stub is created anew, it is saved in cache for reuse by other callers.
+           If a stub is created anew, it is saved in cache for reuse by other callers. Every stub has immediate expiry date, that is,
+           it expires on the next cache purge unless its data is loaded and TLS updated; this prevents keeping a large number of unused stubs indefinitely.
          */
         assert(typeof id === 'number')
         // this.session?.countRequested(id)
-        // a stub has immediate expiry date (i.e., on next cache purge) unless its data is loaded and TLS updated;
-        // this prevents keeping a large number of unused stubs indefinitely
         let obj = this.registry.get_object(id)
         if (obj && SERVER) {
             // on server, don't return loaded objects after expiry date, even if still present in the registry
