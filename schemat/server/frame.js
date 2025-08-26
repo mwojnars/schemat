@@ -298,7 +298,7 @@ export class Frame {
                 agent._print_error(`${method}(${s_args}) FAILED with`, ex)
                 error = ex
             })
-            if (schemat.tx.is_nonempty()) await schemat.tx.save()
+            if (!error && schemat.tx.is_nonempty()) await schemat.tx.save()
             return callback ? callback(result, error) : result
         }
         return agent.app_context(tx ? () => schemat.in_transaction(callB, tx, false) : callB, caller_ctx)
