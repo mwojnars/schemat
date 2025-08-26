@@ -217,10 +217,10 @@ export class Ring extends WebObject {
         yield* seq.scan_binary(opts)
     }
 
-    async 'ax.create_derived'(source = 'main', operator) {
+    async create_derived(source = 'main', operator) {
         // TODO SEC: check permissions
         if (this.readonly) throw new Error("the ring is read-only")
-        await this.main_sequence.ax.create_derived(operator)
+        await this.main_sequence.create_derived(operator)
     }
 
     async rebuild_indexes() {
@@ -435,7 +435,7 @@ export class Database extends WebObject {
         return operator
     }
 
-    // async 'ax.create_aggregation'(name, key, sum = [], {category, ring} = {}) {
+    // async create_aggregation(name, key, sum = [], {category, ring} = {}) {
     // }
 
     async _create_sequence(operator, {ring} = {}) {
@@ -446,11 +446,11 @@ export class Database extends WebObject {
         let pos = this.rings.indexOf(ring)
         for (let i = pos; i < this.rings.length; i++) {
             ring = this.rings[i]
-            await ring.ax.create_derived('main', operator)
+            await ring.create_derived('main', operator)
         }
     }
 
-    async 'ax.remove_operator'(operator) {
+    async remove_operator(operator) {
         /* Delete `operator` object and all sequences that implement this operator across different rings
            starting in operator.__ring and moving up to the top ring.
          */

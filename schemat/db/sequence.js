@@ -119,11 +119,11 @@ export class Sequence extends WebObject {
     // async erase()   { return Promise.all(this.blocks.map(b => b.$agent.erase())) }
     // async flush()   { return Promise.all(this.blocks.map(b => b.$agent.flush())) }
 
-    async 'ax.create_derived'(operator) {
+    async create_derived(operator) {
         /* Create a derived sequence that will capture changes from this sequence and apply `operator` to them. */
 
         assert(this.__ring)
-        // assert(schemat.tx.lite, `action create_derived() can only be executed in a lite transaction`)
+        // assert(schemat.tx.lite, `create_derived() can only be executed in a lite transaction`)
 
         let seq = schemat.std.Sequence.new({ring: this.ring, source: this, operator})
         seq = await seq.save({ring: this.__ring, broadcast: true})
