@@ -44,9 +44,10 @@ export class Sequence extends WebObject {
         // this._print(`tx._staging:`, schemat.tx._staging)
     }
 
-    __delete__() {
-        /* Upon delete, the sequence must delete itself from source.derived array. */
-        this.source?.edit.rmv_derived(this)
+    async __delete__() {
+        /* Upon delete, the sequence must delete itself from source.derived and stop the agents. */
+        await this.source?.edit.rmv_derived(this).save({broadcast: true})   // at this point, change propagation from source blocks to this.blocks should cease
+        await Promise.all(this.blocks.map(b => b.discard_agent()))
     }
 
     async __load__() {

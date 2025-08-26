@@ -583,7 +583,7 @@ export class Node extends Agent {
         // await this.update_self({agents})
     }
 
-    // async '$master.dismiss'(agent, role) {}   // dismiss/discard/delete/displace/expel/expulse/evict/eject/remove
+    // async '$master.dismiss'(agent, role) {}
 
     async '$master.stop_agent'(agent, {role, worker} = {}) {
         /* `agent` is a web object or ID. */

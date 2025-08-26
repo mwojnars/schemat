@@ -783,12 +783,6 @@ export class DataBlock extends Block {
         return super['$agent.erase']()
     }
 
-    // _propagate(key, obj_old = null, obj_new = null) {
-    //     /* Push a change in this block to all derived sequences; also, perform a cascade delete if needed. */
-    //     super._propagate(key, obj_old, obj_new)
-    //     this._cascade_delete(obj_old, obj_new)
-    // }
-
     _cascade_delete(prev, next = null) {
         /* Compare `prev` and `next` objects to see if any *strong* references got removed, and if so, delete the referenced objects.
            This method takes into account that the schema may have changed, and a previously strong REF might become weak,
