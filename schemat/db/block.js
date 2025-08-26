@@ -764,13 +764,6 @@ export class DataBlock extends Block {
             let del = obj.__delete__()                      // perform custom cleanup
             if (del instanceof Promise) await del
 
-            // // if `obj` defines custom cleanup, __delete__(), activate the object and run the cleanup
-            // if (obj.__delete__ !== WebObject.prototype.__delete__) {
-            //     if (!obj.is_loaded()) await obj.load()
-            //     let del = obj.__delete__()
-            //     if (del instanceof Promise) await del
-            // }
-
             let op_del = new OP('del', key)
             let ops_derived = this._derive(key, obj)        // instructions for derived sequences
             await this._apply([op_del, ...ops_derived])     // schedule `ops` for execution, either immediately or later with WAL
