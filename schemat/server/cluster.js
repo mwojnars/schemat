@@ -44,7 +44,7 @@ export class NodeState {
 export class Cluster extends Agent {
 
     // nodes            array of Node objects representing physical nodes of this cluster
-    // $state.nodes     array of NodeState objects keeping the most recent stats on the node's health and activity
+    // $state.nodes     map of NodeState objects keeping the most recent stats on the node's health and activity
 
     async __load__() {
         if (SERVER) await Promise.all(this.nodes.map(node => node.load()))
@@ -139,12 +139,16 @@ export class Cluster extends Agent {
         let args = typeof props === 'string' ? [{}, props] : [props]
         let node = await schemat.std.Node.ax.insert(...args)
         node = await node.reload()
+        // let node = await schemat.std.Node.new(...args).save()
 
         this._print(`$leader.create_node() node: is_loaded=${node.is_loaded()}`, node.__content)
 
-        let nodes = [...this.$state.node_ids, node.id].map(id => schemat.get_object(id))
+        let {nodes} = this.$state
+        nodes.set(node.id, new NodeState(node))
         await this.ax.update({nodes})
 
-        this.$state.node_ids = nodes.map(n => n.id)
+        // let nodes = [...this.$state.node_ids, node.id].map(id => schemat.get_object(id))
+        // await this.ax.update({nodes})
+        // this.$state.node_ids = nodes.map(n => n.id)
     }
 }
