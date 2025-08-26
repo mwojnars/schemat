@@ -419,7 +419,7 @@ export class Database extends WebObject {
         return true
     }
 
-    async 'ax.create_index'(name, key, payload = undefined, {category, ring} = {}) {
+    async create_index(name, key, payload = undefined, {category, ring} = {}) {
         /* Add a new index in `ring` and all rings above. If not provided, `ring` is the bottom of the ring stack (ring-kernel).
            Schema of the new index is defined by `key` and `payload` (arrays of property names).
          */
