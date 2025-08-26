@@ -29,7 +29,7 @@ export class Sequence extends WebObject {
     flush_delay     // delay (in seconds) before flushing all recent updates in a block to disk (to combine multiple consecutive updates in one write)
     file_tag
 
-    operator        // Operator that defines this sequence's name, record schema and sources; same operators are shared across rings
+    operator        // Operator that determines how this sequence's content is produced; same operators are shared across rings
     source          // source sequence that feeds data to this one
     derived         // array of derived sequences that capture data from this one
     //filled        // true if the backfill procedure for this (derived) sequence was completed
