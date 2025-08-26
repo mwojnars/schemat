@@ -1312,6 +1312,15 @@ export class WebObject {
         /* Like .delete_self(), but first stops & uninstalls all running instances of this agent across the cluster. */
     }
 
+    // async update_self(props = {}) {
+    //     /* Copy `props` entries into `this` and save changes automatically to DB. */
+    //     // schemat.tx.config({capture: false, atomic: true})
+    //     // schemat.tx.default({capture: false, atomic: true}) -- has effect unless the property was already configured by client
+    //     for (let [key, val] of Object.entries(props))
+    //         this[key] = val
+    //     await this.save()
+    // }
+
 
     /***  Versioning  ***/
 
@@ -1525,21 +1534,6 @@ export class WebObject {
 
 
     /***  Actions  ***/
-
-    // _execute_action(name, args, as_mutable = true) {
-    //     let obj = as_mutable ? schemat.tx.get_mutable(this) : this
-    //     let func = obj.__self[`ax.${name}`]
-    //     if (!func) throw new Error(`action method not found: '${name}'`)
-    //     return func.call(obj, ...args)
-    // }
-
-    async 'ax.update'(props = {}) {
-        /* Copy `props` entries into `this` and save changes automatically to DB. */
-        // schemat.tx.config({capture: false, atomic: true})
-        // schemat.tx.default({capture: false, atomic: true}) -- has effect unless the property was already configured by client
-        for (let [key, val] of Object.entries(props))
-            this[key] = val
-    }
 
     async 'ax.move_to'(directory, overwrite = false) {
         /* Move this object from its current __container to `directory`, which must be a Directory object, or its URL. */
