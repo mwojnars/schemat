@@ -143,6 +143,5 @@ export class Cluster extends Agent {
 
         this.$state.nodes.set(node, new NodeState(node))
         this.nodes = [...this.$state.nodes.keys()]
-        await this.save()
     }
 }
