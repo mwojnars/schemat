@@ -248,6 +248,7 @@ export class Schemat {
         /* Create a stub of an object with a given ID, or return an existing instance (a stub or loaded), if present in the cache.
            If a stub is created anew, it is saved in cache for reuse by other callers.
          */
+        assert(typeof id === 'number')
         // this.session?.countRequested(id)
         // a stub has immediate expiry date (i.e., on next cache purge) unless its data is loaded and TLS updated;
         // this prevents keeping a large number of unused stubs indefinitely
