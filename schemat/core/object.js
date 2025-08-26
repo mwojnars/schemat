@@ -1302,7 +1302,7 @@ export class WebObject {
     }
 
     async deploy_agent(role = null) {
-        /* Deploy `this` as an agent somewhere in the cluster. Should only be called for web objects of Agent category.
+        /* Deploy `this` as an agent somewhere in the cluster. Should only be called on web objects of Agent category.
            This method is defined here instead of Agent class to allow its invocation on stubs.
          */
         return schemat.cluster.$leader.deploy(this, role)
