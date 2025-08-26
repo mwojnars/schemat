@@ -143,9 +143,9 @@ export class Cluster extends Agent {
 
         this._print(`$leader.create_node() node: is_loaded=${node.is_loaded()}`, node.__content)
 
-        this.$state.nodes.set(node.id, new NodeState(node))
-        let nodes = [...this.$state.nodes.values()].map(id => schemat.get_object(id))
-        await this.ax.update({nodes})
+        this.$state.nodes.set(node, new NodeState(node))
+        this.nodes = [...this.$state.nodes.keys()]
+        await this.save()
 
         // let nodes = [...this.$state.node_ids, node.id].map(id => schemat.get_object(id))
         // await this.ax.update({nodes})
