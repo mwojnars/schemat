@@ -148,7 +148,10 @@ export class Sequence extends WebObject {
         await this.blocks[0].deploy_agent('$master')
 
         // request all source blocks to send initial data + set up data capture for future changes, NOT awaited!
-        this.source?.blocks.map(block => block.$master.backfill(this))
+        if (this.source) {
+            await this.source.load()
+            this.source.blocks.map(block => block.$master.backfill(this))
+        }
     }
 
     async 'ax.erase'() {
