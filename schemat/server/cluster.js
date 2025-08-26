@@ -145,7 +145,7 @@ export class Cluster extends Agent {
 
         let {nodes} = this.$state
         nodes.set(node.id, new NodeState(node))
-        await this.ax.update({nodes})
+        await this.ax.update({nodes: [...nodes.values()]})
 
         // let nodes = [...this.$state.node_ids, node.id].map(id => schemat.get_object(id))
         // await this.ax.update({nodes})
