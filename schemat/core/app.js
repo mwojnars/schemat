@@ -137,25 +137,14 @@ export class Application extends WebObject {
            Any locally created data modifications are implicitly saved at the end unless the code raised an error.
          */
         return new JsonPOST({
-            server: async (code) => {
+            server: async (code, in_tx = false) => {
                 if (!this.eval_allowed) throw new Error(`custom server-side code execution is not allowed`)
-                let result = await eval(code)
+                let result = await (in_tx ? schemat.in_transaction(() => eval(code)) : eval(code))
                 await schemat.save()
                 return result
             },
             input:  mString,
-        })
-    }
-
-    'POST.server_tx'() {
-        /* Run eval(code) on the server in a transaction and return a JSONx-encoded result; `code` is a string. */
-        return new JsonPOST({
-            server: (code) => {
-                if (!this.eval_allowed) throw new Error(`custom server-side code execution is not allowed`)
-                return schemat.in_transaction(() => eval(code))
-            },
-            input:  mString,
-            output: mActionResult,
+            // output: mActionResult,
         })
     }
 
