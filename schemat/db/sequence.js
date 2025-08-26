@@ -145,7 +145,8 @@ export class Sequence extends WebObject {
            to populate this derived sequence with initial data from this.source.
          */
         assert(this.blocks.length === 1, this.id, this.blocks)
-        await schemat.cluster.$leader.deploy(this.blocks[0], '$master')
+        await this.blocks[0].deploy_agent('$master')
+        // await schemat.cluster.$leader.deploy(this.blocks[0], '$master')
 
         // request all source blocks to send initial data + set up data capture for future changes, NOT awaited!
         this.source?.blocks.map(block => block.$master.backfill(this))
