@@ -1108,8 +1108,10 @@ export class WebObject {
          */
 
     __delete__() {}    // __destroy__/__teardown__/__finalize__()
-        /* Custom tear down executed when this object is to be permanently deleted from the database.
+        /* Custom cleanup executed when this object is to be permanently deleted from the database.
            Typically, this method removes related objects and/or local resources.
+           IMPORTANT: this method is called on *inactive* object, which means that __data is loaded, prototypes and
+           the class are initialized, but __load__() has *not* been executed, so references may not be loaded (!).
          */
 
     __load__() {}
