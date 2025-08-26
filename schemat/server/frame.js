@@ -267,6 +267,7 @@ export class Frame {
 
     async exec(command, args = [], caller_ctx = schemat.current_context, tx = null, callback = null) {
         /* Call agent's `command` in tracked mode, in a proper app context (own or caller's) + schemat.tx context + agent.__frame context.
+           Send to DB (but do not commit!) any data modifications that were created locally during command execution.
          */
         let {agent, tag} = this
         let [method] = this._find_command(command)      // check that `command` is recognized by the agent
@@ -297,6 +298,7 @@ export class Frame {
                 agent._print_error(`${method}(${s_args}) FAILED with`, ex)
                 error = ex
             })
+            if (schemat.tx.is_nonempty()) await schemat.tx.save()
             return callback ? callback(result, error) : result
         }
         return agent.app_context(tx ? () => schemat.in_transaction(callB, tx, false) : callB, caller_ctx)
