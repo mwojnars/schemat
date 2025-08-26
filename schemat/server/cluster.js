@@ -138,17 +138,11 @@ export class Cluster extends Agent {
 
         let args = typeof props === 'string' ? [{}, props] : [props]
         let node = await schemat.std.Node.new(...args).save()
-        // let node = await schemat.std.Node.ax.insert(...args)
-        // node = await node.reload()
 
         this._print(`$leader.create_node() node: is_loaded=${node.is_loaded()}`, node.__content)
 
         this.$state.nodes.set(node, new NodeState(node))
         this.nodes = [...this.$state.nodes.keys()]
         await this.save()
-
-        // let nodes = [...this.$state.node_ids, node.id].map(id => schemat.get_object(id))
-        // await this.ax.update({nodes})
-        // this.$state.node_ids = nodes.map(n => n.id)
     }
 }
