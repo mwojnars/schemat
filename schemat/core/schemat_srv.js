@@ -394,7 +394,8 @@ export class ServerSchemat extends Schemat {
 
     async in_transaction(callback, tx = this.tx, _return_tx = true) {
         /* Run callback() inside a new Transaction object, with TID inherited from `tx` or this.tx, or created anew.
-           If a new TID was assigned, the transaction is committed at the end. Returns: [result-of-callback(), transaction-object].
+           If a new TID was assigned, the transaction is committed at the end. In either case, any local modifications
+           are saved (flushed) at the end. Returns: [result-of-callback(), transaction-object].
            After the call, the transaction object contains info about the execution, esp. a list of records updated.
          */
         assert(this === schemat)

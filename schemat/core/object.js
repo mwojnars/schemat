@@ -141,7 +141,7 @@ class Intercept {
                 let opts = use_opts ? {...current_opts, role} : {role}
                 current_opts = null
 
-                // if the target object is deployed here on the current process, call directly without RPC
+                // if the target object is deployed here on the current process, call it directly without RPC
                 if (frame && !opts.broadcast) return (...args) => frame.exec(name, args)
 
                 // function wrapper for an RPC call
