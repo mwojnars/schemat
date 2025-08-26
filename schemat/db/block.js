@@ -576,7 +576,7 @@ export class DataBlock extends Block {
             let obj = objects[pos]
             if (obj.__setup__ === WebObject.prototype.__setup__) continue       // skip loading if no custom __setup__() present
 
-            this._print(`calling custom ${obj}.__setup__()`)
+            // this._print(`calling custom ${obj}.__setup__()`)
             if (!obj.is_loaded()) await obj.load()
             let setup = obj.__setup__()  //{}, {ring: this.ring, block: this})
             if (setup instanceof Promise) await setup
@@ -757,17 +757,22 @@ export class DataBlock extends Block {
                 throw new DataAccessError("cannot remove the item, the ring is read-only", {id})
                 // return req.error_access("cannot remove the item, the ring is read-only")
 
-            let obj = await WebObject.inactive(id, data)
+            let obj = await WebObject.inactive(id, data)    // class, prototypes, __data are initialized, but __load__() not executed
 
             // TODO: if `obj` is an agent, stop and uninstall all of its running instances ??
+
+            // if `obj` defines custom cleanup, __delete__(), activate the object and run the cleanup
+            if (obj.__delete__ !== WebObject.prototype.__delete__) {
+                if (!obj.is_loaded()) await obj.load()
+                let del = obj.__delete__()
+                if (del instanceof Promise) await del
+            }
 
             let op_del = new OP('del', key)
             let ops_derived = this._derive(key, obj)        // instructions for derived sequences
             await this._apply([op_del, ...ops_derived])     // schedule `ops` for execution, either immediately or later with WAL
-            this._cascade_delete(obj)                       // remove objects linked to via a strong reference
 
-            // let delete = obj.__delete__()
-            // if (delete instanceof Promise) await delete
+            this._cascade_delete(obj)                       // remove objects linked to via a strong reference
 
             schemat.register_changes({id, data: {'__status': WebObject.Status.DELETED}})
             return 1
