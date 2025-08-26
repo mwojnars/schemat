@@ -84,6 +84,8 @@ export class Transaction {
     }
 
     is_empty()      { return !this._staging.size }
+    is_nonempty()   { return this._staging.size > 0 }
+
     has(obj)        { return this._staging.has(obj) }
     has_exact(obj)  { return this._staging.has_exact(obj) }
 
