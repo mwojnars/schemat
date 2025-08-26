@@ -1301,6 +1301,20 @@ export class WebObject {
         return obj
     }
 
+    async deploy_agent(role = null) {
+        /* Deploy `this` as an agent somewhere in the cluster. Should only be called for web objects of Agent category.
+           This method is defined here instead of Agent class to allow its invocation on stubs.
+         */
+        return schemat.cluster.$leader.deploy(this, role)
+    }
+
+    async delete_agent() {
+        /* Like .delete_self(), but first stops & uninstalls all running instances of this agent across the cluster. */
+    }
+
+
+    /***  Versioning  ***/
+
     _bump_version() {
         /* Set or increment __ver number, if already present or category's `set_version` is true. */
         if (this.__ver || this.__base?.set_version) {
