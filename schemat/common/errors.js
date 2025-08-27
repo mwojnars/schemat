@@ -41,11 +41,12 @@ export class BaseError extends Error {
         }
     }
 
-    static with_cause(msg, cause) {
+    static with_cause(msg, cause, request = null) {
         // passing cause in constructor, BaseError(msg, {cause}), pollutes the stack trace and makes it unreadable
         // - probably the constructor should be fixed to properly handle {cause} param
         let err = new this(msg)
         err.cause = cause
+        if (request) err.request = JSON.stringify(request)
         return err
     }
 

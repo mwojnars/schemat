@@ -198,7 +198,7 @@ class RPC_Response {
         if (err) {
             let {rpc: [id, cmd, args_encoded], role = schemat.GENERIC_ROLE} = request
             let s_args = JSON.stringify(args_encoded).slice(1,-1)
-            throw RPC_Error.with_cause(`error processing request [${id}].${role}.${cmd}(${s_args})`, err)
+            throw RPC_Error.with_cause(`error in request [${id}].${role}.${cmd}(${s_args})`, err, request)
         }
 
         if (records?.length) schemat.register_changes(...records)
