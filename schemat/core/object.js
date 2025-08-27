@@ -1161,7 +1161,7 @@ export class WebObject {
                 return result
             }
             catch (ex) {
-                this._print_error(`${endpoint}() FAILED with ${ex.constructor.name}: ${ex.message}`, ex)
+                this._print_error(`${endpoint}() failed with ${ex.constructor.name}: ${ex.message}`, ex)
                 return
             }
         }
