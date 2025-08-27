@@ -1153,13 +1153,17 @@ export class WebObject {
 
             // print(`handle() endpoint: ${endpoint}`)
             request.set_endpoint(endpoint)
-            let result = handler.call(this, request)
 
-            if (result instanceof Promise) result = await result
-            if (result instanceof Service) result = result.handle(this, request)
-            if (typeof result === 'function') result = result.call(this, request)
-
-            return result
+            try {
+                let result = await handler.call(this, request)
+                if (result instanceof Service) result = await result.handle(this, request)
+                if (typeof result === 'function') result = await result.call(this, request)
+                return result
+            }
+            catch (ex) {
+                this._print_error(`${endpoint}() FAILED with ${ex.constructor.name}: ${ex.message}`, ex)
+                return
+            }
         }
 
         throw new URLNotFound(`endpoint(s) not found in the target object: [${endpoints}]`, {path: request.path})
