@@ -397,7 +397,7 @@ export class Schemat {
     /***  Registry management  ***/
 
     register_changes(...records) {
-        // this._print(`register_changes() tid=${this.tx.tid}, |records| = ${records.length}, |tx._updated| = ${this.tx._updated?.length}`)
+        // this._print(`register_changes() tid=${this.tx.tid}, |records| = ${records.length}, |tx._snap| = ${this.tx._snap?.length}`)
         records.forEach(rec => this.register_record(rec))
         this.tx.capture(...records)
     }

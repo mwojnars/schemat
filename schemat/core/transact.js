@@ -36,7 +36,7 @@ export class Transaction {
     _provisional = 0            // the last __provisional_id assigned to newborn objects so far
 
     // captured DB changes after commit & save:
-    _updated = []               // array of {id, data} records received from DB after committing the corresponding objects
+    _snap = []                  // array of {id, data} records received from DB after committing the corresponding objects
 
 
     get_mutable(obj) {
@@ -226,7 +226,7 @@ export class Transaction {
                     precedence in the Registry, which may not always be the most recent version of the object.
            // TODO: detect duplicates, restrict the size of `records`
          */
-        this._updated.push(...records)
+        this._snap.push(...records)
     }
 }
 
@@ -294,7 +294,7 @@ export class ServerTransaction extends Transaction {
         let tx = new ServerTransaction()
         tx.tid = tid
         tx.debug = debug
-        // tx._updated = records || []
+        // tx._snap = records || []
         return tx
     }
 
@@ -304,7 +304,7 @@ export class ServerTransaction extends Transaction {
     }
 
     dump_records() {
-        return this._updated.map(({id, data}) => ({id, data:
+        return this._snap.map(({id, data}) => ({id, data:
                 (typeof data === 'string') ? JSON.parse(data) :
                 (data instanceof Catalog) ? data.encode() : data
         }))
@@ -318,13 +318,13 @@ export class LiteTransaction extends ServerTransaction {
        with agent operations: deploying, installing, stopping and uninstalling agents across the cluster.
        This transaction is always open: it can exist for a long time and be reused for new groups of mutations.
        For this reason, and to avoid memory leaks or multiplication of the same records over and over again between nodes,
-       lite transaction resets the list of records (_updated) on every capture instead of accumulating them.
+       lite transaction resets the list of records (_snap) on every capture instead of accumulating them.
      */
 
     constructor()   { super({lite: true}) }
     commit()        { throw new Error(`lite transaction cannot be committed`) }
     dump_tx()       {}
-    capture(...recs){ this._updated = recs }
+    capture(...recs){ this._snap = recs }
 }
 
 /**********************************************************************************************************************/
