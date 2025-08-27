@@ -128,6 +128,8 @@ export class Sequence extends WebObject {
 
         let seq = schemat.std.Sequence.new({ring: this.ring, source: this, operator})
         seq = await seq.save({ring: this.__ring, broadcast: true})
+        // await schemat.save({ring: this.__ring, broadcast: true})    // doing seq.save() won't save the blocks (?)
+        // seq = await seq.reload()                                    // blocks are loaded here
 
         // tx.is_lite() / tx.no_rollback  -- whatever was saved to DB cannot be rolled back;
         // only in this mode it's allowed to perform mutating operations on the cluster within a DB transaction
