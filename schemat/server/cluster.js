@@ -109,11 +109,18 @@ export class Cluster extends Agent {
         let nodes = [...this.$state.nodes.values()]
         let {id} = min(nodes, n => n.avg_agents)
         let node = schemat.get_object(id)
+
+        // this._print(`$leader.deploy() node states:`, nodes)
+        // this._print(`$leader.deploy() node avg_agents:`, nodes.map(n => n.avg_agents))
+        // this._print(`$leader.deploy() deploying ${agent} at ${node}`)
+
         await node.$master.deploy(agent, role)
         this.$state.nodes.get(node).num_agents++
     }
 
-    async '$leader.dismiss'(agent) {}
+    async '$leader.dismiss'(agent) {
+        /* Find and stop all deployments of `agent` across the cluster. */
+    }
 
     async '$leader.create_node'(props = {}) {
         /* Create a new Node object and add it to this cluster.
