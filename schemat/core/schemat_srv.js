@@ -454,12 +454,12 @@ export class ServerSchemat extends Schemat {
         /* Print an error together with its .cause chain of errors. */
         let errors = [], first = true
         while (ex) {
-            errors.push([ex.stack, ex.request, ex.node, ex.worker])
+            errors.push(ex)
             ex = ex.cause
         }
-        for (let [stack, request, node, worker] of errors) {
+        for (let {constructor, message, stack, request, node, worker} of errors) {
             if (first) schemat._print(title, stack)
-            else print(`  caused at ${node}/#${worker} by`, stack)
+            else print(`  caused at ${node}/#${worker} by ${constructor.name}: ${message}`, stack)
             if (request) print('    request:\x1b[32m', request, '\x1b[0m')
             first = false
         }
