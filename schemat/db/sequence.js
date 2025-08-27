@@ -127,7 +127,7 @@ export class Sequence extends WebObject {
         // assert(schemat.tx.lite, `create_derived() can only be executed in a lite transaction`)
 
         let seq = schemat.std.Sequence.new({ring: this.ring, source: this, operator})
-        seq = await seq.save({ring: this.__ring, broadcast: true})
+        seq = await seq.save({ring: this.__ring, broadcast: true})  // {snap: true}
         // await schemat.save({ring: this.__ring, broadcast: true})    // doing seq.save() won't save the blocks (?)
         // seq = await seq.reload()                                    // blocks are loaded here
 
