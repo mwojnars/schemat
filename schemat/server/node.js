@@ -194,7 +194,13 @@ class RPC_Response {
             throw new Error(`missing RPC response to request ${JSON.stringify(request)}`)
         }
         let {ret, err, records} = JSONx.decode(response)
-        if (err) throw RPC_Error.with_cause('error processing request', err)
+
+        if (err) {
+            let {rpc: [id, cmd, args_encoded], role = schemat.GENERIC_ROLE} = request
+            let s_args = JSON.stringify(args_encoded).slice(1,-1)
+            throw RPC_Error.with_cause(`error processing request [${id}].${role}.${cmd}(${s_args})`, err)
+        }
+
         if (records?.length) schemat.register_changes(...records)
         // TODO: above, use register_changes() only for important records that should be stored in TX and passed back to the originator
         return ret
