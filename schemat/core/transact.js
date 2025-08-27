@@ -35,8 +35,8 @@ export class Transaction {
     _staging = new Objects()    // staging area: a set of mutated or newborn objects that wait for being saved to DB
     _provisional = 0            // the last __provisional_id assigned to newborn objects so far
 
-    // captured DB changes after commit & save:
-    _snap = []                  // array of {id, data} records received from DB after committing the corresponding objects
+    // captured DB changes after save:
+    _snap = new Map()          // map of id -> data records received from DB after committing objects
 
 
     get_mutable(obj) {
@@ -222,11 +222,10 @@ export class Transaction {
 
     capture(...records) {
         /* Remember updated records received from the DB, so they can be propagated further back to the originator.
-           WARNING: in case of multiple modifications to the same record, the one received most recently will take
-                    precedence in the Registry, which may not always be the most recent version of the object.
-           // TODO: detect duplicates, restrict the size of `records`
+           If a record with the same ID already exists, it will be overwritten with the new data.
          */
-        this._snap.push(...records)
+        for (let {id, data} of records)
+            this._snap.set(id, data)
     }
 }
 
@@ -304,7 +303,8 @@ export class ServerTransaction extends Transaction {
     }
 
     dump_records() {
-        return this._snap.map(({id, data}) => ({id, data:
+        /* Return a list of {id, data} records from _snap map, with `data` in JSONx-encoded form. */
+        return [...this._snap.entries()].map(([id, data]) => ({id, data:
                 (typeof data === 'string') ? JSON.parse(data) :
                 (data instanceof Catalog) ? data.encode() : data
         }))
@@ -324,7 +324,9 @@ export class LiteTransaction extends ServerTransaction {
     constructor()   { super({lite: true}) }
     commit()        { throw new Error(`lite transaction cannot be committed`) }
     dump_tx()       {}
-    capture(...recs){ this._snap = recs }
+    capture(...recs) {
+        this._snap = new Map(recs.map(r => [r.id, r.data]))
+    }
 }
 
 /**********************************************************************************************************************/
@@ -333,6 +335,6 @@ export class ClientTransaction extends Transaction {
     /* Client-side transaction object. No TID. No commits. Exists permanently. */
 
     commit() { throw new Error(`client-side transaction cannot be committed`) }
-    capture(...records) {}      // on client, records are saved in Registry and this is enough (no further back-propagation is done)
+    capture(...records) {}      // on client, records are saved in Registry and this is enough
 }
 
