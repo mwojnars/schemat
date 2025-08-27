@@ -182,10 +182,10 @@ class RPC_Response {
          */
         if (err) return JSONx.encode({err})
         let response = {}
-        let records = schemat.tx?.dump_records()
+        let snap = schemat.tx?.dump_records()
 
         if (ret !== undefined) response.ret = ret
-        if (records?.length) response.records = records
+        if (snap?.length) response.snap = snap
 
         return JSONx.encode(response)
     }
@@ -195,7 +195,7 @@ class RPC_Response {
             schemat.node._print_stack(`missing RPC response to request ${JSON.stringify(request)}`)
             throw new Error(`missing RPC response to request ${JSON.stringify(request)}`)
         }
-        let {ret, err, records} = JSONx.decode(response)
+        let {ret, err, snap} = JSONx.decode(response)
 
         if (err) {
             let {rpc: [id, cmd, args_encoded], role = schemat.GENERIC_ROLE} = request
@@ -203,8 +203,10 @@ class RPC_Response {
             throw RPC_Error.with_cause(`error in request [${id}].${role}.${cmd}(${s_args})`, err, request)
         }
 
-        if (records?.length) schemat.register_changes(...records)
-        // TODO: above, use register_changes() only for important records that should be stored in TX and passed back to the originator
+        // TODO: make sure that `snap` only contains the most recent versions of corresponding DB records, so that
+        //       register_changes() below does NOT override newer records with older ones (!?), esp. in a lite transaction
+        if (snap?.length) schemat.register_changes(...snap)
+
         return ret
     }
 }
