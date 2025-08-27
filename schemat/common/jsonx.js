@@ -270,6 +270,7 @@ export class JSONx {
         if (err.stack) state.stack = err.stack
         if (err.code) state.code = err.code
         if (err.cause) state.cause = this.encode(err.cause)
+        if (err.request) state.request = err.request
         return state
     }
 }
