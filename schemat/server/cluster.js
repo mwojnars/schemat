@@ -113,7 +113,7 @@ export class Cluster extends Agent {
         this.$state.nodes.get(node).num_agents++
     }
 
-    async '$leader.revoke'(agent) {}
+    async '$leader.dismiss'(agent) {}
 
     async '$leader.create_node'(props = {}) {
         /* Create a new Node object and add it to this cluster.
