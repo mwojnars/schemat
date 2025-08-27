@@ -175,8 +175,10 @@ class RPC_Request {
 
 class RPC_Response {
     static create(ret, err) {
-        /* RPC result must be JSONx-encoded, and execution context & transaction metadata must be added to the response.
-           Response format: {result, error, records}
+        /* RPC response, as {ret, err, snap} object encoded via JSONx, with:
+           - ret = returned value
+           - err = exception caught
+           - snap = array of {id, data} records captured (snapped) during request processing
          */
         if (err) return JSONx.encode({err})
         let response = {}
