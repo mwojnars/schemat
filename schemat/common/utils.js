@@ -470,12 +470,15 @@ export function sum(...nums) {
 
 export function min(arr, key = null) {
     /* Returns the first element of `arr` array that minimizes key(arr[i]) value (or arr[i] if no key). Ignores null and undefined values. */
-    let opt     // current minimum
+    let opt_elem, opt_val       // current minimum
     arr.forEach((elem) => {
         let v = key ? key(elem) : elem
-        if (v != null && (opt == null || v < opt)) opt = elem
+        if (v != null && (opt_val == null || v < opt_val)) {
+            opt_elem = elem
+            opt_val = v
+        }
     })
-    return opt
+    return opt_elem
 }
 
 export function max(arr, key = null) {
