@@ -33,8 +33,8 @@ globalThis.server_import = function(path) {
     return SERVER ? import(path) : undefined
 }
 
-if (DEBUG)
-    await server_import('longjohn')     // long stack traces across async boundaries
+// if (DEBUG)
+//     await server_import('longjohn')     // long stack traces across async boundaries
 
 
 /**********************************************************************************************************************/
