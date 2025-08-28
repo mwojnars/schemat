@@ -446,7 +446,8 @@ export class Node extends Agent {
         if (worker != null) return this                             // if target worker was specified by the caller, the current node is assumed implicitly
         if (this._find_worker(agent_id, role) != null) return this  // local deployment here on this node is present, which is preferred over remote nodes
         let node = schemat.cluster.find_node(agent_id, role)        // check global placements via [cluster] object
-        // let node = this.$state.global_placements
+        // let query = ...
+        // let nodes = this.$state.global_placements[query][0]  ... $state.agent_nodes  $state.agent_workers
         if (node) return node
         throw new Error(`agent [${agent_id}] not found on any node in the cluster`)
     }
@@ -572,10 +573,10 @@ export class Node extends Agent {
         let {agents} = this.$state
         agent = schemat.as_object(agent)
 
-        let stop = agents.filter(status => status.id === agent.id)
+        let stop = agents.filter(st => st.id === agent.id && (!role || st.role === role))
         if (!stop.length) return
 
-        this.$state.agents = agents = agents.filter(status => status.id !== agent.id)
+        this.$state.agents = agents = agents.filter(st => !(st.id === agent.id && (!role || st.role === role)))
 
         // stop every agent from `stop`, in reverse order
         for (let {worker} of stop.reverse())
