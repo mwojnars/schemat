@@ -437,14 +437,14 @@ export class Node extends Agent {
         // this._print(`rpc_frwd():`, `agent_id=${agent_id} method=${method} args=${args}`)
 
         // if `worker` is given, `node` is itself by default
-        if (worker != null) node ??= schemat.node
+        if (worker != null) node ??= this
 
         node ??= this._find_node(agent_id, role)
         if (!node) throw new Error(`missing host node for RPC target agent [${agent_id}]`)
 
         // check if the target object is deployed here on this node, then no need to look any further
         // -- this rule is important for loading data blocks during and after bootstrap
-        if (node.is(schemat.node)) {
+        if (node.is(this)) {
             // this._print(`rpc_frwd(): redirecting to self`)
             return this.rpc_recv(message)       // no remote connection if agent is deployed here on the current node
         }
