@@ -51,7 +51,7 @@ export class Placement {      // AgentInstance Run Placement Lineup Spec Allocat
 // }
 
 export class GlobalPlacements {
-    /* Map of deployments of all agents across the cluster, as a mapping of agent-role tag to array of nodes
+    /* Map of deployments of all agents across the cluster, as a mapping of [agent-role tag] to [array of nodes]
        where the agent is deployed; agent-role tag is a string of the form `${id}_${role}`, like "1234_$leader".
        Additionally, ID-only tags are included to support role-agnostic queries (i.e., when role="$agent").
      */
@@ -63,17 +63,15 @@ export class GlobalPlacements {
            of the form `${id}_${role}`, like "1234_$leader". Additionally, ID-only placements are included
            to support role-agnostic queries (i.e., when role="$agent").
          */
-        let placements = this._placements
-
-        // add regular agents to placements
-        for (let node of nodes)
+        for (let node of nodes) {
+            // add regular agents to placements
             for (let {id, role} of node.agents)
                 this.add(node, id, role)
 
-        // add node.$master agents (excluded from node.agents lists), they are deployed on itself and nowhere else;
-        // there are $worker deployments, too, but they are not needed for global routing
-        for (let node of nodes)
+            // add node.$master/$worker agents (not on node.agents lists), they are deployed on itself and nowhere else
             this.add(node, node.id, '$master')
+            this.add(node, node.id, '$worker')
+        }
     }
 
     add(node_id, agent_id, role = null) {
