@@ -347,13 +347,13 @@ export class Node extends Agent {
 
     /* Agent routing */
 
-    _find_node(id, role) {
-        /* Return the node where agent is deployed in a given `role`. The current node has a priority:
-           if the agent is deployed on one of the local processes, `this` is always returned.
-         */
-        if (this._find_worker(id, role) != null) return this
-        return schemat.cluster.find_node(id, role)
-    }
+    // _find_node(id, role) {
+    //     /* Return the node where agent is deployed in a given `role`. The current node has a priority:
+    //        if the agent is deployed on one of the local processes, `this` is always returned.
+    //      */
+    //     if (this._find_worker(id, role) != null) return this
+    //     return schemat.cluster.find_node(id, role)
+    // }
 
     _find_worker(id, role) {
         /* On master, look up the `agents` array of agent placements to find the local process where the agent runs
@@ -423,24 +423,29 @@ export class Node extends Agent {
         return this.ipc_send(MASTER, request)
     }
 
-    // _find_node__(node, worker, agent_id, role) {
-    //     if (node) return node                           // target node was specified by the caller
-    //     if (worker != null) return this                 // target worker process was specified by the caller, which implicitly indicates the current node
-    //     if (this._find_worker(agent_id, role) != null) return this              // local deployment here on this node, if present, always has a preference over remote nodes
-    //     if ((node = schemat.cluster.find_node(agent_id, role))) return node
-    //     throw new Error(`missing host node for RPC target agent [${agent_id}]`)
-    // }
+    _find_node(worker, agent_id, role) {
+        /* Return the node where agent_id is deployed in a given `role`. The current node has a priority:
+           if the agent is deployed on one of the local processes, `this` is always returned.
+         */
+        if (worker != null) return this                             // target worker was specified by the caller, which implicitly indicates the current node
+        if (this._find_worker(agent_id, role) != null) return this  // local deployment here on this node is present, which is preferred over remote nodes
+        let node = schemat.cluster.find_node(agent_id, role)        // check global placements via [cluster] object
+        if (node) return node
+        throw new Error(`missing host node for RPC target agent [${agent_id}]`)
+    }
 
     async rpc_frwd(message) {
         /* On master, forward an RPC message originating at this node either to a remote peer or a local worker process. */
         let {node, worker, agent_id, role} = RPC_Request.parse(message)
         // this._print(`rpc_frwd():`, `agent_id=${agent_id} method=${method} args=${args}`)
 
-        // if `worker` is given, `node` is itself by default
-        if (worker != null) node ??= this
+        node ??= this._find_node(worker, agent_id, role)
 
-        node ??= this._find_node(agent_id, role)
-        if (!node) throw new Error(`missing host node for RPC target agent [${agent_id}]`)
+        // // if `worker` is given, `node` is itself by default
+        // if (worker != null) node ??= this
+        //
+        // node ??= this._find_node(agent_id, role)
+        // if (!node) throw new Error(`missing host node for RPC target agent [${agent_id}]`)
 
         // check if the target object is deployed here on this node, then no need to look any further
         // -- this rule is important for loading data blocks during and after bootstrap
