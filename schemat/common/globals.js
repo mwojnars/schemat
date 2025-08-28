@@ -35,6 +35,7 @@ globalThis.server_import = function(path) {
 
 // if (DEBUG)
 //     await server_import('longjohn')     // long stack traces across async boundaries
+//                                         // WARNING: longjohn probably has a side effect causing error messages to not show up when printing full stack trace (!)
 
 
 /**********************************************************************************************************************/
