@@ -62,8 +62,8 @@ export function check_plural(path) {
 
 /**********************************************************************************************************************/
 
-// predefined special role names for running agents
-export const Role = {
-    GENERIC: '$agent',      // generic role that is used when no role name was provided; commands defined at this role are accessible by agents running in any other role
+// special role names for deployed agents
+export const AgentRole = {
+    GENERIC: '$agent',      // generic role that is used when no role name was provided when starting an agent; commands defined at this role are accessible by agents running in any other role
     ANY:     '*',           // wildcard that matches any role when searching for deployed agents
 }

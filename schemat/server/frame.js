@@ -1,4 +1,4 @@
-import {AsyncLocalStorage} from 'node:async_hooks'
+import {AgentRole} from "../common/globals.js";
 import {print, assert, T, fluctuate, sleep} from "../common/utils.js";
 import {JSONx} from "../common/jsonx.js";
 import {CustomMap} from "../common/structs.js";
@@ -58,7 +58,7 @@ export class FramesMap extends CustomMap {
     _frames_by_id = new Map()    // internal map: id -> list of frames
 
     convert([id, role]) {
-        role ??= schemat.GENERIC_ROLE
+        role ??= AgentRole.GENERIC
         return `${id}_${role}`          // 1234_$agent
     }
 
@@ -124,7 +124,7 @@ export class Frame {
 
     constructor(agent, role) {
         this.agent = agent
-        this.role = role || schemat.GENERIC_ROLE
+        this.role = role || AgentRole.GENERIC
         assert(this.role[0] === '$')
 
         let _resolve
@@ -311,7 +311,7 @@ export class Frame {
         let func = agent.__self[method]
         if (typeof func !== 'function') {
             // generic $agent.*() method is used as a fallback when there's no role-specific implementation of the `command`
-            method = `${schemat.GENERIC_ROLE}.${command}`
+            method = `${AgentRole.GENERIC}.${command}`
             func = agent.__self[method]
         }
         if (typeof func !== 'function') throw new Error(`command "${command}" not recognized by agent ${agent}`)
