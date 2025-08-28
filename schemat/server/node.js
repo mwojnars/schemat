@@ -456,7 +456,10 @@ export class Node extends Agent {
         let node_ids = this.$state.global_placements.find_all(agent_id, role)
 
         if (!node_ids?.length) throw new Error(`agent ${agent}.${role} not found on any node in the cluster`)
-        if (node_ids.some(id => id === this.id)) return this
+        if (node_ids.some(id => id === this.id)) {
+            assert(node_ids[0] === this.id)
+            return this
+        }
         return schemat.get_object(node_ids[0])   //node_ids.random()
     }
 
