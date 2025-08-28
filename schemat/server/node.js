@@ -395,7 +395,9 @@ export class Node extends Agent {
         let frame = !broadcast && schemat.get_frame(agent_id, role)
         if (frame) return this.rpc_exec(request)
 
-        return this.ipc_send(MASTER, request)
+        // return this.ipc_send(MASTER, request)
+        if (this.is_master()) return this.rpc_frwd(request)     // if already on master, forward to a target node/process
+        return schemat.kernel.mailbox.send(request)             // otherwise, forward to master
     }
 
     async rpc_frwd(message) {
@@ -404,8 +406,8 @@ export class Node extends Agent {
         // this._print(`rpc_frwd():`, `agent_id=${agent_id} method=${method} args=${args}`)
 
         node ??= this._find_node(worker, agent_id, role)
-        if (node.is(this)) return this.rpc_recv(message)    // loopback connection if agent is deployed here on the current node
-        return this.tcp_send(node, message)                 // remote connection otherwise
+        if (node.is(this)) return this.rpc_recv(message)        // loopback connection if agent is deployed here on the current node
+        return this.tcp_send(node, message)                     // remote connection otherwise
     }
 
     async rpc_recv(message) {
@@ -415,10 +417,8 @@ export class Node extends Agent {
         worker ??= this._find_worker(agent_id, role)
         if (worker == null) throw new Error(`agent [${agent_id}] not found on this node`)
         if (worker === MASTER) return this.rpc_exec(message)    // process the message here in the master process
-        // return this.ipc_send(worker, message)                   // forward the message down to a worker process
-
-        return this.get_worker(worker).mailbox.send(message)
-        // return this._send(worker, message)
+        return this.get_worker(worker).mailbox.send(message)    // forward the message down to a worker process
+        // return this.ipc_send(worker, message)
     }
 
     async rpc_exec(message) {
@@ -461,32 +461,32 @@ export class Node extends Agent {
     }
 
 
-    /* IPC: vertical communication between master/worker processes */
-
-    async ipc_send(process_id, request) {
-        /* Send an IPC request from master down to a worker process, or the other way round. */
-
-        // this._print(`ipc_send() process_id=${process_id} worker_id=${this.worker_id} request=${request}`)
-        try {
-            if (process_id === this.worker_id)      // shortcut when sending to itself, on master or worker
-                return process_id ? await this.rpc_exec(request) : await this.rpc_frwd(request)
-
-            if (process_id) {
-                assert(this.is_master())
-                let worker = this.get_worker(process_id)
-                return await worker.mailbox.send(request)
-            }
-            else {
-                assert(this.is_worker())
-                return await schemat.kernel.mailbox.send(request)
-            }
-        }
-        catch (ex) {
-            // this._print(`ipc_send() FAILED request to proc #${process_id}:`, JSON.stringify(request))
-            throw this._rich_exception(ex, request)
-        }
-    }
-
+    // /* IPC: vertical communication between master/worker processes */
+    //
+    // async ipc_send(process_id, request) {
+    //     /* Send an IPC request from master down to a worker process, or the other way round. */
+    //
+    //     // this._print(`ipc_send() process_id=${process_id} worker_id=${this.worker_id} request=${request}`)
+    //     try {
+    //         if (process_id === this.worker_id)      // shortcut when sending to itself, on master or worker
+    //             return process_id ? await this.rpc_exec(request) : await this.rpc_frwd(request)
+    //
+    //         if (process_id) {
+    //             assert(this.is_master())
+    //             let worker = this.get_worker(process_id)
+    //             return await worker.mailbox.send(request)
+    //         }
+    //         else {
+    //             assert(this.is_worker())
+    //             return await schemat.kernel.mailbox.send(request)
+    //         }
+    //     }
+    //     catch (ex) {
+    //         // this._print(`ipc_send() FAILED request to proc #${process_id}:`, JSON.stringify(request))
+    //         throw this._rich_exception(ex, request)
+    //     }
+    // }
+    //
     // ipc_master(message) {
     //     /* On master process, handle an IPC message received from a worker process or directly from itself.
     //        IPC calls do NOT perform JSONx-encoding/decoding of arguments/result, so the latter must be
