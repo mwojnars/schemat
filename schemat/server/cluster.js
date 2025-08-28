@@ -50,10 +50,10 @@ export class Placement {      // AgentInstance Run Placement Lineup Spec Allocat
 //     /* Most recent statistics on all nodes in the cluster: their health and activity. */
 // }
 
-export class GlobalPlacements {        // Plan Arrangement Blueprint Map Outline Atlas
-    /* Map of deployments of all agents across the cluster, as a mapping of agent-role tags to arrays of nodes
-       where this agent is deployed; agent-role tag is a string of the form `${id}_${role}`, like "1234_$leader".
-       Additionally, ID-only placements are included to support role-agnostic queries (i.e., when role="$agent").
+export class GlobalPlacements {
+    /* Map of deployments of all agents across the cluster, as a mapping of agent-role tag to array of nodes
+       where the agent is deployed; agent-role tag is a string of the form `${id}_${role}`, like "1234_$leader".
+       Additionally, ID-only tags are included to support role-agnostic queries (i.e., when role="$agent").
      */
 
     _placements = {}
@@ -110,34 +110,7 @@ export class Cluster extends Agent {
         if (SERVER) await Promise.all(this.nodes.map(node => node.load()))
     }
 
-    get global_placements() {
-        return new GlobalPlacements(this.nodes) //._placements
-    }
-
-    // get global_placements() {
-    //     /* POJO mapping of agent-role tags to arrays of nodes where this agent is deployed; agent-role tag is a string
-    //        of the form `${id}_${role}`, like "1234_$leader". Additionally, ID-only placements are included
-    //        to support role-agnostic queries (i.e., when role="$agent").
-    //      */
-    //     let placements = {}
-    //
-    //     // index regular agents and their deployment nodes
-    //     for (let node of this.nodes)
-    //         for (let {id, role} of node.agents) {
-    //             assert(id)
-    //             let tag = _agent_role(id, role);
-    //             (placements[tag] ??= []).push(node);
-    //             (placements[id] ??= []).push(node);
-    //         }
-    //
-    //     // index Node objects running as agents, they're excluded from node.agents lists
-    //     for (let node of this.nodes) {
-    //         let tag = _agent_role(node.id, '$master')       // there are $worker deployments, too, but they are not needed for global routing
-    //         assert(placements[tag] === undefined)
-    //         placements[tag] = [node]                        // node.$master is deployed on itself and nowhere else
-    //     }
-    //     return placements
-    // }
+    get global_placements() { return new GlobalPlacements(this.nodes) }
 
 
     /***  Agent operations  ***/
