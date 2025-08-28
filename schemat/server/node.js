@@ -5,7 +5,6 @@ import {JSONx} from "../common/jsonx.js";
 import {Agent} from "./agent.js";
 import {TCP_Receiver, TCP_Sender} from "./tcp.js";
 import {Counter} from "../common/structs.js";
-import {_agent_role} from "./cluster.js";
 
 
 const MASTER = 0        // ID of the master process; workers are numbered 1,2,...,N

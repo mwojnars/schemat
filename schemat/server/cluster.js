@@ -4,13 +4,6 @@ import {Agent} from "./agent.js";
 import {ObjectsMap} from "../common/structs.js";
 
 
-export function _agent_role(id, role = null) {
-    /* A string that identifies an agent by ID together with its particular role, like "1234_$agent". */
-    role ??= AgentRole.GENERIC
-    assert(role[0] === '$', `incorrect name of agent role (${role})`)
-    return `${id}_${role}`
-}
-
 /**********************************************************************************************************************/
 
 export class NodeState {
@@ -36,12 +29,6 @@ export class NodeState {
         this.num_workers = node.num_workers
         this.num_agents = node.agents.length
     }
-}
-
-export class Placement {      // AgentInstance Run Placement Lineup Spec Allocation Provision Card Sheet Ticket Slip
-    id
-    role
-    node_id
 }
 
 /**********************************************************************************************************************/
@@ -74,17 +61,25 @@ export class GlobalPlacements {
         }
     }
 
-    add(node_id, agent_id, role = null) {
-        if (typeof node_id === 'object') node_id = node_id.id
-        assert(agent_id)
-        let tag = _agent_role(agent_id, role);
-        (this._placements[tag] ??= []).push(node_id);
-        (this._placements[agent_id] ??= []).push(node_id);
+    _agent_role(id, role = null) {
+        /* A string that identifies an agent by ID together with its particular role, like "1234_$agent". */
+        role ??= AgentRole.GENERIC
+        assert(role[0] === '$', `incorrect name of agent role (${role})`)
+        assert(id && typeof id !== 'object')
+        return `${id}_${role}`
+    }
+
+    add(node, agent, role = null) {
+        if (typeof node === 'object') node = node.id
+        assert(agent)
+        let tag = this._agent_role(agent, role);
+        (this._placements[tag] ??= []).push(node);
+        (this._placements[agent] ??= []).push(node);
     }
 
     find_all(agent_id, role = AgentRole.GENERIC) {
         /* Return an array of all node IDs where (agent_id, role) is deployed. */
-        let tag = (role === AgentRole.GENERIC) ? agent_id : _agent_role(agent_id, role)
+        let tag = (role === AgentRole.GENERIC) ? agent_id : this._agent_role(agent_id, role)
         return this._placements[tag]
     }
 }
