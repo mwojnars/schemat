@@ -458,7 +458,7 @@ export class ServerSchemat extends Schemat {
         }
         for (let {constructor, message, stack, request, node, worker} of errors) {
             if (first) schemat._print(title, stack)
-            else print(`  caused at ${node}/#${worker} by ${constructor.name}: ${message}`, stack)
+            else print(`  caused at ${node}/#${worker} by`, stack)    // ${constructor.name}: ${message}
             if (request) print('    request:\x1b[32m', request, '\x1b[0m')
             first = false
         }

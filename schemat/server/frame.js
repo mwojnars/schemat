@@ -295,7 +295,7 @@ export class Frame {
             let error, result = await this._tracked(this._frame_context(agent, callA)).catch(ex => {
                 if (!callback) throw ex
                 let s_args = JSONx.stringify(args).slice(1,-1)
-                agent._print_error(`${method}(${s_args}) failed with ${ex.constructor.name}: ${ex.message}`, ex)
+                agent._print_error(`${method}(${s_args}) failed with`, ex)      // ${ex.constructor.name}: ${ex.message}
                 error = ex
             })
             if (!error && schemat.tx.is_nonempty()) await schemat.tx.save()
