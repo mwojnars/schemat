@@ -4,7 +4,7 @@ import {Agent} from "./agent.js";
 import {ObjectsMap} from "../common/structs.js";
 
 
-function _agent_role(id, role = null) {
+export function _agent_role(id, role = null) {
     /* A string that identifies an agent by ID together with its particular role, like "1234_$agent". */
     role ??= AgentRole.GENERIC
     assert(role[0] === '$', `incorrect name of agent role (${role})`)
@@ -102,23 +102,23 @@ export class Cluster extends Agent {
         return placements
     }
 
-    find_node(agent, role) {
-        /* Return the node where `agent` running in a given `role` can be found. If `agent` is deployed
-           on multiple nodes, one of them is chosen at random, or by hashing (TODO), or according to a routing policy...
-           If `agent` is deployed here on the current node, this location is always returned.
-           If role is the generic "$agent", every target deployment is accepted no matter its declared role.
-         */
-        role ??= AgentRole.GENERIC
-        agent = schemat.as_object(agent)
-
-        let query = AgentRole.GENERIC ? agent.id : _agent_role(agent.id, role)
-        let nodes = this.global_placements[query]
-
-        if (!nodes?.length) throw new Error(`agent ${agent}.${role} not deployed on any node`)
-        if (nodes.some(node => node.id === this.id)) return this
-        return nodes[0]
-        // return nodes.random()
-    }
+    // find_node(agent, role) {
+    //     /* Return the node where `agent` running in a given `role` can be found. If `agent` is deployed
+    //        on multiple nodes, one of them is chosen at random, or by hashing (TODO), or according to a routing policy...
+    //        If `agent` is deployed here on the current node, this location is always returned.
+    //        If role is the generic "$agent", every target deployment is accepted no matter its declared role.
+    //      */
+    //     role ??= AgentRole.GENERIC
+    //     agent = schemat.as_object(agent)
+    //
+    //     let query = AgentRole.GENERIC ? agent.id : _agent_role(agent.id, role)
+    //     let nodes = this.global_placements[query]
+    //
+    //     if (!nodes?.length) throw new Error(`agent ${agent}.${role} not deployed on any node`)
+    //     if (nodes.some(node => node.id === this.id)) return this
+    //     return nodes[0]
+    //     // return nodes.random()
+    // }
 
 
     /***  Agent operations  ***/
