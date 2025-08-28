@@ -345,31 +345,6 @@ export class Node extends Agent {
     // }
 
 
-    /* Agent routing */
-
-    // _find_node(id, role) {
-    //     /* Return the node where agent is deployed in a given `role`. The current node has a priority:
-    //        if the agent is deployed on one of the local processes, `this` is always returned.
-    //      */
-    //     if (this._find_worker(id, role) != null) return this
-    //     return schemat.cluster.find_node(id, role)
-    // }
-
-    _find_worker(id, role) {
-        /* On master, look up the `agents` array of agent placements to find the local process where the agent runs
-           in a given `role` (or in any role if `role` is missing or GENERIC_ROLE).
-         */
-        // let agents = this.$master.state?.agents
-        // assert(agents, `array of running agents not yet initialized`)
-
-        if (id === this.id) return 0        // the node agent itself is contacted at the master process
-        if (role === AgentRole.GENERIC) role = undefined
-
-        assert(this.$state, `missing $frame binding`)
-        let status = this.$state.agents.find(st => st.id === id && (!role || st.role === role))
-        return status?.worker
-    }
-
     _rich_exception(ex, request) {
         ex.node = this.id
         ex.worker = this.worker_id
@@ -423,40 +398,14 @@ export class Node extends Agent {
         return this.ipc_send(MASTER, request)
     }
 
-    _find_node(worker, agent_id, role) {
-        /* Return the node where agent_id is deployed in a given `role`. The current node has a priority:
-           if the agent is deployed on one of the local processes, `this` is always returned.
-         */
-        if (worker != null) return this                             // target worker was specified by the caller, which implicitly indicates the current node
-        if (this._find_worker(agent_id, role) != null) return this  // local deployment here on this node is present, which is preferred over remote nodes
-        let node = schemat.cluster.find_node(agent_id, role)        // check global placements via [cluster] object
-        if (node) return node
-        throw new Error(`missing host node for RPC target agent [${agent_id}]`)
-    }
-
     async rpc_frwd(message) {
         /* On master, forward an RPC message originating at this node either to a remote peer or a local worker process. */
         let {node, worker, agent_id, role} = RPC_Request.parse(message)
         // this._print(`rpc_frwd():`, `agent_id=${agent_id} method=${method} args=${args}`)
 
         node ??= this._find_node(worker, agent_id, role)
-
-        // // if `worker` is given, `node` is itself by default
-        // if (worker != null) node ??= this
-        //
-        // node ??= this._find_node(agent_id, role)
-        // if (!node) throw new Error(`missing host node for RPC target agent [${agent_id}]`)
-
-        // check if the target object is deployed here on this node, then no need to look any further
-        // -- this rule is important for loading data blocks during and after bootstrap
-        if (node.is(this)) {
-            // this._print(`rpc_frwd(): redirecting to self`)
-            return this.rpc_recv(message)       // no remote connection if agent is deployed here on the current node
-        }
-
-        // await node.load()
-        // this._print(`rpc_frwd(): sending to ${node.id} at ${node.tcp_address}`)
-        return this.tcp_send(node, message)
+        if (node.is(this)) return this.rpc_recv(message)    // loopback connection if agent is deployed here on the current node;
+        return this.tcp_send(node, message)                 // remote connection otherwise
     }
 
     async rpc_recv(message) {
@@ -495,6 +444,33 @@ export class Node extends Agent {
         if (!frame) throw new Error(`[${agent_id}].${role} not found on this process (worker #${this.worker_id}) to execute RPC message ${JSON.stringify(message)}`)
 
         return frame.exec(cmd, args, ctx, tx, (out, err) => RPC_Response.create(out, err))
+    }
+
+    _find_node(worker, agent_id, role) {
+        /* Return the node where agent_id is deployed in a given role. The current node has a priority: if the agent is
+           deployed here on a local process, `this` is always returned -- this rule is important for loading data blocks
+           during and after bootstrap.
+         */
+        if (worker != null) return this                             // target worker was specified by the caller, which implicitly indicates the current node
+        if (this._find_worker(agent_id, role) != null) return this  // local deployment here on this node is present, which is preferred over remote nodes
+        let node = schemat.cluster.find_node(agent_id, role)        // check global placements via [cluster] object
+        if (node) return node
+        throw new Error(`missing host node for RPC target agent [${agent_id}]`)
+    }
+
+    _find_worker(id, role) {
+        /* On $master, look up local $state.agents placements to find the process where the agent runs
+           in a given `role` (or in any role if `role` is missing or GENERIC_ROLE).
+         */
+        // let agents = this.$master.state?.agents
+        // assert(agents, `array of running agents not yet initialized`)
+
+        if (id === this.id) return 0        // the node agent itself is contacted at the master process
+        if (role === AgentRole.GENERIC) role = undefined
+
+        assert(this.$state, `missing $frame binding`)
+        let status = this.$state.agents.find(st => st.id === id && (!role || st.role === role))
+        return status?.worker
     }
 
 
