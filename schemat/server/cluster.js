@@ -10,6 +10,7 @@ function _agent_role(id, role = null) {
     return `${id}_${role}`        // 1234_$agent
 }
 
+/**********************************************************************************************************************/
 
 export class NodeState {
     /* Statistics of how a particular node in the cluster is doing: health, load, heartbeat etc. */
@@ -38,13 +39,26 @@ export class NodeState {
 
 /**********************************************************************************************************************/
 
-// Cluster extends System
-// Application extends System
+// export class Nodes {
+//     /* Most recent statistics on all nodes in the cluster: their health and activity. */
+// }
+//
+// export class Agents {
+//     /* Map of deployments of all agents across the cluster: nodes, processes, agent IDs, roles. */
+// }
+
+/**********************************************************************************************************************/
 
 export class Cluster extends Agent {
 
-    // nodes            array of Node objects representing physical nodes of this cluster
-    // $state.nodes     map of NodeState objects keeping the most recent stats on the node's health and activity
+    /*
+    Persisted properties:
+        nodes            array of Node objects representing physical nodes of this cluster
+
+    $leader state attributes:
+        $state.nodes     map of NodeState objects keeping the most recent stats on node's health and activity
+    */
+
 
     async __load__() {
         if (SERVER) await Promise.all(this.nodes.map(node => node.load()))
@@ -98,11 +112,13 @@ export class Cluster extends Agent {
         // return nodes.random()
     }
 
-    find_nodes(agent, role) {
-        /* Array of all nodes where `agent` is currently deployed. */
-    }
 
     /***  Agent operations  ***/
+
+    _find_nodes(agent, role) {
+        /* Array of all nodes where `agent` is currently deployed. */
+        // this.$state.agents
+    }
 
     async '$leader.deploy'(agent, role = null) {
         /* Find the least busy node and deploy `agent` there. */

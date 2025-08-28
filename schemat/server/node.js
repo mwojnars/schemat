@@ -178,7 +178,7 @@ class RPC_Response {
         /* RPC response, as {ret, err, snap} object encoded via JSONx, with:
            - ret = returned value
            - err = exception caught
-           - snap = array of {id, data} records captured (snapped) during request processing
+           - snap = array of {id, data} records updated and captured (snapped) during request processing
          */
         if (err) return JSONx.encode({err})
         let response = {}
@@ -204,7 +204,7 @@ class RPC_Response {
         }
 
         // TODO: make sure that `snap` only contains the most recent versions of corresponding DB records, so that
-        //       register_changes() below does NOT override newer records with older ones (!?), esp. in a lite transaction
+        //       register_changes() below does NOT override newer records with older ones in Registry (!?), esp. in a lite transaction
         if (snap?.length) schemat.register_changes(...snap)
 
         return ret
