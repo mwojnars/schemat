@@ -445,9 +445,9 @@ export class Node extends Agent {
            for loading data blocks during and after bootstrap.
          */
         if (worker != null) return this                             // if target worker was specified by the caller, the current node is assumed implicitly
-        if (this._find_worker(agent_id, role) != null) return this  // local deployment here on this node is present, which is preferred over remote nodes
-        // let node = schemat.cluster.find_node(agent_id, role)        // check global placements via [cluster] object
-        let node = this.find_node(agent_id, role)
+        if (this._find_worker(agent_id, role) != null) return this  // if agent deployed here on this node, it is preferred over remote nodes
+        let node = this.find_node(agent_id, role)                   // retrieve the node from global_placements
+        // let node = schemat.cluster.find_node(agent_id, role)     // check global placements via [cluster] object
 
         if (node) return node
         throw new Error(`agent [${agent_id}] not found on any node in the cluster`)
