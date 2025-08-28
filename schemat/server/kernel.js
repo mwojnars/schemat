@@ -4,6 +4,7 @@ import yaml from 'yaml'
 // import why from 'why-is-node-running'
 
 import "../common/globals.js"           // global flags: CLIENT, SERVER
+import {AgentRole} from "../common/globals.js";
 
 import {print, assert, T} from "../common/utils.js";
 import {StoppingNow} from "../common/errors.js";
@@ -151,14 +152,14 @@ export class Kernel {
         // start ordinary agents
         for (let {id, role} of agents) {
             assert(id)
-            role ??= schemat.GENERIC_ROLE
+            role ??= AgentRole.GENERIC
             await this.start_agent(id, role)
         }
     }
 
     async start_agent(id, role) {
         if (this.frames.has([id, role])) throw new Error(`agent [${id}] in role ${role} is already running`)
-        role ??= schemat.GENERIC_ROLE           // "$agent" role is the default for running agents
+        role ??= AgentRole.GENERIC                  // "$agent" role is the default for running agents
 
         try {
             let agent = await schemat.get_loaded(id)
@@ -275,7 +276,7 @@ export class KernelMaster extends Kernel {
     //     let num_workers = this.workers.length
     //     for (let {worker, id, role} of agents) {
     //         assert(id)
-    //         role ??= schemat.GENERIC_ROLE
+    //         role ??= AgentRole.GENERIC
     //
     //         // adjust the `worker` index if it does not match a valid worker ID (should be in 1,2,...,num_workers)
     //         if (worker < 1 || worker > num_workers) {

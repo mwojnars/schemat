@@ -6,7 +6,7 @@
  *
  */
 
-import {ROOT_ID, PLURAL, SUBFIELD, check_plural} from '../common/globals.js'
+import {ROOT_ID, PLURAL, SUBFIELD, check_plural, AgentRole} from '../common/globals.js'
 import {print, assert, T, copy, escape_html, concat, unique, sleep, randint} from '../common/utils.js'
 import {NotLoaded, URLNotFound, ValidationError} from '../common/errors.js'
 import {Catalog, Struct} from '../common/catalog.js'
@@ -129,8 +129,8 @@ class Intercept {
         let create_handler = (use_opts) => ({
             get(target, name) {
                 if (typeof name !== 'string' || name === '__getstate__') return
-                role ??= schemat.GENERIC_ROLE
-                // if (role === schemat.GENERIC_ROLE) role = undefined     // "$agent" as a requested role matches all role names at the target
+                role ??= AgentRole.GENERIC
+                // if (role === AgentRole.GENERIC) role = undefined     // "$agent" as a requested role matches all role names at the target
 
                 let frame = schemat.get_frame(id, role)
 

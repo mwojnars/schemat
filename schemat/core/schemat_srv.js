@@ -1,6 +1,7 @@
 import fs from 'node:fs'
 import {AsyncLocalStorage} from 'node:async_hooks'
 
+import {AgentRole} from "../common/globals.js";
 import {assert, print, copy, fluctuate} from '../common/utils.js'
 import {Schemat} from './schemat.js'
 import {RequestContext} from "../web/request.js";
@@ -18,8 +19,6 @@ export class ServerSchemat extends Schemat {
 
     // sessionMutex = new Mutex()  // a mutex to lock cache for only one concurrent session (https://github.com/DirtyHairy/async-mutex);
     //                             // new requests wait until the current session completes, see Session.start()
-
-    GENERIC_ROLE = "$agent"     // special role name for RPC calls to agent objects
 
     kernel          // Kernel that runs the main Schemat loop of the current master/worker process
     parent          // parent ServerSchemat that created this one via .fork() below
@@ -324,8 +323,8 @@ export class ServerSchemat extends Schemat {
     get_frame(id, role = null) {
         /* Find and return the current execution frame of an agent. */
         // let id = (typeof id_or_obj === 'object') ? id_or_obj.id : id_or_obj
-        role ??= schemat.GENERIC_ROLE
-        if (role !== schemat.GENERIC_ROLE) return this.kernel.frames.get([id, role])
+        role ??= AgentRole.GENERIC
+        if (role !== AgentRole.GENERIC) return this.kernel.frames.get([id, role])
         return this.kernel.frames.get_any_role(id)      // search for any role when the requested role is "$agent"
     }
 

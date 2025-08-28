@@ -84,10 +84,6 @@ export class Agent extends WebObject {
         return schemat.app_context(ctx, fn)
     }
 
-    // get_placement(role = schemat.GENERIC_ROLE) {
-    //     /* Return the node where this agent is deployed right now in a given role. */
-    // }
-
     /***  RPC methods  ***/
 
     '$agent.pause'() {
