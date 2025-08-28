@@ -70,16 +70,19 @@ export class GlobalPlacements {
     }
 
     add(node, agent, role = null) {
-        if (typeof node === 'object') node = node.id
-        assert(agent)
+        if (typeof node === 'object') node = node.id        // convert node & agent objects to IDs
+        if (typeof agent === 'object') agent = agent.id
+
         let tag = this._agent_role(agent, role);
         (this._placements[tag] ??= []).push(node);
         (this._placements[agent] ??= []).push(node);
     }
 
-    find_all(agent_id, role = AgentRole.GENERIC) {
-        /* Return an array of all node IDs where (agent_id, role) is deployed. */
-        let tag = (role === AgentRole.GENERIC) ? agent_id : this._agent_role(agent_id, role)
+    find_all(agent, role = null) {
+        /* Return an array of IDs of all nodes where (agent, role) is deployed, `agent` is an object or ID. */
+        if (typeof agent === 'object') agent = agent.id
+        role ??= AgentRole.GENERIC
+        let tag = (role === AgentRole.GENERIC) ? agent : this._agent_role(agent, role)
         return this._placements[tag]
     }
 }
