@@ -83,7 +83,8 @@ export class GlobalPlacements {        // Plan Arrangement Blueprint Map Outline
     }
 
     find(id, role = AgentRole.GENERIC) {
-
+        let tag = (role === AgentRole.GENERIC) ? id : _agent_role(id, role)
+        return this._placements[tag]
     }
 }
 
@@ -110,7 +111,7 @@ export class Cluster extends Agent {
     }
 
     get global_placements() {
-        return new GlobalPlacements(this.nodes)._placements
+        return new GlobalPlacements(this.nodes) //._placements
     }
 
     // get global_placements() {

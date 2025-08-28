@@ -454,8 +454,8 @@ export class Node extends Agent {
         // retrieve the node from global_placements
         role ??= AgentRole.GENERIC
         let agent = schemat.as_object(agent_id)
-        let query = AgentRole.GENERIC ? agent_id : _agent_role(agent_id, role)
-        let nodes = this.$state.global_placements[query]
+        // let query = role === AgentRole.GENERIC ? agent_id : _agent_role(agent_id, role)
+        let nodes = this.$state.global_placements.find(agent_id, role)  //[query]
 
         if (!nodes?.length) throw new Error(`agent ${agent}.${role} not found on any node in the cluster`)
         if (nodes.some(node => node.id === this.id)) return this
