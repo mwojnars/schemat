@@ -446,11 +446,29 @@ export class Node extends Agent {
         if (worker != null) return this                             // if target worker was specified by the caller, the current node is assumed implicitly
         if (this._find_worker(agent_id, role) != null) return this  // local deployment here on this node is present, which is preferred over remote nodes
         let node = schemat.cluster.find_node(agent_id, role)        // check global placements via [cluster] object
-        // let query = ...
-        // let nodes = this.$state.global_placements[query][0]  ... $state.agent_nodes  $state.agent_workers
+        // let node = this.find_node(agent_id, role)    -- TODO
+
         if (node) return node
         throw new Error(`agent [${agent_id}] not found on any node in the cluster`)
     }
+
+    // find_node(agent, role) {
+    //     /* On master, return the node where the `agent` running in a given `role` can be found. If `agent` is deployed
+    //        on multiple nodes, one of them is chosen at random, or by hashing (TODO), or according to a routing policy...
+    //        If `agent` is deployed here on the current node, this location is always returned.
+    //        If role is the generic "$agent", every target deployment is accepted no matter its declared role.
+    //      */
+    //     role ??= AgentRole.GENERIC
+    //     agent = schemat.as_object(agent)
+    //
+    //     let query = AgentRole.GENERIC ? agent.id : _agent_role(agent.id, role)
+    //     let nodes = this.$state.global_placements[query]
+    //
+    //     if (!nodes?.length) throw new Error(`agent ${agent}.${role} not deployed on any node`)
+    //     if (nodes.some(node => node.id === this.id)) return this
+    //     return nodes[0]
+    //     // return nodes.random()
+    // }
 
     _find_worker(id, role) {
         /* On master, look up $state.agents placements to find the process where the agent runs in a given role

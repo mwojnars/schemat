@@ -77,14 +77,8 @@ export class Cluster extends Agent {
         if (SERVER) await Promise.all(this.nodes.map(node => node.load()))
     }
 
-    async __start__({role}) {
-        assert(role === '$leader')
-        let nodes = new ObjectsMap(this.nodes.map(n => [n, new NodeState(n)]))
-        return {nodes}
-    }
-
     get global_placements() {
-        /* POJO mapping of `agent_role_tag` to array of `nodes` where this agent is deployed; `agent_role_tag` is a string
+        /* POJO mapping of agent-role tags to arrays of nodes where this agent is deployed; agent-role tag is a string
            of the form `${id}_${role}`, like "1234_$leader". Additionally, ID-only placements are included
            to support role-agnostic queries (i.e., when role="$agent").
          */
@@ -109,7 +103,7 @@ export class Cluster extends Agent {
     }
 
     find_node(agent, role) {
-        /* Return the node where the `agent` running in a given `role` can be found. If `agent` is deployed
+        /* Return the node where `agent` running in a given `role` can be found. If `agent` is deployed
            on multiple nodes, one of them is chosen at random, or by hashing (TODO), or according to a routing policy...
            If `agent` is deployed here on the current node, this location is always returned.
            If role is the generic "$agent", every target deployment is accepted no matter its declared role.
@@ -128,6 +122,13 @@ export class Cluster extends Agent {
 
 
     /***  Agent operations  ***/
+
+    async __start__({role}) {
+        assert(role === '$leader')
+        let nodes = new ObjectsMap(this.nodes.map(n => [n, new NodeState(n)]))
+        let global_placements = this.global_placements
+        return {nodes, global_placements}
+    }
 
     _find_nodes(agent, role) {
         /* Array of all nodes where `agent` is currently deployed. */
