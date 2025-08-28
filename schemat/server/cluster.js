@@ -94,7 +94,7 @@ export class GlobalPlacements {
     }
 
     find_first(agent, role = null) {
-        /* Return an ID of the first node where (agent, role) is deployed, or undefined if not deployed anywhere. */
+        /* Return an ID of the first node where (agent, role) is deployed, or undefined if none found. */
         return this.find_all(agent, role)[0]
     }
 }

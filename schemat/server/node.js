@@ -447,25 +447,14 @@ export class Node extends Agent {
            is chosen at random, or by hashing (TODO), or according to a routing policy...
            If `role` is the generic "$agent", every target deployment is accepted no matter its declared role.
          */
-        if (worker != null) return this                             // if target worker was specified by the caller, the current node is assumed implicitly
-        if (this._find_worker(agent_id, role) != null) return this  // if agent deployed here on this node, it is preferred over remote nodes
+        if (worker != null) return this                                 // if target worker was specified by the caller, the current node is assumed
+        if (this._find_worker(agent_id, role) != null) return this      // if agent is deployed here on this node, it is preferred over remote nodes
 
         // check `global_placements` to find the node
         let node_id = this.$state.global_placements.find_first(agent_id, role)
         if (node_id) return schemat.get_object(node_id)   //node_ids.random()
 
-        throw new Error(`agent ${agent}.${role ?? AgentRole.GENERIC} not found on any node in the cluster`)
-
-        // role ??= AgentRole.GENERIC
-        // let agent = schemat.as_object(agent_id)
-        // let node_ids = this.$state.global_placements.find_all(agent_id, role)
-        //
-        // if (!node_ids?.length) throw new Error(`agent ${agent}.${role} not found on any node in the cluster`)
-        // if (node_ids.some(id => id === this.id)) {
-        //     assert(node_ids[0] === this.id)
-        //     return this
-        // }
-        // return schemat.get_object(node_ids[0])   //node_ids.random()
+        throw new Error(`agent [${agent_id}].${role ?? AgentRole.GENERIC} not found on any node in the cluster`)
     }
 
     _find_worker(id, role) {
