@@ -67,18 +67,21 @@ export class GlobalPlacements {
 
         // index regular agents and their deployment nodes
         for (let node of nodes)
-            for (let {id, role} of node.agents) {
-                assert(id)
-                let tag = _agent_role(id, role);
-                (placements[tag] ??= []).push(node);
-                (placements[id] ??= []).push(node);
-            }
+            for (let {id, role} of node.agents)
+                this.add(node, id, role)
+            // {
+            //     assert(id)
+            //     let tag = _agent_role(id, role);
+            //     (placements[tag] ??= []).push(node);
+            //     (placements[id] ??= []).push(node);
+            // }
 
         // index Node objects running as agents, they're excluded from node.agents lists
         for (let node of nodes) {
-            let tag = _agent_role(node.id, '$master')       // there are $worker deployments, too, but they are not needed for global routing
-            assert(placements[tag] === undefined)
-            placements[tag] = [node]                        // node.$master is deployed on itself and nowhere else
+            this.add(node, node.id, '$master')
+            // let tag = _agent_role(node.id, '$master')       // there are $worker deployments, too, but they are not needed for global routing
+            // assert(placements[tag] === undefined)
+            // placements[tag] = [node]                        // node.$master is deployed on itself and nowhere else
         }
     }
 
