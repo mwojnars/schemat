@@ -526,6 +526,11 @@ export class Node extends Agent {
 
     /* Starting & stopping agents */
 
+    async '$master.update_placements'(placements) {
+        /* Update global_placements with a new configuration sent by cluster.$leader. */
+        this.$state.global_placements = placements
+    }
+
     async '$master.deploy'(agent, role, {worker, replicas = 1} = {}) {
         /* Install `agent` (object or ID) on this node, then find the least busy worker process and start `agent` there. */
         agent = await schemat.as_loaded(agent)
