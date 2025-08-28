@@ -369,16 +369,6 @@ export class Node extends Agent {
         return status?.worker
     }
 
-    // async _find_frame(agent_id, role, attempts = 1, delay = 0.2) {
-    //     /* Find an agent by its ID in the current process. Retry `attempts` times with a delay to allow the agent to start during bootstrap. */
-    //     for (let i = 0; i < attempts; i++) {
-    //         let frame = schemat.get_frame(agent_id, role)
-    //         if (frame) return frame
-    //         this._print(`_find_frame(): retrying agent_id=${agent_id}`)
-    //         await sleep(delay)
-    //     }
-    // }
-
     _rich_exception(ex, request) {
         ex.node = this.id
         ex.worker = this.worker_id

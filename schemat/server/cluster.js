@@ -56,7 +56,7 @@ export class Cluster extends Agent {
         nodes            array of Node objects representing physical nodes of this cluster
 
     $leader state attributes:
-        $state.nodes     map of NodeState objects keeping the most recent stats on node's health and activity
+        $state.nodes     map (ObjectsMap) of NodeState objects keeping the most recent stats on node's health and activity
     */
 
 
