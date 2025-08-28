@@ -413,14 +413,9 @@ export class Node extends Agent {
         let {worker, agent_id, role} = RPC_Request.parse(message)
 
         worker ??= this._find_worker(agent_id, role)
-
-        if (worker == null)
-            throw new Error(`agent [${agent_id}] not found on this node`)
-
-        if (worker !== this.worker_id)
-            return this.ipc_send(worker, message)           // forward the message down to a worker process, to its ipc_worker()
-
-        return this.rpc_exec(message)                       // process the message here in the master process
+        if (worker == null) throw new Error(`agent [${agent_id}] not found on this node`)
+        if (worker === 0) return this.rpc_exec(message)     // process the message here in the master process
+        return this.ipc_send(worker, message)               // forward the message down to a worker process, to its ipc_worker()
     }
 
     async rpc_exec(message) {
