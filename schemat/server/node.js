@@ -288,7 +288,9 @@ export class Node extends Agent {
         await tcp_sender.start(this.tcp_retry_interval * 1000)
         await tcp_receiver.start(this.tcp_port)
 
-        return {tcp_sender, tcp_receiver, agents: this.agents}
+        let global_placements = schemat.cluster.global_placements
+
+        return {tcp_sender, tcp_receiver, agents: this.agents, global_placements}
     }
 
     async __restart__() {}
@@ -449,40 +451,17 @@ export class Node extends Agent {
         if (worker != null) return this                             // if target worker was specified by the caller, the current node is assumed implicitly
         if (this._find_worker(agent_id, role) != null) return this  // if agent deployed here on this node, it is preferred over remote nodes
 
-        // let node = this.find_node(agent_id, role)                   // retrieve the node from global_placements
+        // retrieve the node from global_placements
         role ??= AgentRole.GENERIC
         let agent = schemat.as_object(agent_id)
         let query = AgentRole.GENERIC ? agent_id : _agent_role(agent_id, role)
-        let nodes = schemat.cluster.global_placements[query]
-        // let nodes = this.$state.global_placements[query]
+        let nodes = this.$state.global_placements[query]   //schemat.cluster.global_placements[query]
 
         if (!nodes?.length) throw new Error(`agent ${agent}.${role} not found on any node in the cluster`)
         if (nodes.some(node => node.id === this.id)) return this
         return nodes[0]
         // return nodes.random()
-
-        // if (node) return node
-        // throw new Error(`agent [${agent_id}] not found on any node in the cluster`)
     }
-
-    // find_node(agent, role) {
-    //     /* On master, return the node where the `agent` running in a given `role` can be found. If `agent` is deployed
-    //        on multiple nodes, one of them is chosen at random, or by hashing (TODO), or according to a routing policy...
-    //        If `agent` is deployed here on the current node, this location is always returned.
-    //        If `role` is the generic "$agent", every target deployment is accepted no matter its declared role.
-    //      */
-    //     role ??= AgentRole.GENERIC
-    //     agent = schemat.as_object(agent)
-    //
-    //     let query = AgentRole.GENERIC ? agent.id : _agent_role(agent.id, role)
-    //     // let nodes = this.$state.global_placements[query]
-    //     let nodes = schemat.cluster.global_placements[query]
-    //
-    //     if (!nodes?.length) throw new Error(`agent ${agent}.${role} not deployed on any node`)
-    //     if (nodes.some(node => node.id === this.id)) return this
-    //     return nodes[0]
-    //     // return nodes.random()
-    // }
 
     _find_worker(id, role) {
         /* On master, look up $state.agents placements to find the process where the agent runs in a given role
