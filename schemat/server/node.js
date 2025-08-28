@@ -1,3 +1,4 @@
+import {AgentRole} from "../common/globals.js";
 import {assert, print, timeout, sleep} from '../common/utils.js'
 import {IPC_Error, RPC_Error} from "../common/errors.js";
 import {JSONx} from "../common/jsonx.js";
@@ -145,7 +146,7 @@ class RPC_Request {
         if (this.is_private(cmd) && scope !== 'process')        // local scope enforced when targeting a private command ("_" prefix)
             opts.scope = 'node'
 
-        if (role === schemat.GENERIC_ROLE) delete opts.role     // default role passed implicitly
+        if (role === AgentRole.GENERIC) delete opts.role        // default role passed implicitly
 
         let tx = schemat.tx?.dump_tx()
         let ctx = schemat.db.id
@@ -198,7 +199,7 @@ class RPC_Response {
         let {ret, err, snap} = JSONx.decode(response)
 
         if (err) {
-            let {rpc: [id, cmd, args_encoded], role = schemat.GENERIC_ROLE} = request
+            let {rpc: [id, cmd, args_encoded], role = AgentRole.GENERIC} = request
             let s_args = JSON.stringify(args_encoded).slice(1,-1)
             throw RPC_Error.with_cause(`error in request [${id}].${role}.${cmd}(${s_args})`, err, request)
         }
@@ -362,7 +363,7 @@ export class Node extends Agent {
         // assert(agents, `array of running agents not yet initialized`)
 
         if (id === this.id) return 0        // the node agent itself is contacted at the master process
-        if (role === schemat.GENERIC_ROLE) role = undefined
+        if (role === AgentRole.GENERIC) role = undefined
 
         assert(this.$state, `missing $frame binding`)
         let status = this.$state.agents.find(st => st.id === id && (!role || st.role === role))
@@ -473,7 +474,7 @@ export class Node extends Agent {
         let {agent_id, role, cmd, args, ctx, tx} = RPC_Request.parse(message)
         if (tx?.debug) this._print("rpc_exec():", JSON.stringify(message))
 
-        role ??= schemat.GENERIC_ROLE
+        role ??= AgentRole.GENERIC
         assert(role[0] === '$', `incorrect name of agent role (${role})`)
 
         // locate the agent by its `agent_id`, should be running here in this process
@@ -568,7 +569,7 @@ export class Node extends Agent {
         let workers = worker ? (Array.isArray(worker) ? worker : [worker]) : this._rank_workers(agents)
         workers = workers.slice(0, replicas)
 
-        if (role === null || role === schemat.GENERIC_ROLE)
+        if (role === null || role === AgentRole.GENERIC)
             role = undefined             // the default role "$agent" is passed implicitly
         
         for (let worker of workers) {
