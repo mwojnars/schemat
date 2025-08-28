@@ -38,15 +38,22 @@ export class NodeState {
     }
 }
 
+export class Placement {      // AgentInstance Run Placement Lineup Spec Allocation Provision Card Sheet Ticket Slip
+    id
+    role
+    node_id
+}
+
 /**********************************************************************************************************************/
 
 // export class Nodes {
 //     /* Most recent statistics on all nodes in the cluster: their health and activity. */
 // }
-//
-// export class Agents {
-//     /* Map of deployments of all agents across the cluster: nodes, processes, agent IDs, roles. */
-// }
+
+export class Agents {        // Plan Arrangement Blueprint Map Outline Atlas
+    /* Map of deployments of all agents across the cluster: nodes, processes, agent IDs, roles. */
+    find({id, role = AgentRole.ANY} = {}) {}
+}
 
 /**********************************************************************************************************************/
 
@@ -54,10 +61,12 @@ export class Cluster extends Agent {
 
     /*
     Persisted properties:
-        nodes            array of Node objects representing physical nodes of this cluster
+        nodes           array of Node objects representing physical nodes of this cluster
 
     $leader state attributes:
-        $state.nodes     map (ObjectsMap) of NodeState objects keeping the most recent stats on node's health and activity
+        $state.nodes    ObjectsMap of NodeState objects keeping the most recent stats on node's health and activity
+        $state.agents   map of (id -> node) + (id_role -> node) placements of agents across the cluster; no worker info;
+                        similar to .agent_placements, but available on $leader only and updated immediately when an agent is deployed/dismissed to a node
     */
 
 
@@ -72,9 +81,9 @@ export class Cluster extends Agent {
     }
 
     get agent_placements() {
-        /* Map of agent_role --> array of nodes where this agent is deployed, where `agent_role` is a string
-           of the form `${id}_${role}`, like "1234_$leader". Additionally, generic placements by ID only are included
-           to support role-agnostic requests (i.e., when role="$agent").
+        /* POJO map of agent_role --> nodes where this agent is deployed, where `agent_role` is a string
+           of the form `${id}_${role}`, like "1234_$leader". Additionally, ID-only placements are included
+           to support role-agnostic queries (i.e., when role="$agent").
          */
         let placements = {}
 
@@ -96,7 +105,7 @@ export class Cluster extends Agent {
         return placements
     }
 
-    find_node(agent, role) {  // host_node() locate_node()
+    find_node(agent, role) {
         /* Return the node where the `agent` running in a given `role` can be found. If `agent` is deployed
            on multiple nodes, one of them is chosen at random, or by hashing (TODO), or according to a routing policy...
            If `agent` is deployed here on the current node, this location is always returned.

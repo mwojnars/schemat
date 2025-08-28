@@ -423,6 +423,14 @@ export class Node extends Agent {
         return this.ipc_send(MASTER, request)
     }
 
+    // _find_node__(node, worker, agent_id, role) {
+    //     if (node) return node                           // target node was specified by the caller
+    //     if (worker != null) return this                 // target worker process was specified by the caller, which implicitly indicates the current node
+    //     if (this._find_worker(agent_id, role) != null) return this              // local deployment here on this node, if present, always has a preference over remote nodes
+    //     if ((node = schemat.cluster.find_node(agent_id, role))) return node
+    //     throw new Error(`missing host node for RPC target agent [${agent_id}]`)
+    // }
+
     async rpc_frwd(message) {
         /* On master, forward an RPC message originating at this node either to a remote peer or a local worker process. */
         let {node, worker, agent_id, role} = RPC_Request.parse(message)
@@ -438,7 +446,7 @@ export class Node extends Agent {
         // -- this rule is important for loading data blocks during and after bootstrap
         if (node.is(schemat.node)) {
             // this._print(`rpc_frwd(): redirecting to self`)
-            return this.rpc_recv(message)       // target agent is deployed on the current node
+            return this.rpc_recv(message)       // no remote connection if agent is deployed here on the current node
         }
 
         // await node.load()
