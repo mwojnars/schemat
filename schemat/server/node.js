@@ -414,8 +414,11 @@ export class Node extends Agent {
 
         worker ??= this._find_worker(agent_id, role)
         if (worker == null) throw new Error(`agent [${agent_id}] not found on this node`)
-        if (worker === 0) return this.rpc_exec(message)     // process the message here in the master process
-        return this.ipc_send(worker, message)               // forward the message down to a worker process
+        if (worker === MASTER) return this.rpc_exec(message)    // process the message here in the master process
+        // return this.ipc_send(worker, message)                   // forward the message down to a worker process
+
+        return this.get_worker(worker).mailbox.send(message)
+        // return this._send(worker, message)
     }
 
     async rpc_exec(message) {
@@ -460,7 +463,7 @@ export class Node extends Agent {
 
     /* IPC: vertical communication between master/worker processes */
 
-    async ipc_send(process_id = 0, request) {
+    async ipc_send(process_id, request) {
         /* Send an IPC request from master down to a worker process, or the other way round. */
 
         // this._print(`ipc_send() process_id=${process_id} worker_id=${this.worker_id} request=${request}`)
