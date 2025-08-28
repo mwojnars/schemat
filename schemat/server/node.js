@@ -442,12 +442,14 @@ export class Node extends Agent {
     _find_node(worker, agent_id, role) {
         /* On master, return the node where agent_id is deployed in a given `role`. The current node has a priority:
            if the agent is deployed here on a local process, `this` is always returned -- this rule is important
-           for loading data blocks during and after bootstrap.
+           for loading data blocks during and after bootstrap. If `agent` is deployed on multiple nodes, one of them
+           is chosen at random, or by hashing (TODO), or according to a routing policy...
+           If `role` is the generic "$agent", every target deployment is accepted no matter its declared role.
          */
         if (worker != null) return this                             // if target worker was specified by the caller, the current node is assumed implicitly
         if (this._find_worker(agent_id, role) != null) return this  // if agent deployed here on this node, it is preferred over remote nodes
+
         let node = this.find_node(agent_id, role)                   // retrieve the node from global_placements
-        // let node = schemat.cluster.find_node(agent_id, role)     // check global placements via [cluster] object
 
         if (node) return node
         throw new Error(`agent [${agent_id}] not found on any node in the cluster`)
@@ -457,7 +459,7 @@ export class Node extends Agent {
         /* On master, return the node where the `agent` running in a given `role` can be found. If `agent` is deployed
            on multiple nodes, one of them is chosen at random, or by hashing (TODO), or according to a routing policy...
            If `agent` is deployed here on the current node, this location is always returned.
-           If role is the generic "$agent", every target deployment is accepted no matter its declared role.
+           If `role` is the generic "$agent", every target deployment is accepted no matter its declared role.
          */
         role ??= AgentRole.GENERIC
         agent = schemat.as_object(agent)
