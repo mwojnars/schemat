@@ -31,11 +31,11 @@ export class NodeState {
     }
 }
 
-/**********************************************************************************************************************/
-
 // export class Nodes {
 //     /* Most recent statistics on all nodes in the cluster: their health and activity. */
 // }
+
+/**********************************************************************************************************************/
 
 export class GlobalPlacements {
     /* Map of deployments of all agents across the cluster, as a mapping of [agent-role tag] to [array] of nodes
@@ -121,7 +121,7 @@ export class Cluster extends Agent {
         if (SERVER) await Promise.all(this.nodes.map(node => node.load()))
     }
 
-    get global_placements() { return new GlobalPlacements(this.nodes) }
+    global_placements() { return new GlobalPlacements(this.nodes) }
 
 
     /***  Agent operations  ***/
@@ -129,7 +129,7 @@ export class Cluster extends Agent {
     async __start__({role}) {
         assert(role === '$leader')
         let nodes = new ObjectsMap(this.nodes.map(n => [n, new NodeState(n)]))
-        let global_placements = this.global_placements
+        let global_placements = new GlobalPlacements(this.nodes)
         return {nodes, global_placements}
     }
 
