@@ -38,7 +38,7 @@ export class NodeState {
 // }
 
 export class GlobalPlacements {
-    /* Map of deployments of all agents across the cluster, as a mapping of [agent-role tag] to [array of nodes]
+    /* Map of deployments of all agents across the cluster, as a mapping of [agent-role tag] to [array] of nodes
        where the agent is deployed; agent-role tag is a string of the form `${id}_${role}`, like "1234_$leader".
        Additionally, ID-only tags are included to support role-agnostic queries (i.e., when role="$agent").
      */
@@ -73,9 +73,14 @@ export class GlobalPlacements {
         if (typeof node === 'object') node = node.id        // convert node & agent objects to IDs
         if (typeof agent === 'object') agent = agent.id
 
-        let tag = this._agent_role(agent, role);
-        (this._placements[tag] ??= []).push(node);
-        (this._placements[agent] ??= []).push(node);
+        let tag = this._agent_role(agent, role)
+        this._add(node, tag)
+        this._add(node, agent)
+    }
+
+    _add(node, key) {
+        let nodes = (this._placements[key] ??= [])
+        nodes.push(node)
     }
 
     find_all(agent, role = null) {
