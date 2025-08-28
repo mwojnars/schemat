@@ -404,7 +404,7 @@ export class Node extends Agent {
         // this._print(`rpc_frwd():`, `agent_id=${agent_id} method=${method} args=${args}`)
 
         node ??= this._find_node(worker, agent_id, role)
-        if (node.is(this)) return this.rpc_recv(message)    // loopback connection if agent is deployed here on the current node;
+        if (node.is(this)) return this.rpc_recv(message)    // loopback connection if agent is deployed here on the current node
         return this.tcp_send(node, message)                 // remote connection otherwise
     }
 
@@ -412,16 +412,10 @@ export class Node extends Agent {
         /* Route an incoming RPC request to the right process on this node and execute. */
         let {worker, agent_id, role} = RPC_Request.parse(message)
 
-        // find out which process (worker >= 1 or master = 0), has the `agent_id` agent deployed
-
-        // let locs = this.locate_processes(agent_id)
-        // if (locs.length > 1) throw new Error(`TCP target agent [${agent_id}] is deployed multiple times on ${this}`)
-        // let proc = locs[0]
-
         worker ??= this._find_worker(agent_id, role)
 
         if (worker == null)
-            throw new Error(`${this.id}/#${this.worker_id}: agent [${agent_id}] not found on this node`)
+            throw new Error(`agent [${agent_id}] not found on this node`)
 
         if (worker !== this.worker_id)
             return this.ipc_send(worker, message)           // forward the message down to a worker process, to its ipc_worker()
@@ -455,20 +449,15 @@ export class Node extends Agent {
         if (this._find_worker(agent_id, role) != null) return this  // local deployment here on this node is present, which is preferred over remote nodes
         let node = schemat.cluster.find_node(agent_id, role)        // check global placements via [cluster] object
         if (node) return node
-        throw new Error(`missing host node for RPC target agent [${agent_id}]`)
+        throw new Error(`agent [${agent_id}] not found on any node in the cluster`)
     }
 
     _find_worker(id, role) {
-        /* On $master, look up local $state.agents placements to find the process where the agent runs
-           in a given `role` (or in any role if `role` is missing or GENERIC_ROLE).
+        /* On $master, look up $state.agents placements to find the process where the agent runs in a given role
+           (or in any role if `role` is missing or GENERIC_ROLE).
          */
-        // let agents = this.$master.state?.agents
-        // assert(agents, `array of running agents not yet initialized`)
-
-        if (id === this.id) return 0        // the node agent itself is contacted at the master process
+        if (id === this.id) return 0        // node.$master itself is contacted at the master process
         if (role === AgentRole.GENERIC) role = undefined
-
-        assert(this.$state, `missing $frame binding`)
         let status = this.$state.agents.find(st => st.id === id && (!role || st.role === role))
         return status?.worker
     }
