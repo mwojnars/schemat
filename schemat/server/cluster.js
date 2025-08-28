@@ -80,7 +80,9 @@ export class GlobalPlacements {
 
     _add(node, key) {
         let nodes = (this._placements[key] ??= [])
-        nodes.push(node)
+        if (nodes.includes(node)) return                            // ignore duplicate IDs
+        if (node === schemat.kernel.node_id) nodes.unshift(node)    // always put the local node's ID at the beginning
+        else nodes.push(node)                                       // put other node IDs at the end of the list
     }
 
     find_all(agent, role = null) {
