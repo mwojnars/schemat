@@ -5,7 +5,7 @@ import {ObjectsMap} from "../common/structs.js";
 
 
 function _agent_role(id, role = null) {
-    /* A string qualifier that identifies an agent by ID together with its particular role, like "1234_$agent". */
+    /* A string that identifies an agent by ID together with its particular role, like "1234_$agent". */
     role ??= AgentRole.GENERIC
     assert(role[0] === '$', `incorrect name of agent role (${role})`)
     return `${id}_${role}`
@@ -66,10 +66,10 @@ export class Cluster extends Agent {
     $leader state attributes:
         $state.nodes    ObjectsMap of NodeState objects keeping the most recent stats on node's health and activity
         $state.agents   map of (id -> node) + (id_role -> node) placements of agents across the cluster (global placements), no worker info;
-                        similar to .agent_placements, but available on $leader only and updated immediately when an agent is deployed/dismissed to a node;
+                        similar to .global_placements, but available on $leader only and updated immediately when an agent is deployed/dismissed to a node;
                         high-level routing table for directing agent requests to proper nodes in the cluster;
                         each node additionally has a low-level routing table for directing requests to a proper worker process;
-        $state.global_placement
+        $state.global_placements
     */
 
 
@@ -83,8 +83,8 @@ export class Cluster extends Agent {
         return {nodes}
     }
 
-    get agent_placements() {
-        /* POJO map of agent_role --> nodes where this agent is deployed, where `agent_role` is a string
+    get global_placements() {
+        /* POJO mapping of `agent_role_tag` to array of `nodes` where this agent is deployed; `agent_role_tag` is a string
            of the form `${id}_${role}`, like "1234_$leader". Additionally, ID-only placements are included
            to support role-agnostic queries (i.e., when role="$agent").
          */
@@ -118,7 +118,7 @@ export class Cluster extends Agent {
         agent = schemat.as_object(agent)
 
         let query = AgentRole.GENERIC ? agent.id : _agent_role(agent.id, role)
-        let nodes = this.agent_placements[query]
+        let nodes = this.global_placements[query]
 
         if (!nodes?.length) throw new Error(`agent ${agent}.${role} not deployed on any node`)
         if (nodes.some(node => node.id === this.id)) return this
