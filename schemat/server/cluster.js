@@ -102,24 +102,6 @@ export class Cluster extends Agent {
         return placements
     }
 
-    // find_node(agent, role) {
-    //     /* Return the node where `agent` running in a given `role` can be found. If `agent` is deployed
-    //        on multiple nodes, one of them is chosen at random, or by hashing (TODO), or according to a routing policy...
-    //        If `agent` is deployed here on the current node, this location is always returned.
-    //        If role is the generic "$agent", every target deployment is accepted no matter its declared role.
-    //      */
-    //     role ??= AgentRole.GENERIC
-    //     agent = schemat.as_object(agent)
-    //
-    //     let query = AgentRole.GENERIC ? agent.id : _agent_role(agent.id, role)
-    //     let nodes = this.global_placements[query]
-    //
-    //     if (!nodes?.length) throw new Error(`agent ${agent}.${role} not deployed on any node`)
-    //     if (nodes.some(node => node.id === this.id)) return this
-    //     return nodes[0]
-    //     // return nodes.random()
-    // }
-
 
     /***  Agent operations  ***/
 
@@ -147,6 +129,8 @@ export class Cluster extends Agent {
 
         await node.$master.deploy(agent, role)
         this.$state.nodes.get(node).num_agents++
+
+        // TODO: update $state.global_placements + node.$$master.update_placements()
     }
 
     async '$leader.dismiss'(agent) {
