@@ -92,6 +92,11 @@ export class GlobalPlacements {
         let tag = (role === AgentRole.GENERIC) ? agent : this._agent_role(agent, role)
         return this._placements[tag]
     }
+
+    find_first(agent, role = null) {
+        /* Return an ID of the first node where (agent, role) is deployed, or undefined if not deployed anywhere. */
+        return this.find_all(agent, role)[0]
+    }
 }
 
 /**********************************************************************************************************************/
