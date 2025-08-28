@@ -77,7 +77,8 @@ export class Kernel {
     root_frame                  // frame that holds the running `node` agent
     _closing                    // true if .stop() was called and the process is shutting down right now
 
-    // web object of [Node] category that represents the physical node this process is running on
+    // web object of [Node] category that represents the physical node this process is running on; since it is taken
+    // from root_frame, it has .$frame and .$state attributes which can be accessed in methods
     get node() { return this.root_frame.agent }
 
     get worker_id() {

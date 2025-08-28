@@ -446,12 +446,13 @@ export class Node extends Agent {
         if (worker != null) return this                             // if target worker was specified by the caller, the current node is assumed implicitly
         if (this._find_worker(agent_id, role) != null) return this  // local deployment here on this node is present, which is preferred over remote nodes
         let node = schemat.cluster.find_node(agent_id, role)        // check global placements via [cluster] object
+        // let node = this.$state.global_placements
         if (node) return node
         throw new Error(`agent [${agent_id}] not found on any node in the cluster`)
     }
 
     _find_worker(id, role) {
-        /* On $master, look up $state.agents placements to find the process where the agent runs in a given role
+        /* On master, look up $state.agents placements to find the process where the agent runs in a given role
            (or in any role if `role` is missing or GENERIC_ROLE).
          */
         if (id === this.id) return MASTER       // node.$master itself is contacted at the master process

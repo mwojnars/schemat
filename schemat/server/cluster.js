@@ -116,8 +116,9 @@ export class Cluster extends Agent {
          */
         role ??= AgentRole.GENERIC
         agent = schemat.as_object(agent)
-        let agent_role = _agent_role(agent.id, role)
-        let nodes = (role === AgentRole.GENERIC) ? this.agent_placements[agent.id] : this.agent_placements[agent_role]
+
+        let query = AgentRole.GENERIC ? agent.id : _agent_role(agent.id, role)
+        let nodes = this.agent_placements[query]
 
         if (!nodes?.length) throw new Error(`agent ${agent}.${role} not deployed on any node`)
         if (nodes.some(node => node.id === this.id)) return this
