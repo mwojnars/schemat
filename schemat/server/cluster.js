@@ -60,13 +60,16 @@ export class Agents {        // Plan Arrangement Blueprint Map Outline Atlas
 export class Cluster extends Agent {
 
     /*
-    Persisted properties:
+    DB-persisted properties:
         nodes           array of Node objects representing physical nodes of this cluster
 
     $leader state attributes:
         $state.nodes    ObjectsMap of NodeState objects keeping the most recent stats on node's health and activity
-        $state.agents   map of (id -> node) + (id_role -> node) placements of agents across the cluster; no worker info;
-                        similar to .agent_placements, but available on $leader only and updated immediately when an agent is deployed/dismissed to a node
+        $state.agents   map of (id -> node) + (id_role -> node) placements of agents across the cluster (global placements), no worker info;
+                        similar to .agent_placements, but available on $leader only and updated immediately when an agent is deployed/dismissed to a node;
+                        high-level routing table for directing agent requests to proper nodes in the cluster;
+                        each node additionally has a low-level routing table for directing requests to a proper worker process;
+        $state.global_placement
     */
 
 

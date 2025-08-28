@@ -439,11 +439,11 @@ export class Node extends Agent {
     }
 
     _find_node(worker, agent_id, role) {
-        /* Return the node where agent_id is deployed in a given role. The current node has a priority: if the agent is
-           deployed here on a local process, `this` is always returned -- this rule is important for loading data blocks
-           during and after bootstrap.
+        /* On master, return the node where agent_id is deployed in a given `role`. The current node has a priority:
+           if the agent is deployed here on a local process, `this` is always returned -- this rule is important
+           for loading data blocks during and after bootstrap.
          */
-        if (worker != null) return this                             // target worker was specified by the caller, which implicitly indicates the current node
+        if (worker != null) return this                             // if target worker was specified by the caller, the current node is assumed implicitly
         if (this._find_worker(agent_id, role) != null) return this  // local deployment here on this node is present, which is preferred over remote nodes
         let node = schemat.cluster.find_node(agent_id, role)        // check global placements via [cluster] object
         if (node) return node
@@ -454,7 +454,7 @@ export class Node extends Agent {
         /* On $master, look up $state.agents placements to find the process where the agent runs in a given role
            (or in any role if `role` is missing or GENERIC_ROLE).
          */
-        if (id === this.id) return 0        // node.$master itself is contacted at the master process
+        if (id === this.id) return MASTER       // node.$master itself is contacted at the master process
         if (role === AgentRole.GENERIC) role = undefined
         let status = this.$state.agents.find(st => st.id === id && (!role || st.role === role))
         return status?.worker
