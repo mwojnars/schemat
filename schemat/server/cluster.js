@@ -82,8 +82,16 @@ export class GlobalPlacements {
         }
     }
 
-    find(id, role = AgentRole.GENERIC) {
-        let tag = (role === AgentRole.GENERIC) ? id : _agent_role(id, role)
+    add(node_id, agent_id, role = null) {
+        // if (typeof node_id === 'object') node_id = node_id.id
+        assert(agent_id)
+        let tag = _agent_role(agent_id, role);
+        (this._placements[tag] ??= []).push(node_id);
+        (this._placements[agent_id] ??= []).push(node_id);
+    }
+
+    find(agent_id, role = AgentRole.GENERIC) {
+        let tag = (role === AgentRole.GENERIC) ? agent_id : _agent_role(agent_id, role)
         return this._placements[tag]
     }
 }
