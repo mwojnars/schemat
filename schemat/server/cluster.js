@@ -5,10 +5,10 @@ import {ObjectsMap} from "../common/structs.js";
 
 
 function _agent_role(id, role = null) {
-    /* Utility function for building a specification string that identifies an agent (by ID) together with its particular role. */
+    /* A string qualifier that identifies an agent by ID together with its particular role, like "1234_$agent". */
     role ??= AgentRole.GENERIC
     assert(role[0] === '$', `incorrect name of agent role (${role})`)
-    return `${id}_${role}`        // 1234_$agent
+    return `${id}_${role}`
 }
 
 /**********************************************************************************************************************/
@@ -94,16 +94,16 @@ export class Cluster extends Agent {
         for (let node of this.nodes)
             for (let {id, role} of node.agents) {
                 assert(id)
-                let agent_role = _agent_role(id, role);
-                (placements[agent_role] ??= []).push(node);
+                let tag = _agent_role(id, role);
+                (placements[tag] ??= []).push(node);
                 (placements[id] ??= []).push(node);
             }
 
         // index Node objects running as agents, they're excluded from node.agents lists
         for (let node of this.nodes) {
-            let agent_role = _agent_role(node.id, '$master')    // there are $worker deployments, too, but they shouldn't be needed
-            assert(placements[agent_role] === undefined)
-            placements[agent_role] = [node]                     // node as an agent is deployed on itself and nowhere else
+            let tag = _agent_role(node.id, '$master')       // there are $worker deployments, too, but they are not needed for global routing
+            assert(placements[tag] === undefined)
+            placements[tag] = [node]                        // node.$master is deployed on itself and nowhere else
         }
         return placements
     }
