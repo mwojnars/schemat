@@ -415,7 +415,7 @@ export class Node extends Agent {
         worker ??= this._find_worker(agent_id, role)
         if (worker == null) throw new Error(`agent [${agent_id}] not found on this node`)
         if (worker === 0) return this.rpc_exec(message)     // process the message here in the master process
-        return this.ipc_send(worker, message)               // forward the message down to a worker process, to its ipc_worker()
+        return this.ipc_send(worker, message)               // forward the message down to a worker process
     }
 
     async rpc_exec(message) {
@@ -466,7 +466,7 @@ export class Node extends Agent {
         // this._print(`ipc_send() process_id=${process_id} worker_id=${this.worker_id} request=${request}`)
         try {
             if (process_id === this.worker_id)      // shortcut when sending to itself, on master or worker
-                return process_id ? await this.ipc_worker(request) : await this.ipc_master(request)
+                return process_id ? await this.rpc_exec(request) : await this.rpc_frwd(request)
 
             if (process_id) {
                 assert(this.is_master())
@@ -484,19 +484,19 @@ export class Node extends Agent {
         }
     }
 
-    ipc_master(message) {
-        /* On master process, handle an IPC message received from a worker process or directly from itself.
-           IPC calls do NOT perform JSONx-encoding/decoding of arguments/result, so the latter must be
-           plain JSON-serializable objects, or already JSONx-encoded.
-         */
-        // this._print(`ipc_master():`, JSON.stringify(message))
-        return this.rpc_frwd(message)
-    }
-
-    ipc_worker(message) {
-        // this._print(`ipc_worker():`, JSON.stringify(msg))
-        return this.rpc_exec(message)
-    }
+    // ipc_master(message) {
+    //     /* On master process, handle an IPC message received from a worker process or directly from itself.
+    //        IPC calls do NOT perform JSONx-encoding/decoding of arguments/result, so the latter must be
+    //        plain JSON-serializable objects, or already JSONx-encoded.
+    //      */
+    //     // this._print(`ipc_master():`, JSON.stringify(message))
+    //     return this.rpc_frwd(message)
+    // }
+    //
+    // ipc_worker(message) {
+    //     // this._print(`ipc_worker():`, JSON.stringify(msg))
+    //     return this.rpc_exec(message)
+    // }
 
 
     /* TCP: horizontal communication between nodes */

@@ -267,7 +267,7 @@ export class KernelMaster extends Kernel {
         /* Start or restart a worker process. */
         let worker = this.workers[id-1] = cluster.fork({WORKER_ID: id})
         this.worker_pids.set(worker.process.pid, id)                                // remember PID-to-ID mapping
-        worker.mailbox = new IPC_Mailbox(worker, msg => this.node.ipc_master(msg))  // IPC requests from `worker` to master
+        worker.mailbox = new IPC_Mailbox(worker, msg => this.node.rpc_frwd(msg))  // IPC requests from `worker` to master
         return worker
     }
 
@@ -303,7 +303,7 @@ export class KernelWorker extends Kernel {
 
     async start(node) {
         schemat._print(`starting worker #${this.worker_id} (PID=${process.pid})...`)
-        this.mailbox = new IPC_Mailbox(process, msg => this.node.ipc_worker(msg))    // IPC requests from master to this worker
+        this.mailbox = new IPC_Mailbox(process, msg => this.node.rpc_exec(msg))    // IPC requests from master to this worker
         await super.start(node)
     }
 }
