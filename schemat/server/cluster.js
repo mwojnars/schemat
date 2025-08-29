@@ -47,9 +47,9 @@ export class Placements {
         let placements = {...this._placements}
 
         // drop numeric [id] tags and "<node>_$master/$worker" tags in `placements`
-        for (let [tag, place] in Object.entries(placements)) {
+        for (let [tag, places] in Object.entries(placements)) {
             let [id, role] = tag.split('_')
-            if (!role || this._is_hidden(tag, place))
+            if ((!role) || this._is_hidden(tag, places))
                 delete placements[tag]
         }
         return placements
@@ -132,8 +132,8 @@ export class GlobalPlacements extends Placements {
 
     _add_hidden() {}
 
-    _is_local(node_id)       { return node_id === schemat.kernel.node_id }
-    _is_hidden(tag, node_id) { return tag.startsWith(`${node_id}_`) }   // node-on-itself placements are excluded from serialization
+    _is_local(node_id)      { return node_id === schemat.kernel.node_id }
+    _is_hidden(tag, nodes)  { return tag.startsWith(`${nodes[0]}_`) }       // node-on-itself placements are excluded from serialization
 
     find_nodes(agent, role = null) {
         /* Return an array of nodes where (agent, role) is deployed; `agent` is an object or ID. */
