@@ -231,6 +231,7 @@ export class Node extends Agent {
      */
 
     num_workers
+    local_placements        // LocalPlacements object containing agent -> worker placements
     agents                  // array of AgentState objects
     http_host
     http_port
@@ -271,8 +272,11 @@ export class Node extends Agent {
     }
 
     async __load__() {
-        if (SERVER && schemat.booting)      // core agents (ex. data blocks) must be loaded initially from bootstrap DB; NOT a cluster object to avoid cyclic dependency
-            await Promise.all(this.agents.map(({id}) => id !== schemat.cluster_id && schemat.load(id)))
+        if (SERVER && schemat.booting) {  // core agents (ex. data blocks) must be loaded initially from bootstrap DB; NOT a cluster object to avoid cyclic dependency
+            let ids = this.local_placements.list_agent_ids()
+            // let ids = this.agents.map(({id}) => id)
+            await Promise.all(ids.map(id => id !== schemat.cluster_id && schemat.load(id)))
+        }
         // this._save_placements()
     }
 
