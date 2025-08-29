@@ -81,6 +81,14 @@ export class Placements {
 
     _is_local()  {}
     _is_hidden() {}
+
+    find_all(agent, role = null) {
+        /* Return an array of places where (agent, role) is deployed; `agent` is an object or ID. */
+        if (typeof agent === 'object') agent = agent.id
+        role ??= AgentRole.GENERIC
+        let tag = (role === AgentRole.GENERIC) ? agent : this.tag(agent, role)
+        return this._placements[tag] || []
+    }
 }
 
 export class LocalPlacements extends Placements {
@@ -114,17 +122,15 @@ export class GlobalPlacements extends Placements {
     _is_hidden(tag, node_id) { return tag.startsWith(`${node_id}_`) }   // drop node-to-itself tags during serialization
 
     find_nodes(agent, role = null) {
-        /* Return an array of nodes where (agent, role) is deployed, `agent` is an object or ID. */
-        if (typeof agent === 'object') agent = agent.id
-        role ??= AgentRole.GENERIC
-        let tag = (role === AgentRole.GENERIC) ? agent : this.tag(agent, role)
-        let placements = this._placements[tag] || []
-        return placements.map(id => schemat.get_object(id))
+        /* Return an array of nodes where (agent, role) is deployed; `agent` is an object or ID. */
+        let places = this.find_all(agent, role)
+        return places.map(id => schemat.get_object(id))
     }
 
     find_node(agent, role = null) {
         /* Return the first node where (agent, role) is deployed, or undefined if none found. */
-        return this.find_nodes(agent, role)[0]    //.random()
+        let id = this.find_all(agent, role)[0]    //.random()
+        if (id) return schemat.get_object(id)
     }
 }
 
