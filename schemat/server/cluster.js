@@ -145,7 +145,7 @@ export class LocalPlacements extends Placements {
 
     add_hidden(node) {
         this.add(MASTER, node, '$master')                   // add node.$master agent
-        for (let worker = 1; worker <= this.num_workers; worker++)
+        for (let worker = 1; worker <= node.num_workers; worker++)
             this.add(worker, node, '$worker')               // add node.$worker agents
     }
 
