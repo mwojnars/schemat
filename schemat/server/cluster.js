@@ -48,7 +48,7 @@ export class Placements {
 
         // drop numeric [id] tags and "<node>_$master/$worker" tags in `placements`
         for (let [tag, place] in Object.entries(placements)) {
-            let [id, role] = `${tag}`.split('_')
+            let [id, role] = tag.split('_')
             if (!role || this._is_hidden(tag, place))
                 delete placements[tag]
         }
@@ -75,7 +75,7 @@ export class Placements {
     }
 
     _add(place, key) {
-        let places = (this._placements[key] ??= [])
+        let places = (this._placements[`${key}`] ??= [])
         if (places.includes(place)) return                  // ignore duplicate IDs
         if (this._is_local(place)) places.unshift(place)    // always put the local node/process ID at the beginning
         else places.push(place)                             // put other node IDs at the end of the list
@@ -88,7 +88,7 @@ export class Placements {
         /* Return an array of places where (agent, role) is deployed; `agent` is an object or ID. */
         if (typeof agent === 'object') agent = agent.id
         role ??= AgentRole.GENERIC
-        let tag = (role === AgentRole.GENERIC) ? agent : this.tag(agent, role)
+        let tag = (role === AgentRole.GENERIC) ? `${agent}` : this.tag(agent, role)
         return this._placements[tag] || []
     }
 }
