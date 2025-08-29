@@ -50,13 +50,25 @@ export class Placements {
         for (let [tag, places] of Object.entries(placements)) {
             places = places.filter(place => !this._is_hidden(tag, place))   // drop hidden (implicit) placements
             let [id, role] = tag.split('-')
-            if (!role || !places.length) delete placements[tag]             // drop ID-only (no role) tags
+            if (!role || !places.length) delete placements[tag]             // drop ID-only (no role) entries
             else if (places.length === 1) placements[tag] = places[0]       // compact representation of singleton arrays
         }
         return placements
     }
 
-    static __setstate__(state) { return new this(state) }
+    static __setstate__(placements) {
+        let obj = new this()
+        obj._placements = placements
+
+        for (let [tag, places] of Object.entries(placements)) {
+            if (!Array.isArray(places))
+                placements[tag] = places = [places]             // recover singleton arrays
+
+            let [id] = tag.split('-')
+            for (let place of places) obj._add(place, id)       // add ID-only entries
+        }
+        return obj
+    }
 
     tag(id, role = null) {
         /* Placement tag. A string that identifies agent by its ID and particular role, like "1234-$agent". */
