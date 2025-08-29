@@ -136,13 +136,14 @@ export class LocalPlacements extends Placements {
     from_agents(node) {
         for (let {worker, id, role} of node.agents)
             this.add(worker, id, role)                      // add regular agents to placements
+        this._add_hidden(node)
+        return this
+    }
 
+    _add_hidden(node) {
         this.add(MASTER, node, '$master')                   // add node.$master agent
-
         for (let worker = 1; worker <= this.num_workers; worker++)
             this.add(worker, node, '$worker')               // add node.$worker agents
-
-        return this
     }
 
     _is_local(worker)       { return worker === Number(process.env.WORKER_ID) || 0 }  // schemat.kernel.worker_id
@@ -156,18 +157,21 @@ export class GlobalPlacements extends Placements {
      */
 
     from_nodes(nodes) {
-        for (let node of nodes) {
+        for (let node of nodes)
             for (let {id, role} of node.agents)
                 this.add(node, id, role)                    // add regular agents to placements
 
-            // add node.$master/$worker agents (not on node.agents lists), they are deployed on itself and nowhere else
-            this.add(node, node, '$master')
-            this.add(node, node, '$worker')
-        }
+        this._add_hidden(nodes)
         return this
     }
 
-    _add_hidden() {}
+    _add_hidden(nodes) {
+        // add node.$master/$worker agents, they are deployed on <node> and nowhere else
+        for (let node of nodes) {
+            this.add(node, node, '$master')
+            this.add(node, node, '$worker')
+        }
+    }
 
     _is_local(node_id)      { return node_id === schemat.kernel.node_id }
     _is_hidden(tag, node)   { return tag.startsWith(`${node}-`) }       // node-on-itself placements are excluded from serialization
