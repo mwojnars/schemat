@@ -4,7 +4,7 @@ import {Counter, ObjectsMap} from "../common/structs.js";
 import {Agent} from "./agent.js";
 
 
-const MASTER = 0        // ID of the master process; workers are numbered 1,2,...,N
+export const MASTER = 0        // ID of the master process; workers are numbered 1,2,...,N
 
 /**********************************************************************************************************************/
 
