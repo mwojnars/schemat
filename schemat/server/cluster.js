@@ -48,8 +48,10 @@ export class Placements {
 
         // drop numeric [id] tags and "<node>_$master/$worker" tags in `placements`
         for (let [tag, places] of Object.entries(placements)) {
+            places = places.filter(place => !this._is_hidden(tag, place))
+
             let [id, role] = tag.split('_')
-            if (!role || !places.length || this._is_hidden(tag, places))
+            if (!role || !places.length) // || this._is_hidden(tag, places))
                 delete placements[tag]
             else if (places.length === 1)
                 placements[tag] = places[0]         // compact representation of a singleton array
@@ -135,7 +137,7 @@ export class GlobalPlacements extends Placements {
     _add_hidden() {}
 
     _is_local(node_id)      { return node_id === schemat.kernel.node_id }
-    _is_hidden(tag, nodes)  { return tag.startsWith(`${nodes[0]}_`) }       // node-on-itself placements are excluded from serialization
+    _is_hidden(tag, node)   { return tag.startsWith(`${node}_`) }       // node-on-itself placements are excluded from serialization
 
     find_nodes(agent, role = null) {
         /* Return an array of nodes where (agent, role) is deployed; `agent` is an object or ID. */
