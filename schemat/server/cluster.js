@@ -49,8 +49,10 @@ export class Placements {
         // drop numeric [id] tags and "<node>_$master/$worker" tags in `placements`
         for (let [tag, places] of Object.entries(placements)) {
             let [id, role] = tag.split('_')
-            if (!role || this._is_hidden(tag, places))
+            if (!role || !places.length || this._is_hidden(tag, places))
                 delete placements[tag]
+            else if (places.length === 1)
+                placements[tag] = places[0]         // compact representation of a singleton array
         }
         return placements
     }
