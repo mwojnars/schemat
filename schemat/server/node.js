@@ -386,7 +386,7 @@ export class Node extends Agent {
     }
 
     async rpc_frwd(request) {
-        /* Forward a newly-created RPC message from a (worker) process up to the master. Shortcuts may be applied. */
+        /* Forward a newly-created RPC message from a (worker) process up to the master. Shortcuts may apply. */
         let {agent_id, role, scope, worker, broadcast} = RPC_Request.parse(request)
 
         // no forwarding when `scope` enforces local execution
@@ -454,8 +454,8 @@ export class Node extends Agent {
         if (this._find_worker(agent_id, role) != null) return this      // if agent is deployed here on this node, it is preferred over remote nodes
 
         // check `global_placements` to find the node
-        let node_id = this.$state.global_placements.find_first(agent_id, role)
-        if (node_id) return schemat.get_object(node_id)   //node_ids.random()
+        let node = this.$state.global_placements.find_first(agent_id, role)
+        if (node) return node
 
         throw new Error(`agent [${agent_id}].${role ?? AgentRole.GENERIC} not found on any node in the cluster`)
     }

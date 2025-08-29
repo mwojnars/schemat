@@ -86,16 +86,16 @@ export class GlobalPlacements {
     }
 
     find_all(agent, role = null) {
-        /* Return an array of IDs of all nodes where (agent, role) is deployed, `agent` is an object or ID. */
+        /* Return an array of nodes where (agent, role) is deployed, `agent` is an object or ID. */
         if (typeof agent === 'object') agent = agent.id
         role ??= AgentRole.GENERIC
         let tag = (role === AgentRole.GENERIC) ? agent : this._agent_role(agent, role)
-        return this._placements[tag]
+        return this._placements[tag].map(id => schemat.get_object(id))
     }
 
     find_first(agent, role = null) {
-        /* Return an ID of the first node where (agent, role) is deployed, or undefined if none found. */
-        return this.find_all(agent, role)[0]
+        /* Return the first node where (agent, role) is deployed, or undefined if none found. */
+        return this.find_all(agent, role)[0]    //.random()
     }
 }
 
@@ -153,8 +153,7 @@ export class Cluster extends Agent {
 
     async '$leader.dismiss_agent'(agent, role = null) {
         /* Find and stop all deployments of `agent` across the cluster. */
-        let node_ids = this.$state.global_placements.find_all(agent, role)
-        let nodes = node_ids.map(id => schemat.get_object(id))
+        let nodes = this.$state.global_placements.find_all(agent, role)
         await Promise.all(nodes.map(node => node.$master.dismiss_agent(agent, role)))
     }
 
