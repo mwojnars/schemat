@@ -399,9 +399,9 @@ export class Node extends Agent {
         let frame = !broadcast && schemat.get_frame(agent_id, role)
         if (frame) return this.rpc_exec(request)
 
+        if (!this.is_master()) return schemat.kernel.mailbox.send(request)  // forward to master if not yet there
+        return this.rpc_frwd(request)                                       // on master, send out the message to a target node/process(es)
         // return this.ipc_send(MASTER, request)
-        if (this.is_master()) return this.rpc_frwd(request)     // if already on master, forward to a target node/process
-        return schemat.kernel.mailbox.send(request)             // otherwise, forward to master
     }
 
     async rpc_frwd(message) {
