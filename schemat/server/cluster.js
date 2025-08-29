@@ -37,8 +37,22 @@ export class NodeState {
 
 /**********************************************************************************************************************/
 
-export class GlobalPlacements {
-    /* Map of deployments of all agents across the cluster, as a mapping of [agent-role tag] to [array] of nodes
+export class Placements {
+    tag(id, role = null) {
+        /* Placement tag. A string that identifies agent by its ID and particular role, like "1234_$agent". */
+        role ??= AgentRole.GENERIC
+        assert(role[0] === '$', `incorrect name of agent role (${role})`)
+        assert(id && typeof id !== 'object')
+        return `${id}_${role}`
+    }
+}
+
+export class LocalPlacements extends Placements {
+    /* Map of agent deployments across worker processes of a node. */
+}
+
+export class GlobalPlacements extends Placements {
+    /* Map of agent deployments across the cluster, as a mapping of [agent-role tag] to [array] of nodes
        where the agent is deployed; agent-role tag is a string of the form `${id}_${role}`, like "1234_$leader".
        Additionally, ID-only tags are included to support role-agnostic queries (i.e., when role="$agent").
      */
@@ -50,6 +64,7 @@ export class GlobalPlacements {
            of the form `${id}_${role}`, like "1234_$leader". Additionally, ID-only placements are included
            to support role-agnostic queries (i.e., when role="$agent").
          */
+        super()
         for (let node of nodes) {
             // add regular agents to placements
             for (let {id, role} of node.agents)
@@ -61,36 +76,31 @@ export class GlobalPlacements {
         }
     }
 
-    _tag(id, role = null) {
-        /* Placement tag. A string that identifies agent by its ID and particular role, like "1234_$agent". */
-        role ??= AgentRole.GENERIC
-        assert(role[0] === '$', `incorrect name of agent role (${role})`)
-        assert(id && typeof id !== 'object')
-        return `${id}_${role}`
-    }
-
     add(node, agent, role = null) {
         if (typeof node === 'object') node = node.id        // convert node & agent objects to IDs
         if (typeof agent === 'object') agent = agent.id
 
-        let tag = this._tag(agent, role)
+        let tag = this.tag(agent, role)
         this._add(node, tag)
         this._add(node, agent)
     }
 
     _add(node, key) {
         let nodes = (this._placements[key] ??= [])
-        if (nodes.includes(node)) return                            // ignore duplicate IDs
-        if (node === schemat.kernel.node_id) nodes.unshift(node)    // always put the local node's ID at the beginning
-        else nodes.push(node)                                       // put other node IDs at the end of the list
+        if (nodes.includes(node)) return                    // ignore duplicate IDs
+        if (this._is_local(node)) nodes.unshift(node)       // always put the local node's ID at the beginning
+        else nodes.push(node)                               // put other node IDs at the end of the list
     }
+
+    _is_local(node_id) { return node_id === schemat.kernel.node_id }
 
     find_all(agent, role = null) {
         /* Return an array of nodes where (agent, role) is deployed, `agent` is an object or ID. */
         if (typeof agent === 'object') agent = agent.id
         role ??= AgentRole.GENERIC
-        let tag = (role === AgentRole.GENERIC) ? agent : this._tag(agent, role)
-        return this._placements[tag].map(id => schemat.get_object(id))
+        let tag = (role === AgentRole.GENERIC) ? agent : this.tag(agent, role)
+        let placements = this._placements[tag] || []
+        return placements.map(id => schemat.get_object(id))
     }
 
     find_first(agent, role = null) {
