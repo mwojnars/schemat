@@ -93,6 +93,9 @@ export class Placements {
 
 export class LocalPlacements extends Placements {
     /* Map of agent deployments across worker processes of a node. */
+
+    _is_local(worker)       { return worker === schemat.kernel.worker_id }
+    _is_hidden(tag, worker) { return worker === 0 }     // drop on-master placements during serialization
 }
 
 export class GlobalPlacements extends Placements {
@@ -102,10 +105,6 @@ export class GlobalPlacements extends Placements {
      */
 
     constructor(nodes) {
-        /* POJO mapping of agent-role tags to arrays of nodes where this agent is deployed; agent-role tag is a string
-           of the form `${id}_${role}`, like "1234_$leader". Additionally, ID-only placements are included
-           to support role-agnostic queries (i.e., when role="$agent").
-         */
         super()
         for (let node of nodes) {
             // add regular agents to placements
@@ -118,7 +117,7 @@ export class GlobalPlacements extends Placements {
         }
     }
 
-    _is_local(node_id) { return node_id === schemat.kernel.node_id }
+    _is_local(node_id)       { return node_id === schemat.kernel.node_id }
     _is_hidden(tag, node_id) { return tag.startsWith(`${node_id}_`) }   // drop node-to-itself tags during serialization
 
     find_nodes(agent, role = null) {
