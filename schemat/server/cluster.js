@@ -47,9 +47,9 @@ export class Placements {
         let placements = {...this._placements}
 
         // drop numeric [id] tags and "<node>_$master/$worker" tags in `placements`
-        for (let [tag, places] in Object.entries(placements)) {
+        for (let [tag, places] of Object.entries(placements)) {
             let [id, role] = tag.split('_')
-            if ((!role) || this._is_hidden(tag, places))
+            if (!role || this._is_hidden(tag, places))
                 delete placements[tag]
         }
         return placements
