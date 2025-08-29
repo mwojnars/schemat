@@ -61,8 +61,8 @@ export class GlobalPlacements {
         }
     }
 
-    _agent_role(id, role = null) {
-        /* A string that identifies an agent by ID together with its particular role, like "1234_$agent". */
+    _tag(id, role = null) {
+        /* Placement tag. A string that identifies agent by its ID and particular role, like "1234_$agent". */
         role ??= AgentRole.GENERIC
         assert(role[0] === '$', `incorrect name of agent role (${role})`)
         assert(id && typeof id !== 'object')
@@ -73,7 +73,7 @@ export class GlobalPlacements {
         if (typeof node === 'object') node = node.id        // convert node & agent objects to IDs
         if (typeof agent === 'object') agent = agent.id
 
-        let tag = this._agent_role(agent, role)
+        let tag = this._tag(agent, role)
         this._add(node, tag)
         this._add(node, agent)
     }
@@ -89,7 +89,7 @@ export class GlobalPlacements {
         /* Return an array of nodes where (agent, role) is deployed, `agent` is an object or ID. */
         if (typeof agent === 'object') agent = agent.id
         role ??= AgentRole.GENERIC
-        let tag = (role === AgentRole.GENERIC) ? agent : this._agent_role(agent, role)
+        let tag = (role === AgentRole.GENERIC) ? agent : this._tag(agent, role)
         return this._placements[tag].map(id => schemat.get_object(id))
     }
 
