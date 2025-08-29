@@ -1311,13 +1311,13 @@ export class WebObject {
         /* Deploy `this` as an agent somewhere in the cluster. Should only be called on web objects of Agent category.
            This method is defined here instead of Agent class to allow its invocation on stubs.
          */
-        return schemat.cluster.$leader.deploy(this, role)
+        return schemat.cluster.$leader.deploy_agent(this, role)
     }
 
     async dismiss_agent() {     // dismiss/discard/expel/expulse/evict/remove/retract/cancel/revoke/recall/withdraw
         /* Stop & uninstall all running instances of this agent across the cluster, typically as a preparation
            before deletion of the object from DB. Reverts the effects of deploy_agent(). */
-        return schemat.cluster.$leader.dismiss(this)
+        return schemat.cluster.$leader.dismiss_agent(this)
     }
 
     // async update_self(props = {}) {

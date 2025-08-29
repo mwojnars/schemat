@@ -538,7 +538,7 @@ export class Node extends Agent {
         this.$state.global_placements = placements
     }
 
-    async '$master.deploy'(agent, role, {worker, replicas = 1} = {}) {
+    async '$master.deploy_agent'(agent, role, {worker, replicas = 1} = {}) {
         /* Install `agent` (object or ID) on this node, then find the least busy worker process and start `agent` there. */
         agent = await schemat.as_loaded(agent)
 
@@ -573,7 +573,7 @@ export class Node extends Agent {
         // await this.update_self({agents})
     }
 
-    async '$master.dismiss'(agent, role) {
+    async '$master.dismiss_agent'(agent, role = null) {
         /* Stop and uninstall (agent, role) from this node. All messages addressed to (agent, role) will be discarded from now on. */
     }
 
