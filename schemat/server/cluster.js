@@ -110,8 +110,7 @@ export class LocalPlacements extends Placements {
     /* Map of agent deployments across worker processes of a node, as a mapping of agent-role tag -> array of worker IDs
        where the agent is deployed.
      */
-    constructor(node) {
-        super()
+    from_agents(node) {
         for (let {worker, id, role} of node.agents)
             this.add(worker, id, role)                      // add regular agents to placements
 
@@ -119,6 +118,8 @@ export class LocalPlacements extends Placements {
 
         for (let worker = 1; worker <= this.num_workers; worker++)
             this.add(worker, node, '$worker')               // add node.$worker agents
+
+        return this
     }
 
     _is_local(worker)       { return worker === schemat.kernel.worker_id }
@@ -131,8 +132,7 @@ export class GlobalPlacements extends Placements {
        Additionally, ID-only tags are included to support role-agnostic queries (i.e., when role="$agent").
      */
 
-    constructor(nodes) {
-        super()
+    from_nodes(nodes) {
         for (let node of nodes) {
             for (let {id, role} of node.agents)
                 this.add(node, id, role)                    // add regular agents to placements
@@ -141,6 +141,7 @@ export class GlobalPlacements extends Placements {
             this.add(node, node, '$master')
             this.add(node, node, '$worker')
         }
+        return this
     }
 
     _add_hidden() {}
@@ -183,7 +184,7 @@ export class Cluster extends Agent {
         if (SERVER) await Promise.all(this.nodes.map(node => node.load()))
     }
 
-    global_placements() { return new GlobalPlacements(this.nodes) }
+    global_placements() { return new GlobalPlacements().from_nodes(this.nodes) }
 
 
     /***  Agent operations  ***/
@@ -191,7 +192,7 @@ export class Cluster extends Agent {
     async __start__({role}) {
         assert(role === '$leader')
         let nodes = new ObjectsMap(this.nodes.map(n => [n, new NodeState(n)]))
-        let global_placements = new GlobalPlacements(this.nodes)
+        let global_placements = new GlobalPlacements().from_nodes(this.nodes)
         return {nodes, global_placements}
     }
 

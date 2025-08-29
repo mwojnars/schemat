@@ -274,12 +274,12 @@ export class Node extends Agent {
         if (SERVER && schemat.booting)      // core agents (ex. data blocks) must be loaded initially from bootstrap DB; NOT a cluster object to avoid cyclic dependency
             await Promise.all(this.agents.map(({id}) => id !== schemat.cluster_id && schemat.load(id)))
 
-        this._save_placements()
+        // this._save_placements()
     }
 
     async _save_placements() {
         await sleep(3.0)
-        this.local_placements = new LocalPlacements(this)
+        this.local_placements = new LocalPlacements().from_agents(this)
         await this.save()
     }
 
