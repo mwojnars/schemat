@@ -122,7 +122,7 @@ export class LocalPlacements extends Placements {
         return this
     }
 
-    _is_local(worker)       { return worker === schemat.kernel.worker_id }
+    _is_local(worker)       { return worker === Number(process.env.WORKER_ID) || 0 }  // schemat.kernel.worker_id
     _is_hidden(tag, worker) { return worker === MASTER }    // placements on master process are excluded from serialization
 }
 
