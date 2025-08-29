@@ -137,6 +137,10 @@
 - id: 1024
   tcp_port: 5828
   num_workers: 2
+#  local_placements:
+#    1015_$master: 2
+#    1026_$master: 1
+#    1032_$master: 1
   agents:
     - worker: 2
       id: 1015

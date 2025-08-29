@@ -428,8 +428,10 @@ export class Node extends Agent {
 
     async rpc_recv(message) {
         /* Route an incoming RPC request to the right process on this node and execute. */
-        let {worker, agent_id, role} = RPC_Request.parse(message)
+        let {worker, agent_id, role, broadcast} = RPC_Request.parse(message)
+
         // TODO: broadcast
+        if (broadcast) {}
 
         worker ??= this._find_worker(agent_id, role)
         if (worker == null) throw new Error(`agent [${agent_id}] not found on this node`)
