@@ -1,7 +1,7 @@
 import {AgentRole} from "../common/globals.js";
 import {assert, print, min, T} from "../common/utils.js";
+import {Counter, ObjectsMap} from "../common/structs.js";
 import {Agent} from "./agent.js";
-import {ObjectsMap} from "../common/structs.js";
 
 
 const MASTER = 0        // ID of the master process; workers are numbered 1,2,...,N
@@ -114,6 +114,18 @@ export class Placements {
     list_agent_ids() {
         /* Array of agent IDs occurring as keys in placement tags. */
         return Object.keys(this._placements).filter(tag => !tag.includes('-')).map(tag => Number(tag))
+    }
+
+    rank_places() {
+        /* Order places by utilization, from least to most busy, and return as an array of place IDs. */
+        let placements = Object.entries(this._placements).filter(([tag]) => tag.includes('-'))
+        let places = placements.map(([tag, places]) => places).flat()
+        // let places = agents.map(status => status.worker).filter(w => w >= 1)     // pull out worker IDs, skip the master process (0)
+
+        let counts = new Counter(places)
+        counts.delete(0)                        // remove master process from the result
+        let sorted = counts.least_common()
+        return sorted.map(entry => entry[0])
     }
 }
 

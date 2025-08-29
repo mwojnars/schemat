@@ -577,7 +577,7 @@ export class Node extends Agent {
         this._print(`$master.deploy() agent=${agent} role=${role}`)
         // this._print(`$master.deploy() agents:`, this.$state.agents.map(({worker, agent, role}) => ({worker, id: agent.id, role})))
 
-        let {agents} = this.$state
+        let {agents, local_placements} = this.$state
         // if (agents.has(agent)) throw new Error(`agent ${agent} is already running on node ${this}`)
         // agents.set(agent, {params, role, workers})
 
