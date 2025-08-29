@@ -93,20 +93,20 @@ export class GlobalPlacements extends Placements {
         }
     }
 
-    add(node, agent, role = null) {
-        if (typeof node === 'object') node = node.id        // convert node & agent objects to IDs
+    add(place, agent, role = null) {
+        if (typeof place === 'object') place = place.id     // convert node & agent objects to IDs
         if (typeof agent === 'object') agent = agent.id
 
         let tag = this.tag(agent, role)
-        this._add(node, tag)
-        this._add(node, agent)
+        this._add(place, tag)
+        this._add(place, agent)
     }
 
-    _add(node, key) {
-        let nodes = (this._placements[key] ??= [])
-        if (nodes.includes(node)) return                    // ignore duplicate IDs
-        if (this._is_local(node)) nodes.unshift(node)       // always put the local node's ID at the beginning
-        else nodes.push(node)                               // put other node IDs at the end of the list
+    _add(place, key) {
+        let places = (this._placements[key] ??= [])
+        if (places.includes(place)) return                  // ignore duplicate IDs
+        if (this._is_local(place)) places.unshift(place)    // always put the local node/process ID at the beginning
+        else places.push(place)                             // put other node IDs at the end of the list
     }
 
     _is_local(node_id) { return node_id === schemat.kernel.node_id }
