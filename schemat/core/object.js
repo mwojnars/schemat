@@ -80,8 +80,10 @@ class Intercept {
         // return if the value was found in a regular JS attr (not a getter)
         if (val !== undefined) return val === Intercept.UNDEFINED ? undefined : val
 
-        // handle role-based access to agent methods and state (e.g., $agent.f(), $leader.f(), etc.)
-        if (typeof prop === 'string' && ((prop[0] === '$' && prop.length > 1) || (prop.startsWith('$$') && prop.length > 2))) {
+        // handle role-based access to agent methods and state (e.g., $agent.f(), $leader.f(), etc.);
+        // double $$, like in $$agent.f(), is treated as a broadcast call
+        if (typeof prop === 'string' && prop[0] === '$' && ((prop.length > 1 && prop[1] !== '$') || (prop.length > 2 && prop[1] === '$')))
+        {
             let broadcast = prop.startsWith('$$') || undefined
             if (broadcast) prop = prop.slice(1)
             let proxy = Intercept._agent_proxy(target, prop, broadcast)
