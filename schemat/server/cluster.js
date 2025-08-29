@@ -44,7 +44,7 @@ export class Placements {
     __getstate__() {
         let placements = {...this._placements}
 
-        // iterate over placements and drop numeric [id] tags and "<node>_$master/$worker" tags
+        // drop numeric [id] tags and "<node>_$master/$worker" tags in `placements`
         for (let [tag, place] in Object.entries(placements)) {
             let [id, role] = `${tag}`.split('_')
             if (!role || this._is_hidden(tag, place))
@@ -107,15 +107,16 @@ export class GlobalPlacements extends Placements {
     constructor(nodes) {
         super()
         for (let node of nodes) {
-            // add regular agents to placements
             for (let {id, role} of node.agents)
-                this.add(node, id, role)
+                this.add(node, id, role)                // add regular agents to placements
 
             // add node.$master/$worker agents (not on node.agents lists), they are deployed on itself and nowhere else
             this.add(node, node.id, '$master')
             this.add(node, node.id, '$worker')
         }
     }
+
+    _add_hidden() {}
 
     _is_local(node_id)       { return node_id === schemat.kernel.node_id }
     _is_hidden(tag, node_id) { return tag.startsWith(`${node_id}_`) }   // node-on-itself placements are excluded from serialization
