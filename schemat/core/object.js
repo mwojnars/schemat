@@ -81,8 +81,10 @@ class Intercept {
         if (val !== undefined) return val === Intercept.UNDEFINED ? undefined : val
 
         // handle role-based access to agent methods and state (e.g., $agent.f(), $leader.f(), etc.)
-        if (typeof prop === 'string' && prop.startsWith('$') && prop.length > 1) {
-            let proxy = Intercept._agent_proxy(target, prop)
+        if (typeof prop === 'string' && ((prop[0] === '$' && prop.length > 1) || (prop.startsWith('$$') && prop.length > 2))) {
+            let broadcast = prop.startsWith('$$') || undefined
+            if (broadcast) prop = prop.slice(1)
+            let proxy = Intercept._agent_proxy(target, prop, broadcast)
             if (cache) Intercept._cache_value(cache, prop, proxy)
             return proxy
         }
@@ -108,7 +110,7 @@ class Intercept {
         return typeof prop !== 'string' || WebObject.RESERVED.has(prop)
     }
 
-    static _agent_proxy(target, role, broadcast = undefined) {
+    static _agent_proxy(target, role, broadcast) {
         /* Create an RPC proxy for this agent running in a particular role ($agent, $leader, etc.).
            The proxy creates triggers for intra-cluster RPC calls in two forms:
            1. obj.$ROLE.fun(...args) - sends a message that invokes obj['$ROLE.fun'](...args);
