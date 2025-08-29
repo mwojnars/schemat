@@ -407,12 +407,20 @@ export class Node extends Agent {
 
     async rpc_send(message) {
         /* On master, forward an RPC message originating at this node either to a remote peer or a local worker process. */
-        let {node, worker, agent_id, role} = RPC_Request.parse(message)
+        let {node, worker, agent_id, role, broadcast} = RPC_Request.parse(message)
         // this._print(`rpc_send():`, `agent_id=${agent_id} method=${method} args=${args}`)
 
+        if (broadcast) return this.rpc_bcst(message)
         node ??= this._find_node(worker, agent_id, role)
         if (node.is(this)) return this.rpc_recv(message)        // loopback connection if agent is deployed here on the current node
         return this.tcp_send(node, message)                     // remote connection otherwise
+    }
+
+    async rpc_bcst(message) {
+        /* On master, broadcast message to all nodes where the target (agent, role) is deployed.
+           Collect all responses and return an array of [node, result] pairs. Throw an error if any of the peers failed.
+         */
+
     }
 
     async rpc_recv(message) {
