@@ -108,7 +108,7 @@ class Intercept {
         return typeof prop !== 'string' || WebObject.RESERVED.has(prop)
     }
 
-    static _agent_proxy(target, role) {
+    static _agent_proxy(target, role, broadcast = undefined) {
         /* Create an RPC proxy for this agent running in a particular role ($agent, $leader, etc.).
            The proxy creates triggers for intra-cluster RPC calls in two forms:
            1. obj.$ROLE.fun(...args) - sends a message that invokes obj['$ROLE.fun'](...args);
@@ -138,7 +138,7 @@ class Intercept {
                 // if (name === 'state') return frame?.state
                 assert(name !== 'state')
 
-                let opts = use_opts ? {...current_opts, role} : {role}
+                let opts = use_opts ? {broadcast, ...current_opts, role} : {broadcast, role}
                 current_opts = null
 
                 // if the target object is deployed here on the current process, call it directly without RPC
