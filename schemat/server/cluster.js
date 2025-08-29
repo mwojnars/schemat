@@ -133,11 +133,6 @@ export class Cluster extends Agent {
         return {nodes, global_placements}
     }
 
-    _find_nodes(agent, role) {
-        /* Array of all nodes where `agent` is currently deployed. */
-        // this.$state.agents
-    }
-
     async '$leader.deploy'(agent, role = null) {
         /* Find the least busy node and deploy `agent` there. */
         // TODO: only look among nodes where (agent, role) is not deployed yet (!)
@@ -156,8 +151,11 @@ export class Cluster extends Agent {
         // TODO: node.$$master.update_placements(this.$state.global_placements)
     }
 
-    async '$leader.dismiss'(agent) {
+    async '$leader.dismiss'(agent, role) {
         /* Find and stop all deployments of `agent` across the cluster. */
+        let node_ids = this.$state.global_placements.find_all(agent, role)
+        let nodes = node_ids.map(id => schemat.get_object(id))
+        await Promise.all(nodes.map(node => node.$master.dismiss(agent, role)))
     }
 
     async '$leader.create_node'(props = {}) {
