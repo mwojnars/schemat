@@ -49,7 +49,7 @@ export class Placements {
         // clean up and compactify `placements`
         for (let [tag, places] of Object.entries(placements)) {
             places = places.filter(place => !this._is_hidden(tag, place))   // drop hidden (implicit) placements
-            let [id, role] = tag.split('_')
+            let [id, role] = tag.split('-')
             if (!role || !places.length) delete placements[tag]             // drop ID-only (no role) tags
             else if (places.length === 1) placements[tag] = places[0]       // compact representation of singleton arrays
         }
@@ -59,11 +59,11 @@ export class Placements {
     static __setstate__(state) { return new this(state) }
 
     tag(id, role = null) {
-        /* Placement tag. A string that identifies agent by its ID and particular role, like "1234_$agent". */
+        /* Placement tag. A string that identifies agent by its ID and particular role, like "1234-$agent". */
         role ??= AgentRole.GENERIC
         assert(role[0] === '$', `incorrect name of agent role (${role})`)
         assert(id && typeof id !== 'object')
-        return `${id}_${role}`
+        return `${id}-${role}`
     }
 
     add(place, agent, role = null) {
@@ -115,7 +115,7 @@ export class LocalPlacements extends Placements {
 
 export class GlobalPlacements extends Placements {
     /* Map of agent deployments across the cluster, as a mapping of agent-role tag -> array of node IDs
-       where the agent is deployed; agent-role tag is a string of the form `${id}_${role}`, like "1234_$leader".
+       where the agent is deployed; agent-role tag is a string of the form `${id}-${role}`, like "1234-$leader".
        Additionally, ID-only tags are included to support role-agnostic queries (i.e., when role="$agent").
      */
 
@@ -134,7 +134,7 @@ export class GlobalPlacements extends Placements {
     _add_hidden() {}
 
     _is_local(node_id)      { return node_id === schemat.kernel.node_id }
-    _is_hidden(tag, node)   { return tag.startsWith(`${node}_`) }       // node-on-itself placements are excluded from serialization
+    _is_hidden(tag, node)   { return tag.startsWith(`${node}-`) }       // node-on-itself placements are excluded from serialization
 
     find_nodes(agent, role = null) {
         /* Return an array of nodes where (agent, role) is deployed; `agent` is an object or ID. */
