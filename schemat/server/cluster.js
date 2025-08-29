@@ -113,7 +113,7 @@ export class GlobalPlacements extends Placements {
     _is_local(node_id) { return node_id === schemat.kernel.node_id }
     _is_hidden(tag, node_id) { return tag.startsWith(`${node_id}_`) }   // drop node-to-itself tags during serialization
 
-    find_all(agent, role = null) {
+    find_nodes(agent, role = null) {
         /* Return an array of nodes where (agent, role) is deployed, `agent` is an object or ID. */
         if (typeof agent === 'object') agent = agent.id
         role ??= AgentRole.GENERIC
@@ -122,9 +122,9 @@ export class GlobalPlacements extends Placements {
         return placements.map(id => schemat.get_object(id))
     }
 
-    find_first(agent, role = null) {
+    find_node(agent, role = null) {
         /* Return the first node where (agent, role) is deployed, or undefined if none found. */
-        return this.find_all(agent, role)[0]    //.random()
+        return this.find_nodes(agent, role)[0]    //.random()
     }
 }
 
@@ -182,7 +182,7 @@ export class Cluster extends Agent {
 
     async '$leader.dismiss_agent'(agent, role = null) {
         /* Find and stop all deployments of `agent` across the cluster. */
-        let nodes = this.$state.global_placements.find_all(agent, role)
+        let nodes = this.$state.global_placements.find_nodes(agent, role)
         await Promise.all(nodes.map(node => node.$master.dismiss_agent(agent, role)))
     }
 

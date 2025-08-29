@@ -421,7 +421,7 @@ export class Node extends Agent {
            Collect all responses and return an array of results. Throw an error if any of the peers failed.
          */
         let {agent_id, role} = RPC_Request.parse(request)
-        let nodes = this.$state.global_placements.find_all(agent_id, role)
+        let nodes = this.$state.global_placements.find_nodes(agent_id, role)
         let results = await Promise.all(nodes.map(node => node.is(this) ? this.rpc_recv(request) : this.tcp_send(node, request)))
         return results.flat()   // in broadcast mode, every peer returns an array of results, so they must be flattened at the end
     }
@@ -468,7 +468,7 @@ export class Node extends Agent {
         if (this._find_worker(agent_id, role) != null) return this      // if agent is deployed here on this node, it is preferred over remote nodes
 
         // check `global_placements` to find the node
-        let node = this.$state.global_placements.find_first(agent_id, role)
+        let node = this.$state.global_placements.find_node(agent_id, role)
         if (node) return node
 
         throw new Error(`agent [${agent_id}].${role ?? AgentRole.GENERIC} not found on any node in the cluster`)
