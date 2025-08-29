@@ -581,7 +581,7 @@ export class Node extends Agent {
         if (replicas > this.num_workers) throw new Error(`no. of replicas (${replicas}) must be <= ${this.num_workers}`)
         if (replicas === -1) replicas = this.num_workers
 
-        let workers = worker ? (Array.isArray(worker) ? worker : [worker]) : this._rank_workers(agents)
+        let workers = worker ? (Array.isArray(worker) ? worker : [worker]) : this._rank_workers(agents)  //local_placements.rank_places()
         workers = workers.slice(0, replicas)
 
         if (role === null || role === AgentRole.GENERIC)
