@@ -382,10 +382,15 @@ export class Struct {
             return new Uint8Array(target)
 
         if (target instanceof Struct) {     // e.g., Type extends Struct
-            // clone own attributes AND the class (prototype) ... TODO: use getstate/setstate() if the object supports
+            // clone own attributes AND the class (prototype)
             let cloned = Object.create(Object.getPrototypeOf(target))
             for (let key of Object.keys(target)) cloned[key] = Struct.clone(target[key])
             return cloned
+        }
+
+        if (target.__getstate__) {
+            let state = Struct.clone(target.__getstate__())
+            return setstate(target.constructor, state)
         }
 
         if (T.isPlain(target)) return Object.assign({}, target)
