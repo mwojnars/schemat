@@ -2,9 +2,10 @@ import {AgentRole} from "../common/globals.js";
 import {assert, print, timeout, sleep} from '../common/utils.js'
 import {IPC_Error, RPC_Error} from "../common/errors.js";
 import {JSONx} from "../common/jsonx.js";
+import {Counter} from "../common/structs.js";
 import {Agent} from "./agent.js";
 import {TCP_Receiver, TCP_Sender} from "./tcp.js";
-import {Counter} from "../common/structs.js";
+import {LocalPlacements} from "./cluster.js";
 
 
 const MASTER = 0        // ID of the master process; workers are numbered 1,2,...,N
@@ -272,6 +273,14 @@ export class Node extends Agent {
     async __load__() {
         if (SERVER && schemat.booting)      // core agents (ex. data blocks) must be loaded initially from bootstrap DB; NOT a cluster object to avoid cyclic dependency
             await Promise.all(this.agents.map(({id}) => id !== schemat.cluster_id && schemat.load(id)))
+
+        // this._save_placements()
+    }
+
+    async _save_placements() {
+        await sleep(3.0)
+        this.local_placements = new LocalPlacements(this)
+        await this.save()
     }
 
 

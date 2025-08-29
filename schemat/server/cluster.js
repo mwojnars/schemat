@@ -4,6 +4,8 @@ import {Agent} from "./agent.js";
 import {ObjectsMap} from "../common/structs.js";
 
 
+const MASTER = 0        // ID of the master process; workers are numbered 1,2,...,N
+
 /**********************************************************************************************************************/
 
 export class NodeState {
@@ -92,14 +94,26 @@ export class Placements {
 }
 
 export class LocalPlacements extends Placements {
-    /* Map of agent deployments across worker processes of a node. */
+    /* Map of agent deployments across worker processes of a node, as a mapping of agent-role tag -> array of worker IDs
+       where the agent is deployed.
+     */
+    constructor(node) {
+        super()
+        for (let {worker, id, role} of node.agents)
+            this.add(worker, id, role)                      // add regular agents to placements
+
+        this.add(MASTER, node, '$master')                   // add node.$master agent
+
+        for (let worker = 1; worker <= this.num_workers; worker++)
+            this.add(worker, node, '$worker')               // add node.$worker agents
+    }
 
     _is_local(worker)       { return worker === schemat.kernel.worker_id }
-    _is_hidden(tag, worker) { return worker === 0 }     // placements on master process are excluded from serialization
+    _is_hidden(tag, worker) { return worker === MASTER }    // placements on master process are excluded from serialization
 }
 
 export class GlobalPlacements extends Placements {
-    /* Map of agent deployments across the cluster, as a mapping of [agent-role tag] to [array] of nodes
+    /* Map of agent deployments across the cluster, as a mapping of agent-role tag -> array of node IDs
        where the agent is deployed; agent-role tag is a string of the form `${id}_${role}`, like "1234_$leader".
        Additionally, ID-only tags are included to support role-agnostic queries (i.e., when role="$agent").
      */
@@ -108,11 +122,11 @@ export class GlobalPlacements extends Placements {
         super()
         for (let node of nodes) {
             for (let {id, role} of node.agents)
-                this.add(node, id, role)                // add regular agents to placements
+                this.add(node, id, role)                    // add regular agents to placements
 
             // add node.$master/$worker agents (not on node.agents lists), they are deployed on itself and nowhere else
-            this.add(node, node.id, '$master')
-            this.add(node, node.id, '$worker')
+            this.add(node, node, '$master')
+            this.add(node, node, '$worker')
         }
     }
 
