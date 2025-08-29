@@ -170,8 +170,8 @@
     1029-$master: 2
     1001-$leader: 1
     1023-$agent:
-      - 2
       - 1
+      - 2
     "@": schemat/server/cluster.js:LocalPlacements
 - id: 1026
   sequence:
@@ -265,8 +265,8 @@
     1030-$master: 1
     1037-$agent: 2
     1023-$agent:
-      - 1
       - 2
+      - 1
     "@": schemat/server/cluster.js:LocalPlacements
 - id: 1037
   name: logger
