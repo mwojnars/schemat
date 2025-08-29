@@ -376,7 +376,7 @@ export class Node extends Agent {
         // this._print("rpc():", JSON.stringify(request))
 
         try {
-            let response = await this.rpc_send(request)
+            let response = await this.rpc_frwd(request)
             return RPC_Response.parse(response, request)
         }
         catch (ex) {
@@ -385,29 +385,30 @@ export class Node extends Agent {
         }
     }
 
-    async rpc_send(request) {
+    async rpc_frwd(request) {
+        /* Forward a newly-created RPC message from a (worker) process up to the master. Shortcuts may be applied. */
         let {agent_id, role, scope, worker, broadcast} = RPC_Request.parse(request)
 
         // no forwarding when `scope` enforces local execution
         if (scope === 'process') return this.rpc_exec(request)
 
-        // no forwarding when a target `worker` is given and it's the current process
+        // no forwarding when target `worker` is given and it's the current process
         if (scope === 'node' && worker === this.worker_id) return this.rpc_exec(request)
 
-        // no forwarding when a target object is deployed here on the current process
+        // no forwarding when target object is deployed here on the current process
         // -- this rule is important for loading data blocks during and after bootstrap
         let frame = !broadcast && schemat.get_frame(agent_id, role)
         if (frame) return this.rpc_exec(request)
 
         if (!this.is_master()) return schemat.kernel.mailbox.send(request)  // forward to master if not yet there
-        return this.rpc_frwd(request)                                       // on master, send out the message to a target node/process(es)
+        return this.rpc_send(request)                                       // on master, send out the message to a target node/process(es)
         // return this.ipc_send(MASTER, request)
     }
 
-    async rpc_frwd(message) {
+    async rpc_send(message) {
         /* On master, forward an RPC message originating at this node either to a remote peer or a local worker process. */
         let {node, worker, agent_id, role} = RPC_Request.parse(message)
-        // this._print(`rpc_frwd():`, `agent_id=${agent_id} method=${method} args=${args}`)
+        // this._print(`rpc_send():`, `agent_id=${agent_id} method=${method} args=${args}`)
 
         node ??= this._find_node(worker, agent_id, role)
         if (node.is(this)) return this.rpc_recv(message)        // loopback connection if agent is deployed here on the current node
@@ -478,7 +479,7 @@ export class Node extends Agent {
     //     // this._print(`ipc_send() process_id=${process_id} worker_id=${this.worker_id} request=${request}`)
     //     try {
     //         if (process_id === this.worker_id)      // shortcut when sending to itself, on master or worker
-    //             return process_id ? await this.rpc_exec(request) : await this.rpc_frwd(request)
+    //             return process_id ? await this.rpc_exec(request) : await this.rpc_send(request)
     //
     //         if (process_id) {
     //             assert(this.is_master())
@@ -502,7 +503,7 @@ export class Node extends Agent {
     //        plain JSON-serializable objects, or already JSONx-encoded.
     //      */
     //     // this._print(`ipc_master():`, JSON.stringify(message))
-    //     return this.rpc_frwd(message)
+    //     return this.rpc_send(message)
     // }
     //
     // ipc_worker(message) {
