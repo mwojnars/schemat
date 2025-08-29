@@ -416,16 +416,20 @@ export class Node extends Agent {
         return this.tcp_send(node, message)                     // remote connection otherwise
     }
 
-    async rpc_bcst(message) {
-        /* On master, broadcast message to all nodes where the target (agent, role) is deployed.
-           Collect all responses and return an array of [node, result] pairs. Throw an error if any of the peers failed.
+    async rpc_bcst(request) {
+        /* On master, broadcast message to all nodes and processes where the target (agent, role) is deployed.
+           Collect all responses and return an array of results. Throw an error if any of the peers failed.
          */
-
+        let {agent_id, role} = RPC_Request.parse(request)
+        let nodes = this.$state.global_placements.find_all(agent_id, role)
+        let results = await Promise.all(nodes.map(node => node.is(this) ? this.rpc_recv(request) : this.tcp_send(node, request)))
+        return results.flat()   // in broadcast mode, every peer returns an array of results, so they must be flattened at the end
     }
 
     async rpc_recv(message) {
         /* Route an incoming RPC request to the right process on this node and execute. */
         let {worker, agent_id, role} = RPC_Request.parse(message)
+        // TODO: broadcast
 
         worker ??= this._find_worker(agent_id, role)
         if (worker == null) throw new Error(`agent [${agent_id}] not found on this node`)
