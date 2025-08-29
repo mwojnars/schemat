@@ -46,15 +46,12 @@ export class Placements {
     __getstate__() {
         let placements = {...this._placements}
 
-        // drop numeric [id] tags and "<node>_$master/$worker" tags in `placements`
+        // clean up and compactify `placements`
         for (let [tag, places] of Object.entries(placements)) {
-            places = places.filter(place => !this._is_hidden(tag, place))
-
+            places = places.filter(place => !this._is_hidden(tag, place))   // drop hidden (implicit) placements
             let [id, role] = tag.split('_')
-            if (!role || !places.length) // || this._is_hidden(tag, places))
-                delete placements[tag]
-            else if (places.length === 1)
-                placements[tag] = places[0]         // compact representation of a singleton array
+            if (!role || !places.length) delete placements[tag]             // drop ID-only (no role) tags
+            else if (places.length === 1) placements[tag] = places[0]       // compact representation of singleton arrays
         }
         return placements
     }
