@@ -95,7 +95,7 @@ export class LocalPlacements extends Placements {
     /* Map of agent deployments across worker processes of a node. */
 
     _is_local(worker)       { return worker === schemat.kernel.worker_id }
-    _is_hidden(tag, worker) { return worker === 0 }     // drop on-master placements during serialization
+    _is_hidden(tag, worker) { return worker === 0 }     // placements on master process are excluded from serialization
 }
 
 export class GlobalPlacements extends Placements {
@@ -118,7 +118,7 @@ export class GlobalPlacements extends Placements {
     }
 
     _is_local(node_id)       { return node_id === schemat.kernel.node_id }
-    _is_hidden(tag, node_id) { return tag.startsWith(`${node_id}_`) }   // drop node-to-itself tags during serialization
+    _is_hidden(tag, node_id) { return tag.startsWith(`${node_id}_`) }   // node-on-itself placements are excluded from serialization
 
     find_nodes(agent, role = null) {
         /* Return an array of nodes where (agent, role) is deployed; `agent` is an object or ID. */
