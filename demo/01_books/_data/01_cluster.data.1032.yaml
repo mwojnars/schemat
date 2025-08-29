@@ -163,6 +163,18 @@
       id: 1023
   __category:
     "@": 21
+  local_placements:
+    1030-$master: 1
+    1015-$master: 2
+    1026-$master: 1
+    1032-$master: 1
+    1033-$master: 2
+    1029-$master: 2
+    1001-$leader: 1
+    1023-$agent:
+      - 1
+      - 2
+    "@": schemat/server/cluster.js:LocalPlacements
 - id: 1026
   sequence:
     "@": 1013
@@ -247,6 +259,17 @@
       id: 1023
   __category:
     "@": 21
+  local_placements:
+    1030-$master: 1
+    1015-$replica: 1
+    1026-$replica: 2
+    1032-$replica: 2
+    1033-$replica: 1
+    1037-$agent: 2
+    1023-$agent:
+      - 1
+      - 2
+    "@": schemat/server/cluster.js:LocalPlacements
 - id: 1037
   name: logger
   __category:
