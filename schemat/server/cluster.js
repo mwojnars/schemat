@@ -41,14 +41,6 @@ export class Placements {
 
     _placements = {}
 
-    tag(id, role = null) {
-        /* Placement tag. A string that identifies agent by its ID and particular role, like "1234_$agent". */
-        role ??= AgentRole.GENERIC
-        assert(role[0] === '$', `incorrect name of agent role (${role})`)
-        assert(id && typeof id !== 'object')
-        return `${id}_${role}`
-    }
-
     __getstate__() {
         let placements = {...this._placements}
 
@@ -63,6 +55,31 @@ export class Placements {
 
     static __setstate__(state) { return new this(state) }
 
+    tag(id, role = null) {
+        /* Placement tag. A string that identifies agent by its ID and particular role, like "1234_$agent". */
+        role ??= AgentRole.GENERIC
+        assert(role[0] === '$', `incorrect name of agent role (${role})`)
+        assert(id && typeof id !== 'object')
+        return `${id}_${role}`
+    }
+
+    add(place, agent, role = null) {
+        if (typeof place === 'object') place = place.id     // convert node & agent objects to IDs
+        if (typeof agent === 'object') agent = agent.id
+
+        let tag = this.tag(agent, role)
+        this._add(place, tag)
+        this._add(place, agent)
+    }
+
+    _add(place, key) {
+        let places = (this._placements[key] ??= [])
+        if (places.includes(place)) return                  // ignore duplicate IDs
+        if (this._is_local(place)) places.unshift(place)    // always put the local node/process ID at the beginning
+        else places.push(place)                             // put other node IDs at the end of the list
+    }
+
+    _is_local()  {}
     _is_hidden() {}
 }
 
@@ -93,24 +110,8 @@ export class GlobalPlacements extends Placements {
         }
     }
 
-    add(place, agent, role = null) {
-        if (typeof place === 'object') place = place.id     // convert node & agent objects to IDs
-        if (typeof agent === 'object') agent = agent.id
-
-        let tag = this.tag(agent, role)
-        this._add(place, tag)
-        this._add(place, agent)
-    }
-
-    _add(place, key) {
-        let places = (this._placements[key] ??= [])
-        if (places.includes(place)) return                  // ignore duplicate IDs
-        if (this._is_local(place)) places.unshift(place)    // always put the local node/process ID at the beginning
-        else places.push(place)                             // put other node IDs at the end of the list
-    }
-
     _is_local(node_id) { return node_id === schemat.kernel.node_id }
-    _is_hidden(tag, node_id) { return tag.startsWith(`${node_id}_`) }   // during serialization, drop node-to-itself tags
+    _is_hidden(tag, node_id) { return tag.startsWith(`${node_id}_`) }   // drop node-to-itself tags during serialization
 
     find_all(agent, role = null) {
         /* Return an array of nodes where (agent, role) is deployed, `agent` is an object or ID. */
