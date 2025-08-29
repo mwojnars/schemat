@@ -52,7 +52,7 @@ export class Placements {
     __getstate__() {
         let placements = {...this._placements}
 
-        // iterate over placements and drop numeric [id] tags and "node.$master/$worker" tags
+        // iterate over placements and drop numeric [id] tags and "<node>_$master/$worker" tags
         for (let [tag, place] in Object.entries(placements)) {
             let [id, role] = `${tag}`.split('_')
             if (!role || this._is_hidden(tag, place))
@@ -61,10 +61,7 @@ export class Placements {
         return placements
     }
 
-    static __setstate__(state) {
-        assert(T.isPOJO(state))
-        return new this(state)
-    }
+    static __setstate__(state) { return new this(state) }
 
     _is_hidden() {}
 }
