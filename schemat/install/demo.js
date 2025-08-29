@@ -65,7 +65,8 @@ async function create_demo_01() {
     db = db.replaceAll('tcp_port: 5829', `tcp_port: 5821`)
 
     // add 02_app.index block [1030] to agents of node [1024] to allow single-node execution of the application (node [1036] not used)
-    db = db.replaceAll('  agents:', `  agents:\n    - {worker: 1, id: 1030, role: $master}`)
+    db = db.replaceAll('  agents:', `  agents:\n    - {worker: 1, id: 1030, role: $master}`)    // TODO: remove this line
+    db = db.replace('  local_placements:', `  local_placements:\n    1030-$master: 1`)
 
     // no need to use rocksdb as secondary storage
     db = db.replaceAll('  storage/2: rocksdb\n', '')
