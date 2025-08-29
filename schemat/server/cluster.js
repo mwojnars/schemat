@@ -1,5 +1,5 @@
 import {AgentRole} from "../common/globals.js";
-import {assert, print, min} from "../common/utils.js";
+import {assert, print, min, T} from "../common/utils.js";
 import {Agent} from "./agent.js";
 import {ObjectsMap} from "../common/structs.js";
 
@@ -38,6 +38,9 @@ export class NodeState {
 /**********************************************************************************************************************/
 
 export class Placements {
+
+    _placements = {}
+
     tag(id, role = null) {
         /* Placement tag. A string that identifies agent by its ID and particular role, like "1234_$agent". */
         role ??= AgentRole.GENERIC
@@ -45,6 +48,25 @@ export class Placements {
         assert(id && typeof id !== 'object')
         return `${id}_${role}`
     }
+
+    __getstate__() {
+        let placements = {...this._placements}
+
+        // iterate over placements and drop numeric [id] tags and "node.$master/$worker" tags
+        for (let [tag, place] in Object.entries(placements)) {
+            let [id, role] = `${tag}`.split('_')
+            if (!role || this._is_hidden(tag, place))
+                delete placements[tag]
+        }
+        return placements
+    }
+
+    static __setstate__(state) {
+        assert(T.isPOJO(state))
+        return new this(state)
+    }
+
+    _is_hidden() {}
 }
 
 export class LocalPlacements extends Placements {
@@ -56,8 +78,6 @@ export class GlobalPlacements extends Placements {
        where the agent is deployed; agent-role tag is a string of the form `${id}_${role}`, like "1234_$leader".
        Additionally, ID-only tags are included to support role-agnostic queries (i.e., when role="$agent").
      */
-
-    _placements = {}
 
     constructor(nodes) {
         /* POJO mapping of agent-role tags to arrays of nodes where this agent is deployed; agent-role tag is a string
@@ -93,6 +113,7 @@ export class GlobalPlacements extends Placements {
     }
 
     _is_local(node_id) { return node_id === schemat.kernel.node_id }
+    _is_hidden(tag, node_id) { return tag.startsWith(`${node_id}_`) }   // during serialization, drop node-to-itself tags
 
     find_all(agent, role = null) {
         /* Return an array of nodes where (agent, role) is deployed, `agent` is an object or ID. */
