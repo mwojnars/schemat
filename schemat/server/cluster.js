@@ -106,6 +106,11 @@ export class Placements {
         return this._placements[tag] || []
     }
 
+    find_first(agent, role = null) {
+        /* Return the first place where (agent, role) is deployed, or undefined if none found. */
+        return this.find_all(agent, role)[0]    //.random()
+    }
+
     list_agent_ids() {
         /* Array of agent IDs occurring as keys in placement tags. */
         return Object.keys(this._placements).filter(tag => !tag.includes('-')).map(tag => Number(tag))
@@ -163,7 +168,7 @@ export class GlobalPlacements extends Placements {
 
     find_node(agent, role = null) {
         /* Return the first node where (agent, role) is deployed, or undefined if none found. */
-        let id = this.find_all(agent, role)[0]    //.random()
+        let id = this.find_first(agent, role)
         if (id) return schemat.get_object(id)
     }
 }

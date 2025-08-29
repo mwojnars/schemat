@@ -272,10 +272,10 @@ export class Node extends Agent {
     }
 
     async __load__() {
-        if (SERVER && schemat.booting) {  // core agents (ex. data blocks) must be loaded initially from bootstrap DB; NOT a cluster object to avoid cyclic dependency
-            let ids = this.local_placements.list_agent_ids()
+        if (SERVER && schemat.booting) {
+            let ids = this.local_placements.list_agent_ids()        // core agents (ex. data blocks) must be loaded initially from bootstrap DB
             // let ids = this.agents.map(({id}) => id)
-            await Promise.all(ids.map(id => id !== schemat.cluster_id && schemat.load(id)))
+            await Promise.all(ids.map(id => id !== schemat.cluster_id && schemat.load(id)))     // skip cluster object to avoid cyclic dependency
         }
         // this._save_placements()
     }
@@ -303,7 +303,7 @@ export class Node extends Agent {
         //       ... or, update global_placements from cluster.$leader right after initializing the node
         let global_placements = schemat.cluster.global_placements()
 
-        return {tcp_sender, tcp_receiver, agents: this.agents, global_placements}
+        return {tcp_sender, tcp_receiver, agents: this.agents, local_placements: this.local_placements, global_placements}
     }
 
     async __restart__() {}
@@ -492,6 +492,7 @@ export class Node extends Agent {
          */
         if (id === this.id) return MASTER       // node.$master itself is contacted at the master process
         if (role === AgentRole.GENERIC) role = undefined
+        // return this.$state.local_placements.find_first(id, role)
         let status = this.$state.agents.find(st => st.id === id && (!role || st.role === role))
         return status?.worker
     }
