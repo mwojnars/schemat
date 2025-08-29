@@ -41,7 +41,8 @@ export class NodeState {
 
 export class Placements {
 
-    _placements = {}
+    _placements = {}        // tag -> array-of-place-ids, where `tag` is a string, either "<id>-<role>" or "<id>",
+                            // and place is a node ID or worker process ID
 
     __getstate__() {
         let placements = {...this._placements}
@@ -103,6 +104,11 @@ export class Placements {
         role ??= AgentRole.GENERIC
         let tag = (role === AgentRole.GENERIC) ? `${agent}` : this.tag(agent, role)
         return this._placements[tag] || []
+    }
+
+    list_agent_ids() {
+        /* Array of agent IDs occurring as keys in placement tags. */
+        return Object.keys(this._placements).filter(tag => !tag.includes('-')).map(tag => Number(tag))
     }
 }
 
