@@ -491,10 +491,10 @@ export class Node extends Agent {
            (or in any role if `role` is missing or GENERIC_ROLE).
          */
         if (id === this.id) return MASTER       // node.$master itself is contacted at the master process
-        if (role === AgentRole.GENERIC) role = undefined
-        // return this.$state.local_placements.find_first(id, role)
-        let status = this.$state.agents.find(st => st.id === id && (!role || st.role === role))
-        return status?.worker
+        return this.$state.local_placements.find_first(id, role)
+        // if (role === AgentRole.GENERIC) role = undefined
+        // let status = this.$state.agents.find(st => st.id === id && (!role || st.role === role))
+        // return status?.worker
     }
 
 
