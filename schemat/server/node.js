@@ -296,11 +296,14 @@ export class Node extends Agent {
         await tcp_sender.start(this.tcp_retry_interval * 1000)
         await tcp_receiver.start(this.tcp_port)
 
+        let local_placements = this.local_placements.clone()
+        local_placements.add_hidden(this)
+
         // TODO: retrieve global_placements from cluster.$leader instead of relying on information stored in DB (can be outdated?)
         //       ... or, update global_placements from cluster.$leader right after initializing the node
         let global_placements = schemat.cluster.global_placements()
 
-        return {tcp_sender, tcp_receiver, agents: this.agents, local_placements: this.local_placements, global_placements}
+        return {tcp_sender, tcp_receiver, agents: this.agents, local_placements, global_placements}
     }
 
     async __restart__() {}

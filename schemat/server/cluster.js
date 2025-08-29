@@ -1,6 +1,7 @@
 import {AgentRole} from "../common/globals.js";
 import {assert, print, min, T} from "../common/utils.js";
 import {Counter, ObjectsMap} from "../common/structs.js";
+import {Struct} from "../common/catalog.js";
 import {Agent} from "./agent.js";
 
 
@@ -43,7 +44,9 @@ export class Placements {
 
     _placements = {}        // tag -> array-of-place-ids, where `tag` is a string, either "<id>-<role>" or "<id>",
                             // and place is a node ID or worker process ID
-
+    
+    clone() { return Struct.clone(this) }
+    
     __getstate__() {
         let placements = {...this._placements}
 
@@ -136,11 +139,11 @@ export class LocalPlacements extends Placements {
     from_agents(node) {
         for (let {worker, id, role} of node.agents)
             this.add(worker, id, role)                      // add regular agents to placements
-        this._add_hidden(node)
+        this.add_hidden(node)
         return this
     }
 
-    _add_hidden(node) {
+    add_hidden(node) {
         this.add(MASTER, node, '$master')                   // add node.$master agent
         for (let worker = 1; worker <= this.num_workers; worker++)
             this.add(worker, node, '$worker')               // add node.$worker agents
@@ -161,11 +164,11 @@ export class GlobalPlacements extends Placements {
             for (let {id, role} of node.agents)
                 this.add(node, id, role)                    // add regular agents to placements
 
-        this._add_hidden(nodes)
+        this.add_hidden(nodes)
         return this
     }
 
-    _add_hidden(nodes) {
+    add_hidden(nodes) {
         // add node.$master/$worker agents, they are deployed on <node> and nowhere else
         for (let node of nodes) {
             this.add(node, node, '$master')
