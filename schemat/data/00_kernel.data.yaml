@@ -791,6 +791,10 @@
       info: Number of worker processes to launch when this node (its master process)
         is restarted.
       "@": schemat/types/type.js:INTEGER
+    local_placements:
+      info: LocalPlacements object containing worker IDs for every (agent, role) 
+        running on this node.
+      "@": schemat/types/type.js:GENERIC
     agents:
       info: Array of agent status objects {worker, id (of agent), role, options, ...}
         describing agents running on different processes of this node. `worker`
