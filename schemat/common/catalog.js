@@ -364,6 +364,7 @@ export class Struct {
            References to WebObject instances are preserved, unlike in JSONx serialization + deserial.
          */
         if (target == null) return target
+        if (target instanceof schemat.WebObject) return target      // references to web objects NOT cloned
 
         if (target instanceof Catalog) {
             let entries = target._entries.map(([key, value]) => [key, Struct.clone(value)])
@@ -395,10 +396,9 @@ export class Struct {
 
         if (T.isPlain(target)) return Object.assign({}, target)
 
-        if (typeof target === 'object' && !(target instanceof schemat.WebObject))
-            throw new Error(`cannot clone a non-plain object (${target})`)
+        if (typeof target === 'object') throw new Error(`cannot clone a non-plain object (${target})`)
 
-        return target       // primitive values or unhandled types returned as-is
+        return target       // primitive values and unhandled types returned as-is
     }
 
     static equal(obj1, obj2) {
