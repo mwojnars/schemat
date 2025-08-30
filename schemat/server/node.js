@@ -228,14 +228,17 @@ export class Node extends Agent {
      */
 
     num_workers
-    local_placements        // LocalPlacements object containing agent -> worker placements
-    agents                  // array of AgentState objects
+    agents                  // array of {id, role, worker} describing worker placements of agents on this node
     http_host
     http_port
     https_port
     tcp_host
     tcp_port
     tcp_retry_interval
+
+    // $master state attributes:
+    // local_placements        // LocalPlacements object containing agent -> worker placements
+
 
     get worker_id()   { return schemat.kernel.worker_id }
     // get num_workers() { assert(this.is_master()); return schemat.kernel.workers.length }
