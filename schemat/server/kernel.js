@@ -216,9 +216,9 @@ export class Kernel {
     }
 
     async stop_agent(id, role) {
-        /* Stop all agents. Do it in reverse order, because newer agents may depend on the older ones. */
         // return Promise.all([...this.frames.values()].reverse().map(frame => frame.stop()))
         let frame = this.frames.get([id, role])
+        if (!frame) schemat._print(`Kernel.stop_agent(${id}, ${role}) frame`, frame)
         await frame.stop()
         this.frames.delete([id, role])
     }

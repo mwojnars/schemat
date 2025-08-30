@@ -626,7 +626,7 @@ export class Node extends Agent {
         // stop every agent from `stop`, in reverse order
         for (let worker of stop.reverse()) {
             local_placements.remove(worker, agent, role)
-            await this.$worker({worker})._stop_agent(agent.id, role)
+            await this.$worker({worker})._stop_agent(agent.id, role)    // FIXME: `role` must be imputed, not null
         }
         this.agents = local_placements.get_status()
 
