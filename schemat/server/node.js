@@ -473,13 +473,14 @@ export class Node extends Agent {
            If `role` is GENERIC ("$agent"), every target deployment is accepted no matter its declared role.
          */
         if (worker != null) return this                                 // if target worker was specified by the caller, the current node is assumed
+        if (!role || role === AgentRole.GENERIC) role = AgentRole.ANY
         if (this._find_worker(agent_id, role) != null) return this      // if agent is deployed here on this node, it is preferred over remote nodes
 
         // check `global_placements` to find the node
         let node = this.$state.global_placements.find_node(agent_id, role)
         if (node) return node
 
-        throw new Error(`agent [${agent_id}].${role ?? AgentRole.GENERIC} not found on any node in the cluster`)
+        throw new Error(`agent [${agent_id}].${role} not found on any node in the cluster`)
     }
 
     _find_worker(agent, role) {
