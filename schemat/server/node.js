@@ -265,8 +265,8 @@ export class Node extends Agent {
 
     async __load__() {
         if (SERVER && schemat.booting) {
-            let ids = this.local_placements.list_agent_ids()        // core agents (ex. data blocks) must be loaded initially from bootstrap DB
-            // let ids = this.agents.map(({id}) => id)
+            // let ids = this.local_placements.list_agent_ids()        // core agents (ex. data blocks) must be loaded initially from bootstrap DB
+            let ids = this.agents.map(({id}) => id)
             await Promise.all(ids.map(id => id !== schemat.cluster_id && schemat.load(id)))     // skip cluster object to avoid cyclic dependency
         }
         // this._save_placements()
@@ -291,8 +291,9 @@ export class Node extends Agent {
         await tcp_sender.start(this.tcp_retry_interval * 1000)
         await tcp_receiver.start(this.tcp_port)
 
-        let local_placements = this.local_placements.clone()
-        local_placements.add_hidden(this)
+        let local_placements = new LocalPlacements().from_agents(this)
+        // let local_placements = this.local_placements.clone()
+        // local_placements.add_hidden(this)
 
         // TODO: retrieve global_placements from cluster.$leader instead of relying on information stored in DB (can be outdated?)
         //       ... or, update global_placements from cluster.$leader right after initializing the node
