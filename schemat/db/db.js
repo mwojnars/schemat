@@ -454,7 +454,7 @@ export class Database extends WebObject {
         /* Delete `operator` object and all sequences that implement this operator across different rings
            starting in operator.__ring and moving up to the top ring.
          */
-        operator = schemat.as_object(operator)
+        operator = await schemat.as_loaded(operator)
         let __ring = operator.__ring
         assert(__ring, `unknown storage ring of ${operator}`)
 
