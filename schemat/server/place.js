@@ -103,7 +103,7 @@ export class Placements {
         place = _as_id(place)
 
         if (role === AgentRole.ANY) {
-            this._agent_tags(agent).forEach(tag => this._remove(place, tag))    // find all tags for this agent and remove them
+            this._agent_tags(agent).forEach(tag => this._remove(place, tag))    // remove all agent-role tags for this agent
             this._remove(place, agent)                                          // remove the ID-only entry since we're removing all roles
             return
         }
@@ -142,7 +142,7 @@ export class Placements {
         return this._placements[tag] || []
     }
 
-    find_first(agent, role = null) {
+    find_first(agent, role) {
         /* Return the first place where (agent, role) is deployed, or undefined if none found. */
         return this.find_all(agent, role)[0]    //.random()
     }

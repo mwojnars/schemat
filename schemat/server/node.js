@@ -483,9 +483,10 @@ export class Node extends Agent {
     }
 
     _find_worker(agent, role) {
-        /* On master, look up $state.agents placements to find the process where the agent runs in a given role
-           (or in any role if `role` is missing or GENERIC_ROLE).
+        /* On master, look up $state.local_placements to find the process where the agent runs in a given role
+           (or in any role if `role` is missing or GENERIC).
          */
+        if (!role || role === AgentRole.GENERIC) role = AgentRole.ANY
         return this.$state.local_placements.find_first(agent, role)
         // if (id === this.id) return MASTER       // node.$master itself is contacted at the master process
         // if (role === AgentRole.GENERIC) role = undefined
