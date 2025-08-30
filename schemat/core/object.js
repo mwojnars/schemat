@@ -133,8 +133,8 @@ class Intercept {
         let create_handler = (use_opts) => ({
             get(target, name) {
                 if (typeof name !== 'string' || name === '__getstate__') return
-                role ??= AgentRole.GENERIC
-                // if (role === AgentRole.GENERIC) role = undefined     // "$agent" as a requested role matches all role names at the target
+                // if (!role || role === AgentRole.GENERIC)    // "$agent" as a requested role matches all role names at the target
+                //     role = AgentRole.ANY
 
                 let frame = schemat.get_frame(id, role)
 

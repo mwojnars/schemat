@@ -323,9 +323,13 @@ export class ServerSchemat extends Schemat {
     get_frame(id, role = null) {
         /* Find and return the current execution frame of an agent. */
         // let id = (typeof id_or_obj === 'object') ? id_or_obj.id : id_or_obj
-        role ??= AgentRole.GENERIC
-        if (role !== AgentRole.GENERIC) return this.kernel.frames.get([id, role])
-        return this.kernel.frames.get_any_role(id)      // search for any role when the requested role is "$agent"
+
+        if (!role || role === AgentRole.GENERIC) role = AgentRole.ANY       // "$agent" as a requested role matches all role names at the target
+        return role === AgentRole.ANY ? this.kernel.frames.get_any_role(id) : this.kernel.frames.get([id, role])
+
+        // role ??= AgentRole.GENERIC
+        // if (role !== AgentRole.GENERIC) return this.kernel.frames.get([id, role])
+        // return this.kernel.frames.get_any_role(id)      // search for any role when the requested role is "$agent"
     }
 
 
