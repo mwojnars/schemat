@@ -1324,14 +1324,14 @@ export class WebObject {
         return schemat.cluster.$leader.remove_agent(this)
     }
 
-    // update_self(props = {}) {
-    //     /* Copy `props` entries into `this` and save changes automatically to DB. */
-    //     // schemat.tx.config({capture: false, atomic: true})
-    //     // schemat.tx.default({capture: false, atomic: true}) -- has effect unless the property was already configured by client
-    //     for (let [key, val] of Object.entries(props))
-    //         this[key] = val
-    //     return this
-    // }
+    update_self(props = {}) {
+        /* Copy all `props` entries into `this`. */
+        // schemat.tx.config({capture: false, atomic: true})
+        // schemat.tx.default({capture: false, atomic: true}) -- has effect unless the property was already configured by client
+        for (let [key, val] of Object.entries(props))
+            this[key] = val
+        return this
+    }
 
 
     /***  Versioning  ***/

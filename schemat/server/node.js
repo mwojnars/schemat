@@ -598,8 +598,9 @@ export class Node extends Agent {
             // request worker process to start the agent:
             await this.$worker({worker})._start_agent(agent.id, role)
         }
-        this.agents = agents    // new configuration of agents will be saved to DB
-        // await this.update_self({agents}).save()
+
+        await this.update_self({agents}).save()     // save new configuration of agents to DB
+        // this.agents = agents    // new configuration of agents will be saved to DB
     }
 
     async '$master.remove_agent'(agent, role = null) {
@@ -619,9 +620,9 @@ export class Node extends Agent {
         for (let {worker} of stop.reverse())
             await this.$worker({worker})._stop_agent(agent.id, role)
 
-        this.agents = agents
-        await this.save()
-        // await this.update_self({agents}).save()
+        await this.update_self({agents}).save()
+        // this.agents = agents
+        // await this.save()
 
         if (!this._has_agent(agent)) await agent.__uninstall__(this)
     }
