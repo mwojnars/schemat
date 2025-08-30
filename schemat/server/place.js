@@ -127,7 +127,7 @@ export class Placements {
     find_all(agent, role = AgentRole.ANY) {
         /* Return an array of places where (agent, role) is deployed; `agent` is an object or ID. */
         agent = _as_id(agent)
-        role ??= AgentRole.GENERIC
+        role ??= AgentRole.GENERIC      // FIXME: remove + treat GENERIC as a regular role
         let tag = (role === AgentRole.GENERIC || role === AgentRole.ANY) ? `${agent}` : this.tag(agent, role)
         return this._placements[tag] || []
     }
@@ -234,13 +234,13 @@ export class GlobalPlacements extends Placements {
     _is_local(node_id)      { return node_id === schemat.kernel.node_id }
     _is_hidden(tag, node)   { return tag.startsWith(`${node}-`) }       // node-on-itself placements are excluded from serialization
 
-    find_nodes(agent, role = null) {
+    find_nodes(agent, role) {
         /* Return an array of nodes where (agent, role) is deployed; `agent` is an object or ID. */
         let places = this.find_all(agent, role)
         return places.map(id => schemat.get_object(id))
     }
 
-    find_node(agent, role = null) {
+    find_node(agent, role) {
         /* Return the first node where (agent, role) is deployed, or undefined if none found. */
         let id = this.find_first(agent, role)
         if (id) return schemat.get_object(id)

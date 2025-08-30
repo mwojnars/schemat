@@ -608,7 +608,7 @@ export class Node extends Agent {
         // await this.update_self({agents}).save()     // save new configuration of agents to DB
     }
 
-    async '$master.remove_agent'(agent, role = null) {
+    async '$master.remove_agent'(agent, role = AgentRole.ANY) {
         /* Stop and uninstall (agent, role) from this node. All messages addressed to (agent, role) will be discarded from now on. */
         this._print(`$master.remove_agent() agent=${agent} role=${role}`)
         // this._print(`$master.remove_agent() agents:`, this.$state.agents.map(({worker, agent, role}) => ({worker, id: agent.id, role})))

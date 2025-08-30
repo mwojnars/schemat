@@ -1,3 +1,4 @@
+import {AgentRole} from "../common/globals.js";
 import {assert, print, min, T} from "../common/utils.js";
 import {ObjectsMap} from "../common/structs.js";
 import {Agent} from "./agent.js";
@@ -92,7 +93,7 @@ export class Cluster extends Agent {
         await this._broadcast_placements()
     }
 
-    async '$leader.remove_agent'(agent, role = null) {
+    async '$leader.remove_agent'(agent, role = AgentRole.ANY) {
         /* Find and stop all deployments of `agent` across the cluster. */
 
         if (this.is(agent)) throw new Error(`cannot directly remove cluster leader agent, ${agent}`)
