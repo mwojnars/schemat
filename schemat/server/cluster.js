@@ -176,22 +176,29 @@ export class GlobalPlacements extends Placements {
        Additionally, ID-only tags are included to support role-agnostic queries (i.e., when role="$agent").
      */
 
-    from_nodes(nodes) {
+    constructor(nodes) {
+        super()
         for (let node of nodes)
             for (let {id, role} of node.agents)
                 this.add(node, id, role)                    // add regular agents to placements
 
-        this.add_hidden(nodes)
-        return this
-    }
-
-    add_hidden(nodes) {
         // add node.$master/$worker agents, they are deployed on <node> and nowhere else
         for (let node of nodes) {
             this.add(node, node, '$master')
             this.add(node, node, '$worker')
         }
+        // this.add_hidden(nodes)
+
+        return this
     }
+
+    // add_hidden(nodes) {
+    //     // add node.$master/$worker agents, they are deployed on <node> and nowhere else
+    //     for (let node of nodes) {
+    //         this.add(node, node, '$master')
+    //         this.add(node, node, '$worker')
+    //     }
+    // }
 
     _is_local(node_id)      { return node_id === schemat.kernel.node_id }
     _is_hidden(tag, node)   { return tag.startsWith(`${node}-`) }       // node-on-itself placements are excluded from serialization
@@ -231,7 +238,7 @@ export class Cluster extends Agent {
         if (SERVER) await Promise.all(this.nodes.map(node => node.load()))
     }
 
-    global_placements() { return new GlobalPlacements().from_nodes(this.nodes) }
+    global_placements() { return new GlobalPlacements(this.nodes) }
 
 
     /***  Agent operations  ***/
@@ -239,7 +246,7 @@ export class Cluster extends Agent {
     async __start__({role}) {
         assert(role === '$leader')
         let nodes = new ObjectsMap(this.nodes.map(n => [n, new NodeState(n)]))
-        let global_placements = new GlobalPlacements().from_nodes(this.nodes)
+        let global_placements = new GlobalPlacements(this.nodes)
         return {nodes, global_placements}
     }
 
