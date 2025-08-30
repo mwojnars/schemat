@@ -482,11 +482,11 @@ export class Node extends Agent {
         throw new Error(`agent [${agent_id}].${role ?? AgentRole.GENERIC} not found on any node in the cluster`)
     }
 
-    _find_worker(id, role) {
+    _find_worker(agent, role) {
         /* On master, look up $state.agents placements to find the process where the agent runs in a given role
            (or in any role if `role` is missing or GENERIC_ROLE).
          */
-        return this.$state.local_placements.find_first(id, role)
+        return this.$state.local_placements.find_first(agent, role)
         // if (id === this.id) return MASTER       // node.$master itself is contacted at the master process
         // if (role === AgentRole.GENERIC) role = undefined
         // let status = this.$state.agents.find(st => st.id === id && (!role || st.role === role))
@@ -555,7 +555,12 @@ export class Node extends Agent {
     }
 
 
-    /* Starting & stopping agents */
+    /* Managing agents */
+
+    _has_agent(agent) {
+        /* True if there is at least one running instance of `agent` (any role) on this node. */
+        return this._find_worker(agent) != null
+    }
 
     async '$master.update_placements'(placements) {
         /* Update global_placements with a new configuration sent by cluster.$leader. */
@@ -568,8 +573,7 @@ export class Node extends Agent {
         agent = await schemat.as_loaded(agent)
 
         // install the agent unless it's already deployed here on this node
-        if (this._find_worker(agent.id, role) == null)
-            await agent.__install__(role, this)
+        if (!this._has_agent(agent)) await agent.__install__(this)
 
         this._print(`$master.deploy() agent=${agent} role=${role}`)
         // this._print(`$master.deploy() agents:`, this.$state.agents.map(({worker, agent, role}) => ({worker, id: agent.id, role})))
@@ -600,6 +604,8 @@ export class Node extends Agent {
 
     async '$master.remove_agent'(agent, role = null) {
         /* Stop and uninstall (agent, role) from this node. All messages addressed to (agent, role) will be discarded from now on. */
+        agent = await schemat.as_loaded(agent)
+        if (!this._has_agent(agent)) await agent.__uninstall__(this)
     }
 
     async '$master.stop_agent'(agent, {role, worker} = {}) {

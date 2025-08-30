@@ -33,12 +33,12 @@ export class Agent extends WebObject {
     get file_path() { throw new Error(`file_path not implemented for agent ${this}`) }
 
 
-    async __install__(role, node) {}
+    async __install__(node) {}
         /* Ideally, this method should be idempotent in case of failure and subsequent re-launch.
            `node` is the same as `schemat.node`, the latter can be used instead.
          */
 
-    async __uninstall__(role, node) {}
+    async __uninstall__(node) {}
 
     // async __deploy__() {}
     // async __destroy__() {}
