@@ -599,23 +599,17 @@ export class Node extends Agent {
             await this.$worker({worker})._start_agent(agent.id, role)
         }
         this.agents = agents    // new configuration of agents will be saved to DB
-        // await this.update_self({agents})
+        // await this.update_self({agents}).save()
     }
 
     async '$master.remove_agent'(agent, role = null) {
         /* Stop and uninstall (agent, role) from this node. All messages addressed to (agent, role) will be discarded from now on. */
-        agent = await schemat.as_loaded(agent)
-        if (!this._has_agent(agent)) await agent.__uninstall__(this)
-    }
+        this._print(`$master.remove_agent() agent=${agent} role=${role}`)
+        // this._print(`$master.remove_agent() agents:`, this.$state.agents.map(({worker, agent, role}) => ({worker, id: agent.id, role})))
 
-    async '$master.stop_agent'(agent, {role, worker} = {}) {
-        /* `agent` is a web object or ID. */
-        this._print(`$master.stop_agent() agent=${agent} role=${role}`)
-        // this._print(`$master.stop_agent() agents:`, this.$state.agents.map(({worker, agent, role}) => ({worker, id: agent.id, role})))
+        agent = await schemat.as_loaded(agent)
 
         let {agents} = this.$state
-        agent = schemat.as_object(agent)
-
         let stop = agents.filter(st => st.id === agent.id && (!role || st.role === role))
         if (!stop.length) return
 
@@ -626,7 +620,10 @@ export class Node extends Agent {
             await this.$worker({worker})._stop_agent(agent.id, role)
 
         this.agents = agents
-        // await this.update_self({agents})
+        await this.save()
+        // await this.update_self({agents}).save()
+
+        if (!this._has_agent(agent)) await agent.__uninstall__(this)
     }
 
     _rank_workers(agents) {
