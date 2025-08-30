@@ -454,6 +454,7 @@ export class Database extends WebObject {
         /* Delete `operator` object and all sequences that implement this operator across different rings
            starting in operator.__ring and moving up to the top ring.
          */
+        operator = schemat.as_object(operator)
         let __ring = operator.__ring
         assert(__ring, `unknown storage ring of ${operator}`)
 
@@ -461,8 +462,6 @@ export class Database extends WebObject {
         for (let ring of this.rings_reversed) {
             let seq = ring.sequence_by_operator.get(operator.id)
             if (seq) await seq.delete_self().save()
-            // TODO: run seq.blocks[i].__uninstall__()
-
             if (ring === __ring) break
         }
 
