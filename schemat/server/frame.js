@@ -59,7 +59,7 @@ export class FramesMap extends CustomMap {
 
     convert([id, role]) {
         role ??= AgentRole.GENERIC
-        return `${id}_${role}`          // 1234_$agent
+        return `${id}-${role}`          // 1234-$agent
     }
 
     reverse(key) {

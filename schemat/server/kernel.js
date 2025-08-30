@@ -215,12 +215,19 @@ export class Kernel {
         process.exit(0)
     }
 
-    async stop_agent(id, role) {
+    async stop_agent(id, role = AgentRole.ANY) {
         // return Promise.all([...this.frames.values()].reverse().map(frame => frame.stop()))
+        if (role === AgentRole.ANY) {
+            let frames = this.frames._frames_by_id.get(id) || []
+            this.frames._frames_by_id.delete(id);
+            [...this.frames.keys()].forEach(key => key[0] === id && this.frames.delete(key))
+            for (let frame of frames.reverse()) await frame.stop()
+        }
+
         let frame = this.frames.get([id, role])
-        if (!frame) schemat._print(`Kernel.stop_agent(${id}, ${role}) frame`, frame)
-        await frame.stop()
+        if (!frame) throw new Error(`no frame to stop for [${id}].${role} agent`)
         this.frames.delete([id, role])
+        await frame.stop()
     }
 }
 
