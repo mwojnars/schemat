@@ -585,22 +585,25 @@ export class Node extends Agent {
         if (replicas > this.num_workers) throw new Error(`no. of replicas (${replicas}) must be <= ${this.num_workers}`)
         if (replicas === -1) replicas = this.num_workers
 
-        let workers = worker ? (Array.isArray(worker) ? worker : [worker]) : this._rank_workers(agents)  //local_placements.rank_places()
+        let workers = worker ? (Array.isArray(worker) ? worker : [worker]) : local_placements.rank_places()  //this._rank_workers(agents)
         workers = workers.slice(0, replicas)
 
         if (role === null || role === AgentRole.GENERIC)
             role = undefined             // the default role "$agent" is passed implicitly
         
-        for (let worker of workers) {
+        for (let worker of workers) {                                   // start `agent` on each of `workers`
             assert(worker >= 1 && worker <= this.num_workers)
-            agents.push({worker, id: agent.id, role})
-
-            // request worker process to start the agent:
             await this.$worker({worker})._start_agent(agent.id, role)
+            local_placements.add(worker, agent, role)
+            // agents.push({worker, id: agent.id, role})
         }
 
+        agents = local_placements.get_status()
         await this.update_self({agents}).save()     // save new configuration of agents to DB
-        // this.agents = agents    // new configuration of agents will be saved to DB
+
+        // this.agents = local_placements.get_status()
+        // await this.save()
+
     }
 
     async '$master.remove_agent'(agent, role = null) {
