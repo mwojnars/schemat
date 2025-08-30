@@ -147,6 +147,8 @@ export class Placements {
     }
 }
 
+/**********************************************************************************************************************/
+
 export class LocalPlacements extends Placements {
     /* Map of agent deployments across worker processes of a node, as a mapping of agent-role tag -> array of worker IDs
        where the agent is deployed.
@@ -182,6 +184,8 @@ export class LocalPlacements extends Placements {
     _is_local(worker)       { return worker === Number(process.env.WORKER_ID) || 0 }  // schemat.kernel.worker_id
     _is_hidden(tag, worker) { return worker === MASTER }    // placements on master process are excluded from serialization
 }
+
+/**********************************************************************************************************************/
 
 export class GlobalPlacements extends Placements {
     /* Map of agent deployments across the cluster, as a mapping of agent-role tag -> array of node IDs
@@ -228,5 +232,3 @@ export class GlobalPlacements extends Placements {
         if (id) return schemat.get_object(id)
     }
 }
-
-
