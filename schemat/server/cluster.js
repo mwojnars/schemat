@@ -269,22 +269,28 @@ export class Cluster extends Agent {
         await node.$master.deploy_agent(agent, role)
         this.$state.nodes.get(node).num_agents++
         this.$state.global_placements.add(node, agent, role)
-
-        // TODO: node.$$master.update_placements(this.$state.global_placements)
+        await this._notify_placements()
     }
 
     async '$leader.dismiss_agent'(agent, role = null) {
         /* Find and stop all deployments of `agent` across the cluster. */
+
+        if (this.is(agent)) throw new Error(`cannot dismiss cluster leader agent, ${agent}`)
+        if (this.get_nodes().any(n => n.is(agent))) throw new Error(`cannot dismiss a node agent, ${agent}`)
+
         let nodes = this.$state.global_placements.find_nodes(agent, role)
         await Promise.all(nodes.map(async node => {
             await node.$master.dismiss_agent(agent, role)
             this.$state.global_placements.remove(node, agent, role)
-            // TODO: node.$$master.update_placements(this.$state.global_placements)
+            await this._notify_placements()
         }))
     }
 
     async _notify_placements() {
         /* Send updated global_placements to all nodes in the cluster. */
+        let nodes = this.get_nodes()
+        let placements = this.$state.global_placements
+        return Promise.all(nodes.map(node => node.$master.update_placements(placements)))
     }
 
     async '$leader.create_node'(props = {}) {
