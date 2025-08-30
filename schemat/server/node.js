@@ -620,11 +620,13 @@ export class Node extends Agent {
         for (let {worker} of stop.reverse())
             await this.$worker({worker})._stop_agent(agent.id, role)
 
-        await this.update_self({agents}).save()
-        // this.agents = agents
-        // await this.save()
+        await Promise.all([
+            this.update_self({agents}).save(),                      // save new configuration of agents to DB
+            !this._has_agent(agent) && agent.__uninstall__(this)    // uninstall the agent locally if the last deployment was removed
+        ])
 
-        if (!this._has_agent(agent)) await agent.__uninstall__(this)
+        // await this.update_self({agents}).save()
+        // if (!this._has_agent(agent)) await agent.__uninstall__(this)
     }
 
     _rank_workers(agents) {
