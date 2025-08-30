@@ -138,20 +138,26 @@ export class LocalPlacements extends Placements {
     /* Map of agent deployments across worker processes of a node, as a mapping of agent-role tag -> array of worker IDs
        where the agent is deployed.
      */
-    from_agents(node) {
+    constructor(node) {
+        super()
         for (let {worker, id, role} of node.agents)
             this.add(worker, id, role)                      // add regular agents to placements
-        this.add_hidden(node)
-        return this
-    }
 
-    add_hidden(node) {
+        // this.add_hidden(node)
         this.add(MASTER, node, '$master')                   // add node.$master agent
         for (let worker = 1; worker <= node.num_workers; worker++)
             this.add(worker, node, '$worker')               // add node.$worker agents
+
+        return this
     }
 
-    get_agents() {
+    // add_hidden(node) {
+    //     this.add(MASTER, node, '$master')                   // add node.$master agent
+    //     for (let worker = 1; worker <= node.num_workers; worker++)
+    //         this.add(worker, node, '$worker')               // add node.$worker agents
+    // }
+
+    get_status() {
         /* Produce a list of agent configurations for saving in DB. */
         let placements = this.compactify()
         return Object.entries(placements).map(([tag, worker]) => {

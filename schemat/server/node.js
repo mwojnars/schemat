@@ -274,7 +274,7 @@ export class Node extends Agent {
 
     // async _save_placements() {
     //     await sleep(3.0)
-    //     this.local_placements = new LocalPlacements().from_agents(this)
+    //     this.local_placements = new LocalPlacements(this)
     //     await this.save()
     // }
 
@@ -291,7 +291,7 @@ export class Node extends Agent {
         await tcp_sender.start(this.tcp_retry_interval * 1000)
         await tcp_receiver.start(this.tcp_port)
 
-        let local_placements = new LocalPlacements().from_agents(this)
+        let local_placements = new LocalPlacements(this)
         // let local_placements = this.local_placements.clone()
         // local_placements.add_hidden(this)
 
