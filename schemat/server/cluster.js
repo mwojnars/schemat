@@ -47,7 +47,9 @@ export class Placements {
     
     clone() { return Struct.clone(this) }
     
-    __getstate__() {
+    __getstate__() { return this.compactify() }
+
+    compactify() {
         let placements = {...this._placements}
 
         // clean up and compactify `placements`
@@ -147,6 +149,15 @@ export class LocalPlacements extends Placements {
         this.add(MASTER, node, '$master')                   // add node.$master agent
         for (let worker = 1; worker <= node.num_workers; worker++)
             this.add(worker, node, '$worker')               // add node.$worker agents
+    }
+
+    get_agents() {
+        /* Produce a list of agent configurations for saving in DB. */
+        let placements = this.compactify()
+        return Object.entries(placements).map(([tag, worker]) => {
+            let [id, role] = tag.split('-')
+            return {id: Number(id), role, worker}
+        })
     }
 
     _is_local(worker)       { return worker === Number(process.env.WORKER_ID) || 0 }  // schemat.kernel.worker_id
