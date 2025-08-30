@@ -222,6 +222,7 @@ export class Kernel {
             this.frames._frames_by_id.delete(id);
             [...this.frames.keys()].forEach(key => key[0] === id && this.frames.delete(key))
             for (let frame of frames.reverse()) await frame.stop()
+            return
         }
 
         let frame = this.frames.get([id, role])
