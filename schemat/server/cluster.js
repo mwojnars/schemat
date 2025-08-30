@@ -52,7 +52,29 @@ export class Placements {
     
     clone() { return Struct.clone(this) }
     
-    __getstate__() { return this.compactify() }
+    __getstate__() { return this._placements }          // no compactification as of now
+
+    static __setstate__(placements) {
+        let obj = new this()
+        obj._placements = placements
+        return obj
+    }
+
+    // __getstate__() { return this.compactify() }
+    //
+    // static __setstate__(placements) {
+    //     let obj = new this()
+    //     obj._placements = placements
+    //
+    //     for (let [tag, places] of Object.entries(placements)) {
+    //         if (!Array.isArray(places))
+    //             placements[tag] = places = [places]             // recover singleton arrays
+    //
+    //         let [id] = tag.split('-')
+    //         for (let place of places) obj._add(place, id)       // add ID-only entries
+    //     }
+    //     return obj
+    // }
 
     compactify() {
         let placements = {...this._placements}
@@ -65,20 +87,6 @@ export class Placements {
             else if (places.length === 1) placements[tag] = places[0]       // compact representation of singleton arrays
         }
         return placements
-    }
-
-    static __setstate__(placements) {
-        let obj = new this()
-        obj._placements = placements
-
-        for (let [tag, places] of Object.entries(placements)) {
-            if (!Array.isArray(places))
-                placements[tag] = places = [places]             // recover singleton arrays
-
-            let [id] = tag.split('-')
-            for (let place of places) obj._add(place, id)       // add ID-only entries
-        }
-        return obj
     }
 
     tag(id, role = null) {
@@ -307,7 +315,7 @@ export class Cluster extends Agent {
         await Promise.all(nodes.map(async node => {
             await node.$master.dismiss_agent(agent, role)
             this.$state.global_placements.remove(node, agent, role)
-            await this._notify_placements()     // FIXME
+            await this._notify_placements()
         }))
     }
 
