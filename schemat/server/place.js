@@ -155,6 +155,8 @@ export class LocalPlacements extends Placements {
      */
     constructor(node) {
         super()
+        if (!node) return
+
         for (let {worker, id, role} of node.agents)
             this.add(worker, id, role)                      // add regular agents to placements
 
@@ -162,8 +164,6 @@ export class LocalPlacements extends Placements {
         this.add(MASTER, node, '$master')                   // add node.$master agent
         for (let worker = 1; worker <= node.num_workers; worker++)
             this.add(worker, node, '$worker')               // add node.$worker agents
-
-        return this
     }
 
     // add_hidden(node) {
@@ -195,6 +195,8 @@ export class GlobalPlacements extends Placements {
 
     constructor(nodes) {
         super()
+        if (!nodes) return
+
         for (let node of nodes)
             for (let {id, role} of node.agents)
                 this.add(node, id, role)                    // add regular agents to placements
@@ -205,8 +207,6 @@ export class GlobalPlacements extends Placements {
             this.add(node, node, '$worker')
         }
         // this.add_hidden(nodes)
-
-        return this
     }
 
     // add_hidden(nodes) {
