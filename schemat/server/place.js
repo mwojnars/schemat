@@ -104,7 +104,7 @@ export class Placements {
 
         if (role === AgentRole.ANY) {
             // find all tags for this agent and remove them
-            let tags = Object.keys(this._placements).filter(tag => tag.startsWith(`${agent}-`))
+            let tags = this._agent_tags(agent)
             tags.forEach(tag => this._remove(place, tag))
             this._remove(place, agent)      // remove the ID-only entry since we're removing all roles
             return
@@ -112,10 +112,9 @@ export class Placements {
 
         this._remove(place, this.tag(agent, role))
 
-        // check if agent -> place link occurs elsewhere (in a different role), and if not, remove the ID-only entry
-        let remain = Object.keys(this._placements).filter(tag => tag.startsWith(`${agent}-`))
-        let elsewhere = remain.some(tag => this._placements[tag].includes(place))
-        if (!elsewhere) this._remove(place, agent)
+        // check if agent -> place link remains elsewhere (in a different role), and if not, remove the ID-only entry
+        let remain = this._agent_tags(agent).some(tag => this._placements[tag].includes(place))
+        if (!remain) this._remove(place, agent)
     }
 
     _remove(place, key) {
@@ -123,6 +122,11 @@ export class Placements {
         if (!places?.length) return
         this._placements[`${key}`] = places = places.filter(p => p !== place)
         if (!places.length) delete this._placements[`${key}`]
+    }
+
+    _agent_tags(agent_id) {
+        /* Array of all agent-role tags that match a given agent_id. */
+        return Object.keys(this._placements).filter(tag => tag.startsWith(`${agent_id}-`))
     }
 
     _is_local()  {}
