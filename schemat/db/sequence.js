@@ -180,7 +180,7 @@ export class Sequence extends WebObject {
 
     'edit.rmv_derived'(dest) {
         /* Remove a destination sequence from `derived` array. */
-        let pos = this.derived.indexOf(dest)
+        let pos = this.derived.findIndex(d => dest.is(d))
         if (pos !== -1) this.derived.splice(pos, 1)
     }
 
