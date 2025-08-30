@@ -598,7 +598,7 @@ export class Node extends Agent {
         // await this.update_self({agents})
     }
 
-    async '$master.dismiss_agent'(agent, role = null) {
+    async '$master.remove_agent'(agent, role = null) {
         /* Stop and uninstall (agent, role) from this node. All messages addressed to (agent, role) will be discarded from now on. */
     }
 

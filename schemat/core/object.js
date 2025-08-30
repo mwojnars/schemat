@@ -1318,10 +1318,10 @@ export class WebObject {
         return schemat.cluster.$leader.deploy_agent(this, role)
     }
 
-    async dismiss_agent() {     // dismiss/discard/expel/expulse/evict/remove/retract/cancel/revoke/recall/withdraw
+    async remove_agent() {     // dismiss/discard/expel/expulse/evict/remove/retract/cancel/revoke/recall/withdraw
         /* Stop & uninstall all running instances of this agent across the cluster, typically as a preparation
            before deletion of the object from DB. Reverts the effects of deploy_agent(). */
-        return schemat.cluster.$leader.dismiss_agent(this)
+        return schemat.cluster.$leader.remove_agent(this)
     }
 
     // async update_self(props = {}) {
