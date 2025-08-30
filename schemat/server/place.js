@@ -153,9 +153,13 @@ export class LocalPlacements extends Placements {
     /* Map of agent deployments across worker processes of a node, as a mapping of agent-role tag -> array of worker IDs
        where the agent is deployed.
      */
+
+    node_id
+
     constructor(node) {
         super()
         if (!node) return
+        this.node_id = node.id
 
         for (let {worker, id, role} of node.agents)
             this.add(worker, id, role)                      // add regular agents to placements
@@ -175,14 +179,16 @@ export class LocalPlacements extends Placements {
     get_status() {
         /* Produce a list of agent configurations for saving in DB. */
         let placements = this.compactify()
-        return Object.entries(placements).map(([tag, worker]) => {
+        return Object.entries(placements).map(([tag, workers]) => {
             let [id, role] = tag.split('-')
-            return {id: Number(id), role, worker}
-        })
+            if (!Array.isArray(workers)) workers = [workers]
+            return workers.map(worker => ({id: Number(id), role, worker}))
+        }).flat()
     }
 
-    _is_local(worker)       { return worker === Number(process.env.WORKER_ID) || 0 }  // schemat.kernel.worker_id
-    _is_hidden(tag, worker) { return worker === MASTER }    // placements on master process are excluded from serialization
+    _is_local(worker)       { return worker === Number(process.env.WORKER_ID) || 0 }    // schemat.kernel.worker_id
+    _is_hidden(tag, worker) { return Number(tag.split('-')[0]) === this.node_id }       // placements of node.$master/$worker excluded
+    // _is_hidden(tag, worker) { return worker === MASTER }    // placements on master process are excluded
 }
 
 /**********************************************************************************************************************/
