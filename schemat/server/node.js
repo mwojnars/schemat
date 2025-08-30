@@ -490,7 +490,7 @@ export class Node extends Agent {
     }
 
     _routing_role(role) {
-        /* For request routing, interpret role=GENERIC like ANY. */
+        /* For request routing, interpret role=GENERIC as ANY. */
         return role && role !== AgentRole.GENERIC ? role : AgentRole.ANY
     }
 
@@ -559,7 +559,7 @@ export class Node extends Agent {
     /* Managing agents */
 
     _has_agent(agent) {
-        /* True if there is at least one running instance of `agent` (any role) on this node. */
+        /* True if there is at least one running instance of `agent` (any role) on this node. For install/uninstall. */
         return this.$state.local_placements.has(agent)
     }
 

@@ -70,15 +70,14 @@ export class Placements {
         }
     }
 
-    tag(id, role = null) {
+    tag(id, role = AgentRole.GENERIC) {
         /* Placement tag. A string that identifies agent by its ID and particular role, like "1234-$agent". */
-        role ??= AgentRole.GENERIC
         assert(role[0] === '$', `incorrect name of agent role (${role})`)
         assert(id && typeof id !== 'object')
         return `${id}-${role}`
     }
 
-    add(place, agent, role = null) {
+    add(place, agent, role = AgentRole.GENERIC) {
         place = _as_id(place)           // convert node & agent objects to IDs
         agent = _as_id(agent)
         let tag = this.tag(agent, role)
@@ -93,7 +92,7 @@ export class Placements {
         else places.push(place)                             // put other node IDs at the end of the list
     }
 
-    // remove_all(agent, role = null) {
+    // remove_all(agent, role = AgentRole.ANY) {
     //     /* Remove all (agent, role) entries, no matter the place. */
     // }
 
@@ -130,9 +129,7 @@ export class Placements {
     _is_local()  {}
     _is_hidden() {}
 
-    has(agent, role = null) {
-        return this.find_first(agent, role) != null
-    }
+    has(agent, role)    { return this.find_first(agent, role) != null }
 
     find_all(agent, role = AgentRole.ANY) {
         /* Return an array of places where (agent, role) is deployed; `agent` is an object or ID. */
