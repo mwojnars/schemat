@@ -7,6 +7,11 @@ import {Agent} from "./agent.js";
 
 export const MASTER = 0        // ID of the master process; workers are numbered 1,2,...,N
 
+
+function _as_id(obj) {
+    return typeof obj === 'object' ? obj.id : obj
+}
+
 /**********************************************************************************************************************/
 
 export class NodeState {
@@ -85,9 +90,8 @@ export class Placements {
     }
 
     add(place, agent, role = null) {
-        if (typeof place === 'object') place = place.id     // convert node & agent objects to IDs
-        if (typeof agent === 'object') agent = agent.id
-
+        place = _as_id(place)           // convert node & agent objects to IDs
+        agent = _as_id(agent)
         let tag = this.tag(agent, role)
         this._add(place, tag)
         this._add(place, agent)
@@ -100,12 +104,32 @@ export class Placements {
         else places.push(place)                             // put other node IDs at the end of the list
     }
 
+    remove(place, agent, role = null) {
+        agent = _as_id(agent)
+        place = _as_id(place)
+        role ??= AgentRole.GENERIC
+
+        this._remove(place, this.tag(agent, role))
+
+        // check if agent -> place link occurs elsewhere (in a different role), and if not, remove the ID-only entry
+        let remain = Object.keys(this._placements).filter(tag => tag.startsWith(`${agent}-`))
+        let elsewhere = remain.some(tag => this._placements[tag].includes(place))
+        if (!elsewhere) this._remove(place, agent)
+    }
+
+    _remove(place, key) {
+        let places = this._placements[`${key}`]
+        if (!places?.length) return
+        this._placements[`${key}`] = places = places.filter(p => p !== place)
+        if (!places.length) delete this._placements[`${key}`]
+    }
+
     _is_local()  {}
     _is_hidden() {}
 
     find_all(agent, role = null) {
         /* Return an array of places where (agent, role) is deployed; `agent` is an object or ID. */
-        if (typeof agent === 'object') agent = agent.id
+        agent = _as_id(agent)
         role ??= AgentRole.GENERIC
         let tag = (role === AgentRole.GENERIC) ? `${agent}` : this.tag(agent, role)
         return this._placements[tag] || []
@@ -226,11 +250,12 @@ export class Cluster extends Agent {
 
     $leader state attributes:
         $state.nodes    ObjectsMap of NodeState objects keeping the most recent stats on node's health and activity
-        $state.agents   map of (id -> node) + (id_role -> node) placements of agents across the cluster (global placements), no worker info;
+
+        $state.global_placements
+                        map of (id -> node) + (id_role -> node) placements of agents across the cluster (global placements), no worker info;
                         similar to .global_placements, but available on $leader only and updated immediately when an agent is deployed/dismissed to a node;
                         high-level routing table for directing agent requests to proper nodes in the cluster;
                         each node additionally has a low-level routing table for directing requests to a proper worker process;
-        $state.global_placements
     */
 
 
@@ -282,7 +307,7 @@ export class Cluster extends Agent {
         await Promise.all(nodes.map(async node => {
             await node.$master.dismiss_agent(agent, role)
             this.$state.global_placements.remove(node, agent, role)
-            await this._notify_placements()
+            await this._notify_placements()     // FIXME
         }))
     }
 
