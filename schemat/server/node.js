@@ -429,7 +429,7 @@ export class Node extends Agent {
            Collect all responses and return an array of results. Throw an error if any of the peers failed.
          */
         let {agent_id, role} = RPC_Request.parse(request)
-        let nodes = this.$state.global_placements.find_nodes(agent_id, role)
+        let nodes = this.$state.global_placements.find_nodes(agent_id, this._routing_role(role))
         let results = await Promise.all(nodes.map(node => node.is(this) ? this.rpc_recv(request) : this.tcp_send(node, request)))
         return results.flat()   // in broadcast mode, every peer returns an array of results, so they must be flattened at the end
     }
@@ -437,9 +437,7 @@ export class Node extends Agent {
     async rpc_recv(message) {
         /* Route an incoming RPC request to the right process on this node and execute. */
         let {worker, agent_id, role, broadcast} = RPC_Request.parse(message)
-
         // TODO: broadcast
-        if (broadcast) {}
 
         worker ??= this._find_worker(agent_id, role)
         if (worker == null) throw new Error(`agent [${agent_id}] not found on this node`)
@@ -472,8 +470,8 @@ export class Node extends Agent {
            is chosen at random, or by hashing (TODO), or according to a routing policy...
            If `role` is GENERIC ("$agent"), every target deployment is accepted no matter its declared role.
          */
+        role = this._routing_role(role)
         if (worker != null) return this                                 // if target worker was specified by the caller, the current node is assumed
-        if (!role || role === AgentRole.GENERIC) role = AgentRole.ANY
         if (this._find_worker(agent_id, role) != null) return this      // if agent is deployed here on this node, it is preferred over remote nodes
 
         // check `global_placements` to find the node
@@ -487,12 +485,13 @@ export class Node extends Agent {
         /* On master, for request routing, look up $state.local_placements to find the process where `agent` runs in a given role
            (or in any role if `role` is missing or GENERIC).
          */
-        if (!role || role === AgentRole.GENERIC) role = AgentRole.ANY
+        role = this._routing_role(role)
         return this.$state.local_placements.find_first(agent, role)
-        // if (id === this.id) return MASTER       // node.$master itself is contacted at the master process
-        // if (role === AgentRole.GENERIC) role = undefined
-        // let status = this.$state.agents.find(st => st.id === id && (!role || st.role === role))
-        // return status?.worker
+    }
+
+    _routing_role(role) {
+        /* For request routing, interpret role=GENERIC like ANY. */
+        return role && role !== AgentRole.GENERIC ? role : AgentRole.ANY
     }
 
 
