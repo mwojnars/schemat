@@ -116,6 +116,10 @@ export class Placements {
     _is_local()  {}
     _is_hidden() {}
 
+    has(agent, role = null) {
+        return this.find_first(agent, role) != null
+    }
+
     find_all(agent, role = null) {
         /* Return an array of places where (agent, role) is deployed; `agent` is an object or ID. */
         agent = _as_id(agent)
