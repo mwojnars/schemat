@@ -212,14 +212,6 @@ class RPC_Response {
 
 /**********************************************************************************************************************/
 
-export class AgentState {
-    id          // agent.id
-    role        // name of the role: "$leader" ...
-    worker      // ID of the worker process (1,2,...)
-}
-
-/**********************************************************************************************************************/
-
 export class Node extends Agent {
     /* Node of a Schemat cluster. Technically, each node is a local (master) process launched independently
        on a particular machine, together with its child (worker) processes. Nodes communicate with each other
