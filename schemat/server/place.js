@@ -93,10 +93,14 @@ export class Placements {
         else places.push(place)                             // put other node IDs at the end of the list
     }
 
-    remove(place, agent, role = null) {
+    // remove_all(agent, role = null) {
+    //     /* Remove all (agent, role) entries, no matter the place. */
+    // }
+
+    remove(place, agent, role = AgentRole.GENERIC) {
+        /* Remove (agent, role) -> place entry. */
         agent = _as_id(agent)
         place = _as_id(place)
-        role ??= AgentRole.GENERIC
 
         this._remove(place, this.tag(agent, role))
 

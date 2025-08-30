@@ -559,7 +559,7 @@ export class Node extends Agent {
 
     _has_agent(agent) {
         /* True if there is at least one running instance of `agent` (any role) on this node. */
-        return this._find_worker(agent) != null
+        return this.$state.local_placements.has(agent)
     }
 
     async '$master.update_placements'(placements) {
@@ -578,7 +578,10 @@ export class Node extends Agent {
         this._print(`$master.deploy() agent=${agent} role=${role}`)
         // this._print(`$master.deploy() agents:`, this.$state.agents.map(({worker, agent, role}) => ({worker, id: agent.id, role})))
 
-        let {agents, local_placements} = this.$state
+        let {local_placements} = this.$state
+        if (local_placements.has(agent, role || AgentRole.GENERIC))     // FIXME: role
+            throw new Error(`agent ${agent} is already running on node ${this}`)
+
         // if (agents.has(agent)) throw new Error(`agent ${agent} is already running on node ${this}`)
         // agents.set(agent, {params, role, workers})
 
@@ -598,12 +601,11 @@ export class Node extends Agent {
             // agents.push({worker, id: agent.id, role})
         }
 
-        agents = local_placements.get_status()
-        await this.update_self({agents}).save()     // save new configuration of agents to DB
+        this.agents = local_placements.get_status()
+        await this.save()
 
-        // this.agents = local_placements.get_status()
-        // await this.save()
-
+        // agents = local_placements.get_status()
+        // await this.update_self({agents}).save()     // save new configuration of agents to DB
     }
 
     async '$master.remove_agent'(agent, role = null) {
@@ -613,23 +615,26 @@ export class Node extends Agent {
 
         agent = await schemat.as_loaded(agent)
 
-        let {agents} = this.$state
-        let stop = agents.filter(st => st.id === agent.id && (!role || st.role === role))
+        let {local_placements} = this.$state
+        let stop = local_placements.find_all(agent, role)
+
+        // let stop = agents.filter(st => st.id === agent.id && (!role || st.role === role)).map(({worker}) => worker)
+        // this.$state.agents = agents = agents.filter(st => !(st.id === agent.id && (!role || st.role === role)))
+
         if (!stop.length) return
 
-        this.$state.agents = agents = agents.filter(st => !(st.id === agent.id && (!role || st.role === role)))
-
         // stop every agent from `stop`, in reverse order
-        for (let {worker} of stop.reverse())
+        for (let worker of stop.reverse()) {
+            local_placements.remove(worker, agent, role)
             await this.$worker({worker})._stop_agent(agent.id, role)
+        }
+        this.agents = local_placements.get_status()
 
         await Promise.all([
-            this.update_self({agents}).save(),                      // save new configuration of agents to DB
+            // this.update_self({agents}).save(),                   // save new configuration of agents to DB
+            this.save(),                                            // save new configuration of agents to DB
             !this._has_agent(agent) && agent.__uninstall__(this)    // uninstall the agent locally if the last deployment was removed
         ])
-
-        // await this.update_self({agents}).save()
-        // if (!this._has_agent(agent)) await agent.__uninstall__(this)
     }
 
     _rank_workers(agents) {
