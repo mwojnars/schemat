@@ -76,7 +76,7 @@ export class Cluster extends Agent {
         return [...this.$state.nodes.keys()]
     }
 
-    async '$leader.deploy_agent'(agent, role = null) {
+    async '$leader.deploy_agent'(agent, role = AgentRole.GENERIC) {
         /* Find the least busy node and deploy `agent` there. */
         // TODO: only look among nodes where (agent, role) is not deployed yet (!)
         let nodes = [...this.$state.nodes.values()]

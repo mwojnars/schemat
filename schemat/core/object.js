@@ -1311,7 +1311,7 @@ export class WebObject {
         return obj
     }
 
-    async deploy_agent(role = null) {
+    async deploy_agent(role = AgentRole.GENERIC) {
         /* Deploy `this` as an agent somewhere in the cluster. Should only be called on web objects of Agent category.
            This method is defined here instead of Agent class to allow its invocation on stubs.
          */
