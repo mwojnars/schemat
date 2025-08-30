@@ -95,8 +95,8 @@ export class Cluster extends Agent {
     async '$leader.remove_agent'(agent, role = null) {
         /* Find and stop all deployments of `agent` across the cluster. */
 
-        if (this.is(agent)) throw new Error(`cannot dismiss cluster leader agent, ${agent}`)
-        if (this.get_nodes().any(n => n.is(agent))) throw new Error(`cannot dismiss a node agent, ${agent}`)
+        if (this.is(agent)) throw new Error(`cannot directly remove cluster leader agent, ${agent}`)
+        if (this.get_nodes().some(n => n.is(agent))) throw new Error(`cannot directly remove a node agent, ${agent}`)
 
         let nodes = this.$state.global_placements.find_nodes(agent, role)
         await Promise.all(nodes.map(async node => {
