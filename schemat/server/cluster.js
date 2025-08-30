@@ -57,6 +57,7 @@ export class Placements {
     static __setstate__(placements) {
         let obj = new this()
         obj._placements = placements
+        this._reorder_locals()
         return obj
     }
 
@@ -87,6 +88,18 @@ export class Placements {
             else if (places.length === 1) placements[tag] = places[0]       // compact representation of singleton arrays
         }
         return placements
+    }
+
+    _reorder_locals() {
+        /* After deserialization on a different node, fix the ordering of places in each array so that the "local" place is listed first. */
+        for (let places of Object.values(this._placements)) {
+            let pos = places.findIndex(place => this._is_local(place))      // position of the "local" place
+            if (pos > 0) {
+                let local = places[pos]
+                places.splice(pos, 1)       // remove "local" from the list
+                places.unshift(local)       // put it at the beginning of the list
+            }
+        }
     }
 
     tag(id, role = null) {
