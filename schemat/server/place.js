@@ -103,10 +103,8 @@ export class Placements {
         place = _as_id(place)
 
         if (role === AgentRole.ANY) {
-            // find all tags for this agent and remove them
-            let tags = this._agent_tags(agent)
-            tags.forEach(tag => this._remove(place, tag))
-            this._remove(place, agent)      // remove the ID-only entry since we're removing all roles
+            this._agent_tags(agent).forEach(tag => this._remove(place, tag))    // find all tags for this agent and remove them
+            this._remove(place, agent)                                          // remove the ID-only entry since we're removing all roles
             return
         }
 
@@ -125,7 +123,7 @@ export class Placements {
     }
 
     _agent_tags(agent_id) {
-        /* Array of all agent-role tags that match a given agent_id. */
+        /* Array of all agent-role tags that match a given agent_id, no matter the role. */
         return Object.keys(this._placements).filter(tag => tag.startsWith(`${agent_id}-`))
     }
 
