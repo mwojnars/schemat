@@ -97,8 +97,8 @@ export class Placements {
     //     /* Remove all (agent, role) entries, no matter the place. */
     // }
 
-    remove(place, agent, role = AgentRole.GENERIC) {
-        /* Remove (agent, role) -> place entry. */
+    remove(place, agent, role = AgentRole.ANY) {
+        /* Remove the entry: (agent, role) -> place. If role=ANY, all entries for different roles are removed. */
         agent = _as_id(agent)
         place = _as_id(place)
 
