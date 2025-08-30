@@ -559,6 +559,7 @@ export class Node extends Agent {
 
     async '$master.update_placements'(placements) {
         /* Update global_placements with a new configuration sent by cluster.$leader. */
+        // this._print(`Node.$master.update_placements() received:`, placements._placements)
         this.$state.global_placements = placements
     }
 
