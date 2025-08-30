@@ -124,11 +124,11 @@ export class Placements {
         return this.find_first(agent, role) != null
     }
 
-    find_all(agent, role = null) {
+    find_all(agent, role = AgentRole.ANY) {
         /* Return an array of places where (agent, role) is deployed; `agent` is an object or ID. */
         agent = _as_id(agent)
         role ??= AgentRole.GENERIC
-        let tag = (role === AgentRole.GENERIC) ? `${agent}` : this.tag(agent, role)
+        let tag = (role === AgentRole.GENERIC || role === AgentRole.ANY) ? `${agent}` : this.tag(agent, role)
         return this._placements[tag] || []
     }
 
