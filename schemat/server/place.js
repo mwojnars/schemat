@@ -102,6 +102,14 @@ export class Placements {
         agent = _as_id(agent)
         place = _as_id(place)
 
+        if (role === AgentRole.ANY) {
+            // find all tags for this agent and remove them
+            let tags = Object.keys(this._placements).filter(tag => tag.startsWith(`${agent}-`))
+            tags.forEach(tag => this._remove(place, tag))
+            this._remove(place, agent)      // remove the ID-only entry since we're removing all roles
+            return
+        }
+
         this._remove(place, this.tag(agent, role))
 
         // check if agent -> place link occurs elsewhere (in a different role), and if not, remove the ID-only entry
