@@ -390,7 +390,7 @@ export class Block extends Agent {
     }
 
     async '$agent.background'(seq) {
-        /* */
+        /* On $master, background processing triggers another step of backfilling to derived sequences. */
         // this._print(`background job...`)
         let {monitors} = this.$state
         if (!monitors) return
@@ -429,7 +429,7 @@ export class Block extends Agent {
 
     /***  Bulk modifications  ***/
 
-    async '$agent.erase'() {
+    async '$master.erase'() {
         /* Remove all records from this block. */
         return this.$state.stores.map(s => s.erase())[0]
     }
@@ -777,10 +777,10 @@ export class DataBlock extends Block {
         })
     }
 
-    async '$agent.erase'() {
+    async '$master.erase'() {
         this.$state.autoincrement = 0
         this.$state.reserved = new Set()
-        return super['$agent.erase']()
+        return super['$master.erase']()
     }
 
     _cascade_delete(prev, next = null) {

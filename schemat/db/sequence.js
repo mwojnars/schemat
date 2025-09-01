@@ -118,7 +118,7 @@ export class Sequence extends WebObject {
         yield* await block_start.$agent.scan(opts)
     }
 
-    // async erase()   { return Promise.all(this.blocks.map(b => b.$agent.erase())) }
+    // async erase()   { return Promise.all(this.blocks.map(b => b.$master.erase())) }
     // async flush()   { return Promise.all(this.blocks.map(b => b.$agent.flush())) }
 
     async create_derived(operator) {
@@ -158,7 +158,7 @@ export class Sequence extends WebObject {
         }
     }
 
-    async erase() { return Promise.all(this.blocks.map(b => b.$agent.erase())) }
+    async erase() { return Promise.all(this.blocks.map(b => b.$master.erase())) }
 
     async rebuild_derived() {
         /* Erase derived sequences and build them from scratch. For development use only. */
@@ -171,7 +171,7 @@ export class Sequence extends WebObject {
         delete this.filled
         delete this.filled_ranges
 
-        await Promise.all(this.blocks.map(b => b.$agent.erase()))
+        await Promise.all(this.blocks.map(b => b.$master.erase()))
         await this.save({broadcast: true})
         await sleep(2.0)    // workaround for missing broadcasting functionality
 
