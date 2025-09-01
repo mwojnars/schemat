@@ -299,6 +299,7 @@ export class Frame {
                 error = ex
             })
             if (!error && schemat.tx.is_nonempty()) await schemat.tx.save()
+            // schemat._print(`exec() of ${this.agent}.${method}(${args}) done`)
             return callback ? callback(result, error) : result
         }
         return agent.app_context(tx ? () => schemat.in_transaction(callB, tx, false) : callB, caller_ctx)
