@@ -46,9 +46,11 @@ export class Sequence extends WebObject {
 
     async __delete__() {
         /* Upon delete, the sequence must delete itself from source.derived and stop the agents. */
-        this.source?.edit.rmv_derived(this).save({broadcast: true})   // at this point, change propagation from source blocks to this.blocks should cease
+        await this.source?.edit.rmv_derived(this).save()
+        this._print(`Sequence.__delete__() removed self from ${this.source}.derived`)
         await sleep(1.0)
-        await Promise.all(this.blocks.map(b => b.remove_agent()))
+        // at this point, change propagation from source blocks to this.blocks should cease (??)
+        // await Promise.all(this.blocks.map(b => b.remove_agent()))
     }
 
     async __load__() {
