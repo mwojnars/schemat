@@ -290,6 +290,9 @@ export class Frame {
         let [_, func] = this._find_command(command)     // agent may have been replaced while pausing, the existence of `command` must be verified again
         let callA = () => func.call(agent, ...args)
 
+        // TODO: timeout
+        // TODO: timeout in block.$state.lock/lock_row()
+
         let callB = async () => {
             // agent._print(`exec() of ${method}(${args}) context=${schemat.current_context}`)
             let error, result = await this._tracked(this._frame_context(agent, callA)).catch(ex => {

@@ -393,16 +393,17 @@ export class Block extends Agent {
         /* On $master, background processing triggers another step of backfilling to derived sequences. */
         // this._print(`background job...`)
         let {monitors} = this.$state
-        if (!monitors) return
+        if (monitors) return this.$state.lock_all(async () =>
+        {
+            // identify the monitors that perform backfilling right now
+            monitors = [...monitors.values()].filter(m => m.is_backfilling())
+            if (!monitors.length) return 10.0       // increase the delay between background job calls if no backfilling
 
-        // identify the monitors that perform backfilling right now
-        monitors = [...monitors.values()].filter(m => m.is_backfilling())
-        if (!monitors.length) return 10.0       // increase the delay between background job calls if no backfilling
+            for (let monitor of monitors)
+                await monitor.backfill()
 
-        for (let monitor of monitors)
-            await monitor.backfill()
-
-        return 1.0
+            return 1.0
+        })
     }
 
     async '$master.backfill'(seq) {
@@ -424,6 +425,14 @@ export class Block extends Agent {
             assert(!seq.filled)
             this.$state.monitors.set(seq, new Monitor(this, seq, true))
         // })
+    }
+
+    async '$master.stop_monitor'(seq) {
+        return this.$state.lock_all(() => {
+            let monitor = this.$state.monitors.get(seq)
+            // TODO: monitor.destroy()
+            this.$state.monitors.delete(seq)
+        })
     }
 
 
