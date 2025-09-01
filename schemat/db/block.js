@@ -531,7 +531,7 @@ export class DataBlock extends Block {
         return this._move_down(id, req)?.select(id, req)
     }
 
-    async '$agent.insert'(entries, {id, ...opts} = {}) {
+    async '$master.insert'(entries, {id, ...opts} = {}) {
         /* Insert a number of `entries` as new objects into this block. Each entry is a pair: [provisional-id, data].
            Option `id`: target ID to be assigned to the new object, only if `entries` contains exactly one entry.
         */
@@ -679,7 +679,7 @@ export class DataBlock extends Block {
 
     // _reclaim_id(...ids)
 
-    async '$agent.update'(id, edits, req) {
+    async '$master.update'(id, edits, req) {
         /* Check if `id` is present in this block. If not, pass the request to a lower ring, or do nothing if no more rings.
            Otherwise, load the data associated with `id`, apply `edits` to it, and save a modified item
            in this block (if the ring permits), or forward the write request back to a higher ring.
@@ -715,7 +715,7 @@ export class DataBlock extends Block {
         })
     }
 
-    async '$agent.upsave'(id, data, req) {
+    async '$master.upsave'(id, data, req) {
         /* Update, or insert an updated object, after the request `req` has been forwarded to a higher ring. */
         let key = this.encode_id(id)
         return this.$state.lock_row(key, async () =>
@@ -742,7 +742,7 @@ export class DataBlock extends Block {
         schemat.register_changes({id, data})
     }
 
-    async '$agent.delete'(id, req) {
+    async '$master.delete'(id, req) {
         /* Try deleting the `id` record. Forward to a lower ring if not present here in this block.
            Throw an error if the `id` is found in a read-only ring. Do nothing if `id` is not found at all.
          */
