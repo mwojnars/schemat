@@ -462,6 +462,7 @@ export class Database extends WebObject {
 
         // iterate from the top ring down to __ring
         for (let ring of this.rings_reversed) {
+            await ring = ring.reload()      // try to get a fresher copy of ring, in case the sequence was added only recently
             let seq = ring.sequence_by_operator.get(operator.id)
             this._print(`remove_operator() ring=${ring} seq=${seq}`)
             if (seq) {
