@@ -455,12 +455,15 @@ export class Database extends WebObject {
            starting in operator.__ring and moving up to the top ring.
          */
         operator = await schemat.as_loaded(operator)
+        this._print(`remove_operator(${operator}) ...  rings_reversed ${this.rings_reversed}`)
+
         let __ring = operator.__ring
         assert(__ring, `unknown storage ring of ${operator}`)
 
         // iterate from the top ring down to __ring
         for (let ring of this.rings_reversed) {
             let seq = ring.sequence_by_operator.get(operator.id)
+            this._print(`remove_operator() ring=${ring} seq=${seq}`)
             if (seq) {
                 this._print(`remove_operator() deleting sequence ${seq} ...`)
                 await seq.delete_self().save()
@@ -470,7 +473,10 @@ export class Database extends WebObject {
         }
 
         // TODO: delete derived operators (derived sequences are removed automatically)
+        this._print(`remove_operator() deleting operator ...`)
         await operator.delete_self().save()
+
+        this._print(`remove_operator(${operator}) done`)
     }
 
     async 'ax.admin_reinsert'(ids, {id: new_id, ring, compact = false} = {}) {
