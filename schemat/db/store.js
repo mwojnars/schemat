@@ -178,6 +178,7 @@ export class JsonStore extends MemoryStore {
             let key_json = JSON.stringify(key)  //Array.from(key_binary))
             return val_json ? `[${key_json}, ${val_json}]` : `[${key_json}]`
         })
+        // schemat._print(`JsonStore._flush() flushing ${this.filename} ...`)
         fs.writeFileSync(this.filename, lines.join('\n') + '\n', 'utf8')
     }
 }

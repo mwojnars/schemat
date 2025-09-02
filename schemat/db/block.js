@@ -254,13 +254,12 @@ export class Block extends Agent {
         await Promise.all(this.$state.stores.toReversed().map(store => store.close()))
     }
 
-    async _clear_files() {
+    async _clear_files(force = true) {
         /* Remove all storage files/folders of this block. Backfill status files are NOT removed. */
-        // this._print(`_clear_files() start...`)
         let paths = this.storage$.map(s => this._get_store_path(s))
-        await Promise.all(paths.map(path => fs.rmSync(path, {recursive: true, force: true})))
-        // await sleep(2)
-        // this._print(`_clear_files() stop`)
+        // this._print(`_clear_files() paths`, paths)
+        paths.map(path => fs.rmSync(path, {recursive: true, force}))
+        // this._print(`_clear_files() done`)
     }
 
     async _create_store(storage, path = null) {
@@ -429,9 +428,11 @@ export class Block extends Agent {
 
     async '$master.stop_monitor'(seq) {
         return this.$state.lock_all(() => {
+            this._print(`$master.stop_monitor(${seq}) start, monitors =`, [...this.$state.monitors.values()].map(m => ([m.src.id, m.dst.id])))
             let monitor = this.$state.monitors.get(seq)
             // TODO: monitor.destroy()
             this.$state.monitors.delete(seq)
+            this._print(`$master.stop_monitor(${seq}) done, monitors =`, [...this.$state.monitors.values()].map(m => ([m.src.id, m.dst.id])))
         })
     }
 
