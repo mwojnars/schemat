@@ -792,7 +792,7 @@
         is restarted.
       "@": schemat/types/type.js:INTEGER
     local_placements:
-      info: LocalPlacements object containing worker IDs for every (agent, role) 
+      info: LocalPlacements object containing worker IDs for every (agent, role)
         running on this node.
       "@": schemat/types/type.js:GENERIC
     agents:
