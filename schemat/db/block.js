@@ -89,6 +89,11 @@ export class Monitor {
             fs.unlinkSync(path)     // remove the backfill file when initialization of `seq` was completed and confirmed in dst.filled
     }
 
+    destroy() {
+        /* Permanently remove this monitor and its resources from the local system. */
+        fs.rmSync(this._backfill_path, {recursive: true, force: true})      // missing file is silently ignored
+    }
+
     is_backfilling() {
         /* True if the target sequence is not yet initialized and the backfill process from `src` is still ongoing. */
         return !!this.backfill_offset
@@ -134,12 +139,6 @@ export class Monitor {
         let stop  = offset || this.src.keys_stop
         this.dst.get_remote().edit.commit_backfill(start, stop).save()
     }
-
-    // _finalize_backfill() {
-    //     /* Finalize the backfill process: clear the offset, remove file. */
-    //     this.backfill_offset = null
-    //     trycatch(() => fs.unlinkSync(this._backfill_path))      // ignore errors, esp. ENOENT = "file not found"
-    // }
 
     _in_pending_zone(key) {
         /* During backfilling, changes in the pending zone (above offset, unprocessed yet) are ignored. */
@@ -426,13 +425,17 @@ export class Block extends Agent {
         // })
     }
 
-    async '$master.stop_monitor'(seq) {
+    async '$master.remove_monitor'(seq) {
+        /* Remove the monitor that forwards changes to `seq` sequence. Called during derived sequence removal,
+           should be coupled with a corresponding update in this.sequence.derived to prevent reinstantiation
+           of the monitor on next restart of the agent.
+         */
         return this.$state.lock_all(() => {
-            this._print(`$master.stop_monitor(${seq}) start, monitors =`, [...this.$state.monitors.values()].map(m => ([m.src.id, m.dst.id])))
+            this._print(`$master.remove_monitor(${seq}) start, monitors =`, [...this.$state.monitors.values()].map(m => ([m.src.id, m.dst.id])))
             let monitor = this.$state.monitors.get(seq)
-            // TODO: monitor.destroy()
             this.$state.monitors.delete(seq)
-            this._print(`$master.stop_monitor(${seq}) done, monitors =`, [...this.$state.monitors.values()].map(m => ([m.src.id, m.dst.id])))
+            monitor.destroy()
+            this._print(`$master.remove_monitor(${seq}) done, monitors =`, [...this.$state.monitors.values()].map(m => ([m.src.id, m.dst.id])))
         })
     }
 
