@@ -63,7 +63,8 @@ export class FramesMap extends CustomMap {
     }
 
     reverse(key) {
-        let [id, role] = key.split('_')
+        let [id, role] = key.split('-')
+        assert(role)
         return [Number(id), role]
     }
 
