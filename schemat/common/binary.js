@@ -143,7 +143,7 @@ export function bytes_int(n) {
 //  Binary encoding/decoding of different data types
 //
 
-function encode_uint(value, length = 0, required = false) {
+export function encode_uint(value, length = 0, required = false) {
     /* Binary encoding of an unsigned integer in a field of `length` bytes.
        If length is missing or 0, magnitude of the value is detected automatically and the value
        is encoded on the minimum required no. of bytes, between 1 and 7 (larger values exceed MAX_SAFE_INTEGER)
@@ -170,7 +170,7 @@ function encode_uint(value, length = 0, required = false) {
     return buffer
 }
 
-function decode_uint(input, length = 0, required = false) {
+export function decode_uint(input, length = 0, required = false) {
     /* Reverse of encode_uint(). `input` must be a BinaryInput (not Uint8Array). */
     let adaptive = !length
     let offset = adaptive ? 1 : 0
