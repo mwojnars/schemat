@@ -1,7 +1,7 @@
 import {A} from '../web/react-utils.js'
 import {assert, print, T} from '../common/utils.js'
 import {ValidationError, NotImplemented, ValueError} from '../common/errors.js'
-import {encode_uint, decode_uint} from "../common/binary.js";
+import {encode_uint, decode_uint, encode_int, decode_int} from "../common/binary.js";
 import {ObjectsMap, Shard} from "../common/structs.js";
 import {Catalog, Struct} from "../common/catalog.js";
 import * as widgets from './widgets.js'
@@ -351,23 +351,27 @@ export class INTEGER extends NUMBER {
     binary_encode(value, last = false) {
         value = this.validate(value)
         let {signed, length} = this.options
-        if (!signed) return encode_uint(value, length)
+        return signed ? encode_int(value, length) : encode_uint(value, length)
 
-        // for signed integers, shift the value range upwards and encode as unsigned
-        length = length || this.constructor.DEFAULT_LENGTH_SIGNED
-        value += Math.pow(2, 8*length - 1)                  // TODO: memorize all Math.pow(2,k) here and below
-        assert(value >= 0)
-        return encode_uint(value, length)
+        // if (!signed) return encode_uint(value, length)
+        //
+        // // for signed integers, shift the value range upwards and encode as unsigned
+        // length = length || this.constructor.DEFAULT_LENGTH_SIGNED
+        // value += Math.pow(2, 8*length - 1)                  // TODO: memorize all Math.pow(2,k) here and below
+        // assert(value >= 0)
+        // return encode_uint(value, length)
     }
 
     binary_decode(input, last = false) {
         let {signed, length} = this.options
-        if (!signed) return decode_uint(input, length)
+        return signed ? decode_int(input, length) : decode_uint(input, length)
 
-        // decode as unsigned and shift the value range downwards after decoding to restore the original signed value
-        length = length || this.constructor.DEFAULT_LENGTH_SIGNED
-        const shift = Math.pow(2, 8*length - 1)
-        return decode_uint(input, length) - shift
+        // if (!signed) return decode_uint(input, length)
+        //
+        // // decode as unsigned and shift the value range downwards after decoding to restore the original signed value
+        // length = length || this.constructor.DEFAULT_LENGTH_SIGNED
+        // const shift = Math.pow(2, 8*length - 1)
+        // return decode_uint(input, length) - shift
     }
 }
 
