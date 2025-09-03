@@ -200,6 +200,7 @@ export function encode_int(value, length = 6) {
     /* Encode a signed integer into Uint8Array of fixed length (6 bytes by default to stay in Number.MIN_SAFE_INTEGER range).
        This is done by shifting the entire value range upwards and encoding as unsigned.
      */
+    // static DEFAULT_LENGTH_SIGNED = 6    // default length of the binary representation in bytes, for signed integers
     assert(length > 0)
     value += Math.pow(2, 8*length - 1)      // TODO: memorize all Math.pow(2,k) here and below
     assert(value >= 0)

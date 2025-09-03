@@ -332,8 +332,6 @@ export class NUMBER extends Primitive {
 export class INTEGER extends NUMBER {
     /* An integer value. Like a NUMBER, but with additional constraints and monotonic binary encoding (can be used in index keys). */
 
-    static DEFAULT_LENGTH_SIGNED = 6    // default length of the binary representation in bytes, for signed integers
-
     static options = {
         signed:  false,         // if true, values can be negative
         length:  undefined,     // number of bytes to be used to store values in DB indexes; adaptive encoding if undefined (for uint), or 6 (for signed int)
@@ -352,26 +350,11 @@ export class INTEGER extends NUMBER {
         value = this.validate(value)
         let {signed, length} = this.options
         return signed ? encode_int(value, length) : encode_uint(value, length)
-
-        // if (!signed) return encode_uint(value, length)
-        //
-        // // for signed integers, shift the value range upwards and encode as unsigned
-        // length = length || this.constructor.DEFAULT_LENGTH_SIGNED
-        // value += Math.pow(2, 8*length - 1)                  // TODO: memorize all Math.pow(2,k) here and below
-        // assert(value >= 0)
-        // return encode_uint(value, length)
     }
 
     binary_decode(input, last = false) {
         let {signed, length} = this.options
         return signed ? decode_int(input, length) : decode_uint(input, length)
-
-        // if (!signed) return decode_uint(input, length)
-        //
-        // // decode as unsigned and shift the value range downwards after decoding to restore the original signed value
-        // length = length || this.constructor.DEFAULT_LENGTH_SIGNED
-        // const shift = Math.pow(2, 8*length - 1)
-        // return decode_uint(input, length) - shift
     }
 }
 
