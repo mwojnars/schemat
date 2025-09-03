@@ -13,6 +13,9 @@ import {CustomMap} from "./structs.js";
 /**********************************************************************************************************************/
 
 export class Binary {
+    /* Utilities for converting values of different types to Uint8Array sequences and back, and for comparing such sequences. */
+
+    static zero = new Uint8Array(0)     // binary equivalent of a "zero" value: vector of zero length that's lower than any non-empty vector
 
 }
 
@@ -84,11 +87,11 @@ export class BinaryInput extends Binary {
 
 /**********************************************************************************************************************/
 
-export const zero_binary = new Uint8Array(0)
+// export const zero_binary = new Uint8Array(0)
 
 export function compare_bin(arr1, arr2) {
     /* Compare two Uint8Arrays byte by byte. Return -1 if arr1 < arr2, 1 if arr1 > arr2, 0 if arr1 === arr2.
-       Empty array [] (`zero_binary`) represents a "zero" vector, which is a lower bound for all arrays.
+       Empty array [] (Binary.zero) represents a "zero" vector, which is a lower bound for all arrays.
        `null` represents a "full" vector, which is an upper bound for all arrays.
      */
     if (arr1 === null) return arr2 === null ? 0 : 1

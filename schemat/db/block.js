@@ -1,7 +1,7 @@
 import {assert, print, T, zip, arrayFromAsync, fileBaseName, trycatch, sleep} from '../common/utils.js'
 import {DataAccessError, DataConsistencyError} from '../common/errors.js'
 import {Shard, ObjectsMap, Mutex, Mutexes} from "../common/structs.js"
-import {BinaryMap, compare_bin, zero_binary} from "../common/binary.js";
+import {Binary, BinaryMap, compare_bin} from "../common/binary.js";
 import {JSONx} from "../common/jsonx.js";
 import {Struct} from "../common/catalog.js"
 import {WebObject} from '../core/object.js'
@@ -82,7 +82,7 @@ export class Monitor {
                 let report = JSONx.parse(fs.readFileSync(path, 'utf8'))
                 this.backfill_offset = report.offset
             }
-            else this.backfill_offset = zero_binary
+            else this.backfill_offset = Binary.zero
             this.src._print(`Monitor.constructor() backfill_offset`, this.backfill_offset)
         }
         else if (exists)

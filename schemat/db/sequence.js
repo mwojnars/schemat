@@ -1,7 +1,7 @@
 import {assert, print, sleep, T} from "../common/utils.js";
 import {JSONx} from "../common/jsonx.js";
 import {Catalog} from "../common/catalog.js";
-import {compare_bin, zero_binary} from "../common/binary.js";
+import {Binary, compare_bin} from "../common/binary.js";
 import {WebObject} from "../core/object.js";
 import {BootDataBlock} from "./block.js";
 import {DataOperator} from "./operator.js";
@@ -201,7 +201,7 @@ export class Sequence extends WebObject {
 
         if (this.filled_ranges.length === 1) {      // if the singleton range spans all keys from <zero> to null, set filled=true
             let [L,R] = this.filled_ranges[0]
-            if (compare_bin(L, zero_binary) === 0 && R === null)
+            if (compare_bin(L, Binary.zero) === 0 && R === null)
                 this.filled = true
         }
         // this._print(`edit.commit_backfill() left=${left} right=${right} filled_ranges`, this.filled_ranges, `filled`, this.filled)
