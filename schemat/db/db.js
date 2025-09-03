@@ -428,6 +428,7 @@ export class Database extends WebObject {
     }
 
     async create_aggregation(name, key, sum = [], {category, ring} = {}) {
+        return this._create_derived(schemat.std.AggregationOperator, {name, key, payload, category}, {ring})
     }
 
     async _create_derived(OperatorCategory, opts, {ring} = {}) {

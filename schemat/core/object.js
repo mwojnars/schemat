@@ -1091,7 +1091,7 @@ export class WebObject {
 
     __new__(...args) {}
         /* Custom initialization of a newborn object. Called by category.new(props, ...args) after `props` were already
-           copied into __data. `args` are the optional arguments (after `props`) that were passed to .new().
+           copied into __data; `args` are the optional arguments (after `props`) that were passed to .new(); __new__() is allowed to assign to `this`.
            A newborn object is NOT activated and mainly serves as a container for __data. For instance, this.__category
            is not yet available, despite '__category' field may be written into __data. More advanced initialization
            may have to be moved to __setup__(), with is called on an object with initialized dependencies (but NOT yet fully activated!).

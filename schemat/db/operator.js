@@ -122,6 +122,7 @@ export class DerivedOperator extends Operator {
     category        // category of objects allowed in this index (optional), also used for field type inference if names only are provided
 
     __new__() {
+        if (this.category) this.category = schemat.as_object(this.category)     // convert ID to object
         this.fields ??= this._infer_field_types(this.key)
         // this._print(`DerivedOperator.__new__(): key=${this.key} fields=${this.fields}`)
     }
