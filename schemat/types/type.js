@@ -545,8 +545,12 @@ export class REF extends Type {
         return obj
     }
 
-    write_binary(output, value) { output.write_uint(this.validate(value)) }
-    read_binary(input)          { return input.read_uint() }
+    write_binary(output, value) { output.write_uint(this.validate(value)?.id) }
+
+    read_binary(input) {
+        let id = input.read_uint()
+        if (id) return schemat.get_object(id)
+    }
 }
 
 export class REF_CATEGORY extends REF {
