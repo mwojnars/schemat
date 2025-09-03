@@ -49,9 +49,9 @@ export class Operator extends WebObject {
         let key = []
 
         for (let i = 0; i < length; i++) {
-            const type = types[i]
-            const last = (i === length - 1)
-            const val  = type.binary_decode(input, last)
+            let type = types[i]
+            let last = (i === length - 1)
+            let val  = type.binary_decode(input, last)
             key.push(val)
         }
         assert(input.pos === key_binary.length)
