@@ -12,10 +12,15 @@ import {CustomMap} from "./structs.js";
 
 /**********************************************************************************************************************/
 
-export class BinaryOutput {
+export class Binary {
+
+}
+
+export class BinaryOutput extends Binary {
     /* A list of uint8 or uint32 sub-arrays to be concatenated into a single uint8 array at the end of encoding. */
 
     constructor() {
+        super()
         this.buffers = []
     }
 
@@ -56,10 +61,11 @@ export class BinaryOutput {
     }
 }
 
-export class BinaryInput {
+export class BinaryInput extends Binary {
     /* An uint8 array that can be read in chunks during decoding while keeping track of the current position. */
 
     constructor(buffer) {
+        super()
         // assert(buffer instanceof Uint8Array)
         this.buffer = buffer
         this.pos = 0
