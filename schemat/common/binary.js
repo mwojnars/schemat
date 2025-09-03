@@ -47,6 +47,19 @@ export class BinaryOutput extends Binary {
         this.buffers = []
     }
 
+    result() {
+        /* Return the concatenated output as a single Uint8Array. */
+        let length = 0
+        for (let chunk of this.buffers) length += chunk.length
+        let result = new Uint8Array(length)
+        let pos = 0
+        for (let chunk of this.buffers) {
+            result.set(chunk, pos)
+            pos += chunk.length
+        }
+        return result
+    }
+
     write(...chunks) {
         /* Append uint8/uint32 array(s) to the output. */
         for (let chunk of chunks) {
@@ -69,19 +82,6 @@ export class BinaryOutput extends Binary {
         }
         return result
     }
-
-    result() {
-        /* Return the concatenated output as a single Uint8Array. */
-        let length = 0
-        for (let chunk of this.buffers) length += chunk.length
-        let result = new Uint8Array(length)
-        let pos = 0
-        for (let chunk of this.buffers) {
-            result.set(chunk, pos)
-            pos += chunk.length
-        }
-        return result
-    }
 }
 
 export class BinaryInput extends Binary {
@@ -93,10 +93,12 @@ export class BinaryInput extends Binary {
         this.buffer = buffer
         this.pos = 0
     }
+
     current() {
         /* Return a subarray of the remaining bytes. */
         return this.buffer.subarray(this.pos)
     }
+
     move(length) {
         /* Advance the current position by `length` bytes. */
         this.pos += length
