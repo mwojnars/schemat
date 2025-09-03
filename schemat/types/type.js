@@ -355,16 +355,21 @@ export class INTEGER extends NUMBER {
         signed ? output.write_int(value, length) : output.write_uint(value, length)
     }
 
-    binary_encode(value, last = false) {
-        value = this.validate(value)
+    read_binary(input, last = false) {
         let {signed, length} = this.options
-        return signed ? encode_int(value, length) : encode_uint(value, length)
+        return signed ? input.read_int(length) : input.read_uint(length)
     }
 
-    binary_decode(input, last = false) {
-        let {signed, length} = this.options
-        return signed ? decode_int(input, length) : decode_uint(input, length)
-    }
+    // binary_encode(value, last = false) {
+    //     value = this.validate(value)
+    //     let {signed, length} = this.options
+    //     return signed ? encode_int(value, length) : encode_uint(value, length)
+    // }
+    //
+    // binary_decode(input, last = false) {
+    //     let {signed, length} = this.options
+    //     return signed ? decode_int(input, length) : decode_uint(input, length)
+    // }
 }
 
 export class ID extends INTEGER {
