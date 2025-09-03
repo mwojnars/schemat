@@ -231,27 +231,32 @@ export class Type extends Struct {
 
     /***  Binary encoding for indexing  ***/
 
-    write_binary(output, value) { throw new NotImplemented(`write_binary() is not implemented for ${this}`) }
-    read_binary(input) { throw new NotImplemented(`read_binary() is not implemented for ${this}`) }
-
-    binary_encode(value, last = false) {
-        /* Create a sort key and return as Uint8Array. If last=false and the binary representation has variable length,
-           the terminator symbol/sequence or length specification should be included in the output,
-           so that binary_decode() can detect the length of the encoded sequence when another value follows.
-           The encoding may or may NOT be reversible, depending on the type.
-           For example, it may be irreversible for some collated strings - such objects can still be used
-           inside keys, but typically their original value must be stored separately in the record's value field.
+    write_binary(output, value, last = false) {
+        /* Convert `value` to a binary sequence (Uint8Array) and append to `output` (BinaryOutput), for use in index keys.
+           If last=false and the binary representation has variable length, the terminator symbol/sequence or length
+           specification should be included in the output, so that binary_decode() can detect the length of the encoded
+           sequence when another value follows. Typically, the value is decoded later with read_binary(), but in the future,
+           in special cases like non-reversible encoding of Unicode strings with lossy getSortKey(), the decoding could be left
+           unimplemented - in such case, the original value would have to be stored separately in the record's payload section.
          */
-        throw new NotImplemented(`binary_encode() is not implemented for ${this}`)
+        throw new NotImplemented(`write_binary() is not implemented for ${this}`)
     }
 
-    binary_decode(input, last = false) {
-        /* Decode a binary input (Uint8Array) back into an application-level value or object.
+    read_binary(input, last = false) {
+        /* Decode the next value of this type from BinaryInput, `input`, back to an application-level value or object.
            If last=false, the encoded value may be followed by another value in the input,
            so the decoder must be able to detect the end of the encoded value by itself.
          */
-        throw new NotImplemented(`binary_decode() is not implemented for ${this}`)
+        throw new NotImplemented(`read_binary() is not implemented for ${this}`)
     }
+
+    // binary_encode(value, last = false) {
+    //     throw new NotImplemented(`binary_encode() is not implemented for ${this}`)
+    // }
+    //
+    // binary_decode(input, last = false) {
+    //     throw new NotImplemented(`binary_decode() is not implemented for ${this}`)
+    // }
 
 
     /***  UI  ***/
@@ -359,17 +364,6 @@ export class INTEGER extends NUMBER {
         let {signed, length} = this.options
         return signed ? input.read_int(length) : input.read_uint(length)
     }
-
-    // binary_encode(value, last = false) {
-    //     value = this.validate(value)
-    //     let {signed, length} = this.options
-    //     return signed ? encode_int(value, length) : encode_uint(value, length)
-    // }
-    //
-    // binary_decode(input, last = false) {
-    //     let {signed, length} = this.options
-    //     return signed ? decode_int(input, length) : decode_uint(input, length)
-    // }
 }
 
 export class ID extends INTEGER {
