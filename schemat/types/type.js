@@ -369,61 +369,6 @@ export class INTEGER extends NUMBER {
         const shift = Math.pow(2, 8*length - 1)
         return decode_uint(input, length) - shift
     }
-
-    // encode_uint(value, length = 0) {
-    //     /* Binary encoding of an unsigned integer in a field of `length` bytes.
-    //        If length is missing or 0, magnitude of the value is detected automatically and the value
-    //        is encoded on the minimum required no. of bytes, between 1 and 7 (larger values exceed MAX_SAFE_INTEGER)
-    //        - in such case the detected byte length is written to the output in the first byte.
-    //      */
-    //     const {required} = this.options
-    //     const adaptive = !length
-    //     const offset = adaptive ? 1 : 0
-    //
-    //     if (required) assert(value !== null)
-    //
-    //     if (adaptive)
-    //         length = (value !== null) ? bytes_uint(value) : 0   // length=0 encodes null in adaptive mode
-    //     else if (!required)
-    //         if (value === null) value = 0                       // in non-adaptive mode, 0 is reserved for "null", hence shifting all values by +1
-    //         else value += 1
-    //
-    //     const buffer = new Uint8Array(length + offset)          // +1 for the length byte in adaptive mode
-    //     if (adaptive) buffer[0] = length
-    //
-    //     for (let i = offset + length - 1; i >= offset; i--) {
-    //         buffer[i] = value & 0xFF
-    //         value = Math.floor(value / 256)             // bitwise ops (value >>= 8) are incorrect for higher bytes
-    //     }
-    //     return buffer
-    // }
-    //
-    // decode_uint(input, length = 0) {
-    //     /* `input` must be a BinaryInput. */
-    //     const {required} = this.options
-    //     const adaptive = !length
-    //     const offset = adaptive ? 1 : 0
-    //     const buffer = input.current()
-    //
-    //     if (adaptive) length = buffer[0]
-    //
-    //     let value = 0
-    //     for (let i = 0; i < length; i++)
-    //         value += buffer[offset + i] * Math.pow(2, 8 * (length - i - 1))
-    //         // value = (value << 8) | buffer[i]
-    //
-    //     if (adaptive && length === 0) {
-    //         assert(!required)
-    //         value = null                                        // length=0 encodes null in adaptive mode
-    //     }
-    //
-    //     if (!adaptive && !required)
-    //         if (value === 0) value = null                       // in non-adaptive mode, 0 is reserved for "null"
-    //         else value -= 1
-    //
-    //     input.move(length + offset)
-    //     return value
-    // }
 }
 
 export class ID extends INTEGER {
