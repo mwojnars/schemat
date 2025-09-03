@@ -83,8 +83,8 @@ export class BinaryOutput extends Binary {
         return result
     }
 
-    // write_int(value, length)  { this.write(encode_int(value, length)) }
-    // write_uint(value, length) { this.write(encode_uint(value, length)) }
+    write_int(value, length)  { this.write(encode_int(value, length)) }
+    write_uint(value, length) { this.write(encode_uint(value, length)) }
 }
 
 export class BinaryInput extends Binary {
@@ -109,8 +109,8 @@ export class BinaryInput extends Binary {
             throw new Error(`BinaryInput: trying to read position ${this.pos} in a buffer of length ${this.buffer.length}`)
     }
 
-    // read_int(length)  { return decode_int(this, length) }
-    // read_uint(length) { return decode_uint(this, length) }
+    read_int(length)  { return decode_int(this, length) }
+    read_uint(length) { return decode_uint(this, length) }
 }
 
 /**********************************************************************************************************************/
