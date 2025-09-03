@@ -321,6 +321,8 @@ export class AggregationOperator extends DerivedOperator {      // SumOperator
     //                     // the absolute value (shifted left/right by `decimals`) gets large;
 
     __new__() {
+        super.__new__()
+
         this._print(`AggregationOperator.__new__() sum=${this.sum}`)
         if (typeof this.sum === 'string') this.sum = [this.sum]
 
