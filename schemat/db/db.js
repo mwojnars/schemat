@@ -421,34 +421,62 @@ export class Database extends WebObject {
 
     async create_index(name, key, payload = undefined, {category, ring} = {}) {
         /* Add a new index in `ring` and all rings above. If not provided, `ring` is the bottom of the ring stack (ring-kernel).
-           Schema of the new index is defined by `key` and `payload` (arrays of property names).
+           Schema of the new index is defined by `key` and `payload` (arrays of property names). Returns the operator.
          */
-        ring = ring ? this.get_ring(ring) : this.bottom_ring
-
-        // check that `name` can be used as an operator name
-        if (this.top_ring.operators.has(name)) throw new Error(`'${name}' is already used as an operator name`)
-
-        // create operator for the derived sequence
-        let IndexOperator = schemat.std.IndexOperator
-        let operator = await IndexOperator.new({name, key, payload, category}).save({ring})
-        await this._create_sequence(operator, {ring})
-        return operator
+        return this._create_derived(schemat.std.IndexOperator, {name, key, payload, category}, {ring})
     }
+
+    // async create_index(name, key, payload = undefined, {category, ring} = {}) {
+    //     /* Add a new index in `ring` and all rings above. If not provided, `ring` is the bottom of the ring stack (ring-kernel).
+    //        Schema of the new index is defined by `key` and `payload` (arrays of property names). Returns the operator.
+    //      */
+    //     ring = ring ? this.get_ring(ring) : this.bottom_ring
+    //
+    //     // check that `name` can be used as an operator name
+    //     if (this.top_ring.operators.has(name)) throw new Error(`'${name}' is already used as an operator name`)
+    //
+    //     // create operator for the derived sequence
+    //     let IndexOperator = schemat.std.IndexOperator
+    //     let opts = {name, key, payload, category}
+    //     let operator = await IndexOperator.new(opts).save({ring})
+    //     return this._create_sequence(IndexOperator, opts, operator, {ring})
+    // }
 
     // async create_aggregation(name, key, sum = [], {category, ring} = {}) {
     // }
 
-    async _create_sequence(operator, {ring} = {}) {
-        /* Create sequence(s) in `ring` and all rings above that implement the `operator`.
-           If `ring` is missing, operator.__ring is used as a starting ring.
+    async _create_derived(OperatorCategory, opts, {ring} = {}) {
+        /* Create a new operator together with corresponding sequences in `ring` and all rings above.
+           If `ring` is missing, the bottom of ring stack is used as a starting ring.
          */
-        ring ??= operator.__ring
+        ring = ring ? this.get_ring(ring) : this.bottom_ring
+        let {name} = opts
+
+        // check that `name` can be used as an operator name
+        if (this.top_ring.operators.has(name)) throw new Error(`'${name}' is already used as an operator name`)
+
+        let operator = await OperatorCategory.new(opts).save({ring})
+        // ring ??= operator.__ring
+
         let pos = this.rings.indexOf(ring)
         for (let i = pos; i < this.rings.length; i++) {
             ring = this.rings[i]
             await ring.create_derived('main', operator)
         }
+        return operator
     }
+
+    // async _create_sequence(operator, {ring} = {}) {
+    //     /* Create sequence(s) in `ring` and all rings above that implement the `operator`.
+    //        If `ring` is missing, operator.__ring is used as a starting ring.
+    //      */
+    //     ring ??= operator.__ring
+    //     let pos = this.rings.indexOf(ring)
+    //     for (let i = pos; i < this.rings.length; i++) {
+    //         ring = this.rings[i]
+    //         await ring.create_derived('main', operator)
+    //     }
+    // }
 
     async remove_operator(operator) {
         /* Delete `operator` object and all sequences that implement this operator across different rings
