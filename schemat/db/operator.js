@@ -123,8 +123,13 @@ export class DerivedOperator extends Operator {
 
     __new__() {
         if (this.category) this.category = schemat.as_object(this.category)     // convert ID to object
-        this.fields ??= this._infer_field_types(this.key)
+        // this.fields ??= this._infer_field_types(this.key)
         // this._print(`DerivedOperator.__new__(): key=${this.key} fields=${this.fields}`)
+    }
+
+    async __setup__() {
+        await this.category.load()
+        this.fields ??= this._infer_field_types(this.key)
     }
 
     _infer_field_types(fields) {
@@ -136,7 +141,7 @@ export class DerivedOperator extends Operator {
         for (let field of fields) {     // find out the type of every field to build a catalog of {field: type} pairs
             field = drop_plural(field)
             let type = schema.get(field)
-            if (!type) throw new Error(`unknown field in 'key': ${field}`)
+            if (!type) throw new Error(`unknown object property '${field}' (not in schema)`)
 
             type = type.clone()
             type.remove_option('info', 'getter')    // some options are irrelevant for record's schema
