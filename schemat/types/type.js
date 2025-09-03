@@ -544,6 +544,9 @@ export class REF extends Type {
         // }
         return obj
     }
+
+    write_binary(output, value) { output.write_uint(this.validate(value)) }
+    read_binary(input)          { return input.read_uint() }
 }
 
 export class REF_CATEGORY extends REF {
