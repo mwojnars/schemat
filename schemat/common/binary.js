@@ -17,6 +17,26 @@ export class Binary {
 
     static zero = new Uint8Array(0)     // binary equivalent of a "zero" value: vector of zero length that's lower than any non-empty vector
 
+    static compare(arr1, arr2) {
+        /* Compare two Uint8Arrays byte by byte. Return -1 if arr1 < arr2, 1 if arr1 > arr2, 0 if arr1 === arr2.
+           Empty array [] (Binary.zero) represents a "zero" vector, which is a lower bound for all arrays.
+           `null` represents a "full" vector, which is an upper bound for all arrays.
+         */
+        if (arr1 === null) return arr2 === null ? 0 : 1
+        if (arr2 === null) return -1
+
+        let minlen = Math.min(arr1.length, arr2.length)
+
+        for (let i = 0; i < minlen; i++)
+            if (arr1[i] < arr2[i]) return -1
+            else if (arr1[i] > arr2[i]) return 1
+
+        // at this point, all bytes up to `minlen` are equal; if one of the arrays is longer, it's considered "greater"
+        if (arr1.length < arr2.length) return -1
+        else if (arr1.length > arr2.length) return 1
+
+        return 0        // both arrays are fully equal
+    }
 }
 
 export class BinaryOutput extends Binary {
@@ -89,26 +109,8 @@ export class BinaryInput extends Binary {
 
 // export const zero_binary = new Uint8Array(0)
 
-export function compare_bin(arr1, arr2) {
-    /* Compare two Uint8Arrays byte by byte. Return -1 if arr1 < arr2, 1 if arr1 > arr2, 0 if arr1 === arr2.
-       Empty array [] (Binary.zero) represents a "zero" vector, which is a lower bound for all arrays.
-       `null` represents a "full" vector, which is an upper bound for all arrays.
-     */
-    if (arr1 === null) return arr2 === null ? 0 : 1
-    if (arr2 === null) return -1
+export const compare_bin = Binary.compare
 
-    let minlen = Math.min(arr1.length, arr2.length)
-
-    for (let i = 0; i < minlen; i++)
-        if (arr1[i] < arr2[i]) return -1
-        else if (arr1[i] > arr2[i]) return 1
-
-    // at this point, all bytes up to `minlen` are equal; if one of the arrays is longer, it's considered "greater"
-    if (arr1.length < arr2.length) return -1
-    else if (arr1.length > arr2.length) return 1
-
-    return 0        // both arrays are fully equal
-}
 
 export function bytes_uint(n) {
     /* Byte length of unsigned integer. This implementation is 2-5x faster than Math.log(). */
