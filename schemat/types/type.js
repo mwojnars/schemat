@@ -231,6 +231,9 @@ export class Type extends Struct {
 
     /***  Binary encoding for indexing  ***/
 
+    write_binary(output, value) { throw new NotImplemented(`write_binary() is not implemented for ${this}`) }
+    read_binary(input) { throw new NotImplemented(`read_binary() is not implemented for ${this}`) }
+
     binary_encode(value, last = false) {
         /* Create a sort key and return as Uint8Array. If last=false and the binary representation has variable length,
            the terminator symbol/sequence or length specification should be included in the output,
@@ -344,6 +347,12 @@ export class INTEGER extends NUMBER {
         if (value < Number.MIN_SAFE_INTEGER) throw new ValueError(`the integer (${value}) is too small to be stored in JavaScript`)
         if (value > Number.MAX_SAFE_INTEGER) throw new ValueError(`the integer (${value}) is too large to be stored in JavaScript`)
         return value
+    }
+
+    write_binary(output, value) {
+        value = this.validate(value)
+        let {signed, length} = this.options
+        signed ? output.write_int(value, length) : output.write_uint(value, length)
     }
 
     binary_encode(value, last = false) {

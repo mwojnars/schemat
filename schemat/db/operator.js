@@ -35,7 +35,8 @@ export class Operator extends WebObject {
         for (let i = 0; i < length; i++) {
             let type = types[i]
             let last = (i === types.length - 1)
-            let bin  = type.binary_encode(key[i], last)
+            // type.write_binary(output, key[i], last)
+            let bin  = type.binary_encode(output, key[i], last)
             output.write(bin)
         }
         return output.result()
