@@ -196,6 +196,23 @@ export function decode_uint(input, length = 0, required = false) {
     return value
 }
 
+export function encode_int(value, length = 6) {
+    /* Encode a signed integer into Uint8Array of fixed length (6 bytes by default to stay in Number.MIN_SAFE_INTEGER range).
+       This is done by shifting the entire value range upwards and encoding as unsigned.
+     */
+    assert(length > 0)
+    value += Math.pow(2, 8*length - 1)      // TODO: memorize all Math.pow(2,k) here and below
+    assert(value >= 0)
+    return encode_uint(value, length)
+}
+
+export function decode_int(input, length = 6) {
+    /* Reverse of encode_int(); `input` must be a BinaryInput (not Uint8Array). */
+    assert(length > 0)
+    let shift = Math.pow(2, 8*length - 1)
+    return decode_uint(input, length) - shift           // decode as unsigned and shift downwards to restore the original signed int
+}
+
 /**********************************************************************************************************************/
 
 export function bin_to_ascii(uint8array) {
