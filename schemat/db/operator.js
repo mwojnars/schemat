@@ -186,8 +186,13 @@ export class DerivedOperator extends Operator {
                 let v_ins = ins_records.get(key)
                 // assert(!(v_ins instanceof Uint8Array))
 
+                // when comparing arrays (AggregationOperator), convert them to JSON
+                if (typeof v_rmv === 'object' && typeof v_ins === 'object') {
+                    v_rmv = JSONx.stringify(v_rmv)
+                    v_ins = JSONx.stringify(v_ins)
+                }
+
                 // plus/minus ops cancel out when old & new values are equal (string comparison)
-                // TODO: when comparing v_rmv/v_ins arrays, first convert to JSON
                 if (v_ins === v_rmv) {          // || (v_ins instanceof Uint8Array && compare_bin(v_ins, v_rmv) === 0))
                     ins_records.delete(key)
                     rmv_records.delete(key)
