@@ -4,6 +4,7 @@ import YAML from 'yaml'
 import {assert, print, T} from '../common/utils.js'
 import {NotImplemented} from '../common/errors.js'
 import {BinaryMap, compare_bin} from "../common/binary.js"
+import {JSONx} from "../common/jsonx.js";
 
 // const fs = await server_import('node:fs')
 // const YAML = (await server_import('yaml'))?.default
@@ -160,13 +161,12 @@ export class JsonStore extends MemoryStore {
 
         let content = fs.readFileSync(this.filename, 'utf8')
         let lines = content.split('\n').filter(line => line.trim().length > 0)
-        let records = lines.map(line => JSON.parse(line))
+        let records = lines.map(line => JSONx.parse(line))
 
         this._records.clear()
 
         for (let [key, value] of records)
-            this._records.set(this.block.encode_key(key), value ? JSON.stringify(value) : '')
-            // this._records.set(Uint8Array.from(key), value ? JSON.stringify(value) : '')
+            this._records.set(this.block.encode_key(key), value ? JSONx.stringify(value) : '')
     }
 
     _flush() {
@@ -175,7 +175,7 @@ export class JsonStore extends MemoryStore {
 
         let lines = [...this.scan()].map(([key_binary, val_json]) => {
             let key = this.block.decode_key(key_binary)
-            let key_json = JSON.stringify(key)  //Array.from(key_binary))
+            let key_json = JSONx.stringify(key)  //Array.from(key_binary))
             return val_json ? `[${key_json}, ${val_json}]` : `[${key_json}]`
         })
         // schemat._print(`JsonStore._flush() flushing ${this.filename} ...`)
