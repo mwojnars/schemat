@@ -387,6 +387,18 @@ export class Block extends Agent {
         })
     }
 
+    async _replicate(op) {
+        /* Send `op` to all replicas. */
+        this._print(`_replicate(${op})`)
+        await this.$$replica.replicate(op.op, ...op.args)
+        // await this.$$replica.exec_op(op.op, ...op.args)
+    }
+
+    async '$replica.replicate'(op, ...args) {
+        this._print(`$replica.replicate(${op}, ${args})`)
+        return this.exec_op(op, ...args)
+    }
+
     async '$agent.background'(seq) {
         /* On $master, background processing triggers another step of backfilling to derived sequences. */
         // this._print(`background job...`)
@@ -748,6 +760,7 @@ export class DataBlock extends Block {
 
         let op_put = new OP('put', key, data)
         let ops_derived = this._derive(key, prev, obj)      // instructions for derived sequences
+        // await this._replicate(op_put)
         await this._apply([op_put, ...ops_derived])         // schedule `ops` for execution, either immediately or later with WAL
         this._cascade_delete(prev, obj)                     // remove objects linked to via a strong reference
 
