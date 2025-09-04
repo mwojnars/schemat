@@ -348,8 +348,8 @@ export class AggregationOperator extends DerivedOperator {      // SumOperator
     }
 
     // below, `val` is a JSONx string from generate_value() containing an array of increments to be added to accumulators
-    _op_rmv(key, val) { this._print(`OP(dec, ${key}, ${val})`); return new OP('dec', key, val) }
-    _op_ins(key, val) { this._print(`OP(inc, ${key}, ${val})`); return new OP('inc', key, val) }
+    _op_rmv(key, val) { return new OP('dec', key, val) }    //this._print(`OP(dec, ${key}, ${val})`)
+    _op_ins(key, val) { return new OP('inc', key, val) }    //this._print(`OP(inc, ${key}, ${val})`)
 
     compactify(ops) {
         /* Merge & compactify, if possible, a batch of `ops` produced from a number of different source records. */
