@@ -115,6 +115,7 @@ export class DerivedOperator extends Operator {
        (this requires that a custom [operator].__class is configured); otherwise, the field is extracted directly
        from object when generating a record (value=obj.field).
      */
+    static IMPLICIT_OVERRIDE = false    // pruning optimization used in _prune_plan() for indexes
 
     category        // category of objects allowed in this index (optional), also used for field type inference if names only are provided
 
@@ -159,7 +160,10 @@ export class DerivedOperator extends Operator {
         let rmv_records = this._make_records(key, prev)
         let ins_records = this._make_records(key, next)
 
-        this._prune_plan(rmv_records, ins_records, true)
+        // this._print(`rmv_records:`, rmv_records)
+        // this._print(`ins_records:`, ins_records)
+
+        this._prune_plan(rmv_records, ins_records)
         let ops = []
 
         for (let [key, val] of rmv_records || [])
@@ -170,7 +174,7 @@ export class DerivedOperator extends Operator {
         return ops
     }
 
-    _prune_plan(rmv_records, ins_records, implicit_override = false) {
+    _prune_plan(rmv_records, ins_records, implicit_override = this.constructor.IMPLICIT_OVERRIDE) {
         /* Prune the destination sequence update plan:
            1) skip the records that are identical in `rmv_records` and `ins_records` (the property didn't change in source during update);
            2) don't explicitly delete records that will be overwritten with a new value anyway (valid for indexes only, not aggregations).
@@ -183,6 +187,7 @@ export class DerivedOperator extends Operator {
                 // assert(!(v_ins instanceof Uint8Array))
 
                 // plus/minus ops cancel out when old & new values are equal (string comparison)
+                // TODO: when comparing v_rmv/v_ins arrays, first convert to JSON
                 if (v_ins === v_rmv) {          // || (v_ins instanceof Uint8Array && compare_bin(v_ins, v_rmv) === 0))
                     ins_records.delete(key)
                     rmv_records.delete(key)
@@ -260,6 +265,7 @@ export class IndexOperator extends DerivedOperator {
     /* Derived operator that outputs "put" and "del" instructions for the destination sequence, effectively building
        an index on selected properties of source objects.
      */
+    static IMPLICIT_OVERRIDE = true     // when feeding to an index (del/put ops), it is safe to drop "del" when followed by "put"
 
     _op_rmv(key, val) { return new OP('del', key) }         // alternative: "put" with <tombstone> (?)
     _op_ins(key, val) { return new OP('put', key, val) }
@@ -337,8 +343,8 @@ export class AggregationOperator extends DerivedOperator {      // SumOperator
     }
 
     // below, `val` is a JSONx string from generate_value() containing an array of increments to be added to accumulators
-    _op_rmv(key, val) { return new OP('dec', key, val) }
-    _op_ins(key, val) { return new OP('inc', key, val) }
+    _op_rmv(key, val) { this._print(`OP(dec, ${key}, ${val})`); return new OP('dec', key, val) }
+    _op_ins(key, val) { this._print(`OP(inc, ${key}, ${val})`); return new OP('inc', key, val) }
 
     compactify(ops) {
         /* Merge & compactify, if possible, a batch of `ops` produced from a number of different source records. */
