@@ -4,6 +4,23 @@ import {JSONx} from "../common/jsonx.js";
 let net = await server_import('node:net')
 
 
+export class FileMessage {  // DRAFT
+    /* For sending large files over TCP. The file is sent in binary form, while the object itself as JSONx string.
+       On recipient, the file is first saved to disk and only later the object is passed to endpoint method.
+       QUESTION: where to save the file given that `filepath` may be relevant for sender only, not for recipient?
+       - save in tmp/...
+       - move to target location if requested so at the endpoint: file_msg.move(path)
+       - remove the file: file_msg.clear()
+     */
+    send_path       // path on sender where the file to be sent is located
+    recv_path       // path on recipient where the file was saved or moved to
+
+    // other attrs -- any additional information for recipient
+
+    constructor(path, info = {}) {}
+}
+
+
 /**********************************************************************************************************************/
 
 function _json(msg) {
@@ -177,13 +194,14 @@ export class TCP_Sender {
             (await socket).end()
     }
 
-    async send(req, address) {
+    async send(msg, address) {
         /* `msg` is a plain object/array whose elements are JSONx-encoded already if needed. */
+        // TODO: if `msg` is an object of FileMessage class, msg.filepath file is read from disk and sent to recipient
         let socket = this.sockets.get(address) || await this._connect(address, new BinaryParser(this._tcp_handle_response))
         if (socket instanceof Promise) socket = await socket
 
         let id = ++this.message_id
-        let message = BinaryParser.create_message(id, req)
+        let message = BinaryParser.create_message(id, msg)
         if (this.message_id >= this.OVERFLOW) this.message_id = 0      // check for 4-byte overflow
 
         return new Promise((resolve, reject) => {
