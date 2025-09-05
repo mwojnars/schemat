@@ -481,7 +481,7 @@ export class WebObject {
     }
     is_not(other)   { return !this.is(other) }
 
-    get_remote()    { return WebObject.remote(this.id) }
+    // get_remote()    { return WebObject.remote(this.id) }
 
 
     /***  Instantiation  ***/
@@ -523,6 +523,7 @@ export class WebObject {
         return self.__proxy = Intercept.wrap(self)
     }
 
+    // TODO: .remote() is probably not needed anymore
     static remote(id, edits = null) {   // proxy virtual ghost dummy
         /* An editable remote object: a mutable object with ID and __meta.edits, but no __data; it is *not* loaded,
            but still can be edited: the edits are recorded in the transaction and passed to DB upon .save()

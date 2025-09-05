@@ -137,7 +137,8 @@ export class Monitor {
         // inform the destination sequence about new offset
         let start = prev
         let stop  = offset || this.src.keys_stop
-        this.dst.get_remote().edit.commit_backfill(start, stop).save()
+        this.dst.edit.commit_backfill(start, stop).save()
+        // this.dst.get_remote().edit.commit_backfill(start, stop).save()
     }
 
     _in_pending_zone(key) {
@@ -156,6 +157,9 @@ export class Monitor {
     }
 }
 
+class ReplicationMonitor extends Monitor {
+
+}
 
 /**********************************************************************************************************************
  **
