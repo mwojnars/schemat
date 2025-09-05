@@ -7,10 +7,8 @@ let net = await server_import('node:net')
 export class FileMessage {  // DRAFT
     /* For sending large files over TCP. The file is sent in binary form, while the object itself as JSONx string.
        On recipient, the file is first saved to disk and only later the object is passed to endpoint method.
-       QUESTION: where to save the file given that `filepath` may be relevant for sender only, not for recipient?
-       - save in tmp/...
-       - move to target location if requested so at the endpoint: file_msg.move(path)
-       - remove the file: file_msg.clear()
+       The file is first saved in tmp/... Later, it can be moved to another location with file_msg.move(path), or
+       removed entirely with file_msg.clear().
      */
     send_path       // path on sender where the file to be sent is located
     recv_path       // path on recipient where the file was saved or moved to
@@ -100,7 +98,7 @@ class BinaryParser {
 
     static create_message(id, msg) {
         /* Create a binary message in format [msg_id, content_length, json_flag, content_binary].
-           An undefined `msg` is represented as an empty content string with json_flag set to true ('J').
+           If msg=undefined, it is represented as an empty content string with json_flag set to true ('J').
          */
         let to_json = typeof msg !== 'string'
         let content = (!to_json) ? msg : ((msg === undefined) ? '' : JSON.stringify(msg))
