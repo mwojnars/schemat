@@ -126,7 +126,7 @@ export class DerivedOperator extends Operator {
     }
 
     async __setup__() {
-        await this.category.load()
+        await this.category?.load()
         this.fields ??= this._infer_field_types(this.key)
     }
 
