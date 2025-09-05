@@ -157,7 +157,7 @@ export class Monitor {
 }
 
 class ReplicationMonitor extends Monitor {
-
+    dst_node        // node where target src.$replica is located
 }
 
 /**********************************************************************************************************************
@@ -762,9 +762,12 @@ export class DataBlock extends Block {
         let key = this.encode_id(id)
 
         let op_put = new OP('put', key, data)
+        await this._replicate(op_put)
+        // TODO: for replication, emit "dff" (diff) when possible, not "put" ??
+
         let ops_derived = this._derive(key, prev, obj)      // instructions for derived sequences
-        // await this._replicate(op_put)
         await this._apply([op_put, ...ops_derived])         // schedule `ops` for execution, either immediately or later with WAL
+
         this._cascade_delete(prev, obj)                     // remove objects linked to via a strong reference
 
         data = this._annotate(data)
@@ -794,6 +797,8 @@ export class DataBlock extends Block {
             if (del instanceof Promise) await del
 
             let op_del = new OP('del', key)
+            await this._replicate(op_del)
+
             let ops_derived = this._derive(key, obj)        // instructions for derived sequences
             await this._apply([op_del, ...ops_derived])     // schedule `ops` for execution, either immediately or later with WAL
 
