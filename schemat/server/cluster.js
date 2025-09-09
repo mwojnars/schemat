@@ -44,10 +44,10 @@ export class Cluster extends Agent {
     DB-persisted properties:
         nodes           array of Node objects representing physical nodes of this cluster
 
-    $leader state attributes:
-        $state.nodes    ObjectsMap of NodeState objects keeping the most recent stats on node's health and activity
+    State attributes:
+        $leader.nodes   ObjectsMap of NodeState objects keeping the most recent stats on node's health and activity
 
-        $state.global_placements
+        $leader.global_placements
                         map of (id -> node) + (id_role -> node) placements of agents across the cluster (global placements), no worker info;
                         similar to .global_placements, but available on $leader only and updated immediately when an agent is deployed/dismissed to a node;
                         high-level routing table for directing agent requests to proper nodes in the cluster;
