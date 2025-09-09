@@ -1313,6 +1313,15 @@ export class WebObject {
         return obj
     }
 
+    update_self(props = {}) {
+        /* Copy all `props` entries into `this`. */
+        // schemat.tx.config({capture: false, atomic: true})
+        // schemat.tx.default({capture: false, atomic: true}) -- has effect unless the property was already configured by client
+        for (let [key, val] of Object.entries(props))
+            this[key] = val
+        return this
+    }
+
     async deploy_agent(role = AgentRole.GENERIC) {
         /* Deploy `this` as an agent somewhere in the cluster. Should only be called on web objects of Agent category.
            This method is defined here instead of Agent class to allow its invocation on stubs.
@@ -1324,15 +1333,6 @@ export class WebObject {
         /* Stop & uninstall all running instances of this agent across the cluster, typically as a preparation
            before deletion of the object from DB. Reverts the effects of deploy_agent(). */
         return schemat.cluster.$leader.remove_agent(this)
-    }
-
-    update_self(props = {}) {
-        /* Copy all `props` entries into `this`. */
-        // schemat.tx.config({capture: false, atomic: true})
-        // schemat.tx.default({capture: false, atomic: true}) -- has effect unless the property was already configured by client
-        for (let [key, val] of Object.entries(props))
-            this[key] = val
-        return this
     }
 
 
