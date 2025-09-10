@@ -126,7 +126,7 @@ export class Cluster extends Agent {
 
         let nodes = this.$state.global_placements.find_nodes(agent, role)
         await Promise.all(nodes.map(async node => {
-            await node.$master.remove_agent(agent, role)
+            await node.$master.stop_agent(agent, role)
             this.$state.global_placements.remove(node, agent, role)
             await this._broadcast_placements()
         }))
