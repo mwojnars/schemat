@@ -210,13 +210,13 @@ export class DerivedOperator extends Operator {
     _make_records(key, obj) {
         /* Map a source-sequence object (a web object or pseudo-object) to a list of destination-sequence (index) records. */
         if (!obj) return
-        let records = [...this.map_object(key, obj)].reverse()
+        let records = [...this.extract_features(key, obj)].reverse()
         return new BinaryMap(records)
         // NOTE: duplicate destination keys may be created along the way, like when indexing all outgoing REFs per object
         // and the same reference occurs several times; duplicates get removed when creating BinaryMap above
     }
 
-    *map_object(key, obj) {     // extract_features
+    *extract_features(key, obj) {
         /* Perform transformation of the source object and yield any number (0+) of output [key,val] pairs that will
            update the destination sequence. The result can be of any size, including:
            - 0: if the input object is filtered out, or doesn't contain the required fields;
@@ -228,7 +228,7 @@ export class DerivedOperator extends Operator {
 
         for (let key of this.generate_keys(obj)) {
             if (!val_generated) {
-                val = this.generate_value(obj)
+                val = this.generate_value(obj)      // payload only needs to be generated once per object, even if multiple keys are yielded
                 val_generated = true
             }
             yield [key, val]
@@ -353,7 +353,7 @@ export class AggregationOperator extends DerivedOperator {      // SumOperator
         // this.fields['__count'] = new BIGINT()
     }
 
-    // below, `val` is a JSONx string from generate_value() containing an array of increments to be added to accumulators
+    // below, `val` is an array from generate_value() containing increments to be added to accumulators
     _op_rmv(key, val) { return new OP('dec', key, val) }    //this._print(`OP(dec, ${key}, ${val})`)
     _op_ins(key, val) { return new OP('inc', key, val) }    //this._print(`OP(inc, ${key}, ${val})`)
 
