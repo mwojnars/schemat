@@ -104,7 +104,7 @@ export class Cluster extends Agent {
 
     async _deploy_agent(node, agent, role) {
         // this._print(`$leader.deploy() deploying ${agent} at ${node}`)
-        await node.$master.deploy_agent(agent, role)
+        await node.$master.start_agent(agent, role)
         this.$state.nodes.get(node).num_agents++
         this.$state.global_placements.add(node, agent, role)
         await this._broadcast_placements()
