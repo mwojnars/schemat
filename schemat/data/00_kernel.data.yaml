@@ -741,6 +741,7 @@
     "@": schemat:Catalog
   defaults:
     concurrent: true
+    controller: BLOCKS
     "@": schemat:Catalog
   class: schemat/db/block.js:Block
   __prototype:
