@@ -248,6 +248,6 @@ export class WebServer extends Agent {
 
 export class Controller extends WebObject {
     /* Agent controller. Manages a group of related agents running on different nodes across the cluster.
-       Receives signals of cluster restructuring and decides whether a particular deployment should be stopped/started/migrated.
+       Receives signals of cluster reshaping and decides whether a particular deployment should be stopped/started/migrated.
      */
 }

@@ -43,6 +43,7 @@ export class Cluster extends Agent {
     /*
     DB-persisted properties:
         nodes           array of Node objects representing physical nodes of this cluster
+                        TODO: broken/stopped nodes should still be included in `nodes` but with a status flag
 
     State attributes:
         $leader.nodes   ObjectsMap of NodeState objects keeping the most recent stats on node's health and activity
