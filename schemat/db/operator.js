@@ -216,17 +216,23 @@ export class DerivedOperator extends Operator {
         // and the same reference occurs several times; duplicates get removed when creating BinaryMap above
     }
 
-    *map_object(key, obj) {
+    *map_object(key, obj) {     // extract_features
         /* Perform transformation of the source object and yield any number (0+) of output [key,val] pairs that will
            update the destination sequence. The result can be of any size, including:
            - 0: if the input object is filtered out, or doesn't contain the required fields;
            - 2+: if some of the fields in the key contain repeated values.
          */
         if (!this.accept(obj)) return undefined
-        let val = this.generate_value(obj)
+        let val_generated = false
+        let val
 
-        for (let key of this.generate_keys(obj))
+        for (let key of this.generate_keys(obj)) {
+            if (!val_generated) {
+                val = this.generate_value(obj)
+                val_generated = true
+            }
             yield [key, val]
+        }
     }
 
     accept(obj) {
