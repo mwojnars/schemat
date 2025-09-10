@@ -155,7 +155,7 @@ export class Sequence extends WebObject {
            to populate this derived sequence with initial data from this.source.
          */
         assert(this.blocks.length === 1, this.id, this.blocks)
-        await this.blocks[0].deploy_agent('$master')
+        await this.blocks[0].deploy_agent('$master', 'BLOCKS')
 
         // request all source blocks to send initial data + set up data capture for future changes, NOT awaited!
         if (this.source) {

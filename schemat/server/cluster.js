@@ -71,9 +71,9 @@ export class Cluster extends Agent {
     get controllers() {
         /* Temporary solution. This attribute will ultimately be stored in DB. */
         return {
-            'blocks':       new BlocksController(),
-            'webservers':   null,
-            'utilities':    null,
+            'BLOCKS':       new BlocksController(),
+            'WEBSERVERS':   null,
+            'UTILITIES':    null,
         }
     }
 
@@ -94,6 +94,7 @@ export class Cluster extends Agent {
 
     async '$leader.deploy_agent'(agent, role, controller_name) {
         /* Find the least busy node and deploy `agent` there. */
+        assert(controller_name, `missing controller name`)
         let controller = this.$state.controllers[controller_name]
         return controller.deploy(agent, role)
     }
