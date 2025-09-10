@@ -299,7 +299,7 @@ export class Node extends Agent {
         //       ... or, update global_placements from cluster.$leader right after initializing the node
         let global_placements = schemat.cluster.global_placements()
 
-        return {tcp_sender, tcp_receiver, agents: this.agents, local_placements, global_placements}
+        return {tcp_sender, tcp_receiver, local_placements, global_placements}
     }
 
     async __restart__() {}

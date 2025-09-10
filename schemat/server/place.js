@@ -20,7 +20,7 @@ export class Placements {
 
     clone() { return Struct.clone(this) }
 
-    __getstate__() { return this._placements }          // no compactification as of now
+    __getstate__() { return this._placements }          // no compactification for serialization as of now
 
     static __setstate__(placements) {
         let obj = new this()
