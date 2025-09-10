@@ -45,6 +45,8 @@ export class Cluster extends Agent {
         nodes           array of Node objects representing physical nodes of this cluster
                         TODO: broken/stopped nodes should still be included in `nodes` but with a status flag
 
+        controllers     {name: controller} listing of all controllers that are active in the cluster
+
     State attributes:
         $leader.nodes   ObjectsMap of NodeState objects keeping the most recent stats on node's health and activity
 
@@ -53,6 +55,9 @@ export class Cluster extends Agent {
                         similar to .global_placements, but available on $leader only and updated immediately when an agent is deployed/dismissed to a node;
                         high-level routing table for directing agent requests to proper nodes in the cluster;
                         each node additionally has a low-level routing table for directing requests to a proper worker process;
+
+        $leader.controllers
+                        like [cluster].controllers, but as a cluster-wide singleton object representing the most recent state
     */
 
 
@@ -62,6 +67,14 @@ export class Cluster extends Agent {
 
     global_placements() { return new GlobalPlacements(this.nodes) }
 
+    get controllers() {
+        /* Temporary solution. This attribute will ultimately be stored in DB. */
+        return {
+            'blocks':       null,
+            'webservers':   null,
+            'utilities':    null,
+        }
+    }
 
     /***  Agent operations  ***/
 
@@ -79,7 +92,7 @@ export class Cluster extends Agent {
 
     async '$leader.deploy_agent'(agent, role, controller_name) {
         /* Find the least busy node and deploy `agent` there. */
-        // TODO: this method should delegate to schemat.get_controller(controller_name).deploy(agent, role)
+        // TODO: controller should decide on deployment: schemat.get_controller(controller_name).deploy(agent, role)
         // TODO: only look among nodes where (agent, role) is not deployed yet (!)
         let nodes = [...this.$state.nodes.values()]
         let {id} = min(nodes, n => n.avg_agents)
