@@ -186,8 +186,9 @@ export class DerivedOperator extends Operator {
                 let v_ins = ins_records.get(key)
                 // assert(!(v_ins instanceof Uint8Array))
 
-                // when comparing arrays (AggregationOperator), convert them to JSON
+                // when comparing non-primitive payload objects (arrays from AggregationOperator), first convert them to JSON
                 if (typeof v_rmv === 'object' && typeof v_ins === 'object') {
+                // if (!(T.isPrimitive(v_rmv) && T.isPrimitive(v_ins))) {
                     v_rmv = JSONx.stringify(v_rmv)
                     v_ins = JSONx.stringify(v_ins)
                 }
