@@ -92,13 +92,13 @@ export class Cluster extends Agent {
         return [...this.$state.nodes.keys()]
     }
 
-    async '$leader.deploy_agent'(agent, role, controller_name) {
+    async '$leader.deploy_agent'(agent, role) {
         /* Find the least busy node and deploy `agent` there. */
 
         await agent.load()
-        // let controller_name = agent.controller
-
+        let controller_name = agent.controller
         assert(controller_name, `missing controller name`)
+
         let controller = this.$state.controllers[controller_name]
         return controller.deploy(this, agent, role)
     }

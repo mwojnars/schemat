@@ -999,7 +999,7 @@
         servers) may benefit from concurrent execution on multiple workers.
       "@": schemat/types/type.js:INTEGER
     controller:
-      info: Global name (like in [cluster].controllers) of the controller that manages 
+      info: Global name (like in [cluster].controllers) of the controller that manages
         this agent's replication and deployments.
       "@": schemat/types/type.js:STRING
     concurrent:
