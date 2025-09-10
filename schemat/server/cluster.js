@@ -77,8 +77,9 @@ export class Cluster extends Agent {
         return [...this.$state.nodes.keys()]
     }
 
-    async '$leader.deploy_agent'(agent, role = AgentRole.GENERIC) {
+    async '$leader.deploy_agent'(agent, role, controller_name) {
         /* Find the least busy node and deploy `agent` there. */
+        // TODO: this method should delegate to schemat.get_controller(controller_name).deploy(agent, role)
         // TODO: only look among nodes where (agent, role) is not deployed yet (!)
         let nodes = [...this.$state.nodes.values()]
         let {id} = nodes[0]  //min(nodes, n => n.avg_agents)   // TODO: temporary (FIXME)

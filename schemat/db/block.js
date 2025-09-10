@@ -789,7 +789,7 @@ export class DataBlock extends Block {
                 throw new DataAccessError("cannot remove the item, the ring is read-only", {id})
                 // return req.error_access("cannot remove the item, the ring is read-only")
 
-            let obj = await WebObject.inactive(id, data)    // class, prototypes, __data are initialized, but __load__() not executed
+            let obj = await WebObject.inactive(id, data)    // class, prototypes, __data are initialized, but __load__() is not executed
 
             // TODO: if `obj` is an agent, stop and uninstall all of its running instances ??
 
@@ -803,6 +803,7 @@ export class DataBlock extends Block {
             await this._apply([op_del, ...ops_derived])     // schedule `ops` for execution, either immediately or later with WAL
 
             this._cascade_delete(obj)                       // remove objects linked to via a strong reference
+            // TODO: launch triggers if attribute change detected?
 
             schemat.register_changes({id, data: {'__status': WebObject.Status.DELETED}})
             return 1
