@@ -3,6 +3,7 @@ import {assert, print, min, T} from "../common/utils.js";
 import {ObjectsMap} from "../common/structs.js";
 import {Agent} from "./agent.js";
 import {GlobalPlacements} from "./place.js";
+import {BlocksController} from "./control.js";
 
 
 /**********************************************************************************************************************/
@@ -70,7 +71,7 @@ export class Cluster extends Agent {
     get controllers() {
         /* Temporary solution. This attribute will ultimately be stored in DB. */
         return {
-            'blocks':       null,
+            'blocks':       new BlocksController(),
             'webservers':   null,
             'utilities':    null,
         }
@@ -82,7 +83,8 @@ export class Cluster extends Agent {
         assert(role === '$leader')
         let nodes = new ObjectsMap(this.nodes.map(n => [n, new NodeState(n)]))
         let global_placements = new GlobalPlacements(this.nodes)
-        return {nodes, global_placements}
+        let controllers = {...this.controllers}
+        return {nodes, global_placements, controllers}
     }
 
     get_nodes() {
