@@ -567,7 +567,7 @@ export class Node extends Agent {
     }
 
     async '$master.deploy_agent'(agent, role, {worker, replicas = 1} = {}) {
-        /* Install `agent` (object or ID) on this node, then find the least busy worker process and start `agent` there. */
+        /* Install `agent` (object or ID) on this node if needed, then find the least busy worker process and start (agent, role) there. */
         agent = await schemat.as_loaded(agent)
 
         // install the agent unless it's already deployed here on this node

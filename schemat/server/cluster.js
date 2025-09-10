@@ -94,14 +94,12 @@ export class Cluster extends Agent {
 
     async '$leader.deploy_agent'(agent, role, controller_name) {
         /* Find the least busy node and deploy `agent` there. */
+        let controller = this.$state.controllers[controller_name]
+        return controller.deploy(agent, role)
 
-        // // TODO: controller should decide on deployment
-        // let controller = this.$state.controllers[controller_name]
-        // return controller.deploy(agent, role)
-
-        // TODO: only look among nodes where (agent, role) is not deployed yet (!)
-        let node = this._least_busy_node()
-        return this._deploy_agent(node, agent, role)
+        // // TODO: only look among nodes where (agent, role) is not deployed yet (!)
+        // let node = this._least_busy_node()
+        // return this._deploy_agent(node, agent, role)
     }
 
     async _deploy_agent(node, agent, role) {
