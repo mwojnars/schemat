@@ -1322,11 +1322,11 @@ export class WebObject {
         return this
     }
 
-    async deploy_agent(role = AgentRole.GENERIC, controller) {
+    async deploy_agent(role = AgentRole.GENERIC) {
         /* Deploy `this` as an agent somewhere in the cluster. Should only be called on web objects of Agent category.
            This method is defined here instead of Agent class to allow its invocation on stubs.
          */
-        return schemat.cluster.$leader.deploy_agent(this, role, controller)
+        return schemat.cluster.$leader.deploy_agent(this, role)
     }
 
     async remove_agent() {     // dismiss/discard/expel/expulse/evict/remove/retract/cancel/revoke/recall/withdraw
