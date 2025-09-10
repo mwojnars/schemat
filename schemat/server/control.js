@@ -10,3 +10,8 @@ export class Controller extends WebObject {
      */
 }
 
+export class BlocksController extends WebObject {
+    /* Manages deployments of data & index blocks of all rings: 1x block.$master per cluster + N x block.$replica,
+       or full replication for bootstrap blocks. Migration of block.$master to a different node when its host node fails or goes down.
+     */
+}
