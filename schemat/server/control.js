@@ -17,7 +17,7 @@ export class Controller {   //extends WebObject
         // TODO: start replicas, not just the master agent
 
         let node = cluster._least_busy_node()
-        return cluster._deploy_agent(node, agent, role)
+        return cluster._start_agent(node, agent, role)
     }
 }
 
