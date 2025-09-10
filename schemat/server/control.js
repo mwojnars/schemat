@@ -12,8 +12,7 @@ export class Controller {   //extends WebObject
     async deploy(cluster, agent, role) {
         /* Find the least busy node and deploy `agent` there. */
 
-        // TODO: only look among nodes where (agent, role) is not deployed yet ... OR better, check that (agent,role) is NOT deployed yet
-
+        // TODO: check that (agent,role) is NOT deployed yet
         // TODO: start replicas, not just the master agent
 
         let node = cluster._least_busy_node()
@@ -24,5 +23,6 @@ export class Controller {   //extends WebObject
 export class BlocksController extends Controller {
     /* Manages deployments of data & index blocks of all rings: 1x block.$master per cluster + N x block.$replica,
        or full replication for bootstrap blocks. Migration of block.$master to a different node when its host node fails or goes down.
+       It's assumed that agents to be deployed are instances of [Block], so their replication config can be found in sequence or ring.
      */
 }
