@@ -97,9 +97,11 @@ export class Cluster extends Agent {
 
         await agent.load()
         let controller_name = agent.controller
-        assert(controller_name, `missing controller name`)
+        if (!controller_name) throw new Error(`missing controller name for ${agent}`)
 
         let controller = this.$state.controllers[controller_name]
+        if (!controller) throw new Error(`unknown controller name, '${controller_name}'`)
+
         return controller.deploy(this, agent, role)
     }
 
