@@ -94,11 +94,13 @@ export class Cluster extends Agent {
 
     async '$leader.deploy_agent'(agent, role, controller_name) {
         /* Find the least busy node and deploy `agent` there. */
-        // TODO: controller should decide on deployment: schemat.get_controller(controller_name).deploy(agent, role)
+
+        // // TODO: controller should decide on deployment
+        // let controller = this.$state.controllers[controller_name]
+        // return controller.deploy(agent, role)
+
         // TODO: only look among nodes where (agent, role) is not deployed yet (!)
-        let nodes = [...this.$state.nodes.values()]
-        let {id} = min(nodes, n => n.avg_agents)
-        let node = schemat.get_object(id)
+        let node = this._least_busy_node()
 
         // this._print(`$leader.deploy() node states:`, nodes)
         // this._print(`$leader.deploy() node avg_agents:`, nodes.map(n => n.avg_agents))
@@ -108,6 +110,12 @@ export class Cluster extends Agent {
         this.$state.nodes.get(node).num_agents++
         this.$state.global_placements.add(node, agent, role)
         await this._broadcast_placements()
+    }
+
+    _least_busy_node() {
+        let nodes = [...this.$state.nodes.values()]
+        let {id} = min(nodes, n => n.avg_agents)
+        return schemat.get_object(id)
     }
 
     async '$leader.remove_agent'(agent, role = AgentRole.ANY) {

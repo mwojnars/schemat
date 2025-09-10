@@ -8,6 +8,10 @@ export class Controller {   //extends WebObject {
        Receives signals of cluster reshaping and decides whether a particular deployment should be stopped/started/migrated.
        Represents the strategy of agent replication.
      */
+
+    deploy(cluster, agent, role) {
+
+    }
 }
 
 export class BlocksController extends WebObject {
