@@ -77,7 +77,7 @@ export class Cluster extends Agent {
         }
     }
 
-    /***  Agent operations  ***/
+    /***  Agent methods  ***/
 
     async __start__({role}) {
         assert(role === '$leader')
@@ -101,11 +101,11 @@ export class Cluster extends Agent {
 
         // TODO: only look among nodes where (agent, role) is not deployed yet (!)
         let node = this._least_busy_node()
+        return this._deploy_agent(node, agent, role)
+    }
 
-        // this._print(`$leader.deploy() node states:`, nodes)
-        // this._print(`$leader.deploy() node avg_agents:`, nodes.map(n => n.avg_agents))
+    async _deploy_agent(node, agent, role) {
         // this._print(`$leader.deploy() deploying ${agent} at ${node}`)
-
         await node.$master.deploy_agent(agent, role)
         this.$state.nodes.get(node).num_agents++
         this.$state.global_placements.add(node, agent, role)
@@ -113,6 +113,8 @@ export class Cluster extends Agent {
     }
 
     _least_busy_node() {
+        // this._print(`$leader.deploy() node states:`, nodes)
+        // this._print(`$leader.deploy() node avg_agents:`, nodes.map(n => n.avg_agents))
         let nodes = [...this.$state.nodes.values()]
         let {id} = min(nodes, n => n.avg_agents)
         return schemat.get_object(id)
