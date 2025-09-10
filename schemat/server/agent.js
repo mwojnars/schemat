@@ -25,10 +25,11 @@ export class Agent extends WebObject {
                     // of this agent ("user mode"); if missing, kernel's context (cluster-level DB) is used ("kernel mode");
                     // behavior for $agent.*() calls can be modified with switch_context=true
 
+    file_tag            // string to be included in names of local files and directories created by this agent
     switch_context      // if true, commands are executed in the caller's context not the agent's own context (__ctx)
     num_replicas        // no. of instances of this agent that should be deployed at different workers of a node; -1 = "one per worker"
     concurrent          // if true, multiple calls to this agent may execute concurrently; disabled by default
-    file_tag            // string to be included in names of local files and directories created by this agent
+    controller          // global name of the controller that manages this agent's replication and deployments
 
     get file_path() { throw new Error(`file_path not implemented for agent ${this}`) }
 

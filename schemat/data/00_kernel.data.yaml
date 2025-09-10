@@ -997,6 +997,10 @@
         need only one copy per node, or per cluster, but some others (like web
         servers) may benefit from concurrent execution on multiple workers.
       "@": schemat/types/type.js:INTEGER
+    controller:
+      info: Global name (like in [cluster].controllers) of the controller that manages 
+        this agent's replication and deployments.
+      "@": schemat/types/type.js:STRING
     concurrent:
       info: If true, multiple calls to an agent instance may execute concurrently.
         Disabled by default, so every agent method runs in exclusive lock.
