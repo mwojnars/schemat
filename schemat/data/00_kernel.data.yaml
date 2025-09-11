@@ -1060,6 +1060,14 @@
     "@": 29
   __category:
     "@": 1
+- id: 31
+  name: blocks-controller
+  __category:
+    "@": 28
+- id: 32
+  name: webservers-controller
+  __category:
+    "@": 28
 - id: 33
   name: Logger
   class: schemat/server/logger.js:Logger
