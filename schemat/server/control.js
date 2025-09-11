@@ -34,13 +34,14 @@ export class Controller {  //extends WebObject
         roles[0] = role_leader
 
         if (copies !== 1 && replicas) throw new Error(`cannot deploy multiple local copies when replicas are deployed too`)
+        let skip = []
 
         for (let role of roles) {
             // TODO: make sure that `node` is not the same as any previously used node (don't put two replicas together etc.)
-            let node = this.cluster._least_busy_node()
+            let node = this.cluster._least_busy_node(skip)
+            skip.push(node)
             await this.cluster._start_agent(node, agent, role, {copies})
         }
-        // TODO: start multiple copies on different worker processes
     }
 
     _check_not_deployed(agent, role) {
@@ -75,5 +76,6 @@ export class BlocksController extends Controller {
        or full replication for bootstrap blocks. Migration of block.$master to a different node when its host node fails or goes down.
        It's assumed that agents to be deployed are instances of [Block], so their replication config can be found in sequence or ring.
      */
-    get_roles()     { return ['$master', '$replica'] }
+    get_roles() { return ['$master', '$replica'] }
+    // get_num_replicas() { return 1 }
 }
