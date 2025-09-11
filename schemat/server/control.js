@@ -27,11 +27,17 @@ export class Controller {   //extends WebObject
         this._check_not_deployed(agent, role_leader)
         if (role_replica) this._check_not_deployed(agent, role_replica)
 
-        // TODO: start replicas, not just the leader
+        let replicas = this.get_num_replicas(agent)
+        let roles = Array.from({length: 1 + replicas}, () => role_replica)
+        roles[0] = role_leader
+
         // TODO: start multiple copies on different worker processes
 
-        let node = this.cluster._least_busy_node()
-        return this.cluster._start_agent(node, agent, role_leader)
+        for (let role of roles) {
+            // TODO: make sure that `node` is not the same as any previously used node (don't put two replicas together etc.)
+            let node = this.cluster._least_busy_node()
+            await this.cluster._start_agent(node, agent, role)
+        }
     }
 
     _check_not_deployed(agent, role) {
