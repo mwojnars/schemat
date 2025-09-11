@@ -446,11 +446,12 @@ export class Block extends Agent {
            of the monitor on next restart of the agent.
          */
         return this.$state.lock_all(() => {
-            this._print(`$master.remove_monitor(${seq}) start, monitors =`, [...this.$state.monitors.values()].map(m => ([m.src.id, m.dst.id])))
+            this._print(`$master.remove_monitor(${seq}) from monitors =`, [...this.$state.monitors.values()].map(m => ([m.src.id, m.dst.id])))
             let monitor = this.$state.monitors.get(seq)
+            if (!monitor) this._print(`$master.remove_monitor(${seq}) WARN: monitor not found for target sequence ${seq}, ignoring`)
             this.$state.monitors.delete(seq)
-            monitor.destroy()
-            this._print(`$master.remove_monitor(${seq}) done, monitors =`, [...this.$state.monitors.values()].map(m => ([m.src.id, m.dst.id])))
+            monitor?.destroy()
+            // this._print(`$master.remove_monitor(${seq}) done, monitors =`, [...this.$state.monitors.values()].map(m => ([m.src.id, m.dst.id])))
         })
     }
 

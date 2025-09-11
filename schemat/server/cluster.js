@@ -80,6 +80,7 @@ export class Cluster extends Agent {
     }
 
     _create_controllers() {
+        /* For now, controllers are local objects, not web objects, so they don't have any internal state (won't be persisted). */
         return {
             'BLOCKS':       new BlocksController(this),
             'WEBSERVERS':   null,

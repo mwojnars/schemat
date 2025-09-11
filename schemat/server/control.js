@@ -6,8 +6,8 @@ import {WebObject} from "../core/object.js";
 export class Controller {   //extends WebObject
     /* Agent controller. Manages a group of related agent deployments running on different nodes across the cluster.
        Receives signals of cluster reshaping and decides whether a particular deployment should be stopped/started/migrated.
-       Represents the strategy of agent replication.
-       Controller is tightly coupled with cluster.$leader and should only be executed in cluster.$leader's process.
+       Represents the strategy of agent replication. Controller is tightly coupled to cluster.$leader as a part
+       of its $state and should only be executed in cluster.$leader's process.
      */
 
     constructor(cluster_leader) {
