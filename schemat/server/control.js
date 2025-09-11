@@ -14,12 +14,14 @@ export class Controller {   //extends WebObject
         this.cluster = cluster_leader
     }
 
+    get global_placements() { return this.cluster.$state.global_placements }
+
     async deploy(agent, role) {
-        /* Find the least busy node and deploy `agent` there. */
+        /* Find the least busy node(s) and deploy `agent` there. */
 
-        // TODO: check that (agent,role) is NOT deployed yet
-
-
+        // check that (agent,role) is not deployed yet
+        let exists = this.global_placements.find_all(agent, role)
+        if (exists.length) throw new Error(`agent ${agent}.${role} is already deployed in the cluster (nodes ${exists})`)
 
         // TODO: start replicas, not just the master agent
 
