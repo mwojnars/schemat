@@ -566,11 +566,13 @@ export class Node extends Agent {
         this.$state.global_placements = placements
     }
 
-    async '$master.start_agent'(agent, role, {worker, replicas = 1} = {}) {
+    async '$master.start_agent'(agent, role, {worker, copies = 1} = {}) {
         /* Start `agent` (object or ID) on this node: first, install it if needed, then find the least busy
            worker process and start (agent, role) there.
          */
         agent = await schemat.as_loaded(agent)
+        // let controller = await agent.controller.load()
+        // let copies = controller.get_num_workers(agent, this)
 
         // install the agent unless it's already deployed here on this node
         if (!this._has_agent(agent)) await agent.__install__(this)
@@ -584,11 +586,11 @@ export class Node extends Agent {
         // if (agents.has(agent)) throw new Error(`agent ${agent} is already running on node ${this}`)
         // agents.set(agent, {params, role, workers})
 
-        if (replicas > this.num_workers) throw new Error(`no. of replicas (${replicas}) must be <= ${this.num_workers}`)
-        if (replicas === -1) replicas = this.num_workers
+        if (copies > this.num_workers) throw new Error(`no. of copies (${copies}) must be <= ${this.num_workers}`)
+        if (copies === -1) copies = this.num_workers
 
         let workers = worker ? (Array.isArray(worker) ? worker : [worker]) : local_placements.rank_places()  //this._rank_workers(agents)
-        workers = workers.slice(0, replicas)
+        workers = workers.slice(0, copies)
 
         if (role === null || role === AgentRole.GENERIC)
             role = undefined             // the default role "$agent" is passed implicitly
