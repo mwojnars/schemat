@@ -68,14 +68,6 @@ export class Cluster extends Agent {
 
     global_placements() { return new GlobalPlacements(this.nodes) }
 
-    get controllers() {
-        /* Temporary solution. This attribute will ultimately be stored in DB. */
-        return {
-            'BLOCKS':       new BlocksController(this),
-            'WEBSERVERS':   null,
-            'UTILITIES':    null,
-        }
-    }
 
     /***  Agent methods  ***/
 
@@ -83,8 +75,16 @@ export class Cluster extends Agent {
         assert(role === '$leader')
         let nodes = new ObjectsMap(this.nodes.map(n => [n, new NodeState(n)]))
         let global_placements = new GlobalPlacements(this.nodes)
-        let controllers = {...this.controllers}
+        let controllers = this._create_controllers()
         return {nodes, global_placements, controllers}
+    }
+
+    _create_controllers() {
+        return {
+            'BLOCKS':       new BlocksController(this),
+            'WEBSERVERS':   null,
+            'UTILITIES':    null,
+        }
     }
 
     get_nodes() {
