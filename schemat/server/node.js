@@ -607,6 +607,8 @@ export class Node extends Agent {
 
         // agents = local_placements.get_status()
         // await this.update_self({agents}).save()     // save new configuration of agents to DB
+
+        return copies
     }
 
     async '$master.stop_agent'(agent, role = AgentRole.ANY) {

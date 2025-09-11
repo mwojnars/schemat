@@ -28,14 +28,17 @@ export class Controller {  //extends WebObject
         this._check_not_deployed(agent, role_leader)
         if (role_replica) this._check_not_deployed(agent, role_replica)
 
+        let copies = this.get_num_workers(agent)
         let replicas = this.get_num_replicas(agent)
         let roles = Array.from({length: 1 + replicas}, () => role_replica)
         roles[0] = role_leader
 
+        if (copies !== 1 && replicas) throw new Error(`cannot deploy multiple local copies when replicas are deployed too`)
+
         for (let role of roles) {
             // TODO: make sure that `node` is not the same as any previously used node (don't put two replicas together etc.)
             let node = this.cluster._least_busy_node()
-            await this.cluster._start_agent(node, agent, role)
+            await this.cluster._start_agent(node, agent, role, {copies})
         }
         // TODO: start multiple copies on different worker processes
     }
@@ -59,9 +62,9 @@ export class Controller {  //extends WebObject
         return 0
     }
 
-    get_num_workers(agent, role, node) {
-        /* Calculate the no. of copies of `agent` that should be started at `node`, each copy running in a separate worker process.
-           If -1 is returned, it means "as many as there are workers".
+    get_num_workers(agent) {
+        /* Calculate the no. of copies of `agent` that should be started at every node, each copy running
+           in a separate worker process. If -1 is returned, it means "one copy per each worker".
          */
         return 1
     }
