@@ -7,16 +7,24 @@ export class Controller {   //extends WebObject
     /* Agent controller. Manages a group of related agent deployments running on different nodes across the cluster.
        Receives signals of cluster reshaping and decides whether a particular deployment should be stopped/started/migrated.
        Represents the strategy of agent replication.
+       Controller is tightly coupled with cluster.$leader and should only be executed in cluster.$leader's process.
      */
 
-    async deploy(cluster, agent, role) {
+    constructor(cluster_leader) {
+        this.cluster = cluster_leader
+    }
+
+    async deploy(agent, role) {
         /* Find the least busy node and deploy `agent` there. */
 
         // TODO: check that (agent,role) is NOT deployed yet
+
+
+
         // TODO: start replicas, not just the master agent
 
-        let node = cluster._least_busy_node()
-        return cluster._start_agent(node, agent, role)
+        let node = this.cluster._least_busy_node()
+        return this.cluster._start_agent(node, agent, role)
     }
 }
 

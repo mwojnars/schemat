@@ -71,7 +71,7 @@ export class Cluster extends Agent {
     get controllers() {
         /* Temporary solution. This attribute will ultimately be stored in DB. */
         return {
-            'BLOCKS':       new BlocksController(),
+            'BLOCKS':       new BlocksController(this),
             'WEBSERVERS':   null,
             'UTILITIES':    null,
         }
@@ -102,7 +102,7 @@ export class Cluster extends Agent {
         let controller = this.$state.controllers[controller_name]
         if (!controller) throw new Error(`unknown controller name, '${controller_name}'`)
 
-        return controller.deploy(this, agent, role)
+        return controller.deploy(agent, role)
     }
 
     async _start_agent(node, agent, role) {
