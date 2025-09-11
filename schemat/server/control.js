@@ -10,7 +10,7 @@ export class Controller {   //extends WebObject
        of its $state and should only be executed in cluster.$leader's process.
      */
 
-    // saturate_workers     -- if true, agents managed by this controller should be executed in multiple copies, on every single worker at a given node
+    // saturate_workers     -- if true, agents managed by this controller should be deployed locally in multiple copies, on every worker process at a given node
 
     constructor(cluster_leader) {
         this.cluster = cluster_leader
@@ -21,10 +21,8 @@ export class Controller {   //extends WebObject
     async deploy(agent, role) {
         /* Find the least busy node(s) and deploy `agent` there. */
 
-        // check that (agent,role) is not deployed yet
-        let exists = this._global_placements.find_all(agent, role)
-        if (exists.length) throw new Error(`agent ${agent}.${role} is already deployed in the cluster (nodes ${exists})`)
-
+        this._check_not_deployed(agent, role)
+        
         // TODO: start replicas, not just the leader
         // TODO: start multiple copies on different worker processes
 
@@ -32,9 +30,15 @@ export class Controller {   //extends WebObject
         return this.cluster._start_agent(node, agent, role)
     }
 
+    _check_not_deployed(agent, role) {
+        /* Check that (agent,role) is not deployed yet in the cluster, raise an error otherwise. */
+        let exists = this._global_placements.find_all(agent, role)
+        if (exists.length) throw new Error(`agent ${agent}.${role} is already deployed in the cluster (nodes ${exists})`)
+    }
+
     get_roles(agent) {
-        /* Return a pair of role names, [<leader>, <replica>], that denote the leader and replicas of `agent`, respectively,
-           during its deployment. If <replica> is empty (undefined), it means that no replicas exist for this type of agent.
+        /* Return a pair of role names, [<leader>, <replica>], that denote the leader and replicas of `agent`, respectively.
+           If <replica> is empty (undefined), it means that no replicas are created for this type of agent.
            If <leader> is empty, it should be imputed with AgentRole.GENERIC.
          */
         return [AgentRole.GENERIC]
