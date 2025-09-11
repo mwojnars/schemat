@@ -31,13 +31,12 @@ export class Controller {   //extends WebObject
         let roles = Array.from({length: 1 + replicas}, () => role_replica)
         roles[0] = role_leader
 
-        // TODO: start multiple copies on different worker processes
-
         for (let role of roles) {
             // TODO: make sure that `node` is not the same as any previously used node (don't put two replicas together etc.)
             let node = this.cluster._least_busy_node()
             await this.cluster._start_agent(node, agent, role)
         }
+        // TODO: start multiple copies on different worker processes
     }
 
     _check_not_deployed(agent, role) {
