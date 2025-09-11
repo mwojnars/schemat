@@ -21,8 +21,12 @@ export class Controller {   //extends WebObject
     async deploy(agent, role) {
         /* Find the least busy node(s) and deploy `agent` there. */
 
-        this._check_not_deployed(agent, role)
-        
+        let [role_leader, role_replica] = this.get_roles(agent)
+        role_leader ??= AgentRole.GENERIC
+
+        this._check_not_deployed(agent, role_leader)
+        if (role_replica) this._check_not_deployed(agent, role_replica)
+
         // TODO: start replicas, not just the leader
         // TODO: start multiple copies on different worker processes
 
