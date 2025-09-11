@@ -978,6 +978,8 @@
     "@": 1
 - id: 28
   name: Controller
+  info: Agent controller. Manages a group of related agent deployments running on
+    different nodes across the cluster. Works on behalf of cluster.$leader.
   __category:
     "@": 1
 - id: 29
