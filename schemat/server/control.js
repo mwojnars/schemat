@@ -1,4 +1,5 @@
 import {assert, print} from '../common/utils.js'
+import {AgentRole} from "../common/globals.js";
 
 /**********************************************************************************************************************/
 
@@ -31,8 +32,24 @@ export class Controller {   //extends WebObject
         return this.cluster._start_agent(node, agent, role)
     }
 
+    get_roles(agent) {
+        /* Return a pair of role names, [<leader>, <replica>], that denote the leader and replicas of `agent`, respectively,
+           during its deployment. If <replica> is empty (undefined), it means that no replicas exist for this type of agent.
+           If <leader> is empty, it should be imputed with AgentRole.GENERIC.
+         */
+        return [AgentRole.GENERIC]
+    }
+
+    get_num_replicas(agent) {
+        /* Calculate the no. of replicas that should be created for `agent` across the cluster in addition to the leader deployment. */
+        return 0
+    }
+
     get_num_workers(agent, role, node) {
-        /* Calculate the no. of copies of `agent` that should be started at `node`, each copy running in a separate worker process. */
+        /* Calculate the no. of copies of `agent` that should be started at `node`, each copy running in a separate worker process.
+           If -1 is returned, it means "as many as there are workers".
+         */
+        return 1
     }
 }
 
