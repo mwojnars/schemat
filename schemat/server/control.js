@@ -1,16 +1,17 @@
 import {assert, print} from '../common/utils.js'
 import {AgentRole} from "../common/globals.js";
+// import {WebObject} from "../core/object.js";
 
 /**********************************************************************************************************************/
 
-export class Controller {   //extends WebObject
+export class Controller {  //extends WebObject
     /* Agent controller. Manages a group of related agent deployments running on different nodes across the cluster.
        Receives signals of cluster reshaping and decides whether a particular deployment should be stopped/started/migrated.
-       Represents the strategy of agent replication. Controller is tightly coupled to cluster.$leader as a part
-       of its $state and should only be executed in cluster.$leader's process.
+       Represents the strategy of agent replication. Controller is tightly coupled to cluster.$leader and most of its
+       functionality is executed in cluster.$leader's process, as it relies on cluster.$leader's state.
      */
 
-    // saturate_workers     -- if true, agents managed by this controller should be deployed locally in multiple copies, on every worker process at a given node
+    // saturate_workers     -- if true, agents managed by this controller are deployed locally in multiple copies, on every worker process available at a given node
 
     constructor(cluster_leader) {
         this.cluster = cluster_leader

@@ -571,7 +571,7 @@ export class Node extends Agent {
            worker process and start (agent, role) there.
          */
         agent = await schemat.as_loaded(agent)
-        // let controller = await agent.controller.load()
+        // let controller = await agent.get_controller()   >  await schemat.get_controller(agent.controller).load()
         // let copies = controller.get_num_workers(agent, this)
 
         // install the agent unless it's already deployed here on this node
