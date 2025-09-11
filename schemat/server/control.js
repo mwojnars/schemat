@@ -18,7 +18,7 @@ export class Controller {   //extends WebObject
 
     get _global_placements() { return this.cluster.$state.global_placements }
 
-    async deploy(agent, role) {
+    async deploy(agent) {
         /* Find the least busy node(s) and deploy `agent` there. */
 
         let [role_leader, role_replica] = this.get_roles(agent)
@@ -31,7 +31,7 @@ export class Controller {   //extends WebObject
         // TODO: start multiple copies on different worker processes
 
         let node = this.cluster._least_busy_node()
-        return this.cluster._start_agent(node, agent, role)
+        return this.cluster._start_agent(node, agent, role_leader)
     }
 
     _check_not_deployed(agent, role) {
@@ -66,4 +66,5 @@ export class BlocksController extends Controller {
        or full replication for bootstrap blocks. Migration of block.$master to a different node when its host node fails or goes down.
        It's assumed that agents to be deployed are instances of [Block], so their replication config can be found in sequence or ring.
      */
+    get_roles()     { return ['$master', '$replica'] }
 }
