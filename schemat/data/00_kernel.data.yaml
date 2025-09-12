@@ -1001,12 +1001,6 @@
       category:
         "@": 11
       "@": schemat/types/type.js:REF
-    num_replicas:
-      info: No. of replicas that should be deployed for this agent across the cluster
-        in addition to the leader; 0 means no replication (master/leader only).
-        How exactly this parameter is used, and what role names denote a leader
-        or replica, is decided by the controller.
-      "@": schemat/types/type.js:INTEGER
     controller:
       info: Global name (like in [cluster].controllers) of the controller that manages
         this agent's replication and deployments.

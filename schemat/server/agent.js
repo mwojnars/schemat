@@ -27,8 +27,6 @@ export class Agent extends WebObject {
 
     file_tag            // string to be included in names of local files and directories created by this agent
     switch_context      // if true, commands are executed in the caller's context not the agent's own context (__ctx)
-    num_replicas        // no. of replicas that should be deployed for this agent across the cluster in addition to the leader; 0 means no replication (master/leader only)
-    // num_replicas        // no. of instances of this agent that should be deployed at different workers of a node; -1 = "one per worker"
     concurrent          // if true, multiple calls to this agent may execute concurrently; disabled by default
     controller          // global name of the controller that manages this agent's replication and deployments
 
