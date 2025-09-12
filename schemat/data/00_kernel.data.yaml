@@ -224,7 +224,7 @@
           update.
         min: 1
         inherited: false
-        "@": schemat/types/type.js:INTEGER
+        "@": schemat/types/type.js:UNSIGNED
       __prev:
         info: The most recent Revision created for the object. Contains the previous
           state of this object (from before the last update).
@@ -553,20 +553,20 @@
         any ID from a lower ring (even if disallowed for inserts) can be saved
         here in this ring as an override of a lower-ring version of the record."
       min: 1,
-      "@": schemat/types/type.js:INTEGER
+      "@": schemat/types/type.js:UNSIGNED
     min_id_forbidden:
       info: "The end of the exclusive ID insert zone. No ID value in the range from
         min_id_forbidden to min_id_sharded-1 can be used for new records
         inserted in this ring. IMPORTANT: updates are not affected by this
         setting."
       min: 1
-      "@": schemat/types/type.js:INTEGER
+      "@": schemat/types/type.js:UNSIGNED
     min_id_sharded:
       info: Lower bound of the (right-unbounded) range where ID sharding is applied to
         inserts. In this range, inserts can only assign an ID that hashes to
         this ring's `shard3.offset` under modulo `shard3.base`.
       min: 1,
-      "@": schemat/types/type.js:INTEGER
+      "@": schemat/types/type.js:UNSIGNED
     shard3:
       info: Base-3 (3**k) shard that defines the valid set of IDs for objects inserted
         into this ring in the 'sharded' zone. The shard's base should be a power
@@ -582,12 +582,12 @@
       "@": schemat/types/type.js:STRING
     data_replicas:
       info: Desired number of $replica deployments to be created for each data block
-        in this ring.
+        in this ring; -1 for "as many as nodes minus 1".
       default: 0
       "@": schemat/types/type.js:INTEGER
     index_replicas:
       info: Desired number of $replica deployments to be created for each derived
-        block (index/aggregation) in this ring.
+        block (index/aggregation) in this ring; -1 for "as many as nodes minus 1".
       default: 0
       "@": schemat/types/type.js:INTEGER
     "@": schemat:Catalog
@@ -714,7 +714,7 @@
       - id
     fields:
       id:
-        "@": schemat/types/type.js:INTEGER
+        "@": schemat/types/type.js:ID
     "@": schemat:Catalog
   __prototype:
     "@": 24
@@ -966,7 +966,7 @@
       "@": schemat/types/type.js:REF
     ver:
       info: Version number of the `target` that is stored in this revision.
-      "@": schemat/types/type.js:INTEGER
+      "@": schemat/types/type.js:UNSIGNED
     data:
       info: JSON-stringified `__data` of the target object at version `ver`.
       "@": schemat/types/type.js:STRING
