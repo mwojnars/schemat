@@ -24,9 +24,9 @@ export class OP {
     bind(block) { this.block = block }
 
     async submit() {
-        /* RPC execution on a derived block. */
+        /* RPC execution on $master of a derived block. */
         let {block, op, args} = this
-        return block.$agent.exec_op(op, ...args)
+        return block.$master.exec_op(op, ...args)
     }
 
     exec(block) {
