@@ -341,7 +341,7 @@ export class INTEGER extends NUMBER {
     /* An integer value. Like a NUMBER, but with additional constraints and monotonic binary encoding (can be used in index keys). */
 
     static options = {
-        signed:  false,         // if true, values can be negative
+        signed:  true,          // if true, values can be negative
         length:  undefined,     // number of bytes to be used to store values in DB indexes; adaptive encoding if undefined (for uint), or 6 (for signed int)
     }
 
@@ -366,11 +366,13 @@ export class INTEGER extends NUMBER {
     }
 }
 
-export class ID extends INTEGER {
+export class UNSIGNED extends INTEGER {
+    static options = {signed: false}
+}
+
+export class ID extends UNSIGNED {
     /* Database ID of an object. */
-    static options = {
-        min: 1,
-    }
+    static options = {min: 1}
 }
 
 /**********************************************************************************************************************
