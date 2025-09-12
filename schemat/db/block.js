@@ -394,7 +394,7 @@ export class Block extends Agent {
     }
 
     async '$replica.replicate'(op, ...args) {
-        this._print(`$replica.replicate(${op}, ${args})`)
+        this._print(`$replica.replicate(${op},${args})`)
         return this.exec_op(op, ...args)
     }
 

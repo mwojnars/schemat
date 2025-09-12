@@ -21,6 +21,7 @@ export class Controller {  //extends WebObject
 
     async deploy(agent) {
         /* Find the least busy node(s) and deploy `agent` there. */
+        await agent.load()
 
         let [role_leader, role_replica] = this.get_roles(agent)
         role_leader ??= AgentRole.GENERIC
@@ -28,13 +29,15 @@ export class Controller {  //extends WebObject
         this._check_not_deployed(agent, role_leader)
         if (role_replica) this._check_not_deployed(agent, role_replica)
 
-        let copies = this.get_num_workers(agent)
         let replicas = this.get_num_replicas(agent)
+        if (replicas === -1) replicas = this._global_placements.count_places() - 1      // convert -1 to N-1
+
         let roles = Array.from({length: 1 + replicas}, () => role_replica)
         roles[0] = role_leader
 
-        if (copies !== 1 && replicas) throw new Error(`cannot deploy multiple local copies when replicas are deployed too`)
         let skip = []
+        let copies = this.get_num_workers(agent)
+        if (copies !== 1 && replicas) throw new Error(`cannot deploy multiple local copies when replicas are deployed too`)
 
         for (let role of roles) {
             let node = this.cluster._least_busy_node(skip)
@@ -58,7 +61,9 @@ export class Controller {  //extends WebObject
     }
 
     get_num_replicas(agent) {
-        /* Calculate the no. of replicas that should be created for `agent` across the cluster in addition to the leader deployment. */
+        /* Calculate the no. of replicas that should be created for `agent` across the cluster in addition to the leader deployment.
+           -1 means that a replica should run on every node except the one that hosts the leader.
+         */
         return 0
     }
 
@@ -76,5 +81,9 @@ export class BlocksController extends Controller {
        It's assumed that agents to be deployed are instances of [Block], so their replication config can be found in sequence or ring.
      */
     get_roles() { return ['$master', '$replica'] }
-    // get_num_replicas() { return 1 }
+    get_num_replicas(block) {
+        return 1
+        // if block is in ring-kernel/cluster, return -1
+        // return block.sequence.num_replicas
+    }
 }
