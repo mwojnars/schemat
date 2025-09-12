@@ -129,6 +129,15 @@ export class Placements {
     _is_local()  {}
     _is_hidden() {}
 
+    get_places() {
+        /* Return an array of place IDs occurring in placements, deduplicated. */
+        return [...new Set(Object.values(this._placements).flat())]
+    }
+    count_places() {
+        /* Return the number of places occurring in placements, deduplicated. */
+        return this.get_places().length
+    }
+
     has(agent, role)    { return this.find_first(agent, role) != null }
 
     find_all(agent, role = AgentRole.ANY) {
