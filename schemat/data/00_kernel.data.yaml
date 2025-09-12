@@ -587,7 +587,8 @@
       "@": schemat/types/type.js:INTEGER
     index_replicas:
       info: Desired number of $replica deployments to be created for each derived
-        block (index/aggregation) in this ring; -1 for "as many as nodes minus 1".
+        block (index/aggregation) in this ring; -1 for "as many as nodes minus
+        1".
       default: 0
       "@": schemat/types/type.js:INTEGER
     "@": schemat:Catalog
