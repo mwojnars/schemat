@@ -580,6 +580,16 @@
         autoincrement when inserting objects; using this mode has performance
         implications, so it should only be used with small rings.
       "@": schemat/types/type.js:STRING
+    data_replicas:
+      info: Desired number of $replica deployments to be created for each data block
+        in this ring.
+      default: 0
+      "@": schemat/types/type.js:INTEGER
+    index_replicas:
+      info: Desired number of $replica deployments to be created for each derived
+        block (index/aggregation) in this ring.
+      default: 0
+      "@": schemat/types/type.js:INTEGER
     "@": schemat:Catalog
   class: schemat/db/db.js:Ring
   __category:

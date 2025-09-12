@@ -75,7 +75,7 @@ export class Controller {  //extends WebObject
     }
 
     adjust_replicas(agent) {
-        /* Bring the number of replicas for `agent` to the desired value, as currently configured. */
+        /* Bring the actual number of replicas for `agent` to the desired value as configured in `agent`. */
     }
 }
 
@@ -86,7 +86,8 @@ export class BlocksController extends Controller {
      */
     get_roles() { return ['$master', '$replica'] }
     get_num_replicas(block) {
+        assert(block.is_loaded())
         return 1
-        // return block.sequence.num_replicas
+        // return block.num_replicas
     }
 }
