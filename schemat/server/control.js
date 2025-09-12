@@ -37,7 +37,6 @@ export class Controller {  //extends WebObject
         let skip = []
 
         for (let role of roles) {
-            // TODO: make sure that `node` is not the same as any previously used node (don't put two replicas together etc.)
             let node = this.cluster._least_busy_node(skip)
             skip.push(node)
             await this.cluster._start_agent(node, agent, role, {copies})

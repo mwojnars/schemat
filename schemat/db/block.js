@@ -378,7 +378,7 @@ export class Block extends Agent {
         return ops
     }
     
-    async _apply(ops) {
+    async apply_ops(ops) {
         /* Schedule local or remote `ops` for execution, either immediately or later with WAL (TODO). */
         return this.$state.lock_all(async () =>
         {
@@ -767,7 +767,7 @@ export class DataBlock extends Block {
         // TODO: for replication, emit "dff" (diff) when possible, not "put" ??
 
         let ops_derived = this._derive(key, prev, obj)      // instructions for derived sequences
-        await this._apply([op_put, ...ops_derived])         // schedule `ops` for execution, either immediately or later with WAL
+        await this.apply_ops([op_put, ...ops_derived])      // schedule `ops` for execution, either immediately or later with WAL
 
         this._cascade_delete(prev, obj)                     // remove objects linked to via a strong reference
 
@@ -801,7 +801,7 @@ export class DataBlock extends Block {
             await this._replicate(op_del)
 
             let ops_derived = this._derive(key, obj)        // instructions for derived sequences
-            await this._apply([op_del, ...ops_derived])     // schedule `ops` for execution, either immediately or later with WAL
+            await this.apply_ops([op_del, ...ops_derived])  // schedule `ops` for execution, either immediately or later with WAL
 
             this._cascade_delete(obj)                       // remove objects linked to via a strong reference
             // TODO: launch triggers if attribute change detected?
