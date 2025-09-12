@@ -87,7 +87,6 @@ export class BlocksController extends Controller {
     get_roles() { return ['$master', '$replica'] }
     get_num_replicas(block) {
         assert(block.is_loaded())
-        return 1
-        // return block.num_replicas
+        return block.num_replicas
     }
 }
