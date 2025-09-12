@@ -140,7 +140,13 @@
     - id: 1015
       role: $master
       worker: 2
+    - id: 1026
+      role: $master
+      worker: 2
     - id: 1032
+      role: $master
+      worker: 1
+    - id: 1033
       role: $master
       worker: 1
     - id: 1029
@@ -221,15 +227,9 @@
     - id: 1015
       role: $replica
       worker: 1
-    - id: 1026
-      role: $master
-      worker: 2
     - id: 1032
       role: $replica
       worker: 2
-    - id: 1033
-      role: $master
-      worker: 1
     - id: 1030
       role: $master
       worker: 1

@@ -129,7 +129,6 @@
     "@": 13
 - id: 1023
   name: webserver
-  num_replicas: -1
   __ctx:
     "@": 1002
   __category:
@@ -139,28 +138,30 @@
   num_workers: 2
   agents:
     - {worker: 1, id: 1030, role: $master}
-    - worker: 2
-      id: 1015
+    - id: 1015
       role: $master
-    - worker: 1
-      id: 1026
+      worker: 2
+    - id: 1026
       role: $master
-    - worker: 1
-      id: 1032
+      worker: 2
+    - id: 1032
       role: $master
-    - worker: 2
-      id: 1033
+      worker: 1
+    - id: 1033
       role: $master
-    - worker: 2
-      id: 1029
+      worker: 1
+    - id: 1029
       role: $master
-    - worker: 1
-      id: 1001
+      worker: 2
+    - id: 1001
       role: $leader
-    - worker: 1
-      id: 1023
-    - worker: 2
-      id: 1023
+      worker: 1
+    - id: 1023
+      role: $agent
+      worker: 1
+    - id: 1023
+      role: $agent
+      worker: 2
   __category:
     "@": 21
 - id: 1026
@@ -224,27 +225,24 @@
   num_workers: 2
   agents:
     - {worker: 1, id: 1030, role: $master}
-    - worker: 1
-      id: 1015
+    - id: 1015
       role: $replica
-    - worker: 2
-      id: 1026
+      worker: 1
+    - id: 1032
       role: $replica
-    - worker: 2
-      id: 1032
-      role: $replica
-    - worker: 1
-      id: 1033
-      role: $replica
-    - worker: 1
-      id: 1030
+      worker: 2
+    - id: 1030
       role: $master
-    - worker: 2
-      id: 1037
-    - worker: 1
-      id: 1023
-    - worker: 2
-      id: 1023
+      worker: 1
+    - id: 1037
+      role: $agent
+      worker: 2
+    - id: 1023
+      role: $agent
+      worker: 1
+    - id: 1023
+      role: $agent
+      worker: 2
   __category:
     "@": 21
 - id: 1037
