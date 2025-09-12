@@ -191,6 +191,13 @@ export class Block extends Agent {
     get operator()  { return this.sequence.operator }
     // get schema()    { return this.sequence.operator.record_schema }
 
+    get num_replicas() {
+        /* The desired number of $replica deployments for this block, as configured in the parent ring or sequence. */
+        return this.sequence.num_replicas ?? (this.is_data_block() ? this.ring.data_replicas : this.ring.index_replicas)
+    }
+
+    is_data_block() { return false }
+
     async __setup__() {
         this._print('__setup__() ...')
         if (!this.sequence.is_loaded()) await this.sequence.load()
@@ -492,6 +499,8 @@ export class DataBlock extends Block {
         if (this.shard && this.ring.shard3) return Shard.intersection(this.shard, this.ring.shard3)
         return this.shard || this.ring.shard3
     }
+
+    is_data_block() { return true }
 
     async __start__(frame) {
         let state = await super.__start__(frame)

@@ -73,6 +73,10 @@ export class Controller {  //extends WebObject
          */
         return 1
     }
+
+    adjust_replicas(agent) {
+        /* Bring the number of replicas for `agent` to the desired value, as currently configured. */
+    }
 }
 
 export class BlocksController extends Controller {
@@ -83,7 +87,6 @@ export class BlocksController extends Controller {
     get_roles() { return ['$master', '$replica'] }
     get_num_replicas(block) {
         return 1
-        // if block is in ring-kernel/cluster, return -1
         // return block.sequence.num_replicas
     }
 }
