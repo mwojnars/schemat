@@ -316,8 +316,10 @@ export class Block extends Agent {
     async '$agent.exec_op'(op, ...args) { return this.exec_op(op, ...args) }
 
     async exec_op(op, ...args) {
+        /* Execute the low-level `op` on the local store, and send to replicas if on $master. */
         assert(['put', 'del', 'inc', 'dec'].includes(op))
-        return this[`op_${op}`](...args)
+        await this[`op_${op}`](...args)
+        if (this.$role === '$master') await this.$$replica.replicate(op, ...args)   // $$replica.exec_op(...)
     }
 
     async op_put(key, val) {
@@ -390,12 +392,12 @@ export class Block extends Agent {
         })
     }
 
-    async _replicate(op) {
-        /* Send `op` to all replicas. */
-        this._print(`_replicate(${op})`)
-        await this.$$replica.replicate(op.op, ...op.args)
-        // await this.$$replica.exec_op(op.op, ...op.args)
-    }
+    // async _replicate(op) {
+    //     /* Send `op` to all replicas. */
+    //     this._print(`_replicate(${op})`)
+    //     await this.$$replica.replicate(op.op, ...op.args)
+    //     // await this.$$replica.exec_op(op.op, ...op.args)
+    // }
 
     async '$replica.replicate'(op, ...args) {
         this._print(`$replica.replicate(${op}, ${args})`)
@@ -763,7 +765,7 @@ export class DataBlock extends Block {
         let key = this.encode_id(id)
 
         let op_put = new OP('put', key, data)
-        await this._replicate(op_put)
+        // await this._replicate(op_put)
         // TODO: for replication, emit "dff" (diff) when possible, not "put" ??
 
         let ops_derived = this._derive(key, prev, obj)      // instructions for derived sequences
@@ -798,7 +800,7 @@ export class DataBlock extends Block {
             if (del instanceof Promise) await del
 
             let op_del = new OP('del', key)
-            await this._replicate(op_del)
+            // await this._replicate(op_del)
 
             let ops_derived = this._derive(key, obj)        // instructions for derived sequences
             await this.submit_ops([op_del, ...ops_derived]) // schedule `ops` for execution, either immediately or later with WAL
