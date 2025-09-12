@@ -31,6 +31,7 @@
       - 0
       - 9
     "@": schemat/common/structs.js:Shard
+  data_replicas: -1
   __category:
     "@": 12
 - id: 1004
@@ -51,6 +52,8 @@
       - 3
       - 9
     "@": schemat/common/structs.js:Shard
+  data_replicas: -1
+  index_replicas: 1
   __category:
     "@": 12
 - id: 1011
