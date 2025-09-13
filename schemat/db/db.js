@@ -63,14 +63,14 @@ export class Ring extends WebObject {
     }
 
     get operators() {
-        /* Map of all operators in this ring stack keyed by operator's name. */
-        let base_operators = this.base_ring?.operators || []
-        let own_operators = this.sequences.map(seq => {
+        /* POJO mapping of all operators in this ring stack keyed by operator's name. */
+        let base_operators = this.base_ring?.operators || {}
+        let own_operators = Object.fromEntries(this.sequences.map(seq => {
             let op = seq.operator
             assert(op.is_loaded())
             return [op.name, op]
-        })
-        return new Map([...base_operators, ...own_operators])
+        }))
+        return {...base_operators, ...own_operators}
     }
 
     get sequence_by_operator() {
@@ -384,7 +384,7 @@ export class Database extends WebObject {
            If `reverse` is true, scan in the reverse order.
            If `batch_size` is not null, yield records in batches of `batch_size` items. (TODO)
          */
-        let operator = this.top_ring.operators.get(name)
+        let operator = this.top_ring.operators[name]
         if (!operator) throw new Error(`unknown derived sequence '${name}'`)
 
         // convert `start` and `stop` to binary keys (Uint8Array)
@@ -439,7 +439,7 @@ export class Database extends WebObject {
         let {name} = opts
 
         // check that `name` can be used as an operator name
-        if (this.top_ring.operators.has(name)) throw new Error(`'${name}' is already used as an operator name`)
+        if (this.top_ring.operators[name]) throw new Error(`'${name}' is already used as an operator name`)
 
         let operator = await OperatorCategory.new(opts).save({ring})
         // ring ??= operator.__ring
