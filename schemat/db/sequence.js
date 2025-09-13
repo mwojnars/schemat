@@ -50,7 +50,7 @@ export class Sequence extends WebObject {
         this._print(`Sequence.__delete__() deleting self from ${this.source}.derived ...`)
         await this.source.load()
 
-        this.source.edit.rmv_derived(this).save()   // FIXME: awaiting here leads to a deadlock for unknown reasons
+        await this.source.edit.rmv_derived(this).save()
         this._print(`Sequence.__delete__() rmv_derived(this).save() done`)
 
         await Promise.all(this.source.blocks.map(b => b.$master.remove_monitor(this)))
