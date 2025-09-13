@@ -232,12 +232,13 @@ export class Frame {
         /* Execute agent's background job, <role>.background() or $agent.background(), and update the interval
            and priority for next execution.
          */
+        if (this.stopping || this.paused) return        // background task is skipped entirely during pause
         if (this._background_priority === 'low')        // if low priority, wait until the agent is idle...
             while (this.calls.length > 0) {
                 await Promise.all(this.calls)           // wait for termination of ongoing calls
                 await sleep()                           // let pending calls jump in and execute
             }
-        if (this.stopping) return
+        if (this.stopping || this.paused) return
 
         let interval = await this.exec('background')
         interval ||= 60     // 60 sec by default if no specific interval was returned
