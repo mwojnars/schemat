@@ -75,7 +75,7 @@ export class Controller {  //extends WebObject
     }
 
     adjust_replicas(agent) {
-        /* Bring the actual number of replicas for `agent` to the desired value as configured in `agent`. */
+        /* Bring the actual number of replicas for `agent` to the desired value. */
     }
 }
 
