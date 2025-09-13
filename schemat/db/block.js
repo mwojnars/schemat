@@ -247,11 +247,11 @@ export class Block extends Agent {
         let stores = await Promise.all(this.storage$.map(s => this._create_store(s)))
         let monitors = (role === '$master') ? new ObjectsMap(this.sequence.derived.map(seq => [seq, new Monitor(this, seq)])) : null
 
-        // global lock
+        // global write lock
         let _lock = new Mutex()
         let lock_all = (fn) => _lock.run_exclusive(fn)
 
-        // row-level locks
+        // row-level write locks
         let _locks = new Mutexes(new BinaryMap())
         let lock_row = (key, fn) => _locks.run_exclusive(key, fn)
 
@@ -441,11 +441,9 @@ export class Block extends Agent {
     }
 
     async '$master.restart_backfill'(seq) {
-        // return this.$frame.lock(async () => {
-            seq = await seq.reload()        // pull fresh sequence data
-            assert(!seq.filled)
-            this.$state.monitors.set(seq, new Monitor(this, seq, true))
-        // })
+        seq = await seq.reload()        // pull fresh sequence data
+        assert(!seq.filled)
+        this.$state.monitors.set(seq, new Monitor(this, seq, true))
     }
 
     async '$master.remove_monitor'(seq) {
