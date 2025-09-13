@@ -41,12 +41,6 @@ export class DataRequest {
     command                // the most recent not-null `command` in the trace
     args                   // the most recent non-empty array of arguments for a command, possibly from a different step than `command` (!)
 
-    // `current_[ROLE]` properties contain the last actor of a given type in the `trace`;
-    // they are updated automatically when a new step is added to the trace; these properties include:
-
-    // current_db
-    // current_ring
-
 
     constructor(actor = null, command = null, args = null) {
         if (actor || command) this.make_step(actor, command, args)
@@ -63,7 +57,7 @@ export class DataRequest {
         this.rings.push(ring)
         // print('request-forward rings:', this.rings.map(r => r.name))
     }
-    pop_ring(ring) {
+    pop_ring() {
         return this.rings.pop()
     }
 
@@ -81,11 +75,11 @@ export class DataRequest {
         return this
     }
 
-    safe_step(actor, command = null, args = null) {
-        /* Like make_step(), but the request object is cloned before adding a step to allow its reuse in another (parallel) step. */
-        return this.clone().make_step(actor, command, args)
-    }
-
+    // safe_step(actor, command = null, args = null) {
+    //     /* Like make_step(), but the request object is cloned before adding a step to allow its reuse in another (parallel) step. */
+    //     return this.clone().make_step(actor, command, args)
+    // }
+    //
     // assert_valid_id(msg)        { return this.current_ring.assert_valid_id(this.args?.id, msg || `object ID is outside of the valid range for the ring`) }
 }
 
