@@ -646,7 +646,7 @@
       "@": schemat/types/type.js:ARRAY
     derived:
       info: "Array of derived sequences: their content is a transformation of this
-        sequence and they should receive notifications on every data change."
+        sequence, so they receive notifications on every data change."
       default: []
       type:
         category:
