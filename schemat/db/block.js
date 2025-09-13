@@ -781,8 +781,8 @@ export class DataBlock extends Block {
         /* Try deleting the `id` record. Forward to a lower ring if not present here in this block.
            Throw an error if the `id` is found in a read-only ring. Do nothing if `id` is not found at all.
          */
-        let key = this.encode_id(id)
-        return this.$state.lock_row(key, async () =>
+        let key = this.encode_id(id), obj
+        let result = await this.$state.lock_row(key, async () =>
         {
             let data = await this._get(key)
             if (data === undefined) return this._move_down(id, req)?.delete(id, req)
@@ -792,25 +792,24 @@ export class DataBlock extends Block {
                 throw new DataAccessError("cannot remove the item, the ring is read-only", {id})
                 // return req.error_access("cannot remove the item, the ring is read-only")
 
-            let obj = await WebObject.inactive(id, data)    // class, prototypes, __data are initialized, but __load__() is not executed
-
-            // TODO: if `obj` is an agent, stop and uninstall all of its running instances ??
-
-            let del = obj.__delete__()                      // perform custom cleanup
-            if (del instanceof Promise) await del
+            obj = await WebObject.inactive(id, data)        // class, prototypes, __data are initialized, but __load__() is not executed
 
             let op_del = new OP('del', key)
             let ops_derived = this._derive(key, obj)        // instructions for derived sequences
             await this.submit_ops([op_del, ...ops_derived]) // schedule `ops` for execution, either immediately or later with WAL
 
-            this._cascade_delete(obj)                       // remove objects linked to via a strong reference
-            // TODO: launch triggers if attribute change detected?
-
             schemat.register_changes({id, data: {'__status': WebObject.Status.DELETED}})
             return 1
-            // assert(Number(deleted) === 1)
-            // return Number(deleted)
         })
+
+        if (obj) {
+            this._cascade_delete(obj)                       // find objects linked to via a strong reference and mark them for removal in TX
+            // TODO: launch triggers if attribute change detected?
+
+            let del = obj.__delete__()                      // perform object-specific custom cleanup
+            if (del instanceof Promise) await del
+        }
+        return result
     }
 
     async '$master.erase'() {
