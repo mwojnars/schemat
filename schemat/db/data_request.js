@@ -33,8 +33,8 @@ export class DataRequest {
 
     // user                // user that initiated the request (if any), to check for permissions, user-specific config etc.
     // hops                // number of hops the request has gone through so far (for debugging and performance monitoring); after too many hops the request should be dropped to avoid infinite loops
-
     // trace = []          // array of ProcessingStep(s) that the request has gone through so far
+
     rings = []             // higher Rings that have been encountered during "read" part of the request when forwarding it down from the top ring;
                            // ordered from top to bottom, *excluding* the current (bottom-most) ring
 
@@ -42,13 +42,12 @@ export class DataRequest {
     args                   // the most recent non-empty array of arguments for a command, possibly from a different step than `command` (!)
 
 
-    constructor(actor = null, command = null, args = null) {
-        if (actor || command) this.make_step(actor, command, args)
-    }
+    // constructor(actor = null, command = null, args = null) {
+    //     if (actor || command) this.make_step(actor, command, args)
+    // }
 
     clone() {
         let dup = copy(this, {class: true})
-        // dup.trace = [...this.trace]             // individual steps are NOT cloned!
         dup.rings = [...this.rings]
         return dup
     }
@@ -61,20 +60,16 @@ export class DataRequest {
         return this.rings.pop()
     }
 
-    make_step(actor, command = null, args = null) {
-        /* Append a new step to the request path and return this object. */
-        // const step = new ProcessingStep(actor, command, args)
-        // this.trace.push(step)
-
-        if (command) this.command = command
-        if (args) {
-            this.args = args
-            for (let key in args) this[key] = args[key]
-        }
-
-        return this
-    }
-
+    // make_step(actor, command = null, args = null) {
+    //     /* Append a new step to the request path and return this object. */
+    //     if (command) this.command = command
+    //     if (args) {
+    //         this.args = args
+    //         for (let key in args) this[key] = args[key]
+    //     }
+    //     return this
+    // }
+    //
     // safe_step(actor, command = null, args = null) {
     //     /* Like make_step(), but the request object is cloned before adding a step to allow its reuse in another (parallel) step. */
     //     return this.clone().make_step(actor, command, args)
