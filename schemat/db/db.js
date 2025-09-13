@@ -283,13 +283,11 @@ export class Database extends WebObject {
 
     /***  Ring manipulation  ***/
 
-    get rings()             { return this.top_ring.stack }      // [0] is the innermost ring (bottom of the stack), [-1] is the outermost ring (top)
-
+    get rings()             { return Object.fromEntries(this.rings_array.map(r => [r.name, r])) }
     get rings_array()       { return this.top_ring.stack }      // [0] is the innermost ring (bottom of the stack), [-1] is the outermost ring (top)
     get rings_reversed()    { return this.rings_array.toReversed() }
     get bottom_ring()       { return this.rings_array[0] }
-    get ring_names()        { return new Map(this.rings_array.map(r => [r.name, r])) }    // may not be unique
-    get ring_ids()          { return new Map(this.rings_array.map(r => [r.id, r])) }      // should be unique
+    get ring_ids()          { return new Map(this.rings_array.map(r => [r.id, r])) }
 
 
     async __load__() {
@@ -304,7 +302,7 @@ export class Database extends WebObject {
            in which case it is replaced with the same-ID object from the ring stack.
          */
         if (ring == null) return this.top_ring
-        if (typeof ring === 'string') ring = this.ring_names.get(ring)
+        if (typeof ring === 'string') ring = this.rings[ring]
         else if (typeof ring === 'number') ring = this.ring_ids.get(ring)
         else ring = this.ring_ids.get(ring?.id)         // replace `ring` with the database's instance
         if (!ring) throw new DataAccessError(`target ring not found in the database`)
