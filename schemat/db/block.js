@@ -774,7 +774,9 @@ export class DataBlock extends Block {
         let ops_derived = this._derive(key, prev, obj)      // instructions for derived sequences
         await this.submit_ops([op_put, ...ops_derived])     // schedule `ops` for execution, either immediately or later with WAL
 
-        this._cascade_delete(prev, obj)                     // remove objects linked to via a strong reference
+        // WARN: we do NOT perform cascade-deletion of modified (removed) REF links during UPDATE, as this is counter-intuitive
+        //       (even for "strong" refs) and may lead to deadlocks when combined with __delete__() hooks (double cyclic removal of the same object)!
+        // this._cascade_delete(prev, obj)                     // remove objects linked to via a strong reference
 
         data = this._annotate(data)
         schemat.register_changes({id, data})
