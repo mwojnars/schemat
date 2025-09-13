@@ -283,11 +283,11 @@ export class Database extends WebObject {
 
     /***  Ring manipulation  ***/
 
-    get rings()             { return Object.fromEntries(this.rings_array.map(r => [r.name, r])) }
-    get rings_array()       { return this.top_ring.stack }      // [0] is the innermost ring (bottom of the stack), [-1] is the outermost ring (top)
-    get rings_reversed()    { return this.rings_array.toReversed() }
-    get bottom_ring()       { return this.rings_array[0] }
-    get ring_ids()          { return new Map(this.rings_array.map(r => [r.id, r])) }
+    get rings()             { return Object.fromEntries(this.stack.map(r => [r.name, r])) }     // rings by name
+    get stack()             { return this.top_ring.stack }      // [0] is the innermost ring (bottom of the stack), [-1] is the outermost ring (top)
+    get stack_reversed()    { return this.stack.toReversed() }
+    get bottom_ring()       { return this.stack[0] }
+    get ring_ids()          { return new Map(this.stack.map(r => [r.id, r])) }
 
 
     async __load__() {
@@ -393,7 +393,7 @@ export class Database extends WebObject {
         opts = {...opts, start, stop}
 
         let compare = ([key1], [key2]) => compare_bin(key1, key2)
-        let streams = this.rings_array.map(r => r.scan_binary(operator, opts))
+        let streams = this.stack.map(r => r.scan_binary(operator, opts))
         let merged = merge(compare, ...streams)
         let {limit} = opts
         
@@ -415,7 +415,7 @@ export class Database extends WebObject {
     /***  DB structure  ***/
 
     async rebuild_indexes() {
-        for (let ring of this.rings_array)
+        for (let ring of this.stack)
             await ring.rebuild_indexes()
         return true
     }
@@ -444,9 +444,9 @@ export class Database extends WebObject {
         let operator = await OperatorCategory.new(opts).save({ring})
         // ring ??= operator.__ring
 
-        let pos = this.rings_array.indexOf(ring)
-        for (let i = pos; i < this.rings_array.length; i++) {
-            ring = this.rings_array[i]
+        let pos = this.stack.indexOf(ring)
+        for (let i = pos; i < this.stack.length; i++) {
+            ring = this.stack[i]
             await ring.create_derived('main', operator)
         }
         return operator
@@ -458,13 +458,13 @@ export class Database extends WebObject {
            starting in operator.__ring and moving up to the top ring.
          */
         operator = await schemat.as_loaded(operator)
-        this._print(`remove_operator(${operator}) ...  rings_reversed ${this.rings_reversed}`)
+        this._print(`remove_operator(${operator}) ...  stack_reversed ${this.stack_reversed}`)
 
         let __ring = operator.__ring
         assert(__ring, `unknown storage ring of ${operator}`)
 
         // iterate from the top ring down to __ring
-        for (let ring of this.rings_reversed) {
+        for (let ring of this.stack_reversed) {
             ring = await ring.reload()      // try to get a fresher copy of ring, in case the sequence was added only recently
             let seq = ring.sequence_by_operator.get(operator.id)
             this._print(`remove_operator() ring=${ring} seq=${seq}`)
@@ -547,7 +547,7 @@ export class Database extends WebObject {
         let transform = (obj => obj?.id === old_id ? target : undefined)
 
         // search for references to `old_id` in all rings and all records
-        for (let ring of this.rings_array)
+        for (let ring of this.stack)
             for await (let {id, data} of ring.main_sequence.scan_objects()) {
                 let old_json = data.dump()
                 let new_json = Struct.transform(data, transform).dump()     // `data` catalog is transformed in place (!)
