@@ -557,7 +557,7 @@ export class DataBlock extends Block {
         let ring = this.ring
         if (!ring.is_loaded()) throw new Error(`the owner ring ${ring} of the block ${this} is not loaded`)
         while (ring?.readonly) ring = req.pop_ring()        // go upwards to find the first writable ring
-        if (!ring) throw new DataAccessError(`can't save an updated object, the ring(s) are read-only`, {id: req.id})
+        if (!ring) throw new DataAccessError(`can't save an updated object, ring ${this.ring} (and higher ones if any) is read-only`)
         return ring
     }
 
