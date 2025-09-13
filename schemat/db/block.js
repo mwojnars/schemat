@@ -803,11 +803,11 @@ export class DataBlock extends Block {
         })
 
         if (obj) {
-            this._cascade_delete(obj)                       // find objects linked to via a strong reference and mark them for removal in TX
-            // TODO: launch triggers if attribute change detected?
-
             let del = obj.__delete__()                      // perform object-specific custom cleanup
             if (del instanceof Promise) await del
+
+            this._cascade_delete(obj)                       // find objects linked to via a strong reference and mark them for removal in TX
+            // TODO: launch triggers if attribute change detected?
         }
         return result
     }
