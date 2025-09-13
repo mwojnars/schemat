@@ -38,19 +38,19 @@ export class DataRequest {
     rings = []             // higher Rings that have been encountered during "read" part of the request when forwarding it down from the top ring;
                            // ordered from top to bottom, *excluding* the current (bottom-most) ring
 
-    command                // the most recent not-null `command` in the trace
-    args                   // the most recent non-empty array of arguments for a command, possibly from a different step than `command` (!)
-
-
+    // command                // the most recent not-null `command` in the trace
+    // args                   // the most recent non-empty array of arguments for a command, possibly from a different step than `command` (!)
+    //
+    //
     // constructor(actor = null, command = null, args = null) {
     //     if (actor || command) this.make_step(actor, command, args)
     // }
-
-    clone() {
-        let dup = copy(this, {class: true})
-        dup.rings = [...this.rings]
-        return dup
-    }
+    //
+    // clone() {
+    //     let dup = copy(this, {class: true})
+    //     dup.rings = [...this.rings]
+    //     return dup
+    // }
 
     push_ring(ring) {
         this.rings.push(ring)
