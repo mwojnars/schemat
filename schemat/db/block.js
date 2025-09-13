@@ -26,7 +26,7 @@ export class OP {
     async submit() {
         /* RPC execution on $master of a derived block. */
         let {block, op, args} = this
-        return block.$master.exec_op(op, ...args)
+        return block.$master.derived_op(op, ...args)
     }
 
     exec(block) {
@@ -320,13 +320,16 @@ export class Block extends Agent {
 
     /***  Record modifications (ops)  ***/
 
-    async '$agent.exec_op'(op, ...args) { return this.exec_op(op, ...args) }
+    async '$master.derived_op'(op, ...args) {
+        /* Receive from source and apply locally a derived op. */
+        return this.exec_op(op, ...args)
+    }
 
     async exec_op(op, ...args) {
         /* Execute the low-level `op` on the local store, and send to replicas if on $master. */
         assert(['put', 'del', 'inc', 'dec'].includes(op))
         await this[`op_${op}`](...args)
-        if (this.$role === '$master') await this.$$replica.replicate(op, ...args)   // $$replica.exec_op(...)
+        if (this.$role === '$master') await this.$$replica.replicate(op, ...args)
         // TODO: for replication, emit "dff" (diff) when possible, not "put" ??
     }
 
