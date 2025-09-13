@@ -29,11 +29,11 @@ export class OP {
         return block.$master.derived_op(op, ...args)
     }
 
-    exec(block) {
-        /* Immediate execution here on `block`. */
-        let {op, args} = this
-        return block.exec_op(op, ...args)
-    }
+    // exec(block) {
+    //     /* Immediate execution here on `block`. */
+    //     let {op, args} = this
+    //     return block.exec_op(op, ...args)
+    // }
 }
 
 /**********************************************************************************************************************/
@@ -321,12 +321,12 @@ export class Block extends Agent {
     /***  Record modifications (ops)  ***/
 
     async '$master.derived_op'(op, ...args) {
-        /* Receive from source and apply locally a derived op. */
+        /* Receive from source and apply locally a derived op. Perform replication + further change propagation (TODO) */
         return this.exec_op(op, ...args)
     }
 
     async exec_op(op, ...args) {
-        /* Execute the low-level `op` on the local store, and send to replicas if on $master. */
+        /* Execute the low-level `op` on the local store; send to replicas if on $master. */
         assert(['put', 'del', 'inc', 'dec'].includes(op))
         await this[`op_${op}`](...args)
         if (this.$role === '$master') await this.$$replica.replicate(op, ...args)
@@ -395,11 +395,13 @@ export class Block extends Agent {
         /* Schedule local or remote `ops` for execution, either immediately or later with WAL (TODO). */
         return this.$state.lock_all(async () =>
         {
-            let local = []
+            // let local = []
             for (let op of ops)
-                if (op.block) op.submit()           // RPC execution on a derived block
-                else local.push(op.exec(this))      // immediate execution here on this block
-            return Promise.all(local)
+                if (op.block) op.submit()                       // RPC execution on a derived block, not awaited
+                else await this.exec_op(op.op, ...op.args)      // immediate execution here on this block
+                // else local.push(this.exec_op(op.op, ...op.args))        // immediate execution here on this block
+                // else local.push(op.exec(this))      // immediate execution here on this block
+            // return Promise.all(local)
         })
     }
 

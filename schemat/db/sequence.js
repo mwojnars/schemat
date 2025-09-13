@@ -49,7 +49,10 @@ export class Sequence extends WebObject {
         if (!this.source) return
         this._print(`Sequence.__delete__() deleting self from ${this.source}.derived ...`)
         await this.source.load()
-        this.source.edit.rmv_derived(this).save()   // FIXME: awaiting here leads to a deadlock for unknown reasons
+
+        await this.source.edit.rmv_derived(this).save()   // FIXME: awaiting here leads to a deadlock for unknown reasons
+        this._print(`Sequence.__delete__() rmv_derived(this).save() done`)
+
         await Promise.all(this.source.blocks.map(b => b.$master.remove_monitor(this)))
         await sleep(0.2)        // FIXME: without this line, it happens that the block's file being deleted is recreated later by store.flush() due to delay=0.1 in MemoryStore.flush()
         // at this point, change propagation from source blocks to this.blocks should cease (??)
