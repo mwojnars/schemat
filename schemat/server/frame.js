@@ -266,13 +266,13 @@ export class Frame {
         this.paused = false
     }
 
-    async exec(command, args = [], caller_ctx = schemat.current_context, tx = null, callback = null) {
+    async exec(command, args = [], caller_ctx = schemat.current_context, tx = null, callback = null, debug = false) {
         /* Call agent's `command` in tracked mode, in a proper app context (own or caller's) + schemat.tx context + agent.__frame context.
            Send to DB (but do not commit!) any data modifications that were created locally during command execution.
          */
         let {agent, tag} = this
         let [method] = this._find_command(command)      // check that `command` is recognized by the agent
-        // schemat._print(`exec() of ${this.agent}.${method}(${args}) ...`)
+        if (debug) schemat._print(`exec ${this.agent}.${method}(${args}) ...`)
 
         // wait for the agent to start
         if (this.starting) await this.starting
@@ -295,7 +295,7 @@ export class Frame {
         // TODO: timeout in block.$state.lock/lock_row()
 
         let callB = async () => {
-            // agent._print(`exec() of ${method}(${args}) context=${schemat.current_context}`)
+            // agent._print(`exec ${method}(${args}) context=${schemat.current_context}`)
             let error, result = await this._tracked(this._frame_context(agent, callA)).catch(ex => {
                 if (!callback) throw ex
                 let s_args = JSONx.stringify(args).slice(1,-1)
@@ -303,7 +303,7 @@ export class Frame {
                 error = ex
             })
             if (!error && schemat.tx.is_nonempty()) await schemat.tx.save()
-            // schemat._print(`exec() of ${this.agent}.${method}(${args}) done`)
+            if (debug) schemat._print(`exec ${this.agent}.${method}(${args}) done`)
             return callback ? callback(result, error) : result
         }
         return agent.app_context(tx ? () => schemat.in_transaction(callB, tx, false) : callB, caller_ctx)
