@@ -78,11 +78,6 @@ export class Ring extends WebObject {
         return {...base_operators, ...own_operators}
     }
 
-    // get sequence_by_operator() {
-    //     /* Map of sequences keyed by their operator's ID. */
-    //     return new Map(this.sequences_array.map(seq => [seq.operator.id, seq]))
-    // }
-
     get id_insert_zones() {
         /* [min_id_exclusive, min_id_forbidden, min_id_sharded] grouped into an array, with the 2nd one imputed if missing.
            The lack of `min_id_exclusive` indicates there's NO exclusive zone.
@@ -467,7 +462,7 @@ export class Database extends WebObject {
          */
         if (typeof operator === 'string') operator = this.get_operator(operator)
         else operator = await schemat.as_loaded(operator)
-        
+
         this._print(`remove_operator(${operator}) ...  stack_reversed ${this.stack_reversed}`)
 
         let __ring = operator.__ring
