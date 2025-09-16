@@ -314,6 +314,9 @@ export class Database extends WebObject {
         return ring
     }
 
+    get_operator(name) { return this.top_ring.operators[name] }
+
+
     /***  Data access & modification  ***/
 
     async select(id, {ring} = {}) {
@@ -462,7 +465,9 @@ export class Database extends WebObject {
         /* Delete `operator` object and all sequences that implement this operator across different rings
            starting in operator.__ring and moving up to the top ring.
          */
-        operator = await schemat.as_loaded(operator)
+        if (typeof operator === 'string') operator = this.get_operator(operator)
+        else operator = await schemat.as_loaded(operator)
+        
         this._print(`remove_operator(${operator}) ...  stack_reversed ${this.stack_reversed}`)
 
         let __ring = operator.__ring
