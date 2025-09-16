@@ -48,11 +48,11 @@ export class Controller {  //extends WebObject
         /* Bring the actual number of replicas for `agent` to the desired value of `num_replicas`
            by starting new deployments or stopping unneeded ones.
          */
-        let [role_leader, role_replica] = this.get_roles(agent)
-        if (!role_replica) throw new Error(`cannot adjust the no. of replicas for ${agent}: no role name for replicas`)
+        let [role_leader, role] = this.get_roles(agent)
+        if (!role) throw new Error(`cannot adjust the no. of replicas for ${agent}: no role name for replicas`)
 
         // calculate the current no. of replicas
-        let current = this._global_placements.count_all(agent, role_replica)
+        let current = this._global_placements.count_all(agent, role)
         num_replicas = this._normalize_num_replicas(num_replicas)
 
         if (current < num_replicas) {
@@ -60,10 +60,9 @@ export class Controller {  //extends WebObject
         }
         else if (current > num_replicas) {
             let surplus = current - num_replicas
-            for (let i = 0; i < surplus; i++) {
-                // choose one of replicas at random and terminate
-
-                await this.cluster._stop_agent(node, agent, role_replica)
+            for (let i = 0; i < surplus; i++) {             // choose one of replicas at random and terminate
+                let node = this._global_placements.find_random(agent, role)
+                if (node) await this.cluster._stop_agent(node, agent, role)
             }
         }
     }
