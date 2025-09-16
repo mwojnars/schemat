@@ -488,6 +488,13 @@ export class Database extends WebObject {
         this._print(`remove_operator(${operator}) done`)
     }
 
+    async set_replicas(num_replicas, ring = this.top_ring, seq = 'main') {
+        /* Set `num_replicas` of a given sequence and invoke replica adjustment. */
+        ring = this.get_ring(ring)
+        let sequence = ring.sequences[seq]
+        return sequence.set_replicas(3)
+    }
+
     /***  Administration  ***/
 
     async 'ax.admin_reinsert'(ids, {id: new_id, ring, compact = false} = {}) {
