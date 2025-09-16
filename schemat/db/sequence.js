@@ -264,7 +264,7 @@ export class Sequence extends WebObject {
 
     async set_replicas(num_replicas) {
         await this.update_self({num_replicas}).save()
-        await Promise.all(this.blocks.map(b => controller.adjust_replicas(b, num_replicas)))
+        await Promise.all(this.blocks.map(b => schemat.cluster.$leader.adjust_replicas(b, num_replicas)))
     }
 }
 
