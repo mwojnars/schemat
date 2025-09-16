@@ -40,6 +40,12 @@ export class Agent extends WebObject {
 
     async __uninstall__(node) {}
 
+    async __migrate__(leader, role) {
+        /* If this deployment is to be started as a replica (`leader` was passed to node.$master.start_agent()),
+           __migrate__() is executed before the first __start__() to let the agent copy initial data from leader.
+         */
+    }
+
     // async __deploy__() {}
     // async __destroy__() {}
 
