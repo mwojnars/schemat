@@ -158,12 +158,13 @@ export class Kernel {
         }
     }
 
-    async start_agent(id, role) {
+    async start_agent(id, role, {leader} = {}) {
         if (this.frames.has([id, role])) throw new Error(`agent [${id}] in role ${role} is already running`)
         role ??= AgentRole.GENERIC                  // "$agent" role is the default for running agents
 
         try {
             let agent = await schemat.get_loaded(id)
+            if (leader) await agent.__migrate__(leader, role)
 
             // schemat._print(`start_agent(): ${agent}`, agent.__content)
             assert(agent.is_loaded())

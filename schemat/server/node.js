@@ -571,22 +571,18 @@ export class Node extends Agent {
            worker process and start (agent, role) there.
          */
         agent = await schemat.as_loaded(agent)
+        this._print(`$master.start_agent(${agent}, ${role})`)
 
         // install the agent unless it's already deployed here on this node
         if (!this._has_agent(agent)) await agent.__install__(this)
 
-        this._print(`$master.start_agent(${agent}, ${role})`)
-
         let {local_placements} = this.$state
-        if (local_placements.has(agent, role)) throw new Error(`agent ${agent}.${role} is already running on node ${this}`)
-
-        // if (agents.has(agent)) throw new Error(`agent ${agent} is already running on node ${this}`)
-        // agents.set(agent, {params, role, workers})
+        // if (local_placements.has(agent, role)) throw new Error(`agent ${agent}.${role} is already running on node ${this}`)
 
         if (copies > this.num_workers) throw new Error(`no. of copies (${copies}) must be <= ${this.num_workers}`)
         if (copies === -1) copies = this.num_workers
 
-        let workers = worker ? (Array.isArray(worker) ? worker : [worker]) : local_placements.rank_places()  //this._rank_workers(agents)
+        let workers = worker ? (Array.isArray(worker) ? worker : [worker]) : local_placements.rank_places()
         workers = workers.slice(0, copies)
 
         if (role === null || role === AgentRole.GENERIC)
@@ -644,9 +640,9 @@ export class Node extends Agent {
         return sorted.map(entry => entry[0])
     }
 
-    async '$worker._start_agent'(agent_id, role) {
+    async '$worker._start_agent'(agent_id, role, opts) {
         /* Start agent on the current worker process. */
-        await schemat.kernel.start_agent(agent_id, role)
+        await schemat.kernel.start_agent(agent_id, role, opts)
     }
 
     async '$worker._stop_agent'(agent_id, role) {
