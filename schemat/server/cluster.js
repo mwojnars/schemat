@@ -107,8 +107,7 @@ export class Cluster extends Agent {
     async '$leader.deploy_agent'(agent, role) {
         /* Find the least busy node and deploy `agent` there. */
         await agent.load()
-        let controller = this.get_controller(agent)
-        return controller.deploy(agent, role)
+        return this.get_controller(agent).deploy(agent, role)
     }
 
     async _start_agent(node, agent, role, opts) {
@@ -154,7 +153,8 @@ export class Cluster extends Agent {
     }
 
     async '$leader.adjust_replicas'(agent, num_replicas) {
-
+        await agent.load()
+        return this.get_controller(agent).adjust_replicas(agent, num_replicas)
     }
 
     async '$leader.create_node'(props = {}) {
