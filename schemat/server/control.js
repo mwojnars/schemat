@@ -44,6 +44,25 @@ export class Controller {  //extends WebObject
         }
     }
 
+    async adjust_replicas(agent, num_replicas) {
+        /* Bring the actual number of replicas for `agent` to the desired value of `num_replicas`
+           by starting new deployments or stopping unneeded ones.
+         */
+        let [role_leader, role_replica] = this.get_roles(agent)
+        if (!role_replica) throw new Error(`cannot adjust the no. of replicas for ${agent}: no role name for replicas`)
+
+        // calculate the current no. of replicas
+        let current = this._global_placements.count_all(agent, role_replica)
+        num_replicas = this._normalize_num_replicas(num_replicas)
+
+        if (current < num_replicas) {
+            let deficit = num_replicas - current
+        }
+        else if (current > num_replicas) {
+            let surplus = current - num_replicas
+        }
+    }
+
     _check_not_deployed(agent, role) {
         /* Check that (agent,role) is not deployed yet in the cluster, raise an error otherwise. */
         let exists = this._global_placements.find_all(agent, role)
@@ -75,25 +94,6 @@ export class Controller {  //extends WebObject
            in a separate worker process. If -1 is returned, it means "one copy per each worker".
          */
         return 1
-    }
-
-    async adjust_replicas(agent, num_replicas) {
-        /* Bring the actual number of replicas for `agent` to the desired value of `num_replicas`
-           by starting new deployments or stopping unneeded ones.
-         */
-        let [role_leader, role_replica] = this.get_roles(agent)
-        if (!role_replica) throw new Error(`cannot adjust the no. of replicas for ${agent}: no role name for replicas`)
-
-        // calculate the current no. of replicas
-        let current = this._global_placements.count_all(agent, role_replica)
-        num_replicas = this._normalize_num_replicas(num_replicas)
-
-        if (current < num_replicas) {
-            let deficit = num_replicas - current
-        }
-        else if (current > num_replicas) {
-            let surplus = current - num_replicas
-        }
     }
 }
 
