@@ -37,6 +37,7 @@ export class Controller {  //extends WebObject
 
         for (let role of roles) {
             let node = this.cluster._least_busy_node(skip)
+            if (!node) throw new Error(`cannot create more replicas than nodes in cluster`)
             skip.push(node)
             await this.cluster._start_agent(node, agent, role, {copies})
         }
@@ -62,14 +63,15 @@ export class Controller {  //extends WebObject
         }
         else if (current < num_replicas) {          // too few replicas? start replica(s) on idle nodes, copy data from leader
             let count = num_replicas - current
-            let skip = this._placements.find_all(agent, role)
+            let skip = this._placements.find_all(agent)
             let leader = this._placements.find_first(agent, role_leader)
             if (!leader) throw new Error(`leader not found, cannot create replica(s) of ${agent}`)
 
             for (let i = 0; i < count; i++) {           // choose one of replicas at random and terminate
                 let node = this.cluster._least_busy_node(skip)
+                if (!node) throw new Error(`cannot create more replicas than nodes in cluster`)
                 skip.push(node)
-                await this.cluster._start_agent(node, agent, role, {})
+                await this.cluster._start_agent(node, agent, role, {leader})
             }
         }
     }

@@ -566,7 +566,7 @@ export class Node extends Agent {
         this.$state.global_placements = placements
     }
 
-    async '$master.start_agent'(agent, role, {worker, copies = 1} = {}) {
+    async '$master.start_agent'(agent, role, {worker, copies = 1, leader} = {}) {
         /* Start `agent` (object or ID) on this node: first, install it if needed, then find the least busy
            worker process and start (agent, role) there.
          */
@@ -597,7 +597,7 @@ export class Node extends Agent {
         
         for (let worker of workers) {                                   // start `agent` on each of `workers`
             assert(worker >= 1 && worker <= this.num_workers)
-            await this.$worker({worker})._start_agent(agent.id, role)
+            await this.$worker({worker})._start_agent(agent.id, role, {leader})
             local_placements.add(worker, agent, role)
             // agents.push({worker, id: agent.id, role})
         }

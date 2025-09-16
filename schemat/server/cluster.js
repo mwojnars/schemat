@@ -184,12 +184,14 @@ export class Cluster extends Agent {
     /***  Utilities  ***/
 
     _least_busy_node(skip = []) {
+        /* Find the least busy node in cluster, `skip` nodes excluded. Return null if `skip` covers the entire cluster. */
         // this._print(`$leader.deploy() node states:`, nodes)
         // this._print(`$leader.deploy() node avg_agents:`, nodes.map(n => n.avg_agents))
         let skip_id = skip.map(n => typeof n === 'object' ? n.id : n)
         let nodes = [...this.$state.nodes.values()]
         let avail = nodes.filter(n => !skip_id.includes(n.id))
-        if (!avail.length) avail = nodes        // if `skip` covers the entire cluster (no nodes left), ignore it entirely
+        if (!avail.length) return null
+        // if (!avail.length) avail = nodes        // if `skip` covers the entire cluster (no nodes left), ignore it entirely
 
         let {id} = min(avail, n => n.avg_agents)
         return schemat.get_object(id)
