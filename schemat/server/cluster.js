@@ -93,20 +93,26 @@ export class Cluster extends Agent {
         return [...this.$state.nodes.keys()]
     }
 
-    async '$leader.deploy_agent'(agent, role) {
-        /* Find the least busy node and deploy `agent` there. */
-
-        await agent.load()
+    get_controller(agent) {
+        assert(agent.is_loaded())
         let controller_name = agent.controller
         if (!controller_name) throw new Error(`missing controller name for ${agent}`)
 
         let controller = this.$state.controllers[controller_name]
         if (!controller) throw new Error(`unknown controller name, '${controller_name}'`)
 
+        return controller
+    }
+
+    async '$leader.deploy_agent'(agent, role) {
+        /* Find the least busy node and deploy `agent` there. */
+        await agent.load()
+        let controller = this.get_controller(agent)
         return controller.deploy(agent, role)
     }
 
     async _start_agent(node, agent, role, opts) {
+        /* For use by Controller. */
         // this._print(`$leader.deploy() deploying ${agent} at ${node}`)
         let started = await node.$master.start_agent(agent, role, opts)
         this.$state.nodes.get(node).num_agents += started
@@ -145,6 +151,10 @@ export class Cluster extends Agent {
         let nodes = this.get_nodes()
         let placements = this.$state.global_placements
         return Promise.all(nodes.map(node => node.$master.update_placements(placements)))
+    }
+
+    async '$leader.adjust_replicas'(agent, num_replicas) {
+
     }
 
     async '$leader.create_node'(props = {}) {
