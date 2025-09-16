@@ -1,5 +1,5 @@
 import {AgentRole} from "../common/globals.js";
-import {assert} from "../common/utils.js";
+import {assert, random} from "../common/utils.js";
 import {Counter} from "../common/structs.js";
 import {Struct} from "../common/catalog.js";
 
@@ -153,7 +153,12 @@ export class Placements {
 
     find_first(agent, role) {
         /* Return the first place where (agent, role) is deployed, or undefined if none found. */
-        return this.find_all(agent, role)[0]    //.random()
+        return this.find_all(agent, role)[0]
+    }
+
+    find_random(agent, role) {
+        /* Return a randomly selected place from all those where (agent, role) is deployed. */
+        return random(this.find_all(agent, role))
     }
 
     list_agent_ids() {
