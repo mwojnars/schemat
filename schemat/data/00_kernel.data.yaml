@@ -663,6 +663,11 @@
         this sequence.
       "@": schemat/types/type.js:STRING
     "@": schemat:Catalog
+    num_replicas:
+      info: Desired number of $replica deployments to be created for each block of
+        this sequence; -1 for "as many as nodes in the cluster minus 1".
+      default: 0
+      "@": schemat/types/type.js:INTEGER
   defaults:
     flush_delay: 0.01
     "@": schemat:Catalog

@@ -70,6 +70,7 @@
     - "@": 1013
   blocks:
     - "@": 1015
+  num_replicas: -1
   __category:
     "@": 14
 - id: 1013
@@ -181,6 +182,7 @@
     - "@": 1028
   blocks:
     - "@": 1032
+  num_replicas: -1
   __category:
     "@": 14
 - id: 1028
