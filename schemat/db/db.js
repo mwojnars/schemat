@@ -44,8 +44,12 @@ export class Ring extends WebObject {
         return [...stack, this]
     }
 
-    get sequences() {
-        /* All sequences of this ring inferred from main_sequence by following .derived links, with main_sequence included as sequences[0]. */
+    get sequences__() {
+        /* POJO map of all sequences in this ring keyed by their operator's name. */
+    }
+
+    get sequences_array() {
+        /* Array of sequences of this ring inferred from main_sequence by following .derived links, with main_sequence included as sequences[0]. */
         let seqs = [this.main_sequence]
 
         // supports single-source derived sequences (indexes & aggregations) without cycles
@@ -58,14 +62,14 @@ export class Ring extends WebObject {
     }
 
     get derived() {
-        /* All derived sequences: like .sequences but without the main sequence. */
-        return this.sequences.slice(1)
+        /* Array of derived sequences: like .sequences_array but without the main sequence. */
+        return this.sequences_array.slice(1)
     }
 
     get operators() {
         /* POJO mapping of all operators in this ring stack keyed by operator's name. */
         let base_operators = this.base_ring?.operators || {}
-        let own_operators = Object.fromEntries(this.sequences.map(seq => {
+        let own_operators = Object.fromEntries(this.sequences_array.map(seq => {
             let op = seq.operator
             assert(op.is_loaded())
             return [op.name, op]
@@ -75,7 +79,7 @@ export class Ring extends WebObject {
 
     get sequence_by_operator() {
         /* Map of sequences keyed by their operator's ID. */
-        return new Map(this.sequences.map(seq => [seq.operator.id, seq]))
+        return new Map(this.sequences_array.map(seq => [seq.operator.id, seq]))
     }
 
     get id_insert_zones() {
@@ -97,7 +101,7 @@ export class Ring extends WebObject {
     //     this.main_sequence = DataSequence.new({ring: this, operator: base.main_sequence.operator})
     //
     //     for (let seq of base.derived)
-    //         this.sequences.push(seq.__category.new({ring: this, operator: seq.operator}))
+    //         this.sequences_array.push(seq.__category.new({ring: this, operator: seq.operator}))
     // }
 
     async __load__() {
