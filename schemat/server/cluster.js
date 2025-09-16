@@ -120,40 +120,6 @@ export class Cluster extends Agent {
         await Promise.all(nodes.map(node => this._stop_agent(node, agent, role)))
     }
 
-    async _stop_agent(node, agent, role, opts) {
-        await node.$master.stop_agent(agent, role)
-        this.$state.global_placements.remove(node, agent, role)
-        await this._broadcast_placements()
-    }
-
-    async _start_agent(node, agent, role, opts) {
-        /* For use by Controller. */
-        // this._print(`$leader.deploy() deploying ${agent} at ${node}`)
-        let started = await node.$master.start_agent(agent, role, opts)
-        this.$state.nodes.get(node).num_agents += started
-        this.$state.global_placements.add(node, agent, role)
-        await this._broadcast_placements()
-    }
-
-    _least_busy_node(skip = []) {
-        // this._print(`$leader.deploy() node states:`, nodes)
-        // this._print(`$leader.deploy() node avg_agents:`, nodes.map(n => n.avg_agents))
-        let skip_id = skip.map(n => typeof n === 'object' ? n.id : n)
-        let nodes = [...this.$state.nodes.values()]
-        let avail = nodes.filter(n => !skip_id.includes(n.id))
-        if (!avail.length) avail = nodes        // if `skip` covers the entire cluster (no nodes left), ignore it entirely
-
-        let {id} = min(avail, n => n.avg_agents)
-        return schemat.get_object(id)
-    }
-
-    async _broadcast_placements() {
-        /* Send updated global_placements to all nodes in the cluster. */
-        let nodes = this.get_nodes()
-        let placements = this.$state.global_placements
-        return Promise.all(nodes.map(node => node.$master.update_placements(placements)))
-    }
-
     async '$leader.adjust_replicas'(agent, num_replicas) {
         await agent.load()
         return this.get_controller(agent).adjust_replicas(agent, num_replicas)
@@ -191,4 +157,42 @@ export class Cluster extends Agent {
         this.nodes = [...this.$state.nodes.keys()]
         // await this.update_self({nodes: [...this.$state.nodes.keys()]}).save()
     }
+
+    async _start_agent(node, agent, role, opts) {
+        /* For use by Controller. */
+        // this._print(`$leader.deploy() deploying ${agent} at ${node}`)
+        let started = await node.$master.start_agent(agent, role, opts)
+        this.$state.nodes.get(node).num_agents += started
+        this.$state.global_placements.add(node, agent, role)
+        await this._broadcast_placements()
+    }
+
+    async _stop_agent(node, agent, role, opts) {
+        await node.$master.stop_agent(agent, role)
+        this.$state.global_placements.remove(node, agent, role)
+        await this._broadcast_placements()
+    }
+
+    async _broadcast_placements() {
+        /* Send updated global_placements to all nodes in the cluster. */
+        let nodes = this.get_nodes()
+        let placements = this.$state.global_placements
+        return Promise.all(nodes.map(node => node.$master.update_placements(placements)))
+    }
+
+
+    /***  Utilities  ***/
+
+    _least_busy_node(skip = []) {
+        // this._print(`$leader.deploy() node states:`, nodes)
+        // this._print(`$leader.deploy() node avg_agents:`, nodes.map(n => n.avg_agents))
+        let skip_id = skip.map(n => typeof n === 'object' ? n.id : n)
+        let nodes = [...this.$state.nodes.values()]
+        let avail = nodes.filter(n => !skip_id.includes(n.id))
+        if (!avail.length) avail = nodes        // if `skip` covers the entire cluster (no nodes left), ignore it entirely
+
+        let {id} = min(avail, n => n.avg_agents)
+        return schemat.get_object(id)
+    }
+
 }
