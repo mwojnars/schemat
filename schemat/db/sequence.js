@@ -261,6 +261,11 @@ export class Sequence extends WebObject {
         this.bind_ops(ops)
         return Promise.all(ops.map(op => op.submit()))
     }
+
+    async set_replicas(num_replicas) {
+        await this.update_self({num_replicas}).save()
+        await Promise.all(this.blocks.map(b => controller.adjust_replicas(b, num_replicas)))
+    }
 }
 
 
