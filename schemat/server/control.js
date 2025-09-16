@@ -37,16 +37,6 @@ export class Controller {  //extends WebObject
         await this._start_many(agent, roles, {copies})
     }
 
-    async _start_many(agent, roles, opts, skip = []) {
-        /* Start multiple deployments of `agent`, each one on a different node. */
-        for (let role of roles) {
-            let node = this.cluster._least_busy_node(skip)
-            if (!node) throw new Error(`cannot create more replicas of ${agent} than nodes in cluster`)
-            skip.push(node)
-            await this.cluster._start_agent(node, agent, role, opts)
-        }
-    }
-
     async adjust_replicas(agent, num_replicas) {
         /* Bring the actual number of replicas for `agent` to the desired value of `num_replicas`
            by starting new deployments or stopping unneeded ones.
@@ -74,6 +64,16 @@ export class Controller {  //extends WebObject
             let skip = this._placements.find_all(agent)
 
             await this._start_many(agent, roles, {leader}, skip)        // replica should copy initial data from `leader`
+        }
+    }
+
+    async _start_many(agent, roles, opts, skip = []) {
+        /* Start multiple deployments of `agent`, each one on a different node. */
+        for (let role of roles) {
+            let node = this.cluster._least_busy_node(skip)
+            if (!node) throw new Error(`cannot create more replicas of ${agent} than nodes in cluster`)
+            skip.push(node)
+            await this.cluster._start_agent(node, agent, role, opts)
         }
     }
 

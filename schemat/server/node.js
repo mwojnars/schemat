@@ -571,14 +571,11 @@ export class Node extends Agent {
            worker process and start (agent, role) there.
          */
         agent = await schemat.as_loaded(agent)
-        // let controller = await agent.get_controller()   >  await schemat.get_controller(agent.controller).load()
-        // let copies = controller.get_num_workers(agent, this)
 
         // install the agent unless it's already deployed here on this node
         if (!this._has_agent(agent)) await agent.__install__(this)
 
-        this._print(`$master.deploy(${agent}, ${role})`)
-        // this._print(`$master.deploy() agents:`, this.$state.agents.map(({worker, agent, role}) => ({worker, id: agent.id, role})))
+        this._print(`$master.start_agent(${agent}, ${role})`)
 
         let {local_placements} = this.$state
         if (local_placements.has(agent, role)) throw new Error(`agent ${agent}.${role} is already running on node ${this}`)
@@ -599,7 +596,6 @@ export class Node extends Agent {
             assert(worker >= 1 && worker <= this.num_workers)
             await this.$worker({worker})._start_agent(agent.id, role, {leader})
             local_placements.add(worker, agent, role)
-            // agents.push({worker, id: agent.id, role})
         }
 
         this.agents = local_placements.get_status()
