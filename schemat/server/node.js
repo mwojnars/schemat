@@ -611,7 +611,7 @@ export class Node extends Agent {
         return copies
     }
 
-    async '$master.stop_agent'(agent, role = AgentRole.ANY) {
+    async '$master.stop_agent'(agent, role = AgentRole.ANY, {worker} = {}) {
         /* Stop and uninstall (agent, role) from this node. All messages addressed to (agent, role) will be discarded from now on. */
         this._print(`$master.stop_agent(${agent}, ${role})`)
         // this._print(`$master.stop_agent() agents:`, this.$state.agents.map(({worker, agent, role}) => ({worker, id: agent.id, role})))
@@ -629,7 +629,7 @@ export class Node extends Agent {
         // stop every agent from `stop`, in reverse order
         for (let worker of stop.reverse()) {
             local_placements.remove(worker, agent, role)
-            await this.$worker({worker})._stop_agent(agent.id, role)    // FIXME: `role` must be imputed, not null
+            await this.$worker({worker})._stop_agent(agent.id, role)
         }
         this.agents = local_placements.get_status()
 

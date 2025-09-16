@@ -110,6 +110,22 @@ export class Cluster extends Agent {
         return this.get_controller(agent).deploy(agent, role)
     }
 
+    async '$leader.remove_agent'(agent, role = AgentRole.ANY) {
+        /* Find and stop all deployments of `agent` across the cluster. */
+
+        if (this.is(agent)) throw new Error(`cannot directly remove cluster leader agent, ${agent}`)
+        if (this.get_nodes().some(n => n.is(agent))) throw new Error(`cannot directly remove a node agent, ${agent}`)
+
+        let nodes = this.$state.global_placements.find_nodes(agent, role)
+        await Promise.all(nodes.map(node => this._stop_agent(node, agent, role)))
+    }
+
+    async _stop_agent(node, agent, role, opts) {
+        await node.$master.stop_agent(agent, role)
+        this.$state.global_placements.remove(node, agent, role)
+        await this._broadcast_placements()
+    }
+
     async _start_agent(node, agent, role, opts) {
         /* For use by Controller. */
         // this._print(`$leader.deploy() deploying ${agent} at ${node}`)
@@ -129,20 +145,6 @@ export class Cluster extends Agent {
 
         let {id} = min(avail, n => n.avg_agents)
         return schemat.get_object(id)
-    }
-
-    async '$leader.remove_agent'(agent, role = AgentRole.ANY) {
-        /* Find and stop all deployments of `agent` across the cluster. */
-
-        if (this.is(agent)) throw new Error(`cannot directly remove cluster leader agent, ${agent}`)
-        if (this.get_nodes().some(n => n.is(agent))) throw new Error(`cannot directly remove a node agent, ${agent}`)
-
-        let nodes = this.$state.global_placements.find_nodes(agent, role)
-        await Promise.all(nodes.map(async node => {
-            await node.$master.stop_agent(agent, role)
-            this.$state.global_placements.remove(node, agent, role)
-            await this._broadcast_placements()
-        }))
     }
 
     async _broadcast_placements() {

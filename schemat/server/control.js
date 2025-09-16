@@ -60,6 +60,7 @@ export class Controller {  //extends WebObject
         }
         else if (current > num_replicas) {
             let surplus = current - num_replicas
+            // choose one of replicas at random and terminate
         }
     }
 
