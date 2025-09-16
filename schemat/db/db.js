@@ -44,10 +44,6 @@ export class Ring extends WebObject {
         return [...stack, this]
     }
 
-    get sequences__() {
-        /* POJO map of all sequences in this ring keyed by their operator's name. */
-    }
-
     get sequences_array() {
         /* Array of sequences of this ring inferred from main_sequence by following .derived links, with main_sequence included as sequences[0]. */
         let seqs = [this.main_sequence]
@@ -59,6 +55,11 @@ export class Ring extends WebObject {
             seqs.push(...seq.derived || [])
         }
         return seqs
+    }
+
+    get sequences() {
+        /* POJO map of all sequences in this ring keyed by their operator's name. */
+        return Object.fromEntries(this.sequences_array.map(seq => ([seq.operator.name, seq])))
     }
 
     get derived() {
@@ -77,10 +78,10 @@ export class Ring extends WebObject {
         return {...base_operators, ...own_operators}
     }
 
-    get sequence_by_operator() {
-        /* Map of sequences keyed by their operator's ID. */
-        return new Map(this.sequences_array.map(seq => [seq.operator.id, seq]))
-    }
+    // get sequence_by_operator() {
+    //     /* Map of sequences keyed by their operator's ID. */
+    //     return new Map(this.sequences_array.map(seq => [seq.operator.id, seq]))
+    // }
 
     get id_insert_zones() {
         /* [min_id_exclusive, min_id_forbidden, min_id_sharded] grouped into an array, with the 2nd one imputed if missing.
@@ -217,7 +218,7 @@ export class Ring extends WebObject {
 
     async *scan_binary(operator, opts) {
         /* Scan a sequence in the range [`start`, `stop`) and yield [key-binary, value-json] pairs. */
-        let seq = this.sequence_by_operator.get(operator.id)
+        let seq = this.sequences[operator.name]
         yield* seq.scan_binary(opts)
     }
 
@@ -470,7 +471,7 @@ export class Database extends WebObject {
         // iterate from the top ring down to __ring
         for (let ring of this.stack_reversed) {
             ring = await ring.reload()      // try to get a fresher copy of ring, in case the sequence was added only recently
-            let seq = ring.sequence_by_operator.get(operator.id)
+            let seq = ring.sequences[operator.name]
             this._print(`remove_operator() ring=${ring} seq=${seq}`)
             if (seq) {
                 this._print(`remove_operator() deleting sequence ${seq} ...`)
