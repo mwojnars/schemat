@@ -243,6 +243,11 @@ export class Block extends Agent {
 
     async __uninstall__() { await this._clear_files() }
 
+    async __migrate__() {
+        /* Create a new replica by copying data from $master. */
+        
+    }
+
     async __start__({role}) {
         let stores = await Promise.all(this.storage$.map(s => this._create_store(s)))
         let monitors = (role === '$master') ? new ObjectsMap(this.sequence.derived.map(seq => [seq, new Monitor(this, seq)])) : null
