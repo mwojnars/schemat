@@ -52,7 +52,7 @@ export class Controller {  //extends WebObject
            by starting new deployments or stopping unneeded ones.
          */
         let [role_leader, role] = this.get_roles(agent)
-        if (!role) throw new Error(`cannot adjust the no. of replicas for ${agent}: no role name for replicas`)
+        if (!role) throw new Error(`cannot adjust the no. of replicas for ${agent}, missing role name`)
 
         // calculate the current no. of replicas
         let current = this._placements.count_all(agent, role)
