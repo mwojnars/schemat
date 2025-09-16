@@ -22,15 +22,13 @@ export class Controller {  //extends WebObject
     async deploy(agent) {
         /* Find the least busy node(s) and deploy `agent` there. */
         await agent.load()
-
         let [role_leader, role_replica] = this.get_roles(agent)
-        role_leader ??= AgentRole.GENERIC
 
         this._check_not_deployed(agent, role_leader)
         if (role_replica) this._check_not_deployed(agent, role_replica)
 
-        let replicas = this.get_num_replicas(agent)
-        if (replicas === -1) replicas = this._global_placements.count_places() - 1      // convert -1 to N-1
+        let replicas = this._normalize_num_replicas(this.get_num_replicas(agent))
+        // if (replicas === -1) replicas = this._global_placements.count_places() - 1      // convert -1 to N-1
 
         let roles = Array.from({length: 1 + replicas}, () => role_replica)
         roles[0] = role_leader
@@ -52,10 +50,15 @@ export class Controller {  //extends WebObject
         if (exists.length) throw new Error(`agent ${agent}.${role} is already deployed in the cluster (nodes ${exists})`)
     }
 
+    _normalize_num_replicas(n) {
+        /* Convert -1 to N-1, where N is the cluster size. */
+        assert(typeof n === 'number' && n >= -1)
+        return n === -1 ? this._global_placements.count_places() - 1 : n
+    }
+
     get_roles(agent) {
         /* Return a pair of role names, [<leader>, <replica>], that denote the leader and replicas of `agent`, respectively.
            If <replica> is empty (undefined), it means that no replicas are created for this type of agent.
-           If <leader> is empty, it should be imputed with AgentRole.GENERIC.
          */
         return [AgentRole.GENERIC]
     }
@@ -74,8 +77,16 @@ export class Controller {  //extends WebObject
         return 1
     }
 
-    adjust_replicas(agent) {
-        /* Bring the actual number of replicas for `agent` to the desired value. */
+    adjust_replicas(agent, num_replicas) {
+        /* Bring the actual number of replicas for `agent` to the desired value of `num_replicas`
+           by starting new deployments or stopping unneeded ones.
+         */
+        let [role_leader, role_replica] = this.get_roles(agent)
+        if (!role_replica) throw new Error(`cannot adjust the no. of replicas for ${agent}: no role name for replicas`)
+
+        // calculate the current no. of replicas
+        let current = this._global_placements.find_all(agent, role_replica)
+
     }
 }
 
