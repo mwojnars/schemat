@@ -138,6 +138,11 @@ export async function arrayFromAsync(iterator) {
     return arr
 }
 
+export function random(array) {
+    /* Random element of `array`. */
+    return array[Math.floor(Math.random() * array.length)]
+}
+
 
 /*************************************************************************************************
  **

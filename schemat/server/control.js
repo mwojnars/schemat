@@ -60,7 +60,11 @@ export class Controller {  //extends WebObject
         }
         else if (current > num_replicas) {
             let surplus = current - num_replicas
-            // choose one of replicas at random and terminate
+            for (let i = 0; i < surplus; i++) {
+                // choose one of replicas at random and terminate
+
+                await this.cluster._stop_agent(node, agent, role_replica)
+            }
         }
     }
 
