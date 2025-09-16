@@ -37,9 +37,8 @@ export class Controller {  //extends WebObject
         await this._start_many(agent, roles, {copies})
     }
 
-    async _start_many(agent, roles, opts) {
+    async _start_many(agent, roles, opts, skip = []) {
         /* Start multiple deployments of `agent`, each one on a different node. */
-        let skip = []
         for (let role of roles) {
             let node = this.cluster._least_busy_node(skip)
             if (!node) throw new Error(`cannot create more replicas of ${agent} than nodes in cluster`)
@@ -67,17 +66,14 @@ export class Controller {  //extends WebObject
             }
         }
         else if (current < num_replicas) {          // too few replicas? start replica(s) on idle nodes, copy data from leader
-            let count = num_replicas - current
-            let skip = this._placements.find_all(agent)
             let leader = this._placements.find_first(agent, role_leader)
             if (!leader) throw new Error(`leader not found, cannot create replica(s) of ${agent}`)
 
-            for (let i = 0; i < count; i++) {           // choose one of replicas at random and terminate
-                let node = this.cluster._least_busy_node(skip)
-                if (!node) throw new Error(`cannot create more replicas than nodes in cluster`)
-                skip.push(node)
-                await this.cluster._start_agent(node, agent, role, {leader})
-            }
+            let length = num_replicas - current
+            let roles = Array.from({length}, () => role)
+            let skip = this._placements.find_all(agent)
+
+            await this._start_many(agent, roles, {leader}, skip)        // replica should copy initial data from `leader`
         }
     }
 
