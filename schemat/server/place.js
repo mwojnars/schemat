@@ -129,16 +129,19 @@ export class Placements {
     _is_local()  {}
     _is_hidden() {}
 
-    get_places() {
-        /* Return an array of place IDs occurring in placements, deduplicated. */
-        return [...new Set(Object.values(this._placements).flat())]
-    }
     count_places() {
         /* Return the number of places occurring in placements, deduplicated. */
         return this.get_places().length
     }
 
+    get_places() {
+        /* Return an array of place IDs occurring in placements, deduplicated. */
+        return [...new Set(Object.values(this._placements).flat())]
+    }
+
     has(agent, role)    { return this.find_first(agent, role) != null }
+
+    count_all(agent, role) { return this.find_all(agent, role).length }
 
     find_all(agent, role = AgentRole.ANY) {
         /* Return an array of places where (agent, role) is deployed; `agent` is an object or ID. */
