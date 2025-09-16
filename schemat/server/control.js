@@ -55,14 +55,23 @@ export class Controller {  //extends WebObject
         let current = this._global_placements.count_all(agent, role)
         num_replicas = this._normalize_num_replicas(num_replicas)
 
-        if (current < num_replicas) {
-            let deficit = num_replicas - current
-        }
-        else if (current > num_replicas) {
-            let surplus = current - num_replicas
-            for (let i = 0; i < surplus; i++) {             // choose one of replicas at random and terminate
+        if (current > num_replicas) {               // too many replicas? choose one(s) at random and terminate
+            let count = current - num_replicas
+            for (let i = 0; i < count; i++) {
                 let node = this._global_placements.find_random(agent, role)
                 if (node) await this.cluster._stop_agent(node, agent, role)
+            }
+        }
+        else if (current < num_replicas) {          // too few replicas? start replica(s) on idle nodes, copy data from leader
+            let count = num_replicas - current
+            let skip = this._global_placements.find_all(agent, role)
+            let leader = this._global_placements.find_first(agent, role_leader)
+            if (!leader) throw new Error(`leader not found, cannot create replica(s) of ${agent}`)
+
+            for (let i = 0; i < count; i++) {           // choose one of replicas at random and terminate
+                let node = this.cluster._least_busy_node(skip)
+                skip.push(node)
+                await this.cluster._start_agent(node, agent, role, {})
             }
         }
     }
