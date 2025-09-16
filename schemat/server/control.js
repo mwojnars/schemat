@@ -31,15 +31,20 @@ export class Controller {  //extends WebObject
         let roles = Array.from({length: 1 + replicas}, () => role_replica)
         roles[0] = role_leader
 
-        let skip = []
         let copies = this.get_num_workers(agent)
         if (copies !== 1 && replicas) throw new Error(`cannot deploy multiple local copies when replicas are deployed too`)
 
+        await this._start_many(agent, roles, {copies})
+    }
+
+    async _start_many(agent, roles, opts) {
+        /* Start multiple deployments of `agent`, each one on a different node. */
+        let skip = []
         for (let role of roles) {
             let node = this.cluster._least_busy_node(skip)
-            if (!node) throw new Error(`cannot create more replicas than nodes in cluster`)
+            if (!node) throw new Error(`cannot create more replicas of ${agent} than nodes in cluster`)
             skip.push(node)
-            await this.cluster._start_agent(node, agent, role, {copies})
+            await this.cluster._start_agent(node, agent, role, opts)
         }
     }
 
