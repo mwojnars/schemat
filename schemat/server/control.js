@@ -17,7 +17,7 @@ export class Controller {  //extends WebObject
         this.cluster = cluster_leader
     }
 
-    get _global_placements() { return this.cluster.$state.global_placements }
+    get _placements() { return this.cluster.$state.global_placements }
 
     async deploy(agent) {
         /* Find the least busy node(s) and deploy `agent` there. */
@@ -27,9 +27,7 @@ export class Controller {  //extends WebObject
         this._check_not_deployed(agent, role_leader)
         if (role_replica) this._check_not_deployed(agent, role_replica)
 
-        let replicas = this._normalize_num_replicas(this.get_num_replicas(agent))
-        // if (replicas === -1) replicas = this._global_placements.count_places() - 1      // convert -1 to N-1
-
+        let replicas = this._normalize_replicas(this.get_num_replicas(agent))
         let roles = Array.from({length: 1 + replicas}, () => role_replica)
         roles[0] = role_leader
 
@@ -52,20 +50,20 @@ export class Controller {  //extends WebObject
         if (!role) throw new Error(`cannot adjust the no. of replicas for ${agent}: no role name for replicas`)
 
         // calculate the current no. of replicas
-        let current = this._global_placements.count_all(agent, role)
-        num_replicas = this._normalize_num_replicas(num_replicas)
+        let current = this._placements.count_all(agent, role)
+        num_replicas = this._normalize_replicas(num_replicas)
 
         if (current > num_replicas) {               // too many replicas? choose one(s) at random and terminate
             let count = current - num_replicas
             for (let i = 0; i < count; i++) {
-                let node = this._global_placements.find_random(agent, role)
+                let node = this._placements.find_random(agent, role)
                 if (node) await this.cluster._stop_agent(node, agent, role)
             }
         }
         else if (current < num_replicas) {          // too few replicas? start replica(s) on idle nodes, copy data from leader
             let count = num_replicas - current
-            let skip = this._global_placements.find_all(agent, role)
-            let leader = this._global_placements.find_first(agent, role_leader)
+            let skip = this._placements.find_all(agent, role)
+            let leader = this._placements.find_first(agent, role_leader)
             if (!leader) throw new Error(`leader not found, cannot create replica(s) of ${agent}`)
 
             for (let i = 0; i < count; i++) {           // choose one of replicas at random and terminate
@@ -78,14 +76,14 @@ export class Controller {  //extends WebObject
 
     _check_not_deployed(agent, role) {
         /* Check that (agent,role) is not deployed yet in the cluster, raise an error otherwise. */
-        let exists = this._global_placements.find_all(agent, role)
+        let exists = this._placements.find_all(agent, role)
         if (exists.length) throw new Error(`agent ${agent}.${role} is already deployed in the cluster (nodes ${exists})`)
     }
 
-    _normalize_num_replicas(n) {
-        /* Convert -1 to N-1, where N is the cluster size. */
+    _normalize_replicas(n) {
+        /* Normalize a num_replicas number: convert -1 to N-1 if needed, where N is the cluster size. */
         assert(typeof n === 'number' && n >= -1)
-        return n === -1 ? this._global_placements.count_places() - 1 : n
+        return n === -1 ? this._placements.count_places() - 1 : n
     }
 
     get_roles(agent) {
