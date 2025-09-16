@@ -191,11 +191,10 @@ export class Block extends Agent {
     get operator()  { return this.sequence.operator }
     // get schema()    { return this.sequence.operator.record_schema }
 
-    get num_replicas() {
-        /* The desired number of $replica deployments for this block as configured in the parent sequence or ring. */
-        return this.is_data_block() ? this.ring.data_replicas : this.ring.index_replicas
-        // return this.sequence.num_replicas
-    }
+    // get num_replicas() {
+    //     /* The desired number of $replica deployments for this block as configured in the parent sequence or ring. */
+    //     return this.is_data_block() ? this.ring.data_replicas : this.ring.index_replicas
+    // }
 
     is_data_block() { return false }
 
