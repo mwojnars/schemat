@@ -18,29 +18,29 @@ export class Placements {
     // _frames             // array of {fid, id, role, worker, node?} specifications of agent frames,
     //                     // either local (per node), or global (in entire cluster)
 
-    _placements = {}        // tag -> array-of-place-ids, where `tag` is a string, either "<id>-<role>" or "<id>",
-                            // and place is a node ID or worker process ID
+    _routes = {}        // tag -> array-of-place-ids, where `tag` is a string, either "<id>-<role>" or "<id>",
+                        // and place is a node ID or worker process ID
 
     clone() { return Struct.clone(this) }
 
-    __getstate__() { return this._placements }          // no compactification for serialization as of now
+    __getstate__() { return this._routes }          // no compactification for serialization as of now
 
-    static __setstate__(placements) {
+    static __setstate__(routes) {
         let obj = new this()
-        obj._placements = placements
+        obj._routes = routes
         obj._reorder_locals()
         return obj
     }
 
     // __getstate__() { return this.compactify() }
     //
-    // static __setstate__(placements) {
+    // static __setstate__(routes) {
     //     let obj = new this()
-    //     obj._placements = placements
+    //     obj._routes = routes
     //
-    //     for (let [tag, places] of Object.entries(placements)) {
+    //     for (let [tag, places] of Object.entries(routes)) {
     //         if (!Array.isArray(places))
-    //             placements[tag] = places = [places]             // recover singleton arrays
+    //             routes[tag] = places = [places]              // recover singleton arrays
     //
     //         let [id] = tag.split('-')
     //         for (let place of places) obj._add(place, id)       // add ID-only entries
@@ -49,21 +49,21 @@ export class Placements {
     // }
 
     compactify() {
-        let placements = {...this._placements}
+        let routes = {...this._routes}
 
-        // clean up and compactify `placements`
-        for (let [tag, places] of Object.entries(placements)) {
+        // clean up and compactify `routes`
+        for (let [tag, places] of Object.entries(routes)) {
             places = places.filter(place => !this._is_hidden(tag, place))   // drop hidden (implicit) placements
             let [id, role] = tag.split('-')
-            if (!role || !places.length) delete placements[tag]             // drop ID-only (no role) entries
-            else if (places.length === 1) placements[tag] = places[0]       // compact representation of singleton arrays
+            if (!role || !places.length) delete routes[tag]                 // drop ID-only (no role) entries
+            else if (places.length === 1) routes[tag] = places[0]           // compact representation of singleton arrays
         }
-        return placements
+        return routes
     }
 
     _reorder_locals() {
         /* After deserialization on a different node, fix the ordering of places in each array so that the "local" place is listed first. */
-        for (let places of Object.values(this._placements)) {
+        for (let places of Object.values(this._routes)) {
             let pos = places.findIndex(place => this._is_local(place))      // position of the "local" place
             if (pos > 0) {
                 let local = places[pos]
@@ -89,7 +89,7 @@ export class Placements {
     }
 
     _add(place, key) {
-        let places = (this._placements[`${key}`] ??= [])
+        let places = (this._routes[`${key}`] ??= [])
         if (places.includes(place)) return                  // ignore duplicate IDs
         if (this._is_local(place)) places.unshift(place)    // always put the local node/process ID at the beginning
         else places.push(place)                             // put other node IDs at the end of the list
@@ -113,20 +113,20 @@ export class Placements {
         this._remove(place, this.tag(agent, role))
 
         // check if agent -> place link remains elsewhere (in a different role), and if not, remove the ID-only entry
-        let remain = this._agent_tags(agent).some(tag => this._placements[tag].includes(place))
+        let remain = this._agent_tags(agent).some(tag => this._routes[tag].includes(place))
         if (!remain) this._remove(place, agent)
     }
 
     _remove(place, key) {
-        let places = this._placements[`${key}`]
+        let places = this._routes[`${key}`]
         if (!places?.length) return
-        this._placements[`${key}`] = places = places.filter(p => p !== place)
-        if (!places.length) delete this._placements[`${key}`]
+        this._routes[`${key}`] = places = places.filter(p => p !== place)
+        if (!places.length) delete this._routes[`${key}`]
     }
 
     _agent_tags(agent_id) {
         /* Array of all agent-role tags that match a given agent_id, no matter the role. */
-        return Object.keys(this._placements).filter(tag => tag.startsWith(`${agent_id}-`))
+        return Object.keys(this._routes).filter(tag => tag.startsWith(`${agent_id}-`))
     }
 
     _is_local()  {}
@@ -139,7 +139,7 @@ export class Placements {
 
     get_places() {
         /* Return an array of place IDs occurring in placements, deduplicated. */
-        return [...new Set(Object.values(this._placements).flat())]
+        return [...new Set(Object.values(this._routes).flat())]
     }
 
     has(agent, role)    { return this.find_first(agent, role) != null }
@@ -151,7 +151,7 @@ export class Placements {
         agent = _as_id(agent)
         role ??= AgentRole.GENERIC      // FIXME: remove + treat GENERIC as a regular role
         let tag = (role === AgentRole.GENERIC || role === AgentRole.ANY) ? `${agent}` : this.tag(agent, role)
-        return this._placements[tag] || []
+        return this._routes[tag] || []
     }
 
     find_first(agent, role) {
@@ -166,13 +166,13 @@ export class Placements {
 
     list_agent_ids() {
         /* Array of agent IDs occurring as keys in placement tags. */
-        return Object.keys(this._placements).filter(tag => !tag.includes('-')).map(tag => Number(tag))
+        return Object.keys(this._routes).filter(tag => !tag.includes('-')).map(tag => Number(tag))
     }
 
     rank_places() {
         /* Order places by utilization, from least to most busy, and return as an array of place IDs. */
-        let placements = Object.entries(this._placements).filter(([tag]) => tag.includes('-'))
-        let places = placements.map(([tag, places]) => places).flat()
+        let routes = Object.entries(this._routes).filter(([tag]) => tag.includes('-'))
+        let places = routes.map(([tag, places]) => places).flat()
         // let places = agents.map(status => status.worker).filter(w => w >= 1)     // pull out worker IDs, skip the master process (0)
 
         let counts = new Counter(places)
@@ -197,7 +197,7 @@ export class LocalPlacements extends Placements {
         this.node_id = node.id
 
         for (let {worker, id, role} of node.agents)
-            this.add(worker, id, role)                      // add regular agents to placements
+            this.add(worker, id, role)                      // add regular agents to routes
 
         // this.add_hidden(node)
         this.add(MASTER, node, '$master')                   // add node.$master agent
@@ -213,8 +213,8 @@ export class LocalPlacements extends Placements {
 
     get_status() {
         /* Produce a list of agent configurations for saving in DB. */
-        let placements = this.compactify()
-        return Object.entries(placements).map(([tag, workers]) => {
+        let routes = this.compactify()
+        return Object.entries(routes).map(([tag, workers]) => {
             let [id, role] = tag.split('-')
             if (!Array.isArray(workers)) workers = [workers]
             return workers.map(worker => ({id: Number(id), role, worker}))
@@ -222,7 +222,7 @@ export class LocalPlacements extends Placements {
     }
 
     _is_local(worker)       { return worker === Number(process.env.WORKER_ID) || 0 }    // schemat.kernel.worker_id
-    _is_hidden(tag, worker) { return Number(tag.split('-')[0]) === this.node_id }       // placements of node.$master/$worker excluded
+    _is_hidden(tag, worker) { return Number(tag.split('-')[0]) === this.node_id }       // routes of node.$master/$worker excluded
     // _is_hidden(tag, worker) { return worker === MASTER }    // placements on master process are excluded
 }
 
@@ -240,7 +240,7 @@ export class GlobalPlacements extends Placements {
 
         for (let node of nodes)
             for (let {id, role} of node.agents)
-                this.add(node, id, role)                    // add regular agents to placements
+                this.add(node, id, role)                    // add regular agents to routes
 
         // add node.$master/$worker agents, they are deployed on <node> and nowhere else
         for (let node of nodes) {
@@ -259,7 +259,7 @@ export class GlobalPlacements extends Placements {
     // }
 
     _is_local(node_id)      { return node_id === schemat.kernel.node_id }
-    _is_hidden(tag, node)   { return tag.startsWith(`${node}-`) }       // node-on-itself placements are excluded from serialization
+    _is_hidden(tag, node)   { return tag.startsWith(`${node}-`) }       // node-on-itself routes are excluded from serialization
 
     find_nodes(agent, role) {
         /* Return an array of nodes where (agent, role) is deployed; `agent` is an object or ID. */
