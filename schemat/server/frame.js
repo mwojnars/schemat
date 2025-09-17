@@ -178,7 +178,7 @@ export class Frame {
         // assert(agent.id === this.agent.id)
         // assert(agent !== this.agent)
 
-        let was_running = !this.paused
+        // let was_running = !this.paused
         await this.pause()                          // prevent RPC calls during restart
 
         schemat._print(`restarting ${tag} ...`)
@@ -194,7 +194,8 @@ export class Frame {
             schemat._print(`error restarting ${tag}:`, ex, `- using previous instance`)
         }
         finally {
-            if (was_running) await this.resume()        // unpause the agent unless it was already paused before restart()
+            this.resume()                           // unpause the agent
+            // if (was_running) await this.resume()        // unpause the agent unless it was already paused before restart()
         }
         schemat._print(`restarting ${tag} done`)
 
@@ -249,24 +250,39 @@ export class Frame {
     }
 
     async pause() {
-        /* Await currently running RPC calls and don't start any new calls until resume(). */
-        let ongoing = Promise.all(this.calls)
-        if (!this.paused) {
-            let _resolve
-            this.paused = new Promise(resolve => {_resolve = resolve})
-            this.paused.resolve = async () => { await ongoing; _resolve() }
-        }
-        return ongoing
+        /* Await currently running RPC calls and prevent new calls until resume(). */
+        while (this.paused) await this.paused       // wait until someone else's pause comes to an end
+        let _resolve
+        this.paused = new Promise(resolve => {_resolve = resolve})
+        this.paused.resolve = _resolve
+        while (this.calls.length) await Promise.all(this.calls)     // WARN: pause() cannot be used inside an RPC endpoint (!) as this would cause a deadlock
     }
 
-    async resume() {
-        /* Resume RPC calls after pause(). If called during the initial phase of pausing, it awaits
-           for ongoing calls to return, so it never returns before the preceding pause().
-         */
-        if (!this.paused) return
-        await this.paused.resolve()
+    resume() {
+        /* Resume RPC calls after pause(). Should only be called after pause() was awaited. */
+        this.paused?.resolve()
         this.paused = false
     }
+
+    // async pause() {
+    //     /* Await currently running RPC calls and don't start any new calls until resume(). */
+    //     let ongoing = Promise.all(this.calls)
+    //     if (!this.paused) {
+    //         let _resolve
+    //         this.paused = new Promise(resolve => {_resolve = resolve})
+    //         this.paused.resolve = async () => { await ongoing; _resolve() }
+    //     }
+    //     return ongoing
+    // }
+    //
+    // async resume() {
+    //     /* Resume RPC calls after pause(). If called during the initial phase of pausing, it awaits
+    //        for ongoing calls to return, so it never returns before the preceding pause().
+    //      */
+    //     if (!this.paused) return
+    //     await this.paused.resolve()
+    //     this.paused = false
+    // }
 
     async exec(command, args = [], caller_ctx = schemat.current_context, tx = null, callback = null, _debug = false) {
         /* Call agent's `command` in tracked mode, in a proper app context (own or caller's) + schemat.tx context + agent.__frame context.
