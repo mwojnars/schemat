@@ -27,8 +27,9 @@ export class Agent extends WebObject {
 
     file_tag            // string to be included in names of local files and directories created by this agent
     switch_context      // if true, commands are executed in the caller's context not the agent's own context (__ctx)
-    concurrent          // if true, multiple calls to this agent may execute concurrently; disabled by default
     controller          // global name of the controller that manages this agent's replication and deployments
+    concurrent          // if true, multiple calls to this agent may execute concurrently; disabled by default
+    //exclusive         // true/false, or a list of agent method names that should be executed in exclusive lock
 
     get file_path() { throw new Error(`file_path not implemented for agent ${this}`) }
 
@@ -40,7 +41,7 @@ export class Agent extends WebObject {
 
     async __uninstall__(node) {}
 
-    async __migrate__(role) {
+    async __migrate__(role) {   //__deploy__()
         /* If this deployment is to be started as a new replica that's added later after the first deployment,
            __migrate__() is executed before the first __start__() to let the agent copy initial data from leader.
          */

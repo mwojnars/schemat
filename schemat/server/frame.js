@@ -104,6 +104,7 @@ export class FramesMap extends CustomMap {
 
 export class Frame {
     /* State (internal variables) and status of a running agent. */
+    //fid               // "frame ID", globally unique ID number of this agent deployment preserved across node restarts and agent migration
     agent_id
     agent               // web object that created this frame, replaced with a new reference on every refresh
     role                // name of the role this agent is running in
@@ -181,7 +182,7 @@ export class Frame {
         // let was_running = !this.paused
         await this.pause()                          // prevent RPC calls during restart
 
-        schemat._print(`restarting ${tag} ...`)
+        schemat._print(`${tag} restart ...`)
         try {
             if (this.stopping) return
             let stop    = () => this._frame_context(prev,  () => prev.__stop__(this.state))
@@ -191,13 +192,13 @@ export class Frame {
             this.agent = agent
         }
         catch (ex) {
-            schemat._print(`error restarting ${tag}:`, ex, `- using previous instance`)
+            schemat._print(`${tag} error during restart:`, ex, `- using previous instance`)
         }
         finally {
             this.resume()                           // unpause the agent
             // if (was_running) await this.resume()        // unpause the agent unless it was already paused before restart()
         }
-        schemat._print(`restarting ${tag} done`)
+        schemat._print(`${tag} restart done`)
 
         // return updated time interval to the next execution of restart()
         let ttl = agent.__ttl
