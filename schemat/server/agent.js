@@ -92,16 +92,17 @@ export class Agent extends WebObject {
 
     /***  RPC methods  ***/
 
-    '$agent.pause'() {
-        /* Pause the execution of this agent: execution of incoming and pending requests is on hold until $agent.resume().
-           Ongoing calls are NOT affected, they run normally until completion. Mainly for debugging. Do NOT override in subclasses.
-         */
-        return this.$frame.pause()
-    }
-
-    '$agent.resume'() {
-        return this.$frame.resume()
-    }
+    // // TODO: currently, $frame.pause() cannot be called inside an RPC method like $agent.pause() because it awaits on termination of all RPC calls!
+    // '$agent.pause'() {
+    //     /* Pause the execution of this agent: execution of incoming and pending requests is on hold until $agent.resume().
+    //        Ongoing calls are NOT affected, they run normally until completion. Mainly for debugging. Do NOT override in subclasses.
+    //      */
+    //     return this.$frame.pause()
+    // }
+    //
+    // '$agent.resume'() {
+    //     return this.$frame.resume()
+    // }
 
     '$agent.background'() {
         /* Background processing that is triggered at regular intervals, usually in spare time when there are no other calls.
