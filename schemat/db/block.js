@@ -254,7 +254,7 @@ export class Block extends Agent {
     }
 
     async __start__({role}) {
-        let stores = await Promise.all(this.storage$.map(s => this._create_store(s)))
+        let stores = await Promise.all(this.storage$.map(s => this._open_store(s)))
         let monitors = (role === '$master') ? new ObjectsMap(this.sequence.derived.map(seq => [seq, new Monitor(this, seq)])) : null
 
         // global write lock
@@ -281,17 +281,18 @@ export class Block extends Agent {
         // this._print(`_clear_files() done`)
     }
 
-    async _create_store(storage, path = null) {
-        path ??= this._get_store_path(storage)
-        let clas_ = await this._detect_store_class(storage)
+    async _open_store(type, path = null) {
+        /* Instantiate and open a Store of a given `type`. */
+        path ??= this._get_store_path(type)
+        let clas_ = await this._detect_store_class(type)
         let store = new clas_(path, this)
         await store.open()
         return store
     }
 
-    _get_store_path(storage) {
-        let ext = Block.STORAGE_TYPES[storage]
-        if (!ext) throw new Error(`unknown storage type '${storage}' in ${this}`)
+    _get_store_path(type) {
+        let ext = Block.STORAGE_TYPES[type]
+        if (!ext) throw new Error(`unknown storage type '${type}' in ${this}`)
         return `${schemat.node.file_path}/${this.file_tag}.${ext}`
     }
 
@@ -873,7 +874,7 @@ export class BootDataBlock extends DataBlock {
     async __draft__(path) {
         this.name = fileBaseName(path)      // for debugging of boot process
         let format = this._detect_format(path)
-        this._store = await this._create_store(format, path)
+        this._store = await this._open_store(format, path)
     }
 
     _detect_format(path) {
