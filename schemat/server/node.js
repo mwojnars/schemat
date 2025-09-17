@@ -569,7 +569,7 @@ export class Node extends Agent {
     }
 
     async '$master.start_agent'(agent, role, {worker, copies = 1, migrate} = {}) {
-        /* Start `agent` (object or ID) on this node: first, install it if needed, then find the least busy
+        /* Start new `agent` deployment on this node: first, install it if needed, then find the least busy
            worker process and start (agent, role) there.
          */
         agent = await schemat.as_loaded(agent)
@@ -592,7 +592,8 @@ export class Node extends Agent {
         
         for (let worker of workers) {                                   // start `agent` on each of `workers`
             assert(worker >= 1 && worker <= this.num_workers)
-            await this.$worker({worker})._start_agent(agent.id, role, {migrate})
+            let fid = Frame.generate_fid()
+            await this.$worker({worker})._start_agent(agent.id, role, {fid, migrate})
             local_placements.add(worker, agent, role)
         }
 

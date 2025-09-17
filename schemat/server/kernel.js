@@ -153,6 +153,7 @@ export class Kernel {
         // start ordinary agents
         for (let {id, role, fid} of agents) {
             assert(id)
+            assert(fid)
             role ??= AgentRole.GENERIC
             await this.start_agent(id, role, {fid})
         }
@@ -170,7 +171,7 @@ export class Kernel {
             assert(agent.is_loaded())
             assert(agent instanceof Agent)
 
-            if (!fid && fid !== null) fid = Frame.generate_fid()
+            // if (!fid && fid !== null) fid = Frame.generate_fid()
             let frame = new Frame(agent, role, fid)
             this.frames.set([id, role], frame)      // the frame must be assigned to `frames` already before .start()
             await frame.start()
