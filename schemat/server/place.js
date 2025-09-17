@@ -15,6 +15,9 @@ function _as_id(obj) {
 
 export class Placements {
 
+    // _frames             // array of {fid, id, role, worker, node?} specifications of agent frames,
+    //                     // either local (per node), or global (in entire cluster)
+
     _placements = {}        // tag -> array-of-place-ids, where `tag` is a string, either "<id>-<role>" or "<id>",
                             // and place is a node ID or worker process ID
 
