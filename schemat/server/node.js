@@ -6,6 +6,7 @@ import {Counter} from "../common/structs.js";
 import {Agent} from "./agent.js";
 import {TCP_Receiver, TCP_Sender} from "./tcp.js";
 import {MASTER, LocalPlacements} from "./place.js";
+import {Frame} from "./frame.js";
 
 
 /**********************************************************************************************************************/
@@ -220,7 +221,7 @@ export class Node extends Agent {
      */
 
     num_workers
-    agents                  // array of {id, role, worker} describing worker placements of agents on this node
+    agents                  // array of {fid, id, role, worker} describing worker placements of agents on this node
     http_host
     http_port
     https_port
@@ -272,6 +273,13 @@ export class Node extends Agent {
         // this._save_placements()
     }
 
+    async _impute_fid() {
+        if (this.agents.every(({fid}) => fid)) return
+        await sleep(3.0)
+        this.agents.forEach(st => {st.fid = Frame.generate_fid()})
+        await this.update_self({agents: this.agents}).save()
+    }
+
     // async _save_placements() {
     //     await sleep(3.0)
     //     this.local_placements = new LocalPlacements(this)
@@ -284,6 +292,7 @@ export class Node extends Agent {
     async __start__() {
         /* On master only. */
         if (this.is_worker()) return
+        // this._impute_fid()
 
         let tcp_sender = new TCP_Sender()
         let tcp_receiver = new TCP_Receiver()
