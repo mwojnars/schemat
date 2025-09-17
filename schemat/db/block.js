@@ -244,18 +244,21 @@ export class Block extends Agent {
     async __uninstall__() { await this._clear_files() }
 
     async __migrate__(role) {
-        /* Create a new replica by copying data from $master. */
+        /* Create a new replica in `this` by copying data from $master. */
         assert(role === '$replica')
 
-        // TODO: we must ensure that immediately after this call, all new operations on $master are forwarded to `this` replica
-        //  without a gap, even if local_placements are not yet refreshed on $master's node
+        // TODO: we must ensure that immediately after this call, all new operations on $master are forwarded
+        //  to `this` replica without a gap, even if placements are not yet refreshed on $master's node
         let file_message = await this.$master.make_replica()
+
         file_message.move(path)
     }
 
     async __start__({role}) {
-        let stores = await Promise.all(this.storage$.map(s => this._open_store(s)))
-        let monitors = (role === '$master') ? new ObjectsMap(this.sequence.derived.map(seq => [seq, new Monitor(this, seq)])) : null
+        let is_master = (role === '$master')
+        let storages = is_master ? this.storage$ : [this.storage]       // on $replica, only the first storage type is used even if more are declared
+        let stores = await Promise.all(storages.map(s => this._open_store(s)))
+        let monitors = is_master ? new ObjectsMap(this.sequence.derived.map(seq => [seq, new Monitor(this, seq)])) : null
 
         // global write lock
         let _lock = new Mutex()
