@@ -68,6 +68,7 @@
     - "@": 1013
   blocks:
     - "@": 1015
+  num_replicas: -1
   __category:
     "@": 14
 - id: 1013
@@ -137,31 +138,39 @@
   tcp_port: 5820
   num_workers: 2
   agents:
-    - {worker: 1, id: 1030, role: $master}
+    - {worker: 1, id: 1030, role: $master, fid: C8BA63}
     - id: 1015
       role: $master
       worker: 2
+      fid: 683E3F
     - id: 1026
       role: $master
       worker: 2
+      fid: 8929B8
     - id: 1032
       role: $master
       worker: 1
+      fid: A3EA64
     - id: 1033
       role: $master
       worker: 1
+      fid: 791C88
     - id: 1029
       role: $master
       worker: 2
+      fid: 0C4053
     - id: 1001
       role: $leader
       worker: 1
+      fid: EE4ED1
     - id: 1023
       role: $agent
       worker: 1
+      fid: EB1522
     - id: 1023
       role: $agent
       worker: 2
+      fid: 0A2418
   __category:
     "@": 21
 - id: 1026
@@ -180,6 +189,7 @@
     - "@": 1028
   blocks:
     - "@": 1032
+  num_replicas: -1
   __category:
     "@": 14
 - id: 1028
@@ -224,25 +234,31 @@
   tcp_port: 5821
   num_workers: 2
   agents:
-    - {worker: 1, id: 1030, role: $master}
+    - {worker: 1, id: 1030, role: $master, fid: C8BA63}
     - id: 1015
       role: $replica
       worker: 1
+      fid: FE33A7
     - id: 1032
       role: $replica
       worker: 2
+      fid: C7ACA0
     - id: 1030
       role: $master
       worker: 1
+      fid: C8BA63
     - id: 1037
       role: $agent
       worker: 2
+      fid: 0B1EB4
     - id: 1023
       role: $agent
       worker: 1
+      fid: 828C66
     - id: 1023
       role: $agent
       worker: 2
+      fid: E46AE2
   __category:
     "@": 21
 - id: 1037
