@@ -151,10 +151,10 @@ export class Kernel {
         let agents = node.agents.filter(({worker}) => worker === this.worker_id)
 
         // start ordinary agents
-        for (let {id, role} of agents) {
+        for (let {id, role, fid} of agents) {
             assert(id)
             role ??= AgentRole.GENERIC
-            await this.start_agent(id, role)
+            await this.start_agent(id, role, {fid})
         }
     }
 
