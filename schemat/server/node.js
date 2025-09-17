@@ -270,7 +270,6 @@ export class Node extends Agent {
             let ids = this.agents.map(({id}) => id)
             await Promise.all(ids.map(id => id !== schemat.cluster_id && schemat.load(id)))     // skip cluster object to avoid cyclic dependency
         }
-        // this._save_placements()
     }
 
     async _impute_fid() {
@@ -279,12 +278,6 @@ export class Node extends Agent {
         this.agents.forEach(st => {st.fid = Frame.generate_fid()})
         await this.update_self({agents: this.agents}).save()
     }
-
-    // async _save_placements() {
-    //     await sleep(3.0)
-    //     this.local_placements = new LocalPlacements(this)
-    //     await this.save()
-    // }
 
 
     /* This node as an agent (on master only!) */
