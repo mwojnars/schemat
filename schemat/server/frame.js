@@ -130,7 +130,8 @@ export class Frame {
 
     get tag() { return `${this.agent}.${this.role}` }
 
-    constructor(agent, role) {
+    constructor(agent, role, fid = null) {
+        if (fid !== null) this.fid = fid
         this.agent = agent
         this.role = role || AgentRole.GENERIC
         assert(this.role[0] === '$')

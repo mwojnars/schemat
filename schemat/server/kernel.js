@@ -143,7 +143,7 @@ export class Kernel {
     async start_agents(node) {
         // start this node's own agent
         let role = this.is_master() ? '$master' : '$worker'
-        this.root_frame = await this.start_agent(this.node_id, role)
+        this.root_frame = await this.start_agent(this.node_id, role, {fid: null})
         assert(this.frames.size === 1)
         assert(this.root_frame.agent)
 
@@ -170,7 +170,8 @@ export class Kernel {
             assert(agent.is_loaded())
             assert(agent instanceof Agent)
 
-            let frame = new Frame(agent, role, fid || Frame.generate_fid())
+            if (!fid && fid !== null) fid = Frame.generate_fid()
+            let frame = new Frame(agent, role, fid)
             this.frames.set([id, role], frame)      // the frame must be assigned to `frames` already before .start()
             await frame.start()
             return frame
