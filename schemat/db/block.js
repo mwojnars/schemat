@@ -246,15 +246,17 @@ export class Block extends Agent {
     async __migrate__(role) {
         /* Create a new replica in `this` by copying data from $master. */
         assert(role === '$replica')
+        assert(this.storage)
 
         // TODO: we must ensure that immediately after this call, all new operations on $master are forwarded
         //  to `this` replica without a gap, even if placements are not yet refreshed on $master's node
-        let file_message = await this.$master.make_replica()
-
-        file_message.move(path)
+        let file_message = await this.$master.make_replica(schemat.node)        // FileMessage
+        let path = this._get_store_path(this.storage)
+        file_message.deploy(path)
     }
 
     async __start__({role}) {
+        assert(this.storage)
         let is_master = (role === '$master')
         let storages = is_master ? this.storage$ : [this.storage]       // on $replica, only the first storage type is used even if more are declared
         let stores = await Promise.all(storages.map(s => this._open_store(s)))

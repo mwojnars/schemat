@@ -7,8 +7,7 @@ let net = await server_import('node:net')
 export class FileMessage {  // DRAFT
     /* For sending large files over TCP. The file is sent in binary form, while the object itself as JSONx string.
        On recipient, the file is first saved to disk and only later the object is passed to endpoint method.
-       The file is first saved in tmp/... Later, it can be moved to another location with file_msg.move(path), or
-       removed entirely with file_msg.clear().
+       The file is first saved in tmp/... Then, it can be moved to target location and unpacked with file_msg.deploy(path).
      */
     send_path       // path on sender where the file to be sent is located
     recv_path       // path on recipient where the file was saved or moved to

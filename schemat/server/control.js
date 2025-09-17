@@ -64,6 +64,8 @@ export class Controller {  //extends WebObject
             let skip = this._placements.find_all(agent)
 
             await this._start_many(agent, roles, {migrate: true}, skip)         // replica should copy initial data from leader
+            // await this[role_leader]({node: leader}).start_replication()
+            // await this[role_leader]({node: leader}).stop_replication()
         }
     }
 
