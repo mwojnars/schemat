@@ -111,7 +111,7 @@ export class Frame {
     calls = []          // promises for currently executing (concurrent) calls on this agent
 
     starting            // a Promise that gets resolved when .state is assigned after the agent's __start__() is finished; false after that
-    paused              // after the agent was paused with $agent.pause(), `paused` contains a Promise that will be resolved by $agent.resume()
+    paused              // after the agent was paused with pause(), `paused` contains a Promise that will be resolved by resume()
     locked              // set by lock() to inform incoming calls that the current call executes in exclusive lock, and they must wait until its completion
     stopping            // if true, the agent is stopping now and no more requests/calls should be accepted
     stopped             // if true, the agent is permanently stopped and should not be restarted even after node restart unless explicitly requested by its creator/supervisor [UNUSED]
@@ -179,11 +179,11 @@ export class Frame {
         // assert(agent !== this.agent)
 
         let was_running = !this.paused
-        await this.pause()                      // wait for termination of ongoing RPC calls
-        if (this.stopping) return
+        await this.pause()                          // prevent RPC calls during restart
 
         schemat._print(`restarting ${tag} ...`)
         try {
+            if (this.stopping) return
             let stop    = () => this._frame_context(prev,  () => prev.__stop__(this.state))
             let restart = () => this._frame_context(agent, () => agent.__restart__(stop))
             let state = await this._tracked(agent.app_context(restart))
@@ -193,8 +193,9 @@ export class Frame {
         catch (ex) {
             schemat._print(`error restarting ${tag}:`, ex, `- using previous instance`)
         }
-
-        if (was_running) await this.resume()    // resume RPC calls unless the agent was already paused
+        finally {
+            if (was_running) await this.resume()        // unpause the agent unless it was already paused before restart()
+        }
         schemat._print(`restarting ${tag} done`)
 
         // return updated time interval to the next execution of restart()
