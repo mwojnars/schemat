@@ -243,9 +243,14 @@ export class Block extends Agent {
 
     async __uninstall__() { await this._clear_files() }
 
-    async __migrate__() {
+    async __migrate__(role) {
         /* Create a new replica by copying data from $master. */
-        
+        assert(role === '$replica')
+
+        // TODO: we must ensure that immediately after this call, all new operations on $master are forwarded to `this` replica
+        //  without a gap, even if local_placements are not yet refreshed on $master's node
+        let file_message = await this.$master.make_replica()
+        file_message.move(path)
     }
 
     async __start__({role}) {
@@ -869,7 +874,6 @@ export class BootDataBlock extends DataBlock {
         this.name = fileBaseName(path)      // for debugging of boot process
         let format = this._detect_format(path)
         this._store = await this._create_store(format, path)
-        await this._store.open()
     }
 
     _detect_format(path) {
