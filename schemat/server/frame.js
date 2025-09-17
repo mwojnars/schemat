@@ -144,7 +144,7 @@ export class Frame {
     async start() {
         /* Start this.agent by calling its __start__(). */
         let {agent, tag} = this
-        schemat._print(`starting ${tag} ...`)
+        schemat._print(`${tag} start ...`)
 
         assert(agent.is_loaded())
         if (agent.$frame) this.agent = agent = await agent.reload()
@@ -159,7 +159,7 @@ export class Frame {
         // schedule recurrent agent restarts after the agent's TTL expires
         this._task_restart = new Recurrent(this.restart.bind(this), {delay: agent.__ttl, name: `${agent}.$frame.restart()`})
 
-        schemat._print(`starting ${tag} done`)
+        schemat._print(`${tag} start done`)
         return state
     }
 
@@ -224,11 +224,11 @@ export class Frame {
             await Promise.all(calls)
         }
         let {agent} = this
-        schemat._print(`stopping ${tag} ...`)
+        schemat._print(`${tag} stop ...`)
 
         let stop = () => agent.__stop__(this.state)
         await agent.app_context(() => this._frame_context(agent, stop))
-        schemat._print(`stopping ${tag} done`)
+        schemat._print(`${tag} stop done`)
     }
 
     async background() {
