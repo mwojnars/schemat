@@ -239,15 +239,16 @@ export class Frame {
 
     async background() {
         /* Execute agent's background job, <role>.background() or $agent.background(), and update the interval
-           and priority for next execution.
+           and priority for next execution. If the agent is paused (only possible during restart()), or executes
+           RPC calls right now, the background task is delayed, but still executes after that.
          */
-        if (this.stopping || this.paused) return        // background task is skipped entirely during pause
         if (this._background_priority === 'low')        // if low priority, wait until the agent is idle...
             while (this.calls.length > 0) {
+                if (this.stopping) return
                 await Promise.all(this.calls)           // wait for termination of ongoing calls
                 await sleep()                           // let pending calls jump in and execute
             }
-        if (this.stopping || this.paused) return
+        if (this.stopping) return
 
         let interval = await this.exec('background')
         interval ||= 60     // 60 sec by default if no specific interval was returned
