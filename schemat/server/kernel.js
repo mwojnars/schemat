@@ -158,7 +158,7 @@ export class Kernel {
         }
     }
 
-    async start_agent(id, role, {migrate} = {}) {
+    async start_agent(id, role, {fid, migrate} = {}) {
         if (this.frames.has([id, role])) throw new Error(`agent [${id}] in role ${role} is already running`)
         role ??= AgentRole.GENERIC                  // "$agent" role is the default for running agents
 
@@ -170,7 +170,7 @@ export class Kernel {
             assert(agent.is_loaded())
             assert(agent instanceof Agent)
 
-            let frame = new Frame(agent, role)
+            let frame = new Frame(agent, role, fid || Frame.generate_fid())
             this.frames.set([id, role], frame)      // the frame must be assigned to `frames` already before .start()
             await frame.start()
             return frame

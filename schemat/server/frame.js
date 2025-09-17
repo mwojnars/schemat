@@ -13,7 +13,7 @@ export class Recurrent {
     constructor(fn, {name, delay = 1.0, randomize = 0.1} = {}) {
         this.interval = delay           // [seconds]
         this.randomize = randomize      // [0.0..1.0]
-        this.fn = fn                    // function to be executed at the interval
+        this.fn = fn                    // callback function to be executed at the interval
         this.name = name                // name of the task
         this.timeout = null             // timer handle
         this.schedule()
@@ -104,7 +104,7 @@ export class FramesMap extends CustomMap {
 
 export class Frame {
     /* State (internal variables) and status of a running agent. */
-    //fid               // "frame ID", globally unique ID number of this agent deployment preserved across node restarts and agent migration
+    fid                 // "frame ID", globally unique ID string of this frame, preserved across node restarts and agent migration
     agent_id
     agent               // web object that created this frame, replaced with a new reference on every refresh
     role                // name of the role this agent is running in
@@ -121,6 +121,12 @@ export class Frame {
     _background_priority// 'normal' or 'low'; if 'low', the background task is delayed until all ongoing/pending jobs are done
     _task_background    // Recurrent task for $agent.background() calls
     _task_restart       // Recurrent task for this.restart() calls
+
+    static generate_fid(LEN = 6) {
+        /* Generate a random hexadecimal FID string of a fixed length, `LEN`. */
+        let s = Math.random().toString(16) + '0000000000'
+        return s.substring(2, 2 + LEN).toUpperCase()
+    }
 
     get tag() { return `${this.agent}.${this.role}` }
 
