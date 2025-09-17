@@ -299,7 +299,7 @@ export class Frame {
             if ((this.locked || !agent.concurrent) && this.calls.length > 0)
                 // print(`... ${agent}.${method}() waits for a previous call(s) to complete`)
                 await Promise.all(this.calls)                   // wait for ongoing call(s) to complete if in exclusive mode
-            else if (this.paused && command !== 'resume')
+            else if (this.paused) // && command !== 'resume')
                 await this.paused                               // wait if explicitly paused
             else break
         }
@@ -366,7 +366,7 @@ export class Frame {
     async lock(fn = null) {
         /* Run `fn` function inside a one-time exclusive lock (no other agent methods are executed concurrently with `fn`);
            or wait until all calls to this agent are completed, set exclusive mode on to prevent concurrent calls,
-           and return `unlock` function to be used to exit the exclusive mode. Usage inside an agent object:
+           and return `unlock` function to be used to exit the exclusive mode. Use inside an agent method:
 
            1)  let result = this.$frame.lock(() => {...})
            or
@@ -381,7 +381,7 @@ export class Frame {
 
         this.locked = true                      // make incoming calls await in exec()
         while (this.calls.length > 1)           // wait for ongoing concurrent calls to terminate
-            await Promise.all(this.calls)
+            await Promise.all(this.calls.slice(0, -1))      // here, we assume that the current call is the last one in `calls`, but is it correct ??
 
         let unlock = () => {this.locked = false}
         if (!fn) return unlock
