@@ -297,11 +297,11 @@ export class Node extends Agent {
         // let local_placements = this.local_placements.clone()
         // local_placements.add_hidden(this)
 
-        // TODO: retrieve global_placements from cluster.$leader instead of relying on information stored in DB (can be outdated?)
-        //       ... or, update global_placements from cluster.$leader right after initializing the node
-        let global_placements = schemat.cluster.global_placements()
+        // TODO: retrieve atlas from cluster.$leader instead of relying on information stored in DB (can be outdated?)
+        //       ... or, update atlas from cluster.$leader right after initializing the node
+        let atlas = schemat.cluster.atlas()
 
-        return {tcp_sender, tcp_receiver, local_placements, global_placements}
+        return {tcp_sender, tcp_receiver, local_placements, atlas}
     }
 
     async __restart__() {}
@@ -431,7 +431,7 @@ export class Node extends Agent {
            Collect all responses and return an array of results. Throw an error if any of the peers failed.
          */
         let {agent_id, role} = RPC_Request.parse(request)
-        let nodes = this.$state.global_placements.find_nodes(agent_id, this._routing_role(role))
+        let nodes = this.$state.atlas.find_nodes(agent_id, this._routing_role(role))
         let results = await Promise.all(nodes.map(node => node.is(this) ? this.rpc_recv(request) : this.tcp_send(node, request)))
         return results.flat()   // in broadcast mode, every peer returns an array of results, so they must be flattened at the end
     }
@@ -473,8 +473,8 @@ export class Node extends Agent {
         if (worker != null) return this                                 // if target worker was specified by the caller, the current node is assumed
         if (this._find_worker(agent_id, role) != null) return this      // if agent is deployed here on this node, it is preferred over remote nodes
 
-        // check `global_placements` to find the node
-        let node = this.$state.global_placements.find_node(agent_id, role)
+        // check `atlas` to find the node
+        let node = this.$state.atlas.find_node(agent_id, role)
         if (node) return node
 
         throw new Error(`agent [${agent_id}].${role} not found on any node in the cluster`)
@@ -563,9 +563,9 @@ export class Node extends Agent {
     }
 
     async '$master.update_placements'(placements) {
-        /* Update global_placements with a new configuration sent by cluster.$leader. */
+        /* Update atlas with a new configuration sent by cluster.$leader. */
         // this._print(`Node.$master.update_placements() received:`, placements._placements)
-        this.$state.global_placements = placements
+        this.$state.atlas = placements
     }
 
     async '$master.start_agent'(agent, role, {worker, copies = 1, migrate} = {}) {

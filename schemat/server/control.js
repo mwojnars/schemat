@@ -17,7 +17,7 @@ export class Controller {  //extends WebObject
         this.cluster = cluster_leader
     }
 
-    get atlas() { return this.cluster.$state.global_placements }
+    get atlas() { return this.cluster.$state.atlas }
 
     async deploy(agent) {
         /* Find the least busy node(s) and deploy `agent` there. */

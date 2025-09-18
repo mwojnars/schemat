@@ -51,9 +51,9 @@ export class Cluster extends Agent {
     State attributes:
         $leader.nodes   ObjectsMap of NodeState objects keeping the most recent stats on node's health and activity
 
-        $leader.global_placements
+        $leader.atlas
                         map of (id -> node) + (id_role -> node) placements of agents across the cluster (global placements), no worker info;
-                        similar to .global_placements, but available on $leader only and updated immediately when an agent is deployed/dismissed to a node;
+                        similar to .atlas, but available on $leader only and updated immediately when an agent is deployed/dismissed to a node;
                         high-level routing table for directing agent requests to proper nodes in the cluster;
                         each node additionally has a low-level routing table for directing requests to a proper worker process;
 
@@ -66,7 +66,7 @@ export class Cluster extends Agent {
         if (SERVER) await Promise.all(this.nodes.map(node => node.load()))
     }
 
-    global_placements() { return new GlobalPlacements(this.nodes) }
+    atlas() { return new GlobalPlacements(this.nodes) }
 
 
     /***  Agent methods  ***/
@@ -74,9 +74,9 @@ export class Cluster extends Agent {
     async __start__({role}) {
         assert(role === '$leader')
         let nodes = new ObjectsMap(this.nodes.map(n => [n, new NodeState(n)]))
-        let global_placements = new GlobalPlacements(this.nodes)
+        let atlas = new GlobalPlacements(this.nodes)
         let controllers = this._create_controllers()
-        return {nodes, global_placements, controllers}
+        return {nodes, atlas, controllers}
     }
 
     _create_controllers() {
@@ -116,7 +116,7 @@ export class Cluster extends Agent {
         if (this.is(agent)) throw new Error(`cannot directly remove cluster leader agent, ${agent}`)
         if (this.get_nodes().some(n => n.is(agent))) throw new Error(`cannot directly remove a node agent, ${agent}`)
 
-        let nodes = this.$state.global_placements.find_nodes(agent, role)
+        let nodes = this.$state.atlas.find_nodes(agent, role)
         await Promise.all(nodes.map(node => this._stop_agent(node, agent, role)))
     }
 
@@ -163,22 +163,22 @@ export class Cluster extends Agent {
         // this._print(`$leader.deploy() deploying ${agent} at ${node}`)
         let started = await node.$master.start_agent(agent, role, opts)
         this.$state.nodes.get(node).num_agents += started
-        this.$state.global_placements.add(node, agent, role)    // TODO: update with `local_placements` returned from node.$master
-        // this.$state.global_placements.update_node(local_placements)
+        this.$state.atlas.add(node, agent, role)    // TODO: update with `local_placements` returned from node.$master
+        // this.$state.atlas.update_node(local_placements)
         // this.$state.atlas.update(node, local_atlas)
         await this._broadcast_placements()
     }
 
     async _stop_agent(node, agent, role, opts) {
         await node.$master.stop_agent(agent, role)
-        this.$state.global_placements.remove(node, agent, role)
+        this.$state.atlas.remove(node, agent, role)
         await this._broadcast_placements()
     }
 
     async _broadcast_placements() {
-        /* Send updated global_placements to all nodes in the cluster. */
+        /* Send updated atlas to all nodes in the cluster. */
         let nodes = this.get_nodes()
-        let placements = this.$state.global_placements
+        let placements = this.$state.atlas
         return Promise.all(nodes.map(node => node.$master.update_placements(placements)))
     }
 
