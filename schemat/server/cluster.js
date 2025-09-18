@@ -2,7 +2,7 @@ import {AgentRole} from "../common/globals.js";
 import {assert, print, min, T} from "../common/utils.js";
 import {ObjectsMap} from "../common/structs.js";
 import {Agent} from "./agent.js";
-import {GlobalPlacements} from "./place.js";
+import {GlobalAtlas} from "./place.js";
 import {BlocksController} from "./control.js";
 
 
@@ -66,7 +66,7 @@ export class Cluster extends Agent {
         if (SERVER) await Promise.all(this.nodes.map(node => node.load()))
     }
 
-    atlas() { return new GlobalPlacements(this.nodes) }
+    atlas() { return new GlobalAtlas(this.nodes) }
 
 
     /***  Agent methods  ***/
@@ -74,7 +74,7 @@ export class Cluster extends Agent {
     async __start__({role}) {
         assert(role === '$leader')
         let nodes = new ObjectsMap(this.nodes.map(n => [n, new NodeState(n)]))
-        let atlas = new GlobalPlacements(this.nodes)
+        let atlas = new GlobalAtlas(this.nodes)
         let controllers = this._create_controllers()
         return {nodes, atlas, controllers}
     }

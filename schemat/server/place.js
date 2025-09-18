@@ -18,9 +18,6 @@ export class Atlas {
        (node, worker, FID) and types (agent ID, role); with methods for efficient routing of requests
        to appropriate frames: by FID, or agent.id, or (agent.id, role) specifier.
      */
-}
-
-export class Placements {
 
     _frames = []        // array of {fid, id, role, worker, node} specifications of agent frames,
                         // either local (per node), or global (in entire cluster)
@@ -198,7 +195,7 @@ export class Placements {
 
 /**********************************************************************************************************************/
 
-export class LocalPlacements extends Placements {
+export class LocalAtlas extends Atlas {
     /* Map of agent deployments across worker processes of a node, as a mapping of agent-role tag -> array of worker IDs
        where the agent is deployed.
      */
@@ -242,7 +239,7 @@ export class LocalPlacements extends Placements {
 
 /**********************************************************************************************************************/
 
-export class GlobalPlacements extends Placements {
+export class GlobalAtlas extends Atlas {
     /* Map of agent deployments across the cluster, as a mapping of agent-role tag -> array of node IDs
        where the agent is deployed; agent-role tag is a string of the form `${id}-${role}`, like "1234-$leader".
        Additionally, ID-only tags are included to support role-agnostic queries (i.e., when role="$agent").

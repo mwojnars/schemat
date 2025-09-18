@@ -5,7 +5,7 @@ import {JSONx} from "../common/jsonx.js";
 import {Counter} from "../common/structs.js";
 import {Agent} from "./agent.js";
 import {TCP_Receiver, TCP_Sender} from "./tcp.js";
-import {MASTER, LocalPlacements} from "./place.js";
+import {MASTER, LocalAtlas} from "./place.js";
 import {Frame} from "./frame.js";
 
 
@@ -230,7 +230,7 @@ export class Node extends Agent {
     tcp_retry_interval
 
     // $master state attributes:
-    // local_atlas        // LocalPlacements object containing agent -> worker placements
+    // local_atlas        // LocalAtlas object containing agent -> worker placements
 
 
     get worker_id()   { return schemat.kernel.worker_id }
@@ -293,7 +293,7 @@ export class Node extends Agent {
         await tcp_sender.start(this.tcp_retry_interval * 1000)
         await tcp_receiver.start(this.tcp_port)
 
-        let local_atlas = new LocalPlacements(this)
+        let local_atlas = new LocalAtlas(this)
         // let local_atlas = this.local_atlas.clone()
         // local_atlas.add_hidden(this)
 
