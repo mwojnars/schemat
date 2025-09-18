@@ -562,10 +562,10 @@ export class Node extends Agent {
         return this.$state.local_placements.has(agent)
     }
 
-    async '$master.update_placements'(placements) {
+    async '$master.update_atlas'(atlas) {
         /* Update atlas with a new configuration sent by cluster.$leader. */
-        // this._print(`Node.$master.update_placements() received:`, placements._placements)
-        this.$state.atlas = placements
+        // this._print(`Node.$master.update_atlas() received:`, atlas._routes)
+        this.$state.atlas = atlas
     }
 
     async '$master.start_agent'(agent, role, {worker, copies = 1, migrate} = {}) {

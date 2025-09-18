@@ -178,8 +178,8 @@ export class Cluster extends Agent {
     async _broadcast_placements() {
         /* Send updated atlas to all nodes in the cluster. */
         let nodes = this.get_nodes()
-        let placements = this.$state.atlas
-        return Promise.all(nodes.map(node => node.$master.update_placements(placements)))
+        let atlas = this.$state.atlas
+        return Promise.all(nodes.map(node => node.$master.update_atlas(atlas)))
     }
 
 
