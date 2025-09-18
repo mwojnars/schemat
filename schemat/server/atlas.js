@@ -240,17 +240,10 @@ export class LocalAtlas extends Atlas {
         for (let {worker, id, role} of node.agents)
             this.add(worker, id, role)                      // add regular agents to routes
 
-        // this.add_hidden(node)
         this.add(MASTER, node, '$master')                   // add node.$master agent
-        for (let worker = 1; worker <= node.num_workers; worker++)
-            this.add(worker, node, '$worker')               // add node.$worker agents
+        // for (let worker = 1; worker <= node.num_workers; worker++)
+        //     this.add(worker, node, '$worker')               // add node.$worker agents
     }
-
-    // add_hidden(node) {
-    //     this.add(MASTER, node, '$master')                   // add node.$master agent
-    //     for (let worker = 1; worker <= node.num_workers; worker++)
-    //         this.add(worker, node, '$worker')               // add node.$worker agents
-    // }
 
     get_status() {
         /* Produce a list of agent configurations for saving in DB. */
@@ -288,16 +281,7 @@ export class GlobalAtlas extends Atlas {
             this.add(node, node, '$master')
             this.add(node, node, '$worker')
         }
-        // this.add_hidden(nodes)
     }
-
-    // add_hidden(nodes) {
-    //     // add node.$master/$worker agents, they are deployed on <node> and nowhere else
-    //     for (let node of nodes) {
-    //         this.add(node, node, '$master')
-    //         this.add(node, node, '$worker')
-    //     }
-    // }
 
     _is_local(node_id)      { return node_id === schemat.kernel.node_id }
     _is_hidden(tag, node)   { return tag.startsWith(`${node}-`) }       // node-on-itself routes are excluded from serialization
