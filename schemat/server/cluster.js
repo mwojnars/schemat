@@ -18,10 +18,10 @@ export class NodeStatus {
 
     // load:
     num_workers     // no. of worker processes
-    num_agents      // total no. of individual agent-role deployments across the node excluding node.$master/$worker itself
+    num_frames      // total no. of agent frames deployed on the node, excluding node.$master/$worker itself
 
     // average no. of individual agent-role deployments per worker process
-    get avg_agents() { return this.num_agents / (this.num_workers || 1) }
+    get avg_agents() { return this.num_frames / (this.num_workers || 1) }
 
     // resource utilization (mem, disk, cpu), possibly grouped by agent category ...
 
@@ -29,7 +29,7 @@ export class NodeStatus {
         /* Initial stats pulled from node's info in DB. */
         this.id = node.id
         this.num_workers = node.num_workers
-        this.num_agents = node.agents.length
+        this.num_frames = node.agents.length
     }
 }
 
@@ -163,14 +163,14 @@ export class Cluster extends Agent {
         /* For use by Controller. */
         // this._print(`$leader.deploy() deploying ${agent} at ${node}`)
         let frames = await node.$master.start_agent(agent, role, opts)
-        this.$state.nodes.get(node).num_agents += frames.length
+        this.$state.nodes.get(node).num_frames += frames.length
         frames.map(status => this.$state.atlas.add_frame(node, status))
         await this._broadcast_placements()
     }
 
     async _stop_agent(node, agent, role, opts) {
         await node.$master.stop_agent(agent, role)
-        this.$state.nodes.get(node).num_agents -= 1
+        this.$state.nodes.get(node).num_frames -= 1
         this.$state.atlas.remove(node, agent, role)
         await this._broadcast_placements()
     }
