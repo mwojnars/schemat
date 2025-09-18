@@ -159,29 +159,6 @@ export class Kernel {
         }
     }
 
-    async start_agent(id, role, {fid, migrate} = {}) {
-        if (this.frames.has([id, role])) throw new Error(`agent [${id}] in role ${role} is already running`)
-        role ??= AgentRole.GENERIC                  // "$agent" role is the default for running agents
-
-        try {
-            let agent = await schemat.get_loaded(id)
-            if (migrate) await agent.__migrate__(role)
-
-            // schemat._print(`start_agent(): ${agent}`, agent.__content)
-            assert(agent.is_loaded())
-            assert(agent instanceof Agent)
-
-            let frame = new Frame(agent, role, fid)
-            this.frames.set([id, role], frame)      // the frame must be assigned to `frames` already before .start()
-            await frame.start()
-            return frame
-        }
-        catch (ex) {
-            // schemat._print_error(`starting agent [${id}].${role} FAILED with`, ex)
-            throw ex
-        }
-    }
-
     async stop() {
         if (this._closing) return
         this._closing = true
@@ -215,6 +192,31 @@ export class Kernel {
 
         schemat._print(`process closed`)
         process.exit(0)
+    }
+
+    /*** general-purpose start/stop agent ***/
+
+    async start_agent(id, role, {fid, migrate} = {}) {
+        if (this.frames.has([id, role])) throw new Error(`agent [${id}] in role ${role} is already running`)
+        role ??= AgentRole.GENERIC                  // "$agent" role is the default for running agents
+
+        try {
+            let agent = await schemat.get_loaded(id)
+            if (migrate) await agent.__migrate__(role)
+
+            // schemat._print(`start_agent(): ${agent}`, agent.__content)
+            assert(agent.is_loaded())
+            assert(agent instanceof Agent)
+
+            let frame = new Frame(agent, role, fid)
+            this.frames.set([id, role], frame)      // the frame must be assigned to `frames` already before .start()
+            await frame.start()
+            return frame
+        }
+        catch (ex) {
+            // schemat._print_error(`starting agent [${id}].${role} FAILED with`, ex)
+            throw ex
+        }
     }
 
     async stop_agent(id, role = AgentRole.ANY) {
