@@ -13,9 +13,16 @@ function _as_id(obj) {
 
 /**********************************************************************************************************************/
 
-export class Placements {   //Atlas
+export class Atlas {
+    /* List of all agent frames across the cluster (GlobalAtlas) or node (LocalAtlas): their exact locations
+       (node, worker, FID) and types (agent ID, role); with methods for efficient routing of requests
+       to appropriate frames: by FID, or agent.id, or (agent.id, role) specifier.
+     */
+}
 
-    _frames = []        // array of {fid, id, role, worker, node?} specifications of agent frames,
+export class Placements {
+
+    _frames = []        // array of {fid, id, role, worker, node} specifications of agent frames,
                         // either local (per node), or global (in entire cluster)
 
     _routes = {}        // {tag: array-of-place-ids} mapping, where `tag` is a string, "<id>-<role>" or "<id>",

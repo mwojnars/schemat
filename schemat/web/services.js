@@ -169,7 +169,7 @@ export class HttpService extends Service {
             if (!T.isPlain(message)) throw new Error(`cannot encode as a HTTP GET query string (${message})`)
             url = url_query(url, message)
         }
-        return fetch(url, {})
+        return fetch(url, {})      // or navigator.sendBeacon() if sending analytics at page unload?
     }
 
     async _parse_response(response) {

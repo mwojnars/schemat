@@ -17,7 +17,7 @@ export class Controller {  //extends WebObject
         this.cluster = cluster_leader
     }
 
-    get _placements() { return this.cluster.$state.global_placements }
+    get atlas() { return this.cluster.$state.global_placements }
 
     async deploy(agent) {
         /* Find the least busy node(s) and deploy `agent` there. */
@@ -45,23 +45,23 @@ export class Controller {  //extends WebObject
         if (!role) throw new Error(`cannot adjust the no. of replicas for ${agent}, missing role name`)
 
         // calculate the current no. of replicas
-        let current = this._placements.count_all(agent, role)
+        let current = this.atlas.count_all(agent, role)
         num_replicas = this._normalize_replicas(num_replicas)
 
         if (current > num_replicas) {               // too many replicas? choose one(s) at random and terminate
             let count = current - num_replicas
             for (let i = 0; i < count; i++) {
-                let node = this._placements.find_random(agent, role)
+                let node = this.atlas.find_random(agent, role)
                 if (node) await this.cluster._stop_agent(node, agent, role)
             }
         }
         else if (current < num_replicas) {          // too few replicas? start replica(s) on idle nodes, copy data from leader
-            let leader = this._placements.find_first(agent, role_leader)
+            let leader = this.atlas.find_first(agent, role_leader)
             if (!leader) throw new Error(`leader not found, cannot create replica(s) of ${agent}`)
 
             let length = num_replicas - current
             let roles = Array.from({length}, () => role)
-            let skip = this._placements.find_all(agent)
+            let skip = this.atlas.find_all(agent)
 
             await this._start_many(agent, roles, {migrate: true}, skip)         // replica should copy initial data from leader
             // await this[role_leader]({node: leader}).start_replication()
@@ -81,14 +81,14 @@ export class Controller {  //extends WebObject
 
     _check_not_deployed(agent, role) {
         /* Check that (agent,role) is not deployed yet in the cluster, raise an error otherwise. */
-        let exists = this._placements.find_all(agent, role)
+        let exists = this.atlas.find_all(agent, role)
         if (exists.length) throw new Error(`agent ${agent}.${role} is already deployed in the cluster (nodes ${exists})`)
     }
 
     _normalize_replicas(n) {
         /* Normalize a num_replicas number: convert -1 to N-1 if needed, where N is the cluster size. */
         assert(typeof n === 'number' && n >= -1)
-        return n === -1 ? this._placements.count_places() - 1 : n
+        return n === -1 ? this.atlas.count_places() - 1 : n
     }
 
     get_roles(agent) {

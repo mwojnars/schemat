@@ -595,6 +595,7 @@ export class Node extends Agent {
             let fid = Frame.generate_fid()
             await this.$worker({worker})._start_agent(agent.id, role, {fid, migrate})
             local_placements.add(worker, agent, role)
+            // local_placements.add_frame(fid, agent, role, worker, this)
         }
 
         this.agents = local_placements.get_status()
