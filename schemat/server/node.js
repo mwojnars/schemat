@@ -623,14 +623,14 @@ export class Node extends Agent {
         // let stop = agents.filter(st => st.id === agent.id && (!role || st.role === role)).map(({worker}) => worker)
         // this.$state.agents = agents = agents.filter(st => !(st.id === agent.id && (!role || st.role === role)))
 
-        if (!stop.length) return
+        if (!stop.length) return []
+        let fids = []
 
         // stop every agent from `stop`, in reverse order
-        for (let worker of stop.reverse()) {
-            let fids = await this.$worker({worker})._stop_agent(agent.id, role)
-            fids.map(fid => local_atlas.remove_frame(worker, fid))  // && atlas.remove_frame(fid)
-            // local_atlas.remove(worker, agent, role)
-        }
+        for (let worker of stop.reverse())
+            fids.push(...await this.$worker({worker})._stop_agent(agent.id, role))
+
+        fids.map(fid => local_atlas.remove_frame(worker, fid))  // && atlas.remove_frame(worker, fid)
         this.agents = local_atlas.get_status()
 
         await Promise.all([
@@ -638,6 +638,7 @@ export class Node extends Agent {
             this.save(),                                            // save new configuration of agents to DB
             !this._has_agent(agent) && agent.__uninstall__(this)    // uninstall the agent locally if the last deployment was removed
         ])
+        return fids
     }
 
     _rank_workers(agents) {
