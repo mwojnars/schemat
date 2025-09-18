@@ -403,10 +403,13 @@ export class Frame {
 
     get_status() {      // will be needed for persisting the current list of node.$state.agents to DB
         return {
+            node:           schemat.kernel.node_id,
+            worker:         schemat.kernel.worker_id,
+            fid:            this.fid,
             id:             this.agent_id,
             role:           this.role,
-            stopped:        this.stopped,
-            migrating_to:   this.migrating_to,
+            // stopped:        this.stopped,
+            // migrating_to:   this.migrating_to,
         }
     }
 }
