@@ -230,7 +230,7 @@ export class Node extends Agent {
     tcp_retry_interval
 
     // $master state attributes:
-    // local_placements        // LocalPlacements object containing agent -> worker placements
+    // local_atlas        // LocalPlacements object containing agent -> worker placements
 
 
     get worker_id()   { return schemat.kernel.worker_id }
@@ -266,7 +266,7 @@ export class Node extends Agent {
 
     async __load__() {
         if (SERVER && schemat.booting) {
-            // let ids = this.local_placements.list_agent_ids()        // core agents (ex. data blocks) must be loaded initially from bootstrap DB
+            // let ids = this.local_atlas.list_agent_ids()        // core agents (ex. data blocks) must be loaded initially from bootstrap DB
             let ids = this.agents.map(({id}) => id)
             await Promise.all(ids.map(id => id !== schemat.cluster_id && schemat.load(id)))     // skip cluster object to avoid cyclic dependency
         }
@@ -293,15 +293,15 @@ export class Node extends Agent {
         await tcp_sender.start(this.tcp_retry_interval * 1000)
         await tcp_receiver.start(this.tcp_port)
 
-        let local_placements = new LocalPlacements(this)
-        // let local_placements = this.local_placements.clone()
-        // local_placements.add_hidden(this)
+        let local_atlas = new LocalPlacements(this)
+        // let local_atlas = this.local_atlas.clone()
+        // local_atlas.add_hidden(this)
 
         // TODO: retrieve atlas from cluster.$leader instead of relying on information stored in DB (can be outdated?)
         //       ... or, update atlas from cluster.$leader right after initializing the node
         let atlas = schemat.cluster.atlas()
 
-        return {tcp_sender, tcp_receiver, local_placements, atlas}
+        return {tcp_sender, tcp_receiver, local_atlas, atlas}
     }
 
     async __restart__() {}
@@ -481,11 +481,11 @@ export class Node extends Agent {
     }
 
     _find_worker(agent, role) {
-        /* On master, for request routing, look up $state.local_placements to find the process where `agent` runs in a given role
+        /* On master, for request routing, look up $state.local_atlas to find the process where `agent` runs in a given role
            (or in any role if `role` is missing or GENERIC).
          */
         role = this._routing_role(role)
-        return this.$state.local_placements.find_first(agent, role)
+        return this.$state.local_atlas.find_first(agent, role)
     }
 
     _routing_role(role) {
@@ -559,7 +559,7 @@ export class Node extends Agent {
 
     _has_agent(agent) {
         /* True if there is at least one running instance of `agent` (any role) on this node. For install/uninstall. */
-        return this.$state.local_placements.has(agent)
+        return this.$state.local_atlas.has(agent)
     }
 
     async '$master.update_atlas'(atlas) {
@@ -578,13 +578,13 @@ export class Node extends Agent {
         // install the agent unless it's already deployed here on this node
         if (!this._has_agent(agent)) await agent.__install__(this)
 
-        let {local_placements} = this.$state
-        // if (local_placements.has(agent, role)) throw new Error(`agent ${agent}.${role} is already running on node ${this}`)
+        let {local_atlas} = this.$state
+        // if (local_atlas.has(agent, role)) throw new Error(`agent ${agent}.${role} is already running on node ${this}`)
 
         if (copies > this.num_workers) throw new Error(`no. of copies (${copies}) must be <= ${this.num_workers}`)
         if (copies === -1) copies = this.num_workers
 
-        let workers = worker ? (Array.isArray(worker) ? worker : [worker]) : local_placements.rank_places()
+        let workers = worker ? (Array.isArray(worker) ? worker : [worker]) : local_atlas.rank_places()
         workers = workers.slice(0, copies)
 
         if (role === null || role === AgentRole.GENERIC)
@@ -594,14 +594,14 @@ export class Node extends Agent {
             assert(worker >= 1 && worker <= this.num_workers)
             let fid = Frame.generate_fid()
             await this.$worker({worker})._start_agent(agent.id, role, {fid, migrate})
-            local_placements.add(worker, agent, role)
-            // local_placements.add_frame(fid, agent, role, worker, this)
+            local_atlas.add(worker, agent, role)
+            // local_atlas.add_frame(fid, agent, role, worker, this)
         }
 
-        this.agents = local_placements.get_status()
+        this.agents = local_atlas.get_status()
         await this.save()
 
-        // agents = local_placements.get_status()
+        // agents = local_atlas.get_status()
         // await this.update_self({agents}).save()     // save new configuration of agents to DB
 
         return copies
@@ -614,8 +614,8 @@ export class Node extends Agent {
 
         agent = await schemat.as_loaded(agent)
 
-        let {local_placements} = this.$state
-        let stop = local_placements.find_all(agent, role)
+        let {local_atlas} = this.$state
+        let stop = local_atlas.find_all(agent, role)
 
         // let stop = agents.filter(st => st.id === agent.id && (!role || st.role === role)).map(({worker}) => worker)
         // this.$state.agents = agents = agents.filter(st => !(st.id === agent.id && (!role || st.role === role)))
@@ -624,10 +624,10 @@ export class Node extends Agent {
 
         // stop every agent from `stop`, in reverse order
         for (let worker of stop.reverse()) {
-            local_placements.remove(worker, agent, role)
+            local_atlas.remove(worker, agent, role)
             await this.$worker({worker})._stop_agent(agent.id, role)
         }
-        this.agents = local_placements.get_status()
+        this.agents = local_atlas.get_status()
 
         await Promise.all([
             // this.update_self({agents}).save(),                   // save new configuration of agents to DB
