@@ -442,7 +442,7 @@ export class Node extends Agent {
         // TODO: broadcast
 
         worker ??= this._find_worker(agent_id, role)
-        if (worker == null) throw new Error(`agent [${agent_id}] not found on this node`)
+        if (worker == null) throw new Error(`agent [${agent_id}].${role || AgentRole.GENERIC} not found on this node`)
         if (worker === MASTER) return this.rpc_exec(message)    // process the message here in the master process
         return this.get_worker(worker).mailbox.send(message)    // forward the message down to a worker process
         // return this.ipc_send(worker, message)
