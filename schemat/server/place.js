@@ -13,13 +13,20 @@ function _as_id(obj) {
 
 /**********************************************************************************************************************/
 
-export class Placements {
+export class Placements {   //Atlas
 
-    // _frames             // array of {fid, id, role, worker, node?} specifications of agent frames,
-    //                     // either local (per node), or global (in entire cluster)
+    _frames = []        // array of {fid, id, role, worker, node?} specifications of agent frames,
+                        // either local (per node), or global (in entire cluster)
 
-    _routes = {}        // tag -> array-of-place-ids, where `tag` is a string, either "<id>-<role>" or "<id>",
+    _routes = {}        // {tag: array-of-place-ids} mapping, where `tag` is a string, "<id>-<role>" or "<id>",
                         // and place is a node ID or worker process ID
+
+    constructor(nodes) {
+        for (let node of nodes) {
+            let specs = node.agents.map(({fid, id, role, worker}) => ({fid, id, role, worker, node: node.id}))
+            this._frames.push(...specs)
+        }
+    }
 
     clone() { return Struct.clone(this) }
 
@@ -192,7 +199,7 @@ export class LocalPlacements extends Placements {
     node_id
 
     constructor(node) {
-        super()
+        super([node])
         if (!node) return
         this.node_id = node.id
 
@@ -235,7 +242,7 @@ export class GlobalPlacements extends Placements {
      */
 
     constructor(nodes) {
-        super()
+        super(nodes)
         if (!nodes) return
 
         for (let node of nodes)
