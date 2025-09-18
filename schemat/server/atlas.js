@@ -16,10 +16,10 @@ function _as_id(obj) {
 export class Atlas {
     /* List of all agent frames across the cluster (GlobalAtlas) or node (LocalAtlas): their exact locations
        (node, worker, FID) and types (agent ID, role); with methods for efficient routing of requests
-       to appropriate frames: by FID, or agent.id, or (agent.id, role) specifier.
+       to appropriate frames: by FID, agent.id, or (agent.id, role) specifiers.
      */
 
-    _frames = []        // array of {fid, id, role, worker, node} specifications of agent frames,
+    _frames = []        // array of {node, worker, fid, id, role} specifications of agent frames,
                         // either local (per node), or global (in entire cluster)
 
     _routes = {}        // {tag: array-of-place-ids} mapping, where `tag` is a string, "<id>-<role>" or "<id>",
@@ -32,7 +32,16 @@ export class Atlas {
         }
     }
 
-    clone() { return Struct.clone(this) }
+    // clone() { return Struct.clone(this) }
+
+    // __getstate__() { return this._frames }  -- TODO
+    //
+    // static __setstate__(frames) {
+    //     let obj = new this(frames)
+    //     obj._routes = routes
+    //     obj._reorder_locals()
+    //     return obj
+    // }
 
     __getstate__() { return this._routes }          // no compactification for serialization as of now
 

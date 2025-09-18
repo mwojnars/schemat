@@ -624,7 +624,7 @@ export class Node extends Agent {
 
         // stop every agent from `stop`, in reverse order
         for (let worker of stop.reverse()) {
-            local_atlas.remove(worker, agent, role)
+            local_atlas.remove(worker, agent, role)    //local_atlas.remove(fid)
             await this.$worker({worker})._stop_agent(agent.id, role)
         }
         this.agents = local_atlas.get_status()
