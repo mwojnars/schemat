@@ -233,8 +233,8 @@ export class LocalAtlas extends Atlas {
     node_id
 
     constructor(node) {
+        if (Array.isArray(node)) node = node[0]
         super([node])
-        if (!node) return
         this.node_id = node.id
 
         for (let {worker, id, role} of node.agents)
@@ -270,7 +270,6 @@ export class GlobalAtlas extends Atlas {
 
     constructor(nodes) {
         super(nodes)
-        if (!nodes) return
 
         for (let node of nodes)
             for (let {id, role} of node.agents)
