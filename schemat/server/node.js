@@ -5,7 +5,7 @@ import {JSONx} from "../common/jsonx.js";
 import {Counter} from "../common/structs.js";
 import {Agent} from "./agent.js";
 import {TCP_Receiver, TCP_Sender} from "./tcp.js";
-import {MASTER, LocalAtlas} from "./place.js";
+import {MASTER, LocalAtlas} from "./atlas.js";
 import {Frame} from "./frame.js";
 
 

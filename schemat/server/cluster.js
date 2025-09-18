@@ -2,7 +2,7 @@ import {AgentRole} from "../common/globals.js";
 import {assert, print, min, T} from "../common/utils.js";
 import {ObjectsMap} from "../common/structs.js";
 import {Agent} from "./agent.js";
-import {GlobalAtlas} from "./place.js";
+import {GlobalAtlas} from "./atlas.js";
 import {BlocksController} from "./control.js";
 
 

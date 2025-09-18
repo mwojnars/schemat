@@ -176,7 +176,7 @@ export class Schemat {
 
         if (SERVER) {
             await builtin.fetch("../server/logger.js")
-            await builtin.fetch("../server/place.js")
+            await builtin.fetch("../server/atlas.js")
             await builtin.fetch("../server/agent.js")
             await builtin.fetch("../server/node.js")
             await builtin.fetch("../server/cluster.js")
