@@ -8,7 +8,7 @@ import {BlocksController} from "./control.js";
 
 /**********************************************************************************************************************/
 
-export class NodeState {
+export class NodeStatus {
     /* Statistics of how a particular node in the cluster is doing: health, load, heartbeat etc. */
 
     // general:
@@ -49,13 +49,14 @@ export class Cluster extends Agent {
         controllers     {name: controller} listing of all controllers that are active in the cluster
 
     State attributes:
-        $leader.nodes   ObjectsMap of NodeState objects keeping the most recent stats on node's health and activity
+        $leader.nodes   ObjectsMap of NodeStatus objects keeping the most recent stats on node's health and activity
+                        // topology
 
         $leader.atlas
-                        map of (id -> node) + (id_role -> node) placements of agents across the cluster (global placements), no worker info;
-                        similar to .atlas, but available on $leader only and updated immediately when an agent is deployed/dismissed to a node;
+                        atlas of all agent deployments across the cluster; similar to .atlas(), but available on $leader only
+                        and updated immediately when an agent is deployed/dismissed to a node;
                         high-level routing table for directing agent requests to proper nodes in the cluster;
-                        each node additionally has a low-level routing table for directing requests to a proper worker process;
+                        each node additionally has a local routing table for directing requests to a proper worker process;
 
         $leader.controllers
                         like [cluster].controllers, but as a cluster-wide singleton object representing the most recent state
@@ -73,7 +74,7 @@ export class Cluster extends Agent {
 
     async __start__({role}) {
         assert(role === '$leader')
-        let nodes = new ObjectsMap(this.nodes.map(n => [n, new NodeState(n)]))
+        let nodes = new ObjectsMap(this.nodes.map(n => [n, new NodeStatus(n)]))
         let atlas = new GlobalAtlas(this.nodes)
         let controllers = this._create_controllers()
         return {nodes, atlas, controllers}
@@ -153,7 +154,7 @@ export class Cluster extends Agent {
 
         this._print(`$leader.create_node() node: is_loaded=${node.is_loaded()}`, node.__content)
 
-        this.$state.nodes.set(node, new NodeState(node))
+        this.$state.nodes.set(node, new NodeStatus(node))
         this.nodes = [...this.$state.nodes.keys()]
         // await this.update_self({nodes: [...this.$state.nodes.keys()]}).save()
     }
@@ -161,9 +162,10 @@ export class Cluster extends Agent {
     async _start_agent(node, agent, role, opts) {
         /* For use by Controller. */
         // this._print(`$leader.deploy() deploying ${agent} at ${node}`)
-        let started = await node.$master.start_agent(agent, role, opts)
-        this.$state.nodes.get(node).num_agents += started
-        this.$state.atlas.add(node, agent, role)    // TODO: update with `local_atlas` returned from node.$master
+        let frames = await node.$master.start_agent(agent, role, opts)
+        this.$state.nodes.get(node).num_agents += frames.length
+        // this.$state.atlas.add(node, agent, role)    // TODO: update with `local_atlas` returned from node.$master
+        frames.map(status => this.$state.atlas.add_frame(node, status))
         // this.$state.atlas.update(node, local_atlas)
         await this._broadcast_placements()
     }

@@ -589,13 +589,17 @@ export class Node extends Agent {
 
         if (role === null || role === AgentRole.GENERIC)
             role = undefined             // the default role "$agent" is passed implicitly
-        
+
+        let frames = []
+
         for (let worker of workers) {                                   // start `agent` on each of `workers`
             assert(worker >= 1 && worker <= this.num_workers)
             let fid = Frame.generate_fid()
             let status = await this.$worker({worker})._start_agent(agent.id, role, {fid, migrate})
-            local_atlas.add(worker, agent, role)
-            // local_atlas.add_frame(status)
+            // local_atlas.add(worker, agent, role)
+            local_atlas.add_frame(worker, status)
+            // atlas.add_frame(status)
+            frames.push(status)
         }
 
         this.agents = local_atlas.get_status()
@@ -604,7 +608,7 @@ export class Node extends Agent {
         // agents = local_atlas.get_status()
         // await this.update_self({agents}).save()     // save new configuration of agents to DB
 
-        return copies
+        return frames
     }
 
     async '$master.stop_agent'(agent, role = AgentRole.ANY, {worker} = {}) {
@@ -625,6 +629,7 @@ export class Node extends Agent {
         // stop every agent from `stop`, in reverse order
         for (let worker of stop.reverse()) {
             local_atlas.remove(worker, agent, role)    //local_atlas.remove(fid)
+            // atlas.remove(...)
             await this.$worker({worker})._stop_agent(agent.id, role)
         }
         this.agents = local_atlas.get_status()
@@ -646,7 +651,8 @@ export class Node extends Agent {
 
     async '$worker._start_agent'(agent_id, role, opts) {
         /* Start agent on the current worker process. */
-        await schemat.kernel.start_agent(agent_id, role, opts)
+        let frame = await schemat.kernel.start_agent(agent_id, role, opts)
+        return frame.get_status()
     }
 
     async '$worker._stop_agent'(agent_id, role) {

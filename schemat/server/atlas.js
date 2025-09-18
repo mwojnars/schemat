@@ -24,7 +24,7 @@ export class Atlas {
     _routes = {}        // {tag: array-of-place-ids} mapping, where `tag` is a string, "<id>-<role>" or "<id>",
                         // and place is a node ID or worker process ID
 
-    constructor(nodes) {
+    constructor(nodes = []) {
         for (let node of nodes) {
             let specs = node.agents.map(({fid, id, role, worker}) => ({fid, id, role, worker, node: node.id}))
             this._frames.push(...specs)
@@ -97,6 +97,12 @@ export class Atlas {
         assert(role[0] === '$', `incorrect name of agent role (${role})`)
         assert(id && typeof id !== 'object')
         return `${id}-${role}`
+    }
+
+    add_frame(place, status) {
+        let {node, worker, fid, id, role} = status
+        this.add(place, id, role)
+        this._frames.push(status)
     }
 
     add(place, agent, role = AgentRole.GENERIC) {
