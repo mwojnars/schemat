@@ -164,14 +164,13 @@ export class Cluster extends Agent {
         // this._print(`$leader.deploy() deploying ${agent} at ${node}`)
         let frames = await node.$master.start_agent(agent, role, opts)
         this.$state.nodes.get(node).num_agents += frames.length
-        // this.$state.atlas.add(node, agent, role)    // TODO: update with `local_atlas` returned from node.$master
         frames.map(status => this.$state.atlas.add_frame(node, status))
-        // this.$state.atlas.update(node, local_atlas)
         await this._broadcast_placements()
     }
 
     async _stop_agent(node, agent, role, opts) {
         await node.$master.stop_agent(agent, role)
+        this.$state.nodes.get(node).num_agents -= 1
         this.$state.atlas.remove(node, agent, role)
         await this._broadcast_placements()
     }

@@ -100,7 +100,7 @@ export class Atlas {
     }
 
     add_frame(place, status) {
-        let {node, worker, fid, id, role} = status
+        let {id, role} = status
         this.add(place, id, role)
         this._frames.push(status)
     }
