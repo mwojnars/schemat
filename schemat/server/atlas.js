@@ -33,29 +33,29 @@ export class Atlas {
 
     // clone() { return Struct.clone(this) }
 
-    // __getstate__() {
-    //     // create fake node objects that can be passed to Local/GlobalAtlas.constructor() in place of real nodes;
-    //     // the returned array has the shape: nodes[i].id, nodes[i].agents
-    //
-    //     let nodes = new Map()
-    //     for (let {node: id, ...status} of this._frames) {
-    //         let node = nodes.get(id) || {id, agents: []}
-    //         node.agents.push(status)
-    //         nodes.set(id, node)
-    //     }
-    //     return [...nodes.values()]
-    // }
-    //
-    // static __setstate__(nodes) { return new this(nodes) }
+    __getstate__() {
+        // create fake node objects that can be passed to Local/GlobalAtlas.constructor() in place of real nodes;
+        // the returned array has the shape: nodes[i].id, nodes[i].agents
 
-    __getstate__() { return this._routes }          // no compactification for serialization as of now
-
-    static __setstate__(routes) {
-        let obj = new this()
-        obj._routes = routes
-        obj._reorder_locals()
-        return obj
+        let nodes = new Map()
+        for (let {node: id, ...status} of this._frames) {
+            let node = nodes.get(id) || {id, agents: []}
+            node.agents.push(status)
+            nodes.set(id, node)
+        }
+        return [...nodes.values()]
     }
+
+    static __setstate__(nodes) { return new this(nodes) }
+
+    // __getstate__() { return this._routes }          // no compactification for serialization as of now
+    //
+    // static __setstate__(routes) {
+    //     let obj = new this()
+    //     obj._routes = routes
+    //     obj._reorder_locals()
+    //     return obj
+    // }
 
     // __getstate__() { return this.compactify() }
     //
