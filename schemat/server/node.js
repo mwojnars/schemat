@@ -627,9 +627,9 @@ export class Node extends Agent {
 
         // stop every agent from `stop`, in reverse order
         for (let worker of stop.reverse()) {
+            let fids = await this.$worker({worker})._stop_agent(agent.id, role)
             local_atlas.remove(worker, agent, role)
             // local_atlas.remove(fid)
-            await this.$worker({worker})._stop_agent(agent.id, role)
         }
         this.agents = local_atlas.get_status()
 
@@ -649,13 +649,14 @@ export class Node extends Agent {
     }
 
     async '$worker._start_agent'(agent_id, role, opts) {
-        /* Start agent on the current worker process. */
+        /* Start agent on the current worker process. Return frame status object. */
         let frame = await schemat.kernel.start_agent(agent_id, role, opts)
         return frame.get_status()
     }
 
     async '$worker._stop_agent'(agent_id, role) {
-        await schemat.kernel.stop_agent(agent_id, role)
+        /* Stop an agent(s) running on the current worker process. Return an array of FID strings of the frames stopped. */
+        return schemat.kernel.stop_agent(agent_id, role)
     }
 
     // async '$worker._capture_records'(records) {}

@@ -226,13 +226,18 @@ export class Kernel {
             this.frames._frames_by_id.delete(id);
             [...this.frames.keys()].forEach(key => key[0] === id && this.frames.delete(key))
             for (let frame of frames.reverse()) await frame.stop()
-            return
+            return frames.map(f => f.fid)
         }
 
         let frame = this.frames.get([id, role])
-        if (!frame) throw new Error(`no frame to stop for [${id}].${role} agent`)
+        if (!frame) {
+            schemat._print(`WARNING: no frame to stop for [${id}].${role} agent`)
+            return []
+        }
+
         this.frames.delete([id, role])
         await frame.stop()
+        return [frame.fid]
     }
 }
 
