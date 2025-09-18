@@ -120,9 +120,17 @@ export class Atlas {
         else places.push(place)                             // put other node IDs at the end of the list
     }
 
-    // remove_all(agent, role = AgentRole.ANY) {
-    //     /* Remove all (agent, role) entries, no matter the place. */
-    // }
+    remove_frame(place, fid) {
+        /* Find and remove a frame by FID. */
+        assert(fid)
+        let pos = this._frames.findIndex(frame => frame.fid === fid)
+        if (pos === -1) {
+            schemat._print(`WARNING: frame @${fid} not found by remove_frame()`)
+            return
+        }
+        let [{id, role}] = this._frames.splice(pos, 1)
+        this.remove(place, id, role)
+    }
 
     remove(place, agent, role = AgentRole.ANY) {
         /* Remove the entry: (agent, role) -> place. If role=ANY, all entries for different roles are removed. */
