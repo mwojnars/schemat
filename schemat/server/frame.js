@@ -101,7 +101,6 @@ export class FramesMap extends CustomMap {
 export class Frame {
     /* State (internal variables) and status of a running agent. */
     fid                 // "frame ID", globally unique ID string of this frame, preserved across node restarts and agent migration
-    agent_id
     agent               // web object that created this frame, replaced with a new reference on every refresh
     role                // name of the role this agent is running in
     state               // state object returned by agent.__start__()
@@ -406,7 +405,7 @@ export class Frame {
             node:           schemat.kernel.node_id,
             worker:         schemat.kernel.worker_id,
             fid:            this.fid,
-            id:             this.agent_id,
+            id:             this.agent.id,
             role:           this.role,
             // stopped:        this.stopped,
             // migrating_to:   this.migrating_to,

@@ -597,6 +597,7 @@ export class Node extends Agent {
             let fid = Frame.generate_fid()
             let status = await this.$worker({worker})._start_agent(agent.id, role, {fid, migrate})
             // local_atlas.add(worker, agent, role)
+            assert(status.worker === worker)
             local_atlas.add_frame(worker, status)
             // atlas.add_frame(status)
             frames.push(status)
