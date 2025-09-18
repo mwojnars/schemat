@@ -627,10 +627,11 @@ export class Node extends Agent {
         let fids = []
 
         // stop every agent from `stop`, in reverse order
-        for (let worker of stop.reverse())
-            fids.push(...await this.$worker({worker})._stop_agent(agent.id, role))
-
-        fids.map(fid => local_atlas.remove_frame(worker, fid))  // && atlas.remove_frame(worker, fid)
+        for (let worker of stop.reverse()) {
+            let _fids = await this.$worker({worker})._stop_agent(agent.id, role)
+            _fids.map(fid => local_atlas.remove_frame(worker, fid))  // && atlas.remove_frame(worker, fid)
+            fids.push(..._fids)
+        }
         this.agents = local_atlas.get_status()
 
         await Promise.all([
