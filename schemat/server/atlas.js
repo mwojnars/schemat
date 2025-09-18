@@ -100,6 +100,7 @@ export class Atlas {
     }
 
     add_frame(place, status) {
+        // schemat._print(`add_frame():`, status)
         let {id, role} = status
         this.add(place, id, role)
         this._frames.push(status)
@@ -123,12 +124,13 @@ export class Atlas {
     remove_frame(place, fid) {
         /* Find and remove a frame by FID. */
         assert(fid)
-        let pos = this._frames.findIndex(frame => frame.fid === fid)
+        let pos = this._frames.findIndex(f => f.fid === fid)
         if (pos === -1) {
             schemat._print(`WARNING: frame @${fid} not found by remove_frame()`)
             return
         }
         let [{id, role}] = this._frames.splice(pos, 1)
+        // schemat._print(`remove_frame():`, {id, role})
         this.remove(place, id, role)
     }
 

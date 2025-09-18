@@ -80,7 +80,7 @@ export class Cluster extends Agent {
         return {nodes, atlas, controllers}
     }
 
-    async __restart__() {}      // $state.* variables must be preserved during restarts
+    async __restart__() {}      // $state variables must be preserved during restarts
 
     _create_controllers() {
         /* For now, controllers are plain local objects, not web objects, so they don't have any internal state (no persistence). */
