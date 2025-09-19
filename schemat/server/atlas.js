@@ -1,111 +1,12 @@
 import {AgentRole} from "../common/globals.js";
 import {assert, random} from "../common/utils.js";
 import {Counter} from "../common/structs.js";
-import {Struct} from "../common/catalog.js";
 
 
 export const MASTER = 0        // ID of the master process; workers are numbered 1,2,...,N
 
-
 function _as_id(obj) {
     return typeof obj === 'object' ? obj.id : obj
-}
-
-/**********************************************************************************************************************/
-
-export class Table {
-    /* List of records of a fixed shape, {x,y,z,...}, with indexes that provide fast retrieval of records by a specific field
-       or combination of fields. Subclasses should implement indexes[desc] functions and, optionally, _priority() method.
-     */
-
-    _records = new Map()    // all records of this Table keyed by the record itself: record -> record
-    _index                  // _index[desc] is a Map of the form {key -> array-of-records}, where key is built by indexes[desc](query) function
-    static indexes = {}     // indexes[desc] is a key generation function, key(...fields), where `fields` match the descriptor, `desc`
-
-    // NOTE: the identity of records is preserved between _records and indexes, so it is valid to get a record, `rec`,
-    // from _index[desc], and then use it as a key into _records, like in _records.delete(rec)
-
-    constructor(records = []) {
-        this._index = Object.fromEntries(Object.keys(this.constructor.indexes).map(desc => [desc, new Map()]))
-        records.map(rec => this.add(rec))
-    }
-
-    __getstate__()                  { return [...this._records.values()] }
-    static __setstate__(records)    { return new this(records) }
-
-    _desc(query) {
-        /* Index descriptor built by combining field names occurring in query. */
-        return Object.keys(query).sort().join('_')
-    }
-
-    _key(record, desc) {
-        /* Calculate an index key given record/query object and, optionally, an index descriptor. 
-           Return undefined if unknown descriptor.
-         */
-        let fields = desc.split('_')
-        let values = fields.map(f => record[f])
-        return this.constructor.indexes[desc]?.(...values)
-    }
-
-    _priority(record) {}    // true if `record` should be kept at the beginning of matching records
-
-    add(record) {
-        /* Add an {x,y,z,...} record to _records and to all indexes. */
-        this._records.set(record, record)
-
-        for (let [desc, index] of Object.entries(this._index)) {
-            let key = this._key(record, desc)
-            let records = index.get(key) || []
-            if (this._priority(record)) records.unshift(record)
-            else records.push(record)
-            index.set(key, records)
-        }
-    }
-
-    remove(query = {}) {
-        /* Find all records matching the query and remove them from _records and indexes. */
-        let records = this.get_all(query)
-        for (let record of records) {
-            this._records.delete(record)
-            for (let [desc, index] of Object.entries(this._index)) {
-                let key = this._key(record, desc)
-                let records = index.get(key)
-                records.splice(records.indexOf(record), 1)
-                if (!records.length) index.delete(key)
-            }
-        }
-    }
-
-    get_first(query = {}) {
-        /* Get the first record of _index[desc].get(key) list, where `desc` and `key` are created according to the fields
-           and their values present in `query`. The query typically contains a subset of all record fields, the subset
-           matching one of the indexes.
-         */
-        return this.get_all(query)[0]
-    }
-
-    get_all(query = {}, map = null) {
-        /* Like get(), but returns an array of all matching records, or an empty array if none found. */
-        let desc = this._desc(query)
-        let key = this._key(query, desc)
-        if (key === undefined) throw new Error(`unknown index descriptor (${desc})`)
-        let records = this._index[desc].get(key) || []
-        return map ? records.map(rec => map(rec)) : records
-    }
-
-    has(query = {}) {
-        /* Return true if any record matching the query exists, false otherwise. */
-        return this.get_all(query).length > 0
-    }
-
-    count(query = {}) {
-        /* Return the number of records matching the query, or 0 if none found. */
-        return this.get_all(query).length
-    }
-
-    get size() { return this._records.size }
-
-    *[Symbol.iterator]() { yield* this._records.values() }
 }
 
 /**********************************************************************************************************************/

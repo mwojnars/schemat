@@ -1,9 +1,8 @@
 import {AgentRole} from "../common/globals.js";
 import {print, assert, T, fluctuate, sleep} from "../common/utils.js";
 import {JSONx} from "../common/jsonx.js";
-import {CustomMap} from "../common/structs.js";
 import {StoppingNow} from "../common/errors.js";
-import {Table} from "./atlas.js";
+import {Table} from "../common/structs.js";
 
 
 /**********************************************************************************************************************/
