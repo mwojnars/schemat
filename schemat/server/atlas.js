@@ -30,6 +30,11 @@ export class FramesTable extends RoutingTable {
 }
 
 
+// export class LocalRoutes extends RoutingTable {
+//     /* Table of frames across worker processes of a node. */
+// }
+
+
 /**********************************************************************************************************************/
 
 export class Atlas {
@@ -49,10 +54,7 @@ export class Atlas {
             let specs = node.agents.map(status => ({...status, node: node.id}))
             this._frames.push(...specs)
         }
-        // schemat._print(`Atlas.constructor() _frames:`, this._frames)
     }
-
-    // clone() { return Struct.clone(this) }
 
     __getstate__() {
         // create fake node objects that can be passed to Local/GlobalAtlas.constructor() in place of real nodes;
@@ -68,47 +70,6 @@ export class Atlas {
     }
 
     static __setstate__(nodes) { return new this(nodes) }
-
-    // __getstate__() { return this.compactify() }
-    //
-    // static __setstate__(routes) {
-    //     let obj = new this()
-    //     obj._routes = routes
-    //
-    //     for (let [tag, places] of Object.entries(routes)) {
-    //         if (!Array.isArray(places))
-    //             routes[tag] = places = [places]              // recover singleton arrays
-    //
-    //         let [id] = tag.split('-')
-    //         for (let place of places) obj._add(place, id)       // add ID-only entries
-    //     }
-    //     return obj
-    // }
-    //
-    // compactify() {
-    //     let routes = {...this._routes}
-    //
-    //     // clean up and compactify `routes`
-    //     for (let [tag, places] of Object.entries(routes)) {
-    //         places = places.filter(place => !this._is_hidden(tag, place))   // drop hidden (implicit) placements
-    //         let [id, role] = tag.split('-')
-    //         if (!role || !places.length) delete routes[tag]                 // drop ID-only (no role) entries
-    //         else if (places.length === 1) routes[tag] = places[0]           // compact representation of singleton arrays
-    //     }
-    //     return routes
-    // }
-    //
-    // _reorder_locals() {
-    //     /* After deserialization on a different node, fix the ordering of places in each array so that the "local" place is listed first. */
-    //     for (let places of Object.values(this._routes)) {
-    //         let pos = places.findIndex(place => this._priority(place))      // position of the "local" place
-    //         if (pos > 0) {
-    //             let local = places[pos]
-    //             places.splice(pos, 1)       // remove "local" from the list
-    //             places.unshift(local)       // put it at the beginning of the list
-    //         }
-    //     }
-    // }
 
     tag(id, role = AgentRole.GENERIC) {
         /* Placement tag. A string that identifies agent by its ID and particular role, like "1234-$agent". */
@@ -271,16 +232,6 @@ export class LocalAtlas extends Atlas {
         /* For saving node.agents in DB; node ID can be removed. */
         return this._frames.map(({node, worker, fid, id, role, ...rest}) => ({id, role, worker, ...rest, fid}))
     }
-
-    // get_status() {
-    //     /* Produce a list of agent configurations for saving in DB. */
-    //     let routes = this.compactify()
-    //     return Object.entries(routes).map(([tag, workers]) => {
-    //         let [id, role] = tag.split('-')
-    //         if (!Array.isArray(workers)) workers = [workers]
-    //         return workers.map(worker => ({id: Number(id), role, worker}))
-    //     }).flat()
-    // }
 
     _priority(worker)       { return worker === Number(process.env.WORKER_ID) || 0 }    // schemat.kernel.worker_id
     // _is_hidden(tag, worker) { return Number(tag.split('-')[0]) === this.node_id }       // routes of node.$master/$worker excluded
