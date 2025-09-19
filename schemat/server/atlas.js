@@ -49,15 +49,6 @@ export class Atlas {
 
     static __setstate__(nodes) { return new this(nodes) }
 
-    // __getstate__() { return this._routes }          // no compactification for serialization as of now
-    //
-    // static __setstate__(routes) {
-    //     let obj = new this()
-    //     obj._routes = routes
-    //     obj._reorder_locals()
-    //     return obj
-    // }
-
     // __getstate__() { return this.compactify() }
     //
     // static __setstate__(routes) {
@@ -73,31 +64,31 @@ export class Atlas {
     //     }
     //     return obj
     // }
-
-    compactify() {
-        let routes = {...this._routes}
-
-        // clean up and compactify `routes`
-        for (let [tag, places] of Object.entries(routes)) {
-            places = places.filter(place => !this._is_hidden(tag, place))   // drop hidden (implicit) placements
-            let [id, role] = tag.split('-')
-            if (!role || !places.length) delete routes[tag]                 // drop ID-only (no role) entries
-            else if (places.length === 1) routes[tag] = places[0]           // compact representation of singleton arrays
-        }
-        return routes
-    }
-
-    _reorder_locals() {
-        /* After deserialization on a different node, fix the ordering of places in each array so that the "local" place is listed first. */
-        for (let places of Object.values(this._routes)) {
-            let pos = places.findIndex(place => this._is_local(place))      // position of the "local" place
-            if (pos > 0) {
-                let local = places[pos]
-                places.splice(pos, 1)       // remove "local" from the list
-                places.unshift(local)       // put it at the beginning of the list
-            }
-        }
-    }
+    //
+    // compactify() {
+    //     let routes = {...this._routes}
+    //
+    //     // clean up and compactify `routes`
+    //     for (let [tag, places] of Object.entries(routes)) {
+    //         places = places.filter(place => !this._is_hidden(tag, place))   // drop hidden (implicit) placements
+    //         let [id, role] = tag.split('-')
+    //         if (!role || !places.length) delete routes[tag]                 // drop ID-only (no role) entries
+    //         else if (places.length === 1) routes[tag] = places[0]           // compact representation of singleton arrays
+    //     }
+    //     return routes
+    // }
+    //
+    // _reorder_locals() {
+    //     /* After deserialization on a different node, fix the ordering of places in each array so that the "local" place is listed first. */
+    //     for (let places of Object.values(this._routes)) {
+    //         let pos = places.findIndex(place => this._is_local(place))      // position of the "local" place
+    //         if (pos > 0) {
+    //             let local = places[pos]
+    //             places.splice(pos, 1)       // remove "local" from the list
+    //             places.unshift(local)       // put it at the beginning of the list
+    //         }
+    //     }
+    // }
 
     tag(id, role = AgentRole.GENERIC) {
         /* Placement tag. A string that identifies agent by its ID and particular role, like "1234-$agent". */
@@ -109,11 +100,11 @@ export class Atlas {
     add_frame(place, status) {
         // schemat._print(`add_frame():`, status)
         let {id, role} = status
-        this.add(place, id, role)
+        this.add_route(place, id, role)
         this._frames.push(status)
     }
 
-    add(place, agent, role = AgentRole.GENERIC) {
+    add_route(place, agent, role = AgentRole.GENERIC) {
         place = _as_id(place)           // convert node & agent objects to IDs
         agent = _as_id(agent)
         let tag = this.tag(agent, role)
@@ -206,10 +197,10 @@ export class Atlas {
         return random(this.find_all(agent, role))
     }
 
-    list_agent_ids() {
-        /* Array of agent IDs occurring as keys in placement tags. */
-        return Object.keys(this._routes).filter(tag => !tag.includes('-')).map(tag => Number(tag))
-    }
+    // list_agent_ids() {
+    //     /* Array of agent IDs occurring as keys in placement tags. */
+    //     return Object.keys(this._routes).filter(tag => !tag.includes('-')).map(tag => Number(tag))
+    // }
 
     rank_places() {
         /* Order places by utilization, from least to most busy, and return as an array of place IDs. */
@@ -238,15 +229,12 @@ export class LocalAtlas extends Atlas {
         super([node])
         this.node_id = node.id
 
-        // for (let status of node.agents)
-        //     this.add_frame(status.worker, status)           // add regular agents to routes
-
         for (let {worker, id, role} of node.agents)
-            this.add(worker, id, role)                      // add regular agents to routes
+            this.add_route(worker, id, role)                    // add regular agents to routes
 
-        this.add(MASTER, node, '$master')                   // add node.$master agent
+        this.add_route(MASTER, node, '$master')                 // add node.$master agent
         // for (let worker = 1; worker <= node.num_workers; worker++)
-        //     this.add(worker, node, '$worker')               // add node.$worker agents
+        //     this.add_route(worker, node, '$worker')          // add node.$worker agents
     }
 
     get_frames() {
@@ -266,7 +254,6 @@ export class LocalAtlas extends Atlas {
 
     _is_local(worker)       { return worker === Number(process.env.WORKER_ID) || 0 }    // schemat.kernel.worker_id
     _is_hidden(tag, worker) { return Number(tag.split('-')[0]) === this.node_id }       // routes of node.$master/$worker excluded
-    // _is_hidden(tag, worker) { return worker === MASTER }    // placements on master process are excluded
 }
 
 /**********************************************************************************************************************/
@@ -282,12 +269,12 @@ export class GlobalAtlas extends Atlas {
 
         for (let node of nodes)
             for (let {id, role} of node.agents)
-                this.add(node, id, role)                    // add regular agents to routes
+                this.add_route(node, id, role)              // add regular agents to routes
 
         // add node.$master/$worker agents, they are deployed on <node> and nowhere else
         for (let node of nodes) {
-            this.add(node, node, '$master')
-            this.add(node, node, '$worker')
+            this.add_route(node, node, '$master')
+            this.add_route(node, node, '$worker')
         }
     }
 
