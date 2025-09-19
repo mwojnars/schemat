@@ -228,15 +228,15 @@ export class Kernel {
             return frames.map(f => f.fid)
         }
 
-        let frame = this.frames.get_first({id, role})
-        if (!frame) {
+        let frames = this.frames.get_all({id, role})
+        if (!frames.length) {
             schemat._print(`WARNING: no frame to stop for [${id}].${role} agent`)
             return []
         }
 
         this.frames.remove({id, role})
-        await frame.stop()
-        return [frame.fid]
+        await Promise.all(frames.map(f => f.stop()))
+        return frames.map(f => f.fid)
     }
 }
 
