@@ -98,10 +98,10 @@ export class Atlas {
         return `${id}-${role}`
     }
 
-    add_frame(place, status) {
+    add_frame(status) {
         // schemat._print(`add_frame():`, status)
         let {id, role} = status
-        this.add_route(place, id, role)
+        this.add_route(status[this.PLACE], id, role)
         this._frames.push(status)
     }
 
@@ -120,7 +120,7 @@ export class Atlas {
         else places.push(place)                             // put other node IDs at the end of the list
     }
 
-    remove_frame(place, fid) {
+    remove_frame(fid) {
         /* Find and remove a frame by FID. */
         assert(fid)
         let pos = this._frames.findIndex(f => f.fid === fid)
@@ -128,9 +128,10 @@ export class Atlas {
             schemat._print(`WARNING: frame @${fid} not found by remove_frame()`)
             return
         }
-        let [{id, role}] = this._frames.splice(pos, 1)
+        let [status] = this._frames.splice(pos, 1)
+        let {id, role} = status
         // schemat._print(`remove_frame():`, {id, role})
-        this.remove_route(place, id, role)
+        this.remove_route(status[this.PLACE], id, role)
     }
 
     remove_route(place, agent, role = AgentRole.ANY) {

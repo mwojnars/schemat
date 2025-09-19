@@ -167,7 +167,7 @@ export class Cluster extends Agent {
         let {nodes, atlas} = this.$state
         let frames = await node.$master.start_agent(agent, role, opts)
         nodes.get(node).num_frames += frames.length
-        frames.map(status => atlas.add_frame(node, status))
+        frames.map(status => atlas.add_frame(status))
         await this._broadcast_placements()
     }
 
@@ -175,7 +175,7 @@ export class Cluster extends Agent {
         let {nodes, atlas} = this.$state
         let fids = await node.$master.stop_agent(agent, role)
         nodes.get(node).num_frames -= fids.length
-        fids.map(fid => atlas.remove_frame(node, fid))
+        fids.map(fid => atlas.remove_frame(fid))
         await this._broadcast_placements()
     }
 

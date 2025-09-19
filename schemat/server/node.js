@@ -596,7 +596,7 @@ export class Node extends Agent {
             assert(worker >= 1 && worker <= this.num_workers)
             let fid = Frame.generate_fid()
             let status = await this.$worker({worker})._start_agent(agent.id, role, {fid, migrate})
-            local_atlas.add_frame(worker, status)
+            local_atlas.add_frame(status)
             // atlas.add_frame(status)
             frames.push(status)
         }
@@ -626,7 +626,7 @@ export class Node extends Agent {
         // stop every agent from `stop`, in reverse order
         for (let worker of stop.reverse()) {
             let _fids = await this.$worker({worker})._stop_agent(agent.id, role)
-            _fids.map(fid => local_atlas.remove_frame(worker, fid))  // && atlas.remove_frame(worker, fid)
+            _fids.map(fid => local_atlas.remove_frame(fid))  // && atlas.remove_frame(fid)
             fids.push(..._fids)
         }
         this.agents = local_atlas.get_frames()
