@@ -59,6 +59,20 @@ export class Table {
         }
     }
 
+    remove(query = {}) {
+        /* Find all records matching the query and remove them from _records and indexes. */
+        let records = this.get_all(query)
+        for (let record of records) {
+            this._records.delete(record)
+            for (let [desc, index] of Object.entries(this._index)) {
+                let key = this._key(record, desc)
+                let records = index.get(key)
+                records.splice(records.indexOf(record), 1)
+                if (!records.length) index.delete(key)
+            }
+        }
+    }
+
     get_first(query = {}) {
         /* Get the first record of _index[desc].get(key) list, where `desc` and `key` are created according to the fields
            and their values present in `query`. The query typically contains a subset of all record fields, the subset
@@ -85,21 +99,9 @@ export class Table {
         return this.get_all(query).length
     }
 
-    size() { return this._records.size }
+    get size() { return this._records.size }
 
-    remove(query = {}) {
-        /* Find all records matching the query and remove them from _records and indexes. */
-        let records = this.get_all(query)
-        for (let record of records) {
-            this._records.delete(record)
-            for (let [desc, index] of Object.entries(this._index)) {
-                let key = this._key(record, desc)
-                let records = index.get(key)
-                records.splice(records.indexOf(record), 1)
-                if (!records.length) index.delete(key)
-            }
-        }
-    }
+    *[Symbol.iterator]() { yield* this._records.values() }
 }
 
 /**********************************************************************************************************************/
