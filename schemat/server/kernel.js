@@ -222,7 +222,7 @@ export class Kernel {
 
     async stop_agent(id, role = AgentRole.ANY) {
         let query = (role === AgentRole.ANY) ? {id} : {id, role}
-        let frames = this.frames.get_all(query)
+        let frames = this.frames.get_all(query, rec => rec.frame)
         if (!frames.length) {
             schemat._print(`WARNING: no frame to stop for [${id}].${role} agent`)
             return []
