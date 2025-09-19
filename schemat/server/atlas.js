@@ -19,14 +19,14 @@ export class Table {
      */
 
     _records = new Map()    // all records of this Table keyed by the record itself: record -> record
-    _index = {}             // _index[desc] is a Map of the form {key -> array-of-records}, where key is built by indexes[desc](query) function
-    indexes = {}            // indexes[desc] is a key generation function, key(...fields), where `fields` match the descriptor, `desc`
+    _index                  // _index[desc] is a Map of the form {key -> array-of-records}, where key is built by indexes[desc](query) function
+    static indexes = {}     // indexes[desc] is a key generation function, key(...fields), where `fields` match the descriptor, `desc`
 
     // NOTE: the identity of records is preserved between _records and indexes, so it is valid to get a record, `rec`,
     // from _index[desc], and then use it as a key into _records, like in _records.delete(rec)
 
     constructor(records = []) {
-        this._index = Object.fromEntries(Object.keys(this.indexes).map(desc => [desc, new Map()]))
+        this._index = Object.fromEntries(Object.keys(this.constructor.indexes).map(desc => [desc, new Map()]))
         records.map(rec => this.add(rec))
     }
 
@@ -44,7 +44,7 @@ export class Table {
          */
         let fields = desc.split('_')
         let values = fields.map(f => record[f])
-        return this.indexes[desc]?.(...values)
+        return this.constructor.indexes[desc]?.(...values)
     }
 
     _priority(record) {}    // true if `record` should be kept at the beginning of matching records

@@ -100,7 +100,7 @@ export class FramesMap extends CustomMap {
 export class FramesTable extends Table {
     /* Records of the form {id, role, frame}. Indexed by {id} and {id, role}. */
 
-    indexes = {
+    static indexes = {
         'id':       (id) => id,
         'id_role':  (id, role) => `${id}-${role}`,
     }
