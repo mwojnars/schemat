@@ -601,11 +601,8 @@ export class Node extends Agent {
             frames.push(status)
         }
 
-        this.agents = local_atlas.get_status()
+        this.agents = local_atlas.get_frames()          // save new configuration of agents to DB
         await this.save()
-
-        // agents = local_atlas.get_status()
-        // await this.update_self({agents}).save()     // save new configuration of agents to DB
 
         return frames
     }
@@ -632,7 +629,7 @@ export class Node extends Agent {
             _fids.map(fid => local_atlas.remove_frame(worker, fid))  // && atlas.remove_frame(worker, fid)
             fids.push(..._fids)
         }
-        this.agents = local_atlas.get_status()
+        this.agents = local_atlas.get_frames()
 
         await Promise.all([
             // this.update_self({agents}).save(),                   // save new configuration of agents to DB

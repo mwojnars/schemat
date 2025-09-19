@@ -249,15 +249,20 @@ export class LocalAtlas extends Atlas {
         //     this.add(worker, node, '$worker')               // add node.$worker agents
     }
 
-    get_status() {
-        /* Produce a list of agent configurations for saving in DB. */
-        let routes = this.compactify()
-        return Object.entries(routes).map(([tag, workers]) => {
-            let [id, role] = tag.split('-')
-            if (!Array.isArray(workers)) workers = [workers]
-            return workers.map(worker => ({id: Number(id), role, worker}))
-        }).flat()
+    get_frames() {
+        /* For saving node.agents in DB. */
+        return [...this._frames]
     }
+
+    // get_status() {
+    //     /* Produce a list of agent configurations for saving in DB. */
+    //     let routes = this.compactify()
+    //     return Object.entries(routes).map(([tag, workers]) => {
+    //         let [id, role] = tag.split('-')
+    //         if (!Array.isArray(workers)) workers = [workers]
+    //         return workers.map(worker => ({id: Number(id), role, worker}))
+    //     }).flat()
+    // }
 
     _is_local(worker)       { return worker === Number(process.env.WORKER_ID) || 0 }    // schemat.kernel.worker_id
     _is_hidden(tag, worker) { return Number(tag.split('-')[0]) === this.node_id }       // routes of node.$master/$worker excluded
