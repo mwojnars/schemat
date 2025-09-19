@@ -14,17 +14,35 @@ function _as_id(obj) {
 /**********************************************************************************************************************/
 
 export class Table {
-    /* List of records of a fixed shape, {x,y,z,...}, with indexes that provide fast queries
-       by a specific field or combination of fields.
+    /* List of records of a fixed shape, {x,y,z,...}, with indexes that provide fast queries by a specific field
+       or combination of fields.
      */
 
-    _records            // array of all records in this table, unordered
-    _index = {}         // _index[desc] is a Map of the form {key -> array-of-records}, where key is built by _key[desc] function
-    _key = {}           // _key[desc] is a key generation function, key(...fields), where `fields` match the descriptor, `desc`
+    _records = new Map()    // all records of this Table keyed by the record itself: record -> record
+    _index = {}             // _index[desc] is a Map of the form {key -> array-of-records}, where key is built by _key[desc](query) function
+    _key = {}               // _key[desc] is a key generation function, key(...fields), where `fields` match the descriptor, `desc`
+
+    // NOTE: the identity of records is preserved between _records and indexes, so it is valid to get a record, `rec`,
+    // from _index[desc], and then use it as a key into _records, like in _records.delete(rec)
+
+    add(record) {
+        /* Add an {x,y,z,...} record to _records and to all indexes. */
+        this._records.set(record, record)
+    }
 
     get(query = {}) {
         /* Get the first record of _index[desc].get(key) list, where `desc` and `key` are created according to fields
-           and their values as occurring in `query`. */
+           and their values as present in `query`. The query may contain a subset of all record fields, the subset
+           matching one of indexes.
+         */
+    }
+
+    get_all(query = {}) {
+        /* Like get(), but returns an array of all matching records, not the first one. */
+    }
+
+    remove(query = {}) {
+        /* Find all records matching the query and remove them from _records and indexes. */
     }
 }
 
