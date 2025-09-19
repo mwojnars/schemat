@@ -15,7 +15,7 @@ function _as_id(obj) {
 
 export class Table {
     /* List of records of a fixed shape, {x,y,z,...}, with indexes that provide fast retrieval of records by a specific field
-       or combination of fields. Subclasses should implement _priority() method and _keys[desc] functions.
+       or combination of fields. Subclasses should implement _keys[desc] functions and, optionally, _priority() method.
      */
 
     _records = new Map()    // all records of this Table keyed by the record itself: record -> record
@@ -73,6 +73,16 @@ export class Table {
         let key = this._key(query, desc)
         if (key === undefined) throw new Error(`unknown index descriptor (${desc})`)
         return this._index[desc].get(key) || []
+    }
+
+    exists(query = {}) {
+        /* Return true if any record matching the query exists, false otherwise. */
+        return this.get_all(query).length > 0
+    }
+
+    count(query = {}) {
+        /* Return the number of records matching the query, or 0 if none found. */
+        return this.get_all(query).length
     }
 
     remove(query = {}) {
