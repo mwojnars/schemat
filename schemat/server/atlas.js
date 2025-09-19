@@ -13,6 +13,23 @@ function _as_id(obj) {
 
 /**********************************************************************************************************************/
 
+export class Table {
+    /* List of records of a fixed shape, {x,y,z,...}, with indexes that provide fast queries
+       by a specific field or combination of fields.
+     */
+
+    _records            // array of all records in this table, unordered
+    _index = {}         // _index[desc] is a Map of the form {key -> array-of-records}, where key is built by _key[desc] function
+    _key = {}           // _key[desc] is a key generation function, key(...fields), where `fields` match the descriptor, `desc`
+
+    get(query = {}) {
+        /* Get the first record of _index[desc].get(key) list, where `desc` and `key` are created according to fields
+           and their values as occurring in `query`. */
+    }
+}
+
+/**********************************************************************************************************************/
+
 export class Atlas {
     /* List of all agent frames deployed across the cluster (GlobalAtlas) or node (LocalAtlas): their exact locations
        (node, worker, FID), types (agent ID, role) and status (stopped, migrating); with methods for efficient routing
