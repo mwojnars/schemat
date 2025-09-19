@@ -614,7 +614,7 @@ export class Node extends Agent {
 
         agent = await schemat.as_loaded(agent)
 
-        let {local_atlas} = this.$state
+        let {local_atlas, atlas} = this.$state
         let stop = local_atlas.find_all(agent, role)
 
         // let stop = agents.filter(st => st.id === agent.id && (!role || st.role === role)).map(({worker}) => worker)
@@ -626,7 +626,7 @@ export class Node extends Agent {
         // stop every agent from `stop`, in reverse order
         for (let worker of stop.reverse()) {
             let _fids = await this.$worker({worker})._stop_agent(agent.id, role)
-            _fids.map(fid => local_atlas.remove_frame(fid))  // && atlas.remove_frame(fid)
+            _fids.map(fid => {local_atlas.remove_frame(fid); atlas.remove_frame(fid)})
             fids.push(..._fids)
         }
         this.agents = local_atlas.get_frames()
