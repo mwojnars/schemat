@@ -29,6 +29,7 @@ export class Atlas {
             let specs = node.agents.map(({fid, id, role, worker}) => ({fid, id, role, worker, node: node.id}))
             this._frames.push(...specs)
         }
+        // schemat._print(`Atlas.constructor() _frames:`, this._frames)
     }
 
     // clone() { return Struct.clone(this) }
@@ -236,6 +237,9 @@ export class LocalAtlas extends Atlas {
         if (Array.isArray(node)) node = node[0]
         super([node])
         this.node_id = node.id
+
+        // for (let status of node.agents)
+        //     this.add_frame(status.worker, status)           // add regular agents to routes
 
         for (let {worker, id, role} of node.agents)
             this.add(worker, id, role)                      // add regular agents to routes
