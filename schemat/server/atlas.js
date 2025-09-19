@@ -33,6 +33,15 @@ export class Table {
     add(record) {
         /* Add an {x,y,z,...} record to _records and to all indexes. */
         this._records.set(record, record)
+
+        for (let [desc, index] of Object.entries(this._index)) {
+            let fields = desc.split('_')
+            let values = fields.map(f => record[f])
+            let key = this._key[desc](...values)
+            let records = index.get(key) || []
+            records.push(record)
+            index.set(key, records)
+        }
     }
 
     get(query = {}) {
