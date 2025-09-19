@@ -82,7 +82,7 @@ export class Atlas {
     // _reorder_locals() {
     //     /* After deserialization on a different node, fix the ordering of places in each array so that the "local" place is listed first. */
     //     for (let places of Object.values(this._routes)) {
-    //         let pos = places.findIndex(place => this._is_local(place))      // position of the "local" place
+    //         let pos = places.findIndex(place => this._is_prime(place))      // position of the "local" place
     //         if (pos > 0) {
     //             let local = places[pos]
     //             places.splice(pos, 1)       // remove "local" from the list
@@ -116,7 +116,7 @@ export class Atlas {
     _add(place, key) {
         let places = (this._routes[`${key}`] ??= [])
         if (places.includes(place)) return                  // ignore duplicate IDs
-        if (this._is_local(place)) places.unshift(place)    // always put the local node/process ID at the beginning
+        if (this._is_prime(place)) places.unshift(place)    // always put the local node/process ID at the beginning
         else places.push(place)                             // put other node IDs at the end of the list
     }
 
@@ -164,7 +164,7 @@ export class Atlas {
         return Object.keys(this._routes).filter(tag => tag.startsWith(`${agent_id}-`))
     }
 
-    _is_local()  {}
+    _is_prime(place)  {}     // true if `place` should be kept at the beginning of matching places
     // _is_hidden() {}
 
     count_places() {
@@ -263,7 +263,7 @@ export class LocalAtlas extends Atlas {
     //     }).flat()
     // }
 
-    _is_local(worker)       { return worker === Number(process.env.WORKER_ID) || 0 }    // schemat.kernel.worker_id
+    _is_prime(worker)       { return worker === Number(process.env.WORKER_ID) || 0 }    // schemat.kernel.worker_id
     // _is_hidden(tag, worker) { return Number(tag.split('-')[0]) === this.node_id }       // routes of node.$master/$worker excluded
 }
 
@@ -290,7 +290,7 @@ export class GlobalAtlas extends Atlas {
         }
     }
 
-    _is_local(node_id)      { return node_id === schemat.kernel.node_id }
+    _is_prime(node_id)      { return node_id === schemat.kernel.node_id }
     // _is_hidden(tag, node)   { return tag.startsWith(`${node}-`) }       // node-on-itself routes are excluded from serialization
 
     find_nodes(agent, role) {

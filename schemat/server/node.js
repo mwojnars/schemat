@@ -369,7 +369,7 @@ export class Node extends Agent {
 
     /* RPC: remote calls to agents */
 
-    async rpc(agent, cmd, args, opts /*{role, node, worker, wait, wait_delegated, broadcast}*/ = {}) {
+    async rpc(agent, cmd, args, opts /*{role, node, worker, fid, broadcast, wait, wait_delegated}*/ = {}) {
         /* Make an RPC call to a remote `agent`. If needed, use IPC (internal) and TCP (external) communication to transmit
            the request to the right node and worker process, where the `agent` is running, and to receive a response back.
            At the target process, <role>.<cmd>(...args) or $agent.<cmd>(...args) of `agent` is invoked. Arguments and result are JSONx-encoded.
@@ -397,7 +397,7 @@ export class Node extends Agent {
 
     async rpc_frwd(request) {
         /* Forward a newly-created RPC message from a (worker) process up to the master. Shortcuts may apply. */
-        let {agent_id, role, scope, worker, broadcast} = RPC_Request.parse(request)
+        let {agent_id, role, fid, scope, worker, broadcast} = RPC_Request.parse(request)
 
         // no forwarding when `scope` enforces local execution
         if (scope === 'process') return this.rpc_exec(request)
@@ -407,7 +407,7 @@ export class Node extends Agent {
 
         // no forwarding when target object is deployed here on the current process
         // -- this rule is important for loading data blocks during and after bootstrap
-        let frame = !broadcast && schemat.get_frame(agent_id, role)
+        let frame = !broadcast && schemat.get_frame(agent_id, role, fid)
         if (frame) return this.rpc_exec(request)
 
         if (!this.is_master()) return schemat.kernel.mailbox.send(request)  // forward to master if not yet there

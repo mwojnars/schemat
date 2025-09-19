@@ -73,7 +73,7 @@ export class Kernel {
     // booting = new Promise(resolve => this._booting_resolve = resolve)   // resolves when the kernel is fully booted; false after that
 
     node_id                     // ID of `node`
-    frames = new FramesMap()    // Frames of currently running agents, keyed by agent IDs
+    frames = new FramesMap()    // Frames of currently running agents, keyed by [agent ID, role] tuples
     root_frame                  // frame that holds the running `node` agent
     _closing                    // true if .stop() was called and the process is shutting down right now
 
