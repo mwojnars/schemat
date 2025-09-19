@@ -480,12 +480,12 @@ export class Node extends Agent {
         throw new Error(`agent [${agent_id}].${role} not found on any node in the cluster`)
     }
 
-    _find_worker(agent, role) {
+    _find_worker(id, role) {
         /* On master, for request routing, look up $state.local_atlas to find the process where `agent` runs in a given role
            (or in any role if `role` is missing or GENERIC).
          */
         role = this._routing_role(role)
-        return this.$state.local_atlas.find_first(agent, role)
+        return this.$state.local_atlas.find_first(id, role)
     }
 
     _routing_role(role) {

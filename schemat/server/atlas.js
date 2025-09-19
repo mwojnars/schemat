@@ -54,15 +54,15 @@ export class Table {
         }
     }
 
-    find_first(query = {}) {
+    get_first(query = {}) {
         /* Get the first record of _index[desc].get(key) list, where `desc` and `key` are created according to the fields
            and their values present in `query`. The query typically contains a subset of all record fields, the subset
            matching one of the indexes.
          */
-        return this.find_all(query)[0]
+        return this.get_all(query)[0]
     }
 
-    find_all(query = {}) {
+    get_all(query = {}) {
         /* Like get(), but returns an array of all matching records, or an empty array if none found. */
         let desc = this._desc(query)
         let key = this._key(query, desc)
@@ -72,7 +72,7 @@ export class Table {
 
     remove(query = {}) {
         /* Find all records matching the query and remove them from _records and indexes. */
-        let records = this.find_all(query)
+        let records = this.get_all(query)
         for (let record of records) {
             this._records.delete(record)
             for (let [desc, index] of Object.entries(this._index)) {
