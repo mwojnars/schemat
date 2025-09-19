@@ -14,8 +14,8 @@ function _as_id(obj) {
 /**********************************************************************************************************************/
 
 export class Table {
-    /* List of records of a fixed shape, {x,y,z,...}, with indexes that provide fast queries by a specific field
-       or combination of fields.
+    /* List of records of a fixed shape, {x,y,z,...}, with indexes that provide fast retrieval of records
+       by a specific field or combination of fields.
      */
 
     _records = new Map()    // all records of this Table keyed by the record itself: record -> record
@@ -30,11 +30,13 @@ export class Table {
         return Object.keys(query).sort().join('_')
     }
 
-    _key(desc, record) {
-        /* Calculate an index key given descriptor and record/query object. */
+    _key(record, desc) {
+        /* Calculate an index key given record/query object and, optionally, an index descriptor. 
+           Return undefined if unknown descriptor.
+         */
         let fields = desc.split('_')
         let values = fields.map(f => record[f])
-        return this._keys[desc](...values)
+        return this._keys[desc]?.(...values)
     }
 
     add(record) {
@@ -42,29 +44,41 @@ export class Table {
         this._records.set(record, record)
 
         for (let [desc, index] of Object.entries(this._index)) {
-            let fields = desc.split('_')
-            let values = fields.map(f => record[f])
-            let key = this._keys[desc](...values)
+            let key = this._key(record, desc)
             let records = index.get(key) || []
             records.push(record)
             index.set(key, records)
         }
     }
 
-    get(query = {}) {
-        /* Get the first record of _index[desc].get(key) list, where `desc` and `key` are created according to fields
-           and their values as present in `query`. The query may contain a subset of all record fields, the subset
-           matching one of indexes.
+    find_first(query = {}) {
+        /* Get the first record of _index[desc].get(key) list, where `desc` and `key` are created according to the fields
+           and their values present in `query`. The query typically contains a subset of all record fields, the subset
+           matching one of the indexes.
          */
+        return this.find_all(query)[0]
     }
 
-    get_all(query = {}) {
-        /* Like get(), but returns an array of all matching records. */
+    find_all(query = {}) {
+        /* Like get(), but returns an array of all matching records, or an empty array if none found. */
         let desc = this._desc(query)
+        let key = this._key(query, desc)
+        if (key === undefined) throw new Error(`unknown index descriptor (${desc})`)
+        return this._index[desc].get(key) || []
     }
 
     remove(query = {}) {
         /* Find all records matching the query and remove them from _records and indexes. */
+        let records = this.find_all(query)
+        for (let record of records) {
+            this._records.delete(record)
+            for (let [desc, index] of Object.entries(this._index)) {
+                let key = this._key(record, desc)
+                let records = index.get(key)
+                records.splice(records.indexOf(record), 1)
+                if (!records.length) index.delete(key)
+            }
+        }
     }
 }
 
