@@ -81,12 +81,13 @@ export class Table {
         return this.get_all(query)[0]
     }
 
-    get_all(query = {}) {
+    get_all(query = {}, map = null) {
         /* Like get(), but returns an array of all matching records, or an empty array if none found. */
         let desc = this._desc(query)
         let key = this._key(query, desc)
         if (key === undefined) throw new Error(`unknown index descriptor (${desc})`)
-        return this._index[desc].get(key) || []
+        let records = this._index[desc].get(key) || []
+        return map ? records.map(rec => map(rec)) : records
     }
 
     has(query = {}) {
