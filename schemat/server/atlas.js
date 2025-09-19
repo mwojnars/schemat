@@ -25,7 +25,10 @@ export class Table {
     // NOTE: the identity of records is preserved between _records and indexes, so it is valid to get a record, `rec`,
     // from _index[desc], and then use it as a key into _records, like in _records.delete(rec)
 
-    constructor(records = []) { records.map(rec => this.add(rec)) }
+    constructor(records = []) {
+        this._index = Object.fromEntries(Object.keys(this.indexes).map(desc => [desc, new Map()]))
+        records.map(rec => this.add(rec))
+    }
 
     __getstate__()                  { return [...this._records.values()] }
     static __setstate__(records)    { return new this(records) }
