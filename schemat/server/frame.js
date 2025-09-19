@@ -101,6 +101,7 @@ export class FramesTable extends Table {
     /* Records of the form {id, role, frame}. Indexed by {id} and {id, role}. */
 
     static indexes = {
+        'fid':      (fid) => fid,
         'id':       (id) => id,
         'id_role':  (id, role) => `${id}-${role}`,
     }
