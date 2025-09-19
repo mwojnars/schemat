@@ -2,7 +2,7 @@
     Common data structures and algorithms.
  */
 
-import {assert, commonPrefix, commonSuffix, lcm} from "./utils.js";
+import {assert, commonPrefix, commonSuffix, lcm, random} from "./utils.js";
 
 
 /**********************************************************************************************************************/
@@ -181,6 +181,11 @@ export class Table {
            matching one of the indexes.
          */
         return this.get_all(query)[0]
+    }
+
+    get_random(query = {}) {
+        /* Randomly selected record from all those matching `query`. */
+        return random(this.get_all(query))
     }
 
     get_all(query = {}, map = null) {
