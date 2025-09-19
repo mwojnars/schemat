@@ -19,8 +19,8 @@ export class Table {
      */
 
     _records = new Map()    // all records of this Table keyed by the record itself: record -> record
-    _index = {}             // _index[desc] is a Map of the form {key -> array-of-records}, where key is built by _key[desc](query) function
-    _key = {}               // _key[desc] is a key generation function, key(...fields), where `fields` match the descriptor, `desc`
+    _index = {}             // _index[desc] is a Map of the form {key -> array-of-records}, where key is built by _keys[desc](query) function
+    _keys = {}              // _keys[desc] is a key generation function, key(...fields), where `fields` match the descriptor, `desc`
 
     // NOTE: the identity of records is preserved between _records and indexes, so it is valid to get a record, `rec`,
     // from _index[desc], and then use it as a key into _records, like in _records.delete(rec)
@@ -30,6 +30,13 @@ export class Table {
         return Object.keys(query).sort().join('_')
     }
 
+    _key(desc, record) {
+        /* Calculate an index key given descriptor and record/query object. */
+        let fields = desc.split('_')
+        let values = fields.map(f => record[f])
+        return this._keys[desc](...values)
+    }
+
     add(record) {
         /* Add an {x,y,z,...} record to _records and to all indexes. */
         this._records.set(record, record)
@@ -37,7 +44,7 @@ export class Table {
         for (let [desc, index] of Object.entries(this._index)) {
             let fields = desc.split('_')
             let values = fields.map(f => record[f])
-            let key = this._key[desc](...values)
+            let key = this._keys[desc](...values)
             let records = index.get(key) || []
             records.push(record)
             index.set(key, records)
@@ -52,7 +59,8 @@ export class Table {
     }
 
     get_all(query = {}) {
-        /* Like get(), but returns an array of all matching records, not the first one. */
+        /* Like get(), but returns an array of all matching records. */
+        let desc = this._desc(query)
     }
 
     remove(query = {}) {
