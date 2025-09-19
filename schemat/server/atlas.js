@@ -26,7 +26,7 @@ export class Atlas {
 
     constructor(nodes = []) {
         for (let node of nodes) {
-            let specs = node.agents.map(({fid, id, role, worker}) => ({fid, id, role, worker, node: node.id}))
+            let specs = node.agents.map(status => ({...status, node: node.id}))
             this._frames.push(...specs)
         }
         // schemat._print(`Atlas.constructor() _frames:`, this._frames)
@@ -250,8 +250,8 @@ export class LocalAtlas extends Atlas {
     }
 
     get_frames() {
-        /* For saving node.agents in DB. */
-        return [...this._frames]
+        /* For saving node.agents in DB; node ID can be removed. */
+        return this._frames.map(({node, worker, fid, id, role, ...rest}) => ({id, role, worker, ...rest, fid}))
     }
 
     // get_status() {
