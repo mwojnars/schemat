@@ -15,12 +15,12 @@ function _as_id(obj) {
 
 export class Table {
     /* List of records of a fixed shape, {x,y,z,...}, with indexes that provide fast retrieval of records by a specific field
-       or combination of fields. Subclasses should implement _keys[desc] functions and, optionally, _priority() method.
+       or combination of fields. Subclasses should implement indexes[desc] functions and, optionally, _priority() method.
      */
 
     _records = new Map()    // all records of this Table keyed by the record itself: record -> record
-    _index = {}             // _index[desc] is a Map of the form {key -> array-of-records}, where key is built by _keys[desc](query) function
-    _keys = {}              // _keys[desc] is a key generation function, key(...fields), where `fields` match the descriptor, `desc`
+    _index = {}             // _index[desc] is a Map of the form {key -> array-of-records}, where key is built by indexes[desc](query) function
+    indexes = {}            // indexes[desc] is a key generation function, key(...fields), where `fields` match the descriptor, `desc`
 
     // NOTE: the identity of records is preserved between _records and indexes, so it is valid to get a record, `rec`,
     // from _index[desc], and then use it as a key into _records, like in _records.delete(rec)
@@ -41,7 +41,7 @@ export class Table {
          */
         let fields = desc.split('_')
         let values = fields.map(f => record[f])
-        return this._keys[desc]?.(...values)
+        return this.indexes[desc]?.(...values)
     }
 
     _priority(record) {}    // true if `record` should be kept at the beginning of matching records

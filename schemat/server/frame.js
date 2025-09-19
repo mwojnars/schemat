@@ -3,6 +3,7 @@ import {print, assert, T, fluctuate, sleep} from "../common/utils.js";
 import {JSONx} from "../common/jsonx.js";
 import {CustomMap} from "../common/structs.js";
 import {StoppingNow} from "../common/errors.js";
+import {Table} from "./atlas.js";
 
 
 /**********************************************************************************************************************/
@@ -93,6 +94,15 @@ export class FramesMap extends CustomMap {
     get_any_role(id) {
         /* Return any frame that has a given agent ID, no matter the role. */
         return this._frames_by_id.get(id)?.[0]
+    }
+}
+
+export class FramesTable extends Table {
+    /* Records of the form {id, role, frame}. Indexed by {id} and {id, role}. */
+
+    indexes = {
+        'id':       (id) => id,
+        'id_role':  (id, role) => `${id}-${role}`,
     }
 }
 
