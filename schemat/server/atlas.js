@@ -25,6 +25,11 @@ export class Table {
     // NOTE: the identity of records is preserved between _records and indexes, so it is valid to get a record, `rec`,
     // from _index[desc], and then use it as a key into _records, like in _records.delete(rec)
 
+    _desc(query) {
+        /* Index descriptor built by combining field names occurring in query. */
+        return Object.keys(query).sort().join('_')
+    }
+
     add(record) {
         /* Add an {x,y,z,...} record to _records and to all indexes. */
         this._records.set(record, record)
