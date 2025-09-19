@@ -215,9 +215,11 @@ export class ServerSchemat extends Schemat {
     }
 
     _analyse_object_graph(deep = true, skip_same_gen = true) {
+        /* Statistics of a deep graph of links between web objects in Registry and agent frames. For debugging. */
         let pad = (x) => `[${x}]`.padStart(6, ' ')
         let accept = (obj) => obj?.__data || obj?.__meta.cache
-        let agents = [...this.kernel.frames.values()].map(f => f.agent)
+        let agents = this.kernel.frames.all().map(f => f.agent)
+        // let agents = [...this.kernel.frames.values()].map(f => f.agent)
         let list   = [this._db, /*this._cluster, this._app,*/ ...this.registry.objects.values(), ...agents]
         let objects = new Set(list.filter(accept))
         let visited = new Set([...objects])
@@ -325,11 +327,9 @@ export class ServerSchemat extends Schemat {
         // let id = (typeof id_or_obj === 'object') ? id_or_obj.id : id_or_obj
 
         if (!role || role === AgentRole.GENERIC) role = AgentRole.ANY       // "$agent" as a requested role matches all role names at the target
-        return role === AgentRole.ANY ? this.kernel.frames.get_any_role(id) : this.kernel.frames.get([id, role])
-
-        // role ??= AgentRole.GENERIC
-        // if (role !== AgentRole.GENERIC) return this.kernel.frames.get([id, role])
-        // return this.kernel.frames.get_any_role(id)      // search for any role when the requested role is "$agent"
+        let query = (role === AgentRole.ANY) ? {id} : {id, role}
+        return this.kernel.frames.get_first(query)?.frame
+        // return role === AgentRole.ANY ? this.kernel.frames.get_any_role(id) : this.kernel.frames.get([id, role])
     }
 
 
