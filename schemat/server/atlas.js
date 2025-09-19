@@ -75,7 +75,7 @@ export class Table {
         return this._index[desc].get(key) || []
     }
 
-    exists(query = {}) {
+    has(query = {}) {
         /* Return true if any record matching the query exists, false otherwise. */
         return this.get_all(query).length > 0
     }
@@ -84,6 +84,8 @@ export class Table {
         /* Return the number of records matching the query, or 0 if none found. */
         return this.get_all(query).length
     }
+
+    size() { return this._records.size }
 
     remove(query = {}) {
         /* Find all records matching the query and remove them from _records and indexes. */
