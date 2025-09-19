@@ -1,6 +1,6 @@
 import {AgentRole} from "../common/globals.js";
 import {assert, random} from "../common/utils.js";
-import {Counter} from "../common/structs.js";
+import {Counter, Table} from "../common/structs.js";
 
 
 export const MASTER = 0        // ID of the master process; workers are numbered 1,2,...,N
@@ -8,6 +8,27 @@ export const MASTER = 0        // ID of the master process; workers are numbered
 function _as_id(obj) {
     return typeof obj === 'object' ? obj.id : obj
 }
+
+/**********************************************************************************************************************/
+
+export class RoutingTable extends Table {
+    /* Base class for a table of records that identify agent frames across the cluster / node / worker process;
+       records indexed by {fid}, {id}, and {id, role}, for different routing modes.
+     */
+    static indexes = {
+        'fid':      (fid) => fid,
+        'id':       (id) => id,
+        'id_role':  (id, role) => `${id}-${role}`,
+    }
+}
+
+
+export class FramesTable extends RoutingTable {
+    /* Routing table with records of the form {fid, id, role, frame}, for indexing frames in a worker process.
+     */
+    all()   { return [...this._records.values()].map(rec => rec.frame) }
+}
+
 
 /**********************************************************************************************************************/
 

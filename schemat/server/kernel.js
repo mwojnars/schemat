@@ -12,7 +12,8 @@ import {ServerSchemat} from "../core/schemat_srv.js";
 import {BootDatabase} from "../db/db.js";
 import {Agent} from "./agent.js";
 import {IPC_Mailbox} from "./node.js";
-import {Frame, FramesTable} from "./frame.js";
+import {Frame} from "./frame.js";
+import {FramesTable} from "./atlas.js";
 
 
 // print NODE_PATH:
