@@ -14,8 +14,8 @@ function _as_id(obj) {
 /**********************************************************************************************************************/
 
 export class Table {
-    /* List of records of a fixed shape, {x,y,z,...}, with indexes that provide fast retrieval of records
-       by a specific field or combination of fields.
+    /* List of records of a fixed shape, {x,y,z,...}, with indexes that provide fast retrieval of records by a specific field
+       or combination of fields. Subclasses should implement _priority() method and _keys[desc] functions.
      */
 
     _records = new Map()    // all records of this Table keyed by the record itself: record -> record
@@ -24,6 +24,11 @@ export class Table {
 
     // NOTE: the identity of records is preserved between _records and indexes, so it is valid to get a record, `rec`,
     // from _index[desc], and then use it as a key into _records, like in _records.delete(rec)
+
+    constructor(records = []) { records.map(rec => this.add(rec)) }
+
+    __getstate__()                  { return [...this._records.values()] }
+    static __setstate__(records)    { return new this(records) }
 
     _desc(query) {
         /* Index descriptor built by combining field names occurring in query. */
