@@ -39,6 +39,8 @@ export class Table {
         return this._keys[desc]?.(...values)
     }
 
+    _priority(record) {}    // true if `record` should be kept at the beginning of matching records
+
     add(record) {
         /* Add an {x,y,z,...} record to _records and to all indexes. */
         this._records.set(record, record)
@@ -46,7 +48,8 @@ export class Table {
         for (let [desc, index] of Object.entries(this._index)) {
             let key = this._key(record, desc)
             let records = index.get(key) || []
-            records.push(record)
+            if (this._priority(record)) records.unshift(record)
+            else records.push(record)
             index.set(key, records)
         }
     }
