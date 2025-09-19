@@ -53,49 +53,51 @@ export class Recurrent {
 
 /**********************************************************************************************************************/
 
-export class FramesMap extends CustomMap {
-    /* A Map where keys are id+role strings. */
+// export class FramesMap extends CustomMap {
+//     /* A Map where keys are id+role strings. */
+//
+//     _frames_by_id = new Map()    // internal map: id -> list of frames
+//
+//     convert([id, role]) {
+//         role ??= AgentRole.GENERIC
+//         return `${id}-${role}`          // 1234-$agent
+//     }
+//
+//     reverse(key) {
+//         let [id, role] = key.split('-')
+//         assert(role)
+//         return [Number(id), role]
+//     }
+//
+//     set(key, frame) {
+//         /* Update _frames_by_id in addition to the base mapping by id+role. */
+//         let [id, role] = key
+//         let frames = this._frames_by_id.get(id) || []
+//         frames.push(frame)
+//         this._frames_by_id.set(id, frames)
+//         return super.set(key, frame)
+//     }
+//
+//     delete(key) {
+//         /* Update _frames_by_id in addition to the base mapping by id+role. */
+//         let [id, role] = key
+//         let frames = this._frames_by_id.get(id)
+//         if (frames) {
+//             let frame = this.get(key)
+//             frames = frames.filter(f => f !== frame)
+//             if (frames.length) this._frames_by_id.set(id, frames)
+//             else this._frames_by_id.delete(id)
+//         }
+//         return super.delete(key)
+//     }
+//
+//     get_any_role(id) {
+//         /* Return any frame that has a given agent ID, no matter the role. */
+//         return this._frames_by_id.get(id)?.[0]
+//     }
+// }
 
-    _frames_by_id = new Map()    // internal map: id -> list of frames
-
-    convert([id, role]) {
-        role ??= AgentRole.GENERIC
-        return `${id}-${role}`          // 1234-$agent
-    }
-
-    reverse(key) {
-        let [id, role] = key.split('-')
-        assert(role)
-        return [Number(id), role]
-    }
-
-    set(key, frame) {
-        /* Update _frames_by_id in addition to the base mapping by id+role. */
-        let [id, role] = key
-        let frames = this._frames_by_id.get(id) || []
-        frames.push(frame)
-        this._frames_by_id.set(id, frames)
-        return super.set(key, frame)
-    }
-
-    delete(key) {
-        /* Update _frames_by_id in addition to the base mapping by id+role. */
-        let [id, role] = key
-        let frames = this._frames_by_id.get(id)
-        if (frames) {
-            let frame = this.get(key)
-            frames = frames.filter(f => f !== frame)
-            if (frames.length) this._frames_by_id.set(id, frames)
-            else this._frames_by_id.delete(id)
-        }
-        return super.delete(key)
-    }
-
-    get_any_role(id) {
-        /* Return any frame that has a given agent ID, no matter the role. */
-        return this._frames_by_id.get(id)?.[0]
-    }
-}
+/**********************************************************************************************************************/
 
 export class FramesTable extends Table {
     /* Records of the form {id, role, frame}. Indexed by {id} and {id, role}. */

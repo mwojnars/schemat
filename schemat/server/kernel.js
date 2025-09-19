@@ -12,7 +12,7 @@ import {ServerSchemat} from "../core/schemat_srv.js";
 import {BootDatabase} from "../db/db.js";
 import {Agent} from "./agent.js";
 import {IPC_Mailbox} from "./node.js";
-import {Frame, FramesMap, FramesTable} from "./frame.js";
+import {Frame, FramesTable} from "./frame.js";
 
 
 // print NODE_PATH:
@@ -74,7 +74,6 @@ export class Kernel {
 
     node_id                     // ID of `node`
     frames = new FramesTable()  // {fid, id, role, frame} records of currently running agents
-    // frames = new FramesMap()    // Frames of currently running agents, keyed by [agent ID, role] tuples
     root_frame                  // frame that holds the running `node` agent
     _closing                    // true if .stop() was called and the process is shutting down right now
 
@@ -184,7 +183,6 @@ export class Kernel {
             })))
 
         try {
-            // let frames = [...this.frames.values()].reverse()
             let frames = this.frames.all().reverse()
             await Promise.all(frames.map(f => f.stop()))
         }
@@ -199,9 +197,8 @@ export class Kernel {
     /*** general-purpose start/stop agent ***/
 
     async start_agent(id, role, {fid, migrate} = {}) {
-        // if (this.frames.has([id, role])) throw new Error(`agent [${id}] in role ${role} is already running`)
         if (this.frames.has({id, role})) throw new Error(`agent [${id}] in role ${role} is already running`)
-        if (fid && this.frames.has({fid})) throw new Error(`duplicate frame ID = ${fid}`)
+        if (fid && this.frames.has({fid})) throw new Error(`duplicate frame ID (${fid})`)
 
         try {
             role ??= AgentRole.GENERIC                  // "$agent" role is the default for running agents
@@ -214,7 +211,6 @@ export class Kernel {
 
             let frame = new Frame(agent, role, fid)
             this.frames.add({fid, id, role, frame})     // the frame must be saved in `frames` already before .start()
-            // this.frames.set([id, role], frame)      // the frame must be assigned to `frames` already before .start()
             await frame.start()
             return frame
         }
@@ -226,9 +222,6 @@ export class Kernel {
 
     async stop_agent(id, role = AgentRole.ANY) {
         if (role === AgentRole.ANY) {
-            // let frames = this.frames._frames_by_id.get(id) || []
-            // this.frames._frames_by_id.delete(id);
-            // [...this.frames.keys()].forEach(key => key[0] === id && this.frames.delete(key))
             let frames = this.frames.get_all({id}, rec => rec.frame)
             this.frames.remove({id})
             for (let frame of frames.reverse()) await frame.stop()
