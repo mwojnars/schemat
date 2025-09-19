@@ -18,6 +18,7 @@ export class Atlas {
        (node, worker, FID), types (agent ID, role) and status (stopped, migrating); with methods for efficient routing
        of RPC requests to appropriate frames: by FID, agent.id, or (agent.id, role) specifiers.
      */
+    PLACE
 
     _frames = []        // array of {node, worker, fid, id, role} specifications (status objects) of agent frames
 
@@ -197,6 +198,14 @@ export class Atlas {
         return random(this.find_all(agent, role))
     }
 
+    find_fid(fid) {
+        /* Find node/worker ID that corresponds to a given frame ID. */
+        // TODO: add `fid` to _routes and use constant-time read access instead of _frames.find()
+        assert(fid)
+        let status = this._frames.find(f => f.fid === fid)
+        return status[this.PLACE]
+    }
+
     // list_agent_ids() {
     //     /* Array of agent IDs occurring as keys in placement tags. */
     //     return Object.keys(this._routes).filter(tag => !tag.includes('-')).map(tag => Number(tag))
@@ -222,6 +231,7 @@ export class LocalAtlas extends Atlas {
        where the agent is deployed.
      */
 
+    PLACE = 'worker'
     node_id
 
     constructor(node) {
@@ -263,6 +273,7 @@ export class GlobalAtlas extends Atlas {
        where the agent is deployed; agent-role tag is a string of the form `${id}-${role}`, like "1234-$leader".
        Additionally, ID-only tags are included to support role-agnostic queries (i.e., when role="$agent").
      */
+    PLACE = 'node'
 
     constructor(nodes) {
         super(nodes)
