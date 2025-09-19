@@ -129,16 +129,16 @@ export class Atlas {
         }
         let [{id, role}] = this._frames.splice(pos, 1)
         // schemat._print(`remove_frame():`, {id, role})
-        this.remove(place, id, role)
+        this.remove_route(place, id, role)
     }
 
-    remove(place, agent, role = AgentRole.ANY) {
+    remove_route(place, agent, role = AgentRole.ANY) {
         /* Remove the entry: (agent, role) -> place. If role=ANY, all entries for different roles are removed. */
         agent = _as_id(agent)
         place = _as_id(place)
 
         if (role === AgentRole.ANY) {
-            this._agent_tags(agent).forEach(tag => this._remove(place, tag))    // remove all agent-role tags for this agent
+            this._role_tags(agent).forEach(tag => this._remove(place, tag))     // remove all agent-role tags for this agent
             this._remove(place, agent)                                          // remove the ID-only entry since we're removing all roles
             return
         }
@@ -146,7 +146,7 @@ export class Atlas {
         this._remove(place, this.tag(agent, role))
 
         // check if agent -> place link remains elsewhere (in a different role), and if not, remove the ID-only entry
-        let remain = this._agent_tags(agent).some(tag => this._routes[tag].includes(place))
+        let remain = this._role_tags(agent).some(tag => this._routes[tag].includes(place))
         if (!remain) this._remove(place, agent)
     }
 
@@ -157,13 +157,13 @@ export class Atlas {
         if (!places.length) delete this._routes[`${key}`]
     }
 
-    _agent_tags(agent_id) {
+    _role_tags(agent_id) {
         /* Array of all agent-role tags that match a given agent_id, no matter the role. */
         return Object.keys(this._routes).filter(tag => tag.startsWith(`${agent_id}-`))
     }
 
     _is_local()  {}
-    _is_hidden() {}
+    // _is_hidden() {}
 
     count_places() {
         /* Return the number of places occurring in placements, deduplicated. */
@@ -253,7 +253,7 @@ export class LocalAtlas extends Atlas {
     // }
 
     _is_local(worker)       { return worker === Number(process.env.WORKER_ID) || 0 }    // schemat.kernel.worker_id
-    _is_hidden(tag, worker) { return Number(tag.split('-')[0]) === this.node_id }       // routes of node.$master/$worker excluded
+    // _is_hidden(tag, worker) { return Number(tag.split('-')[0]) === this.node_id }       // routes of node.$master/$worker excluded
 }
 
 /**********************************************************************************************************************/
@@ -279,7 +279,7 @@ export class GlobalAtlas extends Atlas {
     }
 
     _is_local(node_id)      { return node_id === schemat.kernel.node_id }
-    _is_hidden(tag, node)   { return tag.startsWith(`${node}-`) }       // node-on-itself routes are excluded from serialization
+    // _is_hidden(tag, node)   { return tag.startsWith(`${node}-`) }       // node-on-itself routes are excluded from serialization
 
     find_nodes(agent, role) {
         /* Return an array of nodes where (agent, role) is deployed; `agent` is an object or ID. */
