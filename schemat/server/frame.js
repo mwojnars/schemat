@@ -104,6 +104,8 @@ export class FramesTable extends Table {
         'id':       (id) => id,
         'id_role':  (id, role) => `${id}-${role}`,
     }
+
+    all()   { return [...this._records.values()].map(rec => rec.frame) }
 }
 
 /**********************************************************************************************************************/
