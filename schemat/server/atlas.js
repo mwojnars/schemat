@@ -60,87 +60,44 @@ function _norm({fid, id, agent, role}) {
 //     }
 //
 //
-//     // find_first(query /*{fid, id, agent, role}*/) {
-//     //     /* Return the first place ID where `fid` frame, or agent `id`, or (agent, role) is deployed; undefined if none found. */
-//     //     return this.get_first(_norm(query))?.[this.PLACE]
+//     add_frame(status) { this.add(status) }
+//     remove_frame(fid) { this.remove({fid}) }
+//
+//     find_first(query /*{fid, id, agent, role}*/) {
+//         /* Return the first place ID where `fid` frame, or agent `id`, or (agent, role) is deployed; undefined if none found. */
+//         return this.get_first(_norm(query))?.[this.PLACE]
+//     }
+//
+//     _priority(record)  {}       // true if `record` should be kept at the beginning of matching records
+//
+//
+//     /*******************/
+//
+//     /* TODO in subclasses:
+//        - _priority() takes `record` not `place`
+//        - add_route() was removed
+//      */
+//
+//     // add_frame(status) {
+//     //     // schemat._print(`add_frame():`, status)
+//     //     let {id, role} = status
+//     //     this.add_route(status[this.PLACE], id, role)
+//     //     this._frames.push(status)
 //     // }
-//
-//
-//     tag(id, role = AgentRole.GENERIC) {
-//         /* Placement tag. A string that identifies agent by its ID and particular role, like "1234-$agent". */
-//         assert(role[0] === '$', `incorrect name of agent role (${role})`)
-//         assert(id && typeof id !== 'object')
-//         return `${id}-${role}`
-//     }
-//
-//     add_frame(status) {
-//         // schemat._print(`add_frame():`, status)
-//         let {id, role} = status
-//         this.add_route(status[this.PLACE], id, role)
-//         this._frames.push(status)
-//     }
-//
-//     add_route(place, agent, role = AgentRole.GENERIC) {
-//         place = _id(place)           // convert node & agent objects to IDs
-//         agent = _id(agent)
-//         let tag = this.tag(agent, role)
-//         this._add(place, tag)
-//         this._add(place, agent)
-//     }
-//
-//     _add(place, key) {
-//         let places = (this._routes[`${key}`] ??= [])
-//         if (places.includes(place)) return                  // ignore duplicate IDs
-//         if (this._priority(place)) places.unshift(place)    // always put the local node/process ID at the beginning
-//         else places.push(place)                             // put other node IDs at the end of the list
-//     }
-//
-//     remove_frame(fid) {
-//         /* Find and remove a frame by FID. */
-//         assert(fid)
-//         let pos = this._frames.findIndex(f => f.fid === fid)
-//         if (pos === -1) {
-//             schemat._print(`WARNING: frame @${fid} not found by remove_frame()`)
-//             return
-//         }
-//         let [status] = this._frames.splice(pos, 1)
-//         let {id, role} = status
-//         // schemat._print(`remove_frame():`, {id, role})
-//         this.remove_route(status[this.PLACE], id, role)
-//     }
-//
-//     remove_route(place, agent, role = AgentRole.ANY) {
-//         /* Remove the entry: (agent, role) -> place. If role=ANY, all entries for different roles are removed. */
-//         agent = _id(agent)
-//         place = _id(place)
-//
-//         if (role === AgentRole.ANY) {
-//             this._role_tags(agent).forEach(tag => this._remove(place, tag))     // remove all agent-role tags for this agent
-//             this._remove(place, agent)                                          // remove the ID-only entry since we're removing all roles
-//             return
-//         }
-//
-//         this._remove(place, this.tag(agent, role))
-//
-//         // check if agent -> place link remains elsewhere (in a different role), and if not, remove the ID-only entry
-//         let remain = this._role_tags(agent).some(tag => this._routes[tag].includes(place))
-//         if (!remain) this._remove(place, agent)
-//     }
-//
-//     _remove(place, key) {
-//         let places = this._routes[`${key}`]
-//         if (!places?.length) return
-//         this._routes[`${key}`] = places = places.filter(p => p !== place)
-//         if (!places.length) delete this._routes[`${key}`]
-//     }
-//
-//     _role_tags(agent_id) {
-//         /* Array of all agent-role tags that match a given agent_id, no matter the role. */
-//         return Object.keys(this._routes).filter(tag => tag.startsWith(`${agent_id}-`))
-//     }
-//
-//     _priority(place)  {}     // true if `place` should be kept at the beginning of matching places
-//     // _is_hidden() {}
+//     //
+//     // remove_frame(fid) {
+//     //     /* Find and remove a frame by FID. */
+//     //     assert(fid)
+//     //     let pos = this._frames.findIndex(f => f.fid === fid)
+//     //     if (pos === -1) {
+//     //         schemat._print(`WARNING: frame @${fid} not found by remove_frame()`)
+//     //         return
+//     //     }
+//     //     let [status] = this._frames.splice(pos, 1)
+//     //     let {id, role} = status
+//     //     // schemat._print(`remove_frame():`, {id, role})
+//     //     this.remove_route(status[this.PLACE], id, role)
+//     // }
 //
 //     count_places() {
 //         /* Return the number of places occurring in placements, deduplicated. */
@@ -164,10 +121,10 @@ function _norm({fid, id, agent, role}) {
 //         return this._routes[tag] || []
 //     }
 //
-//     find_first(agent, role) {
-//         /* Return the first place where (agent, role) is deployed, or undefined if none found. */
-//         return this.find_all(agent, role)[0]
-//     }
+//     // find_first(agent, role) {
+//     //     /* Return the first place where (agent, role) is deployed, or undefined if none found. */
+//     //     return this.find_all(agent, role)[0]
+//     // }
 //
 //     find_random(agent, role) {
 //         /* Return a randomly selected place from all those where (agent, role) is deployed. */
