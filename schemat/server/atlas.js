@@ -5,7 +5,7 @@ import {Counter, Table} from "../common/structs.js";
 
 export const MASTER = 0        // ID of the master process; workers are numbered 1,2,...,N
 
-function _as_id(obj) {
+function _id(obj) {
     return typeof obj === 'object' ? obj.id : obj
 }
 
@@ -76,8 +76,8 @@ export class FramesTable extends RoutingTable {
 //     }
 //
 //     add_route(place, agent, role = AgentRole.GENERIC) {
-//         place = _as_id(place)           // convert node & agent objects to IDs
-//         agent = _as_id(agent)
+//         place = _id(place)           // convert node & agent objects to IDs
+//         agent = _id(agent)
 //         let tag = this.tag(agent, role)
 //         this._add(place, tag)
 //         this._add(place, agent)
@@ -106,8 +106,8 @@ export class FramesTable extends RoutingTable {
 //
 //     remove_route(place, agent, role = AgentRole.ANY) {
 //         /* Remove the entry: (agent, role) -> place. If role=ANY, all entries for different roles are removed. */
-//         agent = _as_id(agent)
-//         place = _as_id(place)
+//         agent = _id(agent)
+//         place = _id(place)
 //
 //         if (role === AgentRole.ANY) {
 //             this._role_tags(agent).forEach(tag => this._remove(place, tag))     // remove all agent-role tags for this agent
@@ -153,7 +153,7 @@ export class FramesTable extends RoutingTable {
 //
 //     find_all(agent, role = AgentRole.ANY) {
 //         /* Return an array of places where (agent, role) is deployed; `agent` is an object or ID. */
-//         agent = _as_id(agent)
+//         agent = _id(agent)
 //         role ??= AgentRole.GENERIC      // FIXME: remove + treat GENERIC as a regular role
 //         let tag = (role === AgentRole.GENERIC || role === AgentRole.ANY) ? `${agent}` : this.tag(agent, role)
 //         return this._routes[tag] || []
@@ -244,8 +244,8 @@ export class Atlas {
     }
 
     add_route(place, agent, role = AgentRole.GENERIC) {
-        place = _as_id(place)           // convert node & agent objects to IDs
-        agent = _as_id(agent)
+        place = _id(place)           // convert node & agent objects to IDs
+        agent = _id(agent)
         let tag = this.tag(agent, role)
         this._add(place, tag)
         this._add(place, agent)
@@ -274,8 +274,8 @@ export class Atlas {
 
     remove_route(place, agent, role = AgentRole.ANY) {
         /* Remove the entry: (agent, role) -> place. If role=ANY, all entries for different roles are removed. */
-        agent = _as_id(agent)
-        place = _as_id(place)
+        agent = _id(agent)
+        place = _id(place)
 
         if (role === AgentRole.ANY) {
             this._role_tags(agent).forEach(tag => this._remove(place, tag))     // remove all agent-role tags for this agent
@@ -321,7 +321,7 @@ export class Atlas {
 
     find_all(agent, role = AgentRole.ANY) {
         /* Return an array of places where (agent, role) is deployed; `agent` is an object or ID. */
-        agent = _as_id(agent)
+        agent = _id(agent)
         role ??= AgentRole.GENERIC      // FIXME: remove + treat GENERIC as a regular role
         let tag = (role === AgentRole.GENERIC || role === AgentRole.ANY) ? `${agent}` : this.tag(agent, role)
         return this._routes[tag] || []
