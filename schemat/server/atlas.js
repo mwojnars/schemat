@@ -37,124 +37,132 @@ function _norm({fid, id, agent, role}) {
     return {fid, id: id || _id(agent), role}
 }
 
-// export class Atlas__ extends RoutingTable {
-//     /* Cluster-wide or node-wide routing table containing records of the form {node (ID), worker (ID), fid, id, role}.
-//      */
-//     PLACE
-//
-//     constructor(nodes = []) {
-//         super()
-//         for (let node of nodes)
-//             node.agents.map(status => this.add({...status, node: node.id}))
-//     }
-//
-//     static __setstate__(frames) {
-//         // create fake node objects that can be passed to Local/GlobalAtlas.constructor() in place of real nodes
-//         let nodes = new Map()
-//         for (let {node: id, ...status} of frames) {
-//             let node = nodes.get(id) || {id, agents: []}
-//             node.agents.push(status)
-//             nodes.set(id, node)
-//         }
-//         return new this([...nodes.values()])        // each item in the array has shape: {id, agents}
-//     }
-//
-//
-//     _priority(record)  {}       // true if `record` should be kept at the beginning of matching records
-//
-//     add_frame(status) { this.add(status) }
-//     remove_frame(fid) { this.remove({fid}) }
-//
-//     // find_first(query /*{fid, id, agent, role}*/) {
-//     //     /* Return the first place ID where `fid` frame, or agent `id`, or (agent, role) is deployed; undefined if none found. */
-//     //     return this.get_first(_norm(query))?.[this.PLACE]
-//     // }
-//
-//     find_first(query) {
-//         /* Return the first place where (agent, role) is deployed, or undefined if none found. */
-//         return this.find_all(query)[0]
-//     }
-//
-//     find_all(agent, role = AgentRole.ANY) {
-//     }
-//
-//     count_places() {
-//         /* Return the number of different place IDs occurring in routes, deduplicated. */
-//         return this.get_places().length
-//     }
-//
-//     get_places() {
-//         /* Return an array of all different place IDs occurring in routes, deduplicated. */
-//         return [...new Set(this.get_all().map(rec => rec[this.PLACE]))]
-//     }
-//
-//     /*******************/
-//
-//     /* TODO in subclasses:
-//        - _priority() takes `record` not `place`
-//        - add_route() was removed
-//      */
-//
-//     // add_frame(status) {
-//     //     // schemat._print(`add_frame():`, status)
-//     //     let {id, role} = status
-//     //     this.add_route(status[this.PLACE], id, role)
-//     //     this._frames.push(status)
-//     // }
-//     //
-//     // remove_frame(fid) {
-//     //     /* Find and remove a frame by FID. */
-//     //     assert(fid)
-//     //     let pos = this._frames.findIndex(f => f.fid === fid)
-//     //     if (pos === -1) {
-//     //         schemat._print(`WARNING: frame @${fid} not found by remove_frame()`)
-//     //         return
-//     //     }
-//     //     let [status] = this._frames.splice(pos, 1)
-//     //     let {id, role} = status
-//     //     // schemat._print(`remove_frame():`, {id, role})
-//     //     this.remove_route(status[this.PLACE], id, role)
-//     // }
-//     //
-//     // get_places() {
-//     //     /* Return an array of place IDs occurring in placements, deduplicated. */
-//     //     return [...new Set(Object.values(this._routes).flat())]
-//     // }
-//     //
-//     // has(agent, role)    { return this.find_first(agent, role) != null }
-//
-//     count_all(agent, role) { return this.find_all(agent, role).length }
-//
-//     find_all(agent, role = AgentRole.ANY) {
-//         /* Return an array of places where (agent, role) is deployed; `agent` is an object or ID. */
-//         agent = _id(agent)
-//         role ??= AgentRole.GENERIC      // FIXME: remove + treat GENERIC as a regular role
-//         let tag = (role === AgentRole.GENERIC || role === AgentRole.ANY) ? `${agent}` : this.tag(agent, role)
-//         return this._routes[tag] || []
-//     }
-//
-//     // find_first(agent, role) {
-//     //     /* Return the first place where (agent, role) is deployed, or undefined if none found. */
-//     //     return this.find_all(agent, role)[0]
-//     // }
-//
-//     find_random(agent, role) {
-//         /* Return a randomly selected place from all those where (agent, role) is deployed. */
-//         return random(this.find_all(agent, role))
-//     }
-//
-//     rank_places() {
-//         /* Order places by utilization, from least to most busy, and return as an array of place IDs. */
-//         let routes = Object.entries(this._routes).filter(([tag]) => tag.includes('-'))
-//         let places = routes.map(([tag, places]) => places).flat()
-//         // let places = agents.map(status => status.worker).filter(w => w >= 1)     // pull out worker IDs, skip the master process (0)
-//
-//         let counts = new Counter(places)
-//         counts.delete(0)                        // remove master process from the result
-//         let sorted = counts.least_common()
-//         return sorted.map(entry => entry[0])
-//     }
-// }
+export class Atlas__ extends RoutingTable {
+    /* Cluster-wide or node-wide routing table containing records of the form {node (ID), worker (ID), fid, id, role}.
+     */
+    PLACE
+
+    constructor(nodes = []) {
+        super()
+        for (let node of nodes)
+            node.agents.map(status => this.add({...status, node: node.id}))
+    }
+
+    static __setstate__(frames) {
+        // create fake node objects that can be passed to Local/GlobalAtlas.constructor() in place of real nodes
+        let nodes = new Map()
+        for (let {node: id, ...status} of frames) {
+            let node = nodes.get(id) || {id, agents: []}
+            node.agents.push(status)
+            nodes.set(id, node)
+        }
+        return new this([...nodes.values()])        // each item in the array has shape: {id, agents}
+    }
+
+
+    _priority(record)  {}       // true if `record` should be kept at the beginning of matching records
+
+    add_frame(status) { this.add(status) }
+    remove_frame(fid) { this.remove({fid}) }
+
+    // find_first(query /*{fid, id, agent, role}*/) {
+    //     /* Return the first place ID where `fid` frame, or agent `id`, or (agent, role) is deployed; undefined if none found. */
+    //     return this.get_first(_norm(query))?.[this.PLACE]
+    // }
+
+    find_first(query) {
+        /* Return the first place where (agent, role) is deployed, or undefined if none found. */
+        return this.find_all(query)[0]
+    }
+
+    find_random(query) {
+        /* Return a randomly selected place from all those where (agent, role) is deployed. */
+        return random(this.find_all(query))
+    }
+
+    find_all(query) {
+        /* Return an array of place IDs that match the {fid, id, agent, role} query. */
+        return this.get_all(_norm(query), rec => rec[this.PLACE])
+    }
+
+    count_all(query) { return this.find_all(query).length }
+
+    count_places() {
+        /* Return the number of different place IDs occurring in routes, deduplicated. */
+        return this.get_places().length
+    }
+
+    get_places() {
+        /* Return an array of all different place IDs occurring in routes, deduplicated. */
+        return [...new Set(this.get_all().map(rec => rec[this.PLACE]))]
+    }
+
+    /*******************/
+
+    /* TODO in subclasses:
+       - _priority() takes `record` not `place`
+       - add_route() was removed
+     */
+
+    // add_frame(status) {
+    //     // schemat._print(`add_frame():`, status)
+    //     let {id, role} = status
+    //     this.add_route(status[this.PLACE], id, role)
+    //     this._frames.push(status)
+    // }
+    //
+    // remove_frame(fid) {
+    //     /* Find and remove a frame by FID. */
+    //     assert(fid)
+    //     let pos = this._frames.findIndex(f => f.fid === fid)
+    //     if (pos === -1) {
+    //         schemat._print(`WARNING: frame @${fid} not found by remove_frame()`)
+    //         return
+    //     }
+    //     let [status] = this._frames.splice(pos, 1)
+    //     let {id, role} = status
+    //     // schemat._print(`remove_frame():`, {id, role})
+    //     this.remove_route(status[this.PLACE], id, role)
+    // }
+    //
+    // get_places() {
+    //     /* Return an array of place IDs occurring in placements, deduplicated. */
+    //     return [...new Set(Object.values(this._routes).flat())]
+    // }
+    //
+    // has(agent, role)    { return this.find_first(agent, role) != null }
+    //
+    // count_all(agent, role) { return this.find_all(agent, role).length }
+    //
+    // find_all(agent, role = AgentRole.ANY) {
+    //     /* Return an array of places where (agent, role) is deployed; `agent` is an object or ID. */
+    //     agent = _id(agent)
+    //     let tag = (role === AgentRole.ANY) ? `${agent}` : this.tag(agent, role)
+    //     return this._routes[tag] || []
+    // }
+    //
+    // find_first(agent, role) {
+    //     /* Return the first place where (agent, role) is deployed, or undefined if none found. */
+    //     return this.find_all(agent, role)[0]
+    // }
+    //
+    // find_random(agent, role) {
+    //     /* Return a randomly selected place from all those where (agent, role) is deployed. */
+    //     return random(this.find_all(agent, role))
+    // }
+
+    rank_places() {
+        /* Order places by utilization, from least to most busy, and return as an array of place IDs. */
+        let routes = Object.entries(this._routes).filter(([tag]) => tag.includes('-'))
+        let places = routes.map(([tag, places]) => places).flat()
+        // let places = agents.map(status => status.worker).filter(w => w >= 1)     // pull out worker IDs, skip the master process (0)
+
+        let counts = new Counter(places)
+        counts.delete(0)                        // remove master process from the result
+        let sorted = counts.least_common()
+        return sorted.map(entry => entry[0])
+    }
+}
 
 /**********************************************************************************************************************/
 
@@ -283,8 +291,6 @@ export class Atlas {
     find_all(agent, role = AgentRole.ANY) {
         /* Return an array of places where (agent, role) is deployed; `agent` is an object or ID. */
         agent = _id(agent)
-        // role ??= AgentRole.GENERIC      // FIXME: remove + treat GENERIC as a regular role
-        // let tag = (role === AgentRole.GENERIC || role === AgentRole.ANY) ? `${agent}` : this.tag(agent, role)
         let tag = (role === AgentRole.ANY) ? `${agent}` : this.tag(agent, role)
         return this._routes[tag] || []
     }
