@@ -65,9 +65,17 @@ function _norm({fid, id, agent, role}) {
 //     add_frame(status) { this.add(status) }
 //     remove_frame(fid) { this.remove({fid}) }
 //
-//     find_first(query /*{fid, id, agent, role}*/) {
-//         /* Return the first place ID where `fid` frame, or agent `id`, or (agent, role) is deployed; undefined if none found. */
-//         return this.get_first(_norm(query))?.[this.PLACE]
+//     // find_first(query /*{fid, id, agent, role}*/) {
+//     //     /* Return the first place ID where `fid` frame, or agent `id`, or (agent, role) is deployed; undefined if none found. */
+//     //     return this.get_first(_norm(query))?.[this.PLACE]
+//     // }
+//
+//     find_first(query) {
+//         /* Return the first place where (agent, role) is deployed, or undefined if none found. */
+//         return this.find_all(query)[0]
+//     }
+//
+//     find_all(agent, role = AgentRole.ANY) {
 //     }
 //
 //     count_places() {
@@ -275,8 +283,9 @@ export class Atlas {
     find_all(agent, role = AgentRole.ANY) {
         /* Return an array of places where (agent, role) is deployed; `agent` is an object or ID. */
         agent = _id(agent)
-        role ??= AgentRole.GENERIC      // FIXME: remove + treat GENERIC as a regular role
-        let tag = (role === AgentRole.GENERIC || role === AgentRole.ANY) ? `${agent}` : this.tag(agent, role)
+        // role ??= AgentRole.GENERIC      // FIXME: remove + treat GENERIC as a regular role
+        // let tag = (role === AgentRole.GENERIC || role === AgentRole.ANY) ? `${agent}` : this.tag(agent, role)
+        let tag = (role === AgentRole.ANY) ? `${agent}` : this.tag(agent, role)
         return this._routes[tag] || []
     }
 
