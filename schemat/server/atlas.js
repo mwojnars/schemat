@@ -342,6 +342,29 @@ export class Atlas {
 
 /**********************************************************************************************************************/
 
+export class LocalAtlas__ extends Atlas__ {
+    /* Map of agent deployments across worker processes of a node, as a mapping of agent-role tag -> array of worker IDs
+       where the agent is deployed.
+     */
+
+    PLACE = 'worker'
+    node_id
+
+    constructor(node) {
+        if (Array.isArray(node)) node = node[0]
+        super([node])
+        this.node_id = node.id
+        this.add({node: node.id, worker: MASTER, id: node.id, role: '$master'})     // add node.$master agent, fid=undefined
+    }
+
+    get_frames() {
+        /* For saving node.agents in DB; node ID can be removed. */
+        return this.get_all().map(({node, worker, fid, id, role, ...rest}) => ({id, role, worker, ...rest, fid}))
+    }
+
+    _priority({worker}) { return worker === Number(process.env.WORKER_ID) || 0 }    // schemat.kernel.worker_id
+}
+
 export class LocalAtlas extends Atlas {
     /* Map of agent deployments across worker processes of a node, as a mapping of agent-role tag -> array of worker IDs
        where the agent is deployed.
