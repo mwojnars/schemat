@@ -485,7 +485,7 @@ export class Node extends Agent {
            (or in any role if `role` is missing or GENERIC).
          */
         role = this._routing_role(role)
-        return this.$state.local_atlas.find_first(id, role)
+        return this.$state.local_atlas.find_first({id, role})
     }
 
     _routing_role(role) {
@@ -615,7 +615,7 @@ export class Node extends Agent {
         agent = await schemat.as_loaded(agent)
 
         let {local_atlas, atlas} = this.$state
-        let stop = local_atlas.find_all(agent, role)
+        let stop = local_atlas.find_all({agent, role})
 
         // let stop = agents.filter(st => st.id === agent.id && (!role || st.role === role)).map(({worker}) => worker)
         // this.$state.agents = agents = agents.filter(st => !(st.id === agent.id && (!role || st.role === role)))
