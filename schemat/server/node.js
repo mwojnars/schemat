@@ -131,8 +131,8 @@ export class IPC_Mailbox extends Mailbox {
 /**********************************************************************************************************************/
 
 class RPC_Request {
-    static create(agent_id, cmd, args = [], opts = {}) {
-        /* RPC message format: [agent_id, cmd, args, opts], where `opts` may include {broadcast, scope, worker, role, app, tx}.
+    static create(id, cmd, args = [], opts = {}) {
+        /* RPC message format: [agent-id, cmd, args, opts], where `opts` may include {broadcast, scope, worker, role, app, tx}.
            - scope = routing scope: whether the request is target at entire 'cluster', or current 'node', or current 'process' only
            - worker = local ID of the target worker process
            - app = application ID
@@ -158,12 +158,12 @@ class RPC_Request {
         }
         assert(!('rpc' in opts))
 
-        return {rpc: [agent_id, cmd, JSONx.encode(args)], ...opts}
+        return {rpc: [id, cmd, JSONx.encode(args)], ...opts}
     }
 
     static parse(request) {
-        let {rpc: [agent_id, cmd, args], ...opts} = request
-        return {agent_id, cmd, args: JSONx.decode(args), ...opts}
+        let {rpc: [id, cmd, args], ...opts} = request
+        return {id, cmd, args: JSONx.decode(args), ...opts}
     }
 
     static is_private(cmd_or_request) {
@@ -397,7 +397,7 @@ export class Node extends Agent {
 
     async rpc_frwd(request) {
         /* Forward a newly-created RPC message from a (worker) process up to the master. Shortcuts may apply. */
-        let {agent_id, role, fid, scope, worker, broadcast} = RPC_Request.parse(request)
+        let {id, role, fid, scope, worker, broadcast} = RPC_Request.parse(request)
 
         // no forwarding when `scope` enforces local execution
         if (scope === 'process') return this.rpc_exec(request)
@@ -407,7 +407,7 @@ export class Node extends Agent {
 
         // no forwarding when target object is deployed here on the current process
         // -- this rule is important for loading data blocks during and after bootstrap
-        let frame = !broadcast && schemat.get_frame(agent_id, role, fid)
+        let frame = !broadcast && schemat.get_frame(id, role, fid)
         if (frame) return this.rpc_exec(request)
 
         if (!this.is_master()) return schemat.kernel.mailbox.send(request)  // forward to master if not yet there
@@ -417,11 +417,11 @@ export class Node extends Agent {
 
     async rpc_send(message) {
         /* On master, forward an RPC message originating at this node either to a remote peer or a local worker process. */
-        let {node, worker, agent_id, role, broadcast} = RPC_Request.parse(message)
-        // this._print(`rpc_send():`, `agent_id=${agent_id} method=${method} args=${args}`)
+        let {node, worker, id, role, broadcast} = RPC_Request.parse(message)
+        // this._print(`rpc_send():`, `id=${id} method=${method} args=${args}`)
 
         if (broadcast) return this.rpc_bcst(message)
-        node ??= this._find_node(worker, agent_id, role)
+        node ??= this._find_node(worker, id, role)
         if (node.is(this)) return this.rpc_recv(message)        // loopback connection if agent is deployed here on the current node
         return this.tcp_send(node, message)                     // remote connection otherwise
     }
@@ -430,19 +430,19 @@ export class Node extends Agent {
         /* On master, broadcast message to all nodes and processes where the target (agent, role) is deployed.
            Collect all responses and return an array of results. Throw an error if any of the peers failed.
          */
-        let {agent_id, role} = RPC_Request.parse(request)
-        let nodes = this.$state.atlas.find_nodes(agent_id, this._routing_role(role))
+        let {id, role} = RPC_Request.parse(request)
+        let nodes = this.$state.atlas.find_nodes(id, this._routing_role(role))
         let results = await Promise.all(nodes.map(node => node.is(this) ? this.rpc_recv(request) : this.tcp_send(node, request)))
         return results.flat()   // in broadcast mode, every peer returns an array of results, so they must be flattened at the end
     }
 
     async rpc_recv(message) {
         /* Route an incoming RPC request to the right process on this node and execute. */
-        let {worker, agent_id, role, broadcast} = RPC_Request.parse(message)
+        let {worker, id, role, broadcast} = RPC_Request.parse(message)
         // TODO: broadcast
 
-        worker ??= this._find_worker(agent_id, role)
-        if (worker == null) throw new Error(`agent [${agent_id}].${role || AgentRole.GENERIC} not found on this node`)
+        worker ??= this._find_worker(id, role)
+        if (worker == null) throw new Error(`agent [${id}].${role || AgentRole.GENERIC} not found on this node`)
         if (worker === MASTER) return this.rpc_exec(message)    // process the message here in the master process
         return this.get_worker(worker).mailbox.send(message)    // forward the message down to a worker process
         // return this.ipc_send(worker, message)
@@ -452,12 +452,12 @@ export class Node extends Agent {
         /* Execute an RPC message addressed to an agent running on this process.
            Error is raised if the agent cannot be found, *no* forwarding. `args` are JSONx-encoded.
          */
-        let {agent_id, role, cmd, args, ctx, tx} = RPC_Request.parse(message)
+        let {id, role, cmd, args, ctx, tx} = RPC_Request.parse(message)
         if (tx?.debug) this._print("rpc_exec():", JSON.stringify(message))
 
-        // locate the agent by its `agent_id`, should be running here in this process
-        let frame = schemat.get_frame(agent_id, role)
-        if (!frame) throw new Error(`[${agent_id}].${role} not found on this process (worker #${this.worker_id}) to execute RPC message ${JSON.stringify(message)}`)
+        // locate the agent by its `id`, should be running here in this process
+        let frame = schemat.get_frame(id, role)
+        if (!frame) throw new Error(`[${id}].${role} not found on this process (worker #${this.worker_id}) to execute RPC message ${JSON.stringify(message)}`)
 
         return frame.exec(cmd, args, ctx, tx, (out, err) => RPC_Response.create(out, err))
     }
