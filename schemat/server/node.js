@@ -381,8 +381,8 @@ export class Node extends Agent {
          */
         assert(schemat.kernel.frames.size, `kernel not yet initialized`)
 
-        let agent_id = (typeof agent === 'object') ? agent.id : agent
-        let request = RPC_Request.create(agent_id, cmd, args, opts)
+        let id = (typeof agent === 'object') ? agent.id : agent
+        let request = RPC_Request.create(id, cmd, args, opts)
         // this._print("rpc():", JSON.stringify(request))
 
         try {
@@ -647,15 +647,15 @@ export class Node extends Agent {
         return sorted.map(entry => entry[0])
     }
 
-    async '$worker._start_agent'(agent_id, role, opts) {
+    async '$worker._start_agent'(id, role, opts) {
         /* Start agent on the current worker process. Return frame status object. */
-        let frame = await schemat.kernel.start_agent(agent_id, role, opts)
+        let frame = await schemat.kernel.start_agent(id, role, opts)
         return frame.get_status()
     }
 
-    async '$worker._stop_agent'(agent_id, role) {
+    async '$worker._stop_agent'(id, role) {
         /* Stop an agent(s) running on the current worker process. Return an array of FID strings of the frames stopped. */
-        return schemat.kernel.stop_agent(agent_id, role)
+        return schemat.kernel.stop_agent(id, role)
     }
 
     // async '$worker._capture_records'(records) {}
