@@ -49,6 +49,11 @@ export class Atlas__ extends RoutingTable {
             node.agents.map(status => this.add({...status, node: node.id}))
     }
 
+    __getstate__() {
+        // exclude special records, i.e., those with missing `fid`
+        return [...this._records.values()].filter(rec => !this._special(rec))
+    }
+
     static __setstate__(frames) {
         // create fake node objects that can be passed to Local/GlobalAtlas.constructor() in place of real nodes
         let nodes = new Map()
@@ -62,6 +67,7 @@ export class Atlas__ extends RoutingTable {
 
 
     _priority(record)  {}       // true if `record` should be kept at the beginning of matching records
+    _special(record) { return !record.fid }
 
     add_frame(status) { this.add(status) }
     remove_frame(fid) { this.remove({fid}) }
@@ -103,7 +109,7 @@ export class Atlas__ extends RoutingTable {
     rank_places() {
         /* Order places by utilization, from least to most busy, and return as an array of place IDs. */
         // extract all place IDs from records, skip special frames (fid=undefined)
-        let places = this.get_all().filter(rec => rec.fid).map(rec => rec[this.PLACE])
+        let places = this.get_all().filter(rec => !this._special(rec)).map(rec => rec[this.PLACE])
         let counts = new Counter(places)
         let sorted = counts.least_common()
         return sorted.map(([place, count]) => place)
@@ -362,7 +368,8 @@ export class LocalAtlas extends Atlas__ {
 
     get_frames() {
         /* For saving node.agents in DB; node ID can be removed. */
-        return this.get_all().map(({node, worker, fid, id, role, ...rest}) => ({id, role, worker, ...rest, fid}))
+        let records = this.get_all().filter(rec => !this._special(rec))
+        return records.map(({node, worker, fid, id, role, ...rest}) => ({id, role, worker, ...rest, fid}))
     }
 
     _priority({worker}) { return worker === Number(process.env.WORKER_ID) || 0 }    // schemat.kernel.worker_id
