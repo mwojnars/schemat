@@ -119,7 +119,7 @@ export class Cluster extends Agent {
         if (this.is(agent)) throw new Error(`cannot directly remove cluster leader agent, ${agent}`)
         if (this.get_nodes().some(n => n.is(agent))) throw new Error(`cannot directly remove a node agent, ${agent}`)
 
-        let nodes = this.$state.atlas.find_nodes(agent, role)
+        let nodes = this.$state.atlas.find_nodes({agent, role})
         await Promise.all(nodes.map(node => this._stop_agent(node, agent, role)))
     }
 

@@ -161,16 +161,16 @@ export class GlobalAtlas extends Atlas {
 
     _priority({node}) { return node === schemat.kernel.node_id }
 
-    find_nodes(agent, role) {
-        /* Return an array of nodes where (agent, role) is deployed; `agent` is an object or ID. */
-        let places = this.find_all({agent, role})
-        return places.map(id => schemat.get_object(id))
+    find_node(query) {
+        /* Like find_first(), but returns a web object (node) not ID. */
+        let id = this.find_first(query)
+        if (id) return schemat.get_object(id)
     }
 
-    find_node(agent, role) {
-        /* Return the first node where (agent, role) is deployed, or undefined if none found. Like find_first(), but returns a web object not ID. */
-        let id = this.find_first({agent, role})
-        if (id) return schemat.get_object(id)
+    find_nodes(query) {
+        /* Like find_all(), but returns web objects (nodes), not IDs. */
+        let places = this.find_all(query)
+        return places.map(id => schemat.get_object(id))
     }
 }
 
