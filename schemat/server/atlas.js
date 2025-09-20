@@ -112,8 +112,8 @@ function _norm({fid, id, agent, role}) {
 //     //     /* Return an array of place IDs occurring in placements, deduplicated. */
 //     //     return [...new Set(Object.values(this._routes).flat())]
 //     // }
-//
-//     has(agent, role)    { return this.find_first(agent, role) != null }
+//     //
+//     // has(agent, role)    { return this.find_first(agent, role) != null }
 //
 //     count_all(agent, role) { return this.find_all(agent, role).length }
 //

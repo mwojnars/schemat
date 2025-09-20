@@ -559,7 +559,7 @@ export class Node extends Agent {
 
     _has_agent(agent) {
         /* True if there is at least one running instance of `agent` (any role) on this node. For install/uninstall. */
-        return this.$state.local_atlas.has(agent)
+        return this.$state.local_atlas.has({id: agent.id})
     }
 
     async '$master.update_atlas'(atlas) {
