@@ -428,7 +428,7 @@ export class GlobalAtlas extends Atlas {
     }
 
     find_node(agent, role) {
-        /* Return the first node where (agent, role) is deployed, or undefined if none found. */
+        /* Return the first node where (agent, role) is deployed, or undefined if none found. Like find_first(), but returns a web object not ID. */
         let id = this.find_first(agent, role)
         if (id) return schemat.get_object(id)
     }
