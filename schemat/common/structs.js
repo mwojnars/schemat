@@ -134,7 +134,7 @@ export class Table {
 
     _desc(query) {
         /* Index descriptor built by combining field names occurring in query. */
-        return Object.keys(query).sort().join('_')
+        return Object.keys(query).filter(key => query[key] !== undefined).sort().join('_')
     }
 
     _key(record, desc) {
