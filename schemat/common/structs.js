@@ -161,7 +161,7 @@ export class Table {
         }
     }
 
-    remove(query = {}) {
+    remove(query) {
         /* Find all records matching the query and remove them from _records and indexes. */
         let records = this.get_all(query)
         for (let record of records) {
@@ -175,7 +175,7 @@ export class Table {
         }
     }
 
-    get_first(query = {}) {
+    get_first(query) {
         /* Get the first record of _index[desc].get(key) list, where `desc` and `key` are created according to the fields
            and their values present in `query`. The query typically contains a subset of all record fields, the subset
            matching one of the indexes.
@@ -183,13 +183,14 @@ export class Table {
         return this.get_all(query)[0]
     }
 
-    get_random(query = {}) {
+    get_random(query) {
         /* Randomly selected record from all those matching `query`. */
         return random(this.get_all(query))
     }
 
-    get_all(query = {}, map = null) {
+    get_all(query = null, map = null) {
         /* Like get(), but returns an array of all matching records, or an empty array if none found. */
+        if (!query) return [...this._records.values()]
         let desc = this._desc(query)
         let key = this._key(query, desc)
         if (key === undefined) throw new Error(`unknown index descriptor (${desc})`)
@@ -197,12 +198,12 @@ export class Table {
         return map ? records.map(rec => map(rec)) : records
     }
 
-    has(query = {}) {
+    has(query) {
         /* Return true if any record matching the query exists, false otherwise. */
         return this.get_all(query).length > 0
     }
 
-    count(query = {}) {
+    count(query) {
         /* Return the number of records matching the query, or 0 if none found. */
         return this.get_all(query).length
     }

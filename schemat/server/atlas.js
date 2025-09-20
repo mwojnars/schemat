@@ -26,7 +26,7 @@ export class RoutingTable extends Table {
 export class FramesTable extends RoutingTable {
     /* Routing table with records of the form {fid, id, role, frame}, for indexing frames in a worker process.
      */
-    all()   { return [...this._records.values()].map(rec => rec.frame) }
+    all()   { return this.get_all().map(rec => rec.frame) }
 }
 
 
@@ -60,6 +60,8 @@ function _norm({fid, id, agent, role}) {
 //     }
 //
 //
+//     _priority(record)  {}       // true if `record` should be kept at the beginning of matching records
+//
 //     add_frame(status) { this.add(status) }
 //     remove_frame(fid) { this.remove({fid}) }
 //
@@ -68,8 +70,15 @@ function _norm({fid, id, agent, role}) {
 //         return this.get_first(_norm(query))?.[this.PLACE]
 //     }
 //
-//     _priority(record)  {}       // true if `record` should be kept at the beginning of matching records
+//     count_places() {
+//         /* Return the number of different place IDs occurring in routes, deduplicated. */
+//         return this.get_places().length
+//     }
 //
+//     get_places() {
+//         /* Return an array of all different place IDs occurring in routes, deduplicated. */
+//         return [...new Set(this.get_all().map(rec => rec[this.PLACE]))]
+//     }
 //
 //     /*******************/
 //
@@ -98,16 +107,11 @@ function _norm({fid, id, agent, role}) {
 //     //     // schemat._print(`remove_frame():`, {id, role})
 //     //     this.remove_route(status[this.PLACE], id, role)
 //     // }
-//
-//     count_places() {
-//         /* Return the number of places occurring in placements, deduplicated. */
-//         return this.get_places().length
-//     }
-//
-//     get_places() {
-//         /* Return an array of place IDs occurring in placements, deduplicated. */
-//         return [...new Set(Object.values(this._routes).flat())]
-//     }
+//     //
+//     // get_places() {
+//     //     /* Return an array of place IDs occurring in placements, deduplicated. */
+//     //     return [...new Set(Object.values(this._routes).flat())]
+//     // }
 //
 //     has(agent, role)    { return this.find_first(agent, role) != null }
 //
