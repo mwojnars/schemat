@@ -139,7 +139,7 @@ export class LocalAtlas extends Atlas {
         return records.map(({node, worker, fid, id, role, ...rest}) => ({id, role, worker, ...rest, fid}))
     }
 
-    _priority({worker}) { return worker === Number(process.env.WORKER_ID) || 0 }    // schemat.kernel.worker_id
+    _priority({worker}) { return worker === (Number(process.env.WORKER_ID) || 0) }    // schemat.kernel.worker_id
 }
 
 /**********************************************************************************************************************/
