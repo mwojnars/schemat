@@ -397,6 +397,36 @@ export class LocalAtlas extends Atlas {
 
 /**********************************************************************************************************************/
 
+export class GlobalAtlas__ extends Atlas__ {
+    /* Map of agent deployments across the cluster, as a mapping of agent-role tag -> array of node IDs
+       where the agent is deployed; agent-role tag is a string of the form `${id}-${role}`, like "1234-$leader".
+       Additionally, ID-only tags are included to support role-agnostic queries (i.e., when role="$agent").
+     */
+    PLACE = 'node'
+
+    constructor(nodes) {
+        super(nodes)
+        for (let node of nodes) {           // add node.$master/$worker agents, they are deployed on <node> and nowhere else
+            this.add({node: node.id, id: node.id, role: '$master', worker: MASTER})     // fid=undefined
+            this.add({node: node.id, id: node.id, role: '$worker'})                     // worker=undefined
+        }
+    }
+
+    _priority({node}) { return node === schemat.kernel.node_id }
+
+    find_nodes(agent, role) {
+        /* Return an array of nodes where (agent, role) is deployed; `agent` is an object or ID. */
+        let places = this.find_all(agent, role)
+        return places.map(id => schemat.get_object(id))
+    }
+
+    find_node(agent, role) {
+        /* Return the first node where (agent, role) is deployed, or undefined if none found. Like find_first(), but returns a web object not ID. */
+        let id = this.find_first(agent, role)
+        if (id) return schemat.get_object(id)
+    }
+}
+
 export class GlobalAtlas extends Atlas {
     /* Map of agent deployments across the cluster, as a mapping of agent-role tag -> array of node IDs
        where the agent is deployed; agent-role tag is a string of the form `${id}-${role}`, like "1234-$leader".
