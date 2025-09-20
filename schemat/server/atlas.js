@@ -37,29 +37,15 @@ function _norm({fid, id, agent, role}) {
     return {fid, id: id || _id(agent), role}
 }
 
-// export class __Atlas__ extends RoutingTable {
+// export class Atlas__ extends RoutingTable {
 //     /* Cluster-wide or node-wide routing table containing records of the form {node (ID), worker (ID), fid, id, role}.
 //      */
 //     PLACE
 //
-//     // _frames = new RoutingTable()        // records of the form {node (ID), worker (ID), fid, id, role}
-//
-//
-//     find_first(query /*{fid, id, agent, role}*/) {
-//         /* Return the first place ID where `fid` frame, or agent `id`, or (agent, role) is deployed; undefined if none found. */
-//         return this.get_first(_norm(query))?.[this.PLACE]
-//     }
-//     // find_first(agent, role) {
-//     //     /* Return the first place where (agent, role) is deployed, or undefined if none found. */
-//     //     return this.find_all(agent, role)[0]
-//     // }
-//
-//
 //     constructor(nodes = []) {
-//         for (let node of nodes) {
-//             let specs = node.agents.map(status => ({...status, node: node.id}))
-//             this._frames.push(...specs)
-//         }
+//         super()
+//         for (let node of nodes)
+//             node.agents.map(status => this.add({...status, node: node.id}))
 //     }
 //
 //     static __setstate__(frames) {
@@ -72,6 +58,13 @@ function _norm({fid, id, agent, role}) {
 //         }
 //         return new this([...nodes.values()])        // each item in the array has shape: {id, agents}
 //     }
+//
+//
+//     // find_first(query /*{fid, id, agent, role}*/) {
+//     //     /* Return the first place ID where `fid` frame, or agent `id`, or (agent, role) is deployed; undefined if none found. */
+//     //     return this.get_first(_norm(query))?.[this.PLACE]
+//     // }
+//
 //
 //     tag(id, role = AgentRole.GENERIC) {
 //         /* Placement tag. A string that identifies agent by its ID and particular role, like "1234-$agent". */
@@ -180,19 +173,6 @@ function _norm({fid, id, agent, role}) {
 //         /* Return a randomly selected place from all those where (agent, role) is deployed. */
 //         return random(this.find_all(agent, role))
 //     }
-//
-//     find_fid(fid) {
-//         /* Find node/worker ID that corresponds to a given frame ID. */
-//         // TODO: add `fid` to _routes and use constant-time read access instead of _frames.find()
-//         assert(fid)
-//         let status = this._frames.find(f => f.fid === fid)
-//         return status[this.PLACE]
-//     }
-//
-//     // list_agent_ids() {
-//     //     /* Array of agent IDs occurring as keys in placement tags. */
-//     //     return Object.keys(this._routes).filter(tag => !tag.includes('-')).map(tag => Number(tag))
-//     // }
 //
 //     rank_places() {
 //         /* Order places by utilization, from least to most busy, and return as an array of place IDs. */
