@@ -142,7 +142,7 @@ export class Kernel {
     }
 
     async start_agents(node) {
-        // start this node's own agent
+        // start this node's own agent; unlike other frames, it has fid=undefined, so it can only be addressed via [id,role] during RPC (!)
         let role = this.is_master() ? '$master' : '$worker'
         this.root_frame = await this.start_agent(this.node_id, role)
         assert(this.frames.size === 1)

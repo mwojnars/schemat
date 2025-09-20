@@ -71,7 +71,7 @@ export class Atlas__ extends RoutingTable {
     // }
 
     find_first(query) {
-        /* Return the first place where (agent, role) is deployed, or undefined if none found. */
+        /* First place ID matching `query`, or undefined if none found. */
         return this.find_all(query)[0]
     }
 
@@ -95,6 +95,15 @@ export class Atlas__ extends RoutingTable {
     get_places() {
         /* Return an array of all different place IDs occurring in routes, deduplicated. */
         return [...new Set(this.get_all().map(rec => rec[this.PLACE]))]
+    }
+
+    rank_places() {
+        /* Order places by utilization, from least to most busy, and return as an array of place IDs. */
+        // extract all place IDs from records, skip special frames (fid=undefined)
+        let places = this.get_all().filter(rec => rec.fid).map(rec => rec[this.PLACE])
+        let counts = new Counter(places)
+        let sorted = counts.least_common()
+        return sorted.map(([place, count]) => place)
     }
 
     /*******************/
@@ -150,18 +159,18 @@ export class Atlas__ extends RoutingTable {
     //     /* Return a randomly selected place from all those where (agent, role) is deployed. */
     //     return random(this.find_all(agent, role))
     // }
-
-    rank_places() {
-        /* Order places by utilization, from least to most busy, and return as an array of place IDs. */
-        let routes = Object.entries(this._routes).filter(([tag]) => tag.includes('-'))
-        let places = routes.map(([tag, places]) => places).flat()
-        // let places = agents.map(status => status.worker).filter(w => w >= 1)     // pull out worker IDs, skip the master process (0)
-
-        let counts = new Counter(places)
-        counts.delete(0)                        // remove master process from the result
-        let sorted = counts.least_common()
-        return sorted.map(entry => entry[0])
-    }
+    //
+    // rank_places() {
+    //     /* Order places by utilization, from least to most busy, and return as an array of place IDs. */
+    //     let routes = Object.entries(this._routes).filter(([tag]) => tag.includes('-'))
+    //     let places = routes.map(([tag, places]) => places).flat()
+    //     // let places = agents.map(status => status.worker).filter(w => w >= 1)     // pull out worker IDs, skip the master process (0)
+    //
+    //     let counts = new Counter(places)
+    //     counts.delete(0)                        // remove master process from the result
+    //     let sorted = counts.least_common()
+    //     return sorted.map(entry => entry[0])
+    // }
 }
 
 /**********************************************************************************************************************/
