@@ -32,15 +32,27 @@ export class FramesTable extends RoutingTable {
 
 /**********************************************************************************************************************/
 
+function _norm({fid, id, agent, role}) {
+    /* Normalize the query for frame specification retrieval by converting `agent` to ID if needed. */
+    return {fid, id: id || _id(agent), role}
+}
+
 // export class __Atlas__ extends RoutingTable {
 //     /* Cluster-wide or node-wide routing table containing records of the form {node (ID), worker (ID), fid, id, role}.
 //      */
 //     PLACE
 //
-//     find_first(query) {
-//         /* The query is either {fid}, or {id}, or {id, role}. */
-//         return this.get_first(query)[this.PLACE]
+//     // _frames = new RoutingTable()        // records of the form {node (ID), worker (ID), fid, id, role}
+//
+//
+//     find_first(query /*{fid, id, agent, role}*/) {
+//         /* Return the first place ID where `fid` frame, or agent `id`, or (agent, role) is deployed; undefined if none found. */
+//         return this.get_first(_norm(query))?.[this.PLACE]
 //     }
+//     // find_first(agent, role) {
+//     //     /* Return the first place where (agent, role) is deployed, or undefined if none found. */
+//     //     return this.find_all(agent, role)[0]
+//     // }
 //
 //
 //     constructor(nodes = []) {
@@ -58,7 +70,7 @@ export class FramesTable extends RoutingTable {
 //             node.agents.push(status)
 //             nodes.set(id, node)
 //         }
-//         return new this([...nodes.values()])        // the array has the shape: nodes[i] = {id, agents}
+//         return new this([...nodes.values()])        // each item in the array has shape: {id, agents}
 //     }
 //
 //     tag(id, role = AgentRole.GENERIC) {
