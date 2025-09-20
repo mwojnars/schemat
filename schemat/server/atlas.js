@@ -12,8 +12,8 @@ function _as_id(obj) {
 /**********************************************************************************************************************/
 
 export class RoutingTable extends Table {
-    /* Base class for a table of records that identify agent frames across the cluster / node / worker process;
-       records indexed by {fid}, {id}, and {id, role}, for different routing modes.
+    /* Base class for a table of records that identify agent frames across the cluster / node / worker process.
+       Records are indexed by {fid}, {id}, {id, role}, for different routing modes.
      */
     static indexes = {
         'fid':      (fid) => fid,
@@ -56,20 +56,18 @@ export class Atlas {
         }
     }
 
-    __getstate__() {
-        // create fake node objects that can be passed to Local/GlobalAtlas.constructor() in place of real nodes;
-        // the returned array has the shape: nodes[i].id, nodes[i].agents
+    __getstate__() { return this._frames }
 
+    static __setstate__(frames) {
+        // create fake node objects that can be passed to Local/GlobalAtlas.constructor() in place of real nodes;
         let nodes = new Map()
-        for (let {node: id, ...status} of this._frames) {
+        for (let {node: id, ...status} of frames) {
             let node = nodes.get(id) || {id, agents: []}
             node.agents.push(status)
             nodes.set(id, node)
         }
-        return [...nodes.values()]
+        return new this([...nodes.values()])        // the array has the shape: nodes[i] = {id, agents}
     }
-
-    static __setstate__(nodes) { return new this(nodes) }
 
     tag(id, role = AgentRole.GENERIC) {
         /* Placement tag. A string that identifies agent by its ID and particular role, like "1234-$agent". */
