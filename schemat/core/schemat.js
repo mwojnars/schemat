@@ -171,6 +171,7 @@ export class Schemat {
         for (let obj of std_objects)
             builtin.set(`:${obj.name}`, obj)
 
+        // WARN: concurrent fetching with fetch_all() may NOT be faster than sequential .fetch() -- this should be tested and compared in production
         await builtin.fetch_all(
             ["../index.js", {path: 'schemat'}],         // Schemat core classes, e.g., "schemat:WebObject"
             "../common/structs.js",
