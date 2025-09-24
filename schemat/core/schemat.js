@@ -26,6 +26,15 @@ class Classpath {
     cache = new Map()
     inverse = new Map()
 
+    async fetch_all(...entries) {
+        /* Each entry is either a path/URL string, or an array of [path/URL, options]. */
+        return Promise.all(entries.map(url => {
+            let opts = {}
+            if (Array.isArray(url)) {opts = url[1]; url = url[0]}
+            return this.fetch(url, opts)
+        }))
+    }
+
     async fetch(module_url, {path: target_path, symbols, accept, exclude_variables = true} = {}) {
         /* Import symbols from a module and add them to the cache. */
         let module = await import(module_url)
@@ -162,30 +171,56 @@ export class Schemat {
         for (let obj of std_objects)
             builtin.set(`:${obj.name}`, obj)
 
-        await builtin.fetch("../index.js", {path: 'schemat'})       // Schemat core classes, e.g., "schemat:WebObject"
-        await builtin.fetch("../common/structs.js")
-        await builtin.fetch("../common/errors.js")                  // for serialization of errors in responses
-        await builtin.fetch("../std/files.js")
-        await builtin.fetch("../std/containers.js")
-        await builtin.fetch("../web/page.js")
-        await builtin.fetch("./app.js")
+        await builtin.fetch_all(
+            ["../index.js", {path: 'schemat'}],         // Schemat core classes, e.g., "schemat:WebObject"
+            "../common/structs.js",
+            "../common/errors.js",                      // for serialization of errors in RPC responses
+            "../types/type.js",
+            "../types/catalog_type.js",
+            "../std/files.js",
+            "../std/containers.js",
+            "../web/page.js",
+            "./app.js",
+        )
 
-        // let accept = (name) => name.toUpperCase() === name
-        await builtin.fetch("../types/type.js") //, {accept})
-        await builtin.fetch("../types/catalog_type.js") //, {accept})
+        if (SERVER)
+            await builtin.fetch_all(
+                "../db/db.js",
+                "../db/operator.js",
+                "../db/sequence.js",
+                "../db/block.js",
+                "../db/data_request.js",
+                "../server/logger.js",
+                "../server/atlas.js",
+                "../server/agent.js",
+                "../server/node.js",
+                "../server/cluster.js",
+            )
 
-        if (SERVER) {
-            await builtin.fetch("../server/logger.js")
-            await builtin.fetch("../server/atlas.js")
-            await builtin.fetch("../server/agent.js")
-            await builtin.fetch("../server/node.js")
-            await builtin.fetch("../server/cluster.js")
-            await builtin.fetch("../db/db.js")
-            await builtin.fetch("../db/operator.js")
-            await builtin.fetch("../db/sequence.js")
-            await builtin.fetch("../db/block.js")
-            await builtin.fetch("../db/data_request.js")
-        }
+        // await builtin.fetch("../index.js", {path: 'schemat'})       // Schemat core classes, e.g., "schemat:WebObject"
+        // await builtin.fetch("../common/structs.js")
+        // await builtin.fetch("../common/errors.js")                  // for serialization of errors in responses
+        // await builtin.fetch("../std/files.js")
+        // await builtin.fetch("../std/containers.js")
+        // await builtin.fetch("../web/page.js")
+        // await builtin.fetch("./app.js")
+        //
+        // // let accept = (name) => name.toUpperCase() === name
+        // await builtin.fetch("../types/type.js") //, {accept})
+        // await builtin.fetch("../types/catalog_type.js") //, {accept})
+        //
+        // if (SERVER) {
+        //     await builtin.fetch("../server/logger.js")
+        //     await builtin.fetch("../server/atlas.js")
+        //     await builtin.fetch("../server/agent.js")
+        //     await builtin.fetch("../server/node.js")
+        //     await builtin.fetch("../server/cluster.js")
+        //     await builtin.fetch("../db/db.js")
+        //     await builtin.fetch("../db/operator.js")
+        //     await builtin.fetch("../db/sequence.js")
+        //     await builtin.fetch("../db/block.js")
+        //     await builtin.fetch("../db/data_request.js")
+        // }
     }
 
     async _load_app() {
