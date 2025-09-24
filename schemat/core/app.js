@@ -18,6 +18,7 @@ import {mActionResult, mString} from "../web/messages.js";
 export class Application extends WebObject {
     /* Global configuration of all applications that comprise this website, with URL routing etc.
        A route whose name starts with asterisk (*NAME) is treated as blank.
+       TODO: in the future, every Application will be able to define its own set of builtin classes for JSONx serialization & classpath mapping
      */
 
     // static DOMAIN_LOCAL   = 'local:'        // for import paths that address physical files of the local Schemat installation

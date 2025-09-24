@@ -170,9 +170,9 @@ export class Schemat {
         await builtin.fetch("../web/page.js")
         await builtin.fetch("./app.js")
 
-        let accept = (name) => name.toUpperCase() === name
-        await builtin.fetch("../types/type.js", {accept})
-        await builtin.fetch("../types/catalog_type.js", {accept})
+        // let accept = (name) => name.toUpperCase() === name
+        await builtin.fetch("../types/type.js") //, {accept})
+        await builtin.fetch("../types/catalog_type.js") //, {accept})
 
         if (SERVER) {
             await builtin.fetch("../server/logger.js")
