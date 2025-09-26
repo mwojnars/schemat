@@ -120,8 +120,8 @@ export class SCHEMA extends CATALOG {
      */
 
     static options = {
-        fields: {},             // object with field names and their types; null means a default data type should be used for a given field
-        strict: true,           // if true, only fields listed in `fields` are allowed; generic_type is assumed for other fields
+        fields: {},         // plain object with field names and their types; null means that a default data type should be used for a given field
+        strict: true,       // if true, only fields listed in `fields` are allowed; generic_type is assumed for other fields
     }
 
     isValidKey(key) {
