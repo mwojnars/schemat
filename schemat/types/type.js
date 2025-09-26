@@ -614,18 +614,19 @@ export class SHARD extends CUSTOM_OBJECT {
 
 /**********************************************************************************************************************
  **
- **  COMPOUND data types
+ **  Compound data types
  **
  */
 
-export class COMPOUND extends Type {
+export class Compound extends Type {
+    /* Base class for compound data types: arrays, maps, etc. */
     static options = {
         repeated: false,
         merged:   true,     // values of compound types are merged by default during inheritance rather than replaced or repeated
     }
 }
 
-export class TYPE extends COMPOUND {
+export class TYPE extends Compound {
     /* Values of this type are Type instances, `type`, which internally contain options, `type.options`,
        which could be merged during inheritance. For this reason, TYPE is treated as compound.
      */
@@ -655,7 +656,7 @@ export class TYPE extends COMPOUND {
     }
 }
 
-export class ARRAY extends COMPOUND {
+export class ARRAY extends Compound {
     /* Represents arrays of objects of a given `type` (generic_type by default). */
 
     static options = {
@@ -675,7 +676,7 @@ export class ARRAY extends COMPOUND {
     }
 }
 
-export class OBJECT extends COMPOUND {
+export class OBJECT extends Compound {
     /* Accept plain JavaScript objects (POJO or null-prototype objects) used as data containers (dictionaries).
        The objects must *not* belong to any class other than Object.
        This type can be used as a replacement for MAP or CATALOG when a simpler data structure is needed for holding
