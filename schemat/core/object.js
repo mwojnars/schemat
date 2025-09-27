@@ -48,6 +48,14 @@ class Intercept {
     static UNDEFINED    = Symbol.for('Intercept.UNDEFINED')
     static NO_CACHING   = Symbol.for('Intercept.NO_CACHING')   // marks a wrapper around a value (typically from a getter) that should not be cached
 
+    // special properties of web object that are always stored/retrieved from __self (regular JS attibutes), not __data;
+    // `then` is special because, when a promise resolves, .then is checked for another chained promise, so we disallow it as a persisted property
+    static RESERVED = new Set([
+        'then', 'id', '__meta', '__data', '__self', '__proxy', '__cache', '__status', '__ring', '__refresh', '__provisional_id',
+        '__frame', '$frame', '$state'
+    ])
+
+    
     static wrap(target) {
         /* Create a Proxy wrapper around `target` object. */
         return new Proxy(target, {get: this.proxy_get, set: this.proxy_set, deleteProperty: this.proxy_delete})
@@ -109,7 +117,7 @@ class Intercept {
     static _is_special(prop) {
         // `prop` can be a symbol like [Symbol.toPrimitive] instead of a string, or be a reserved property
         // that is always accessed as a regular JS attribute
-        return typeof prop !== 'string' || WebObject.RESERVED.has(prop)
+        return typeof prop !== 'string' || Intercept.RESERVED.has(prop)
     }
 
     static _agent_proxy(target, role, broadcast) {
@@ -249,13 +257,6 @@ export class WebObject {
     })
 
     static SEAL_SEP = '.'
-
-    // properties that are always taken from regular JS attributes of __self and must not be present in __data when saving a web object;
-    // `then` attr is special in JS because when a promise resolves, .then is checked for another chained promise, hence we disallow it as a field
-    static RESERVED = new Set([
-        'then', 'id', '__meta', '__data', '__self', '__proxy', '__cache', '__status', '__ring', '__refresh', '__provisional_id',
-        '__frame', '$frame', '$state'
-    ])
 
     /***
     COMMON properties (stored in __data and persisted to DB):
@@ -407,7 +408,7 @@ export class WebObject {
         return this.__base?.ttl || 0
     }
 
-    get _ttl_ms() { return this.__ttl * 1000 }
+    get __ttl_ms() { return this.__ttl * 1000 }
 
     __ttl_left() {
         /* Remaining time between now and __meta.expire_at, in seconds. Returns a different value on each call, that's why it's not a getter. */
@@ -1026,7 +1027,7 @@ export class WebObject {
 
             // make sure the property name is not missing nor reserved: id, __meta, __self, __proxy, __status, etc.
             if (!prop) throw new ValidationError(`missing property name (${prop === '' ? `''` : prop})`)
-            if (WebObject.RESERVED.has(prop)) throw new ValidationError(`reserved property name ('${prop}')`)
+            if (Intercept.RESERVED.has(prop)) throw new ValidationError(`reserved property name ('${prop}')`)
 
             let type = schema.get(prop)
 
