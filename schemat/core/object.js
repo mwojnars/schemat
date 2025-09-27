@@ -423,8 +423,8 @@ export class WebObject {
     /***  Internal properties  ***/
 
     __self = this   // for direct system-level access to POJO special attributes after proxying
-    __proxy         // Proxy wrapper around this object created during instantiation and used for caching of computed properties
-    __cache         // Map of cached properties: read from __data, imputed, inherited or calculated from getters; ONLY present in immutable object
+    // __proxy      // Proxy wrapper around this object created during instantiation and used for caching of computed properties
+    // __cache      // Map of cached properties: read from __data, imputed, inherited or calculated from getters; ONLY present in immutable object
 
     __meta = {      // special properties grouped here to avoid cluttering the object's interface ...
         // active           set to true after full initialization procedure was completed; implies that full __data is present (newborn or loaded)
