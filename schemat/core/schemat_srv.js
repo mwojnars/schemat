@@ -175,7 +175,7 @@ export class ServerSchemat extends Schemat {
 
     async _purge_registry(iteration = 0, ERASE_TIMEOUT = 5) {
         /* Purge the object cache in the registry. Schedule periodical re-run: the interval is configured
-           in app.cache_purge_interval and may change over time.
+           in app.purge_objects_interval and may change over time.
          */
         if (this.terminating) return
         if (this.debug_mem) this._print(`_purge_registry() app=${this.app} generation=${this._generation}:${iteration}`)
@@ -194,7 +194,7 @@ export class ServerSchemat extends Schemat {
             this._report_memory('@3')
         }
         finally {
-            let interval = (this.app?.cache_purge_interval || 10) * 1000        // [ms]  ... TODO: move cache_purge_interval to cluster/node/config
+            let interval = (this.app?.purge_objects_interval || 10) * 1000      // [ms]  ... TODO: move purge_objects_interval to cluster ??
             setTimeout(() => this._purge_registry(iteration + 1), fluctuate(interval)).unref()
         }
     }

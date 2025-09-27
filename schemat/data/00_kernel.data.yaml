@@ -310,10 +310,15 @@
         and made globally available to the application code via
         `schemat.global.XXX` right after initialization of the application.
       "@": schemat/types/catalog_type.js:CATALOG
-    cache_purge_interval:
+    purge_objects_interval:
       default: 10
-      info: Interval [sec] at which the server-side cache is purged from expired
-        objects. A real number.
+      info: Interval [sec] at which the server-side cache of objects (in Registry) is
+        purged from expired objects. A real number.
+      "@": schemat/types/type.js:NUMBER
+    evict_records_interval:
+      default: 1.0
+      info: Interval [sec] at which the server-side cache of raw records (in Registry)
+        is completely erased. A real number.
       "@": schemat/types/type.js:NUMBER
     eval_allowed:
       default: false

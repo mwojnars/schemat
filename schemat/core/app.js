@@ -35,7 +35,8 @@ export class Application extends WebObject {
     cluster
     webserver
     default_path
-    cache_purge_interval
+    purge_objects_interval
+    evict_records_interval
     eval_allowed
     logger
 
