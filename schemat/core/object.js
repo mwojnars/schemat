@@ -51,11 +51,11 @@ class Intercept {
     // special properties of web object that are always stored/retrieved from __self (regular JS attibutes), not __data;
     // `then` is special because, when a promise resolves, .then is checked for another chained promise, so we disallow it as a persisted property
     static RESERVED = new Set([
-        'then', 'id', '__meta', '__data', '__self', '__proxy', '__cache', '__status', '__ring', '__refresh', '__provisional_id',
-        '__frame', '$frame', '$state'
+        'then', 'id', '__provisional_id', '__meta', '__data', '__self', '__proxy', '__cache', '__status', '__ring', '__refresh',
+        '$frame', '$state'
     ])
 
-    
+
     static wrap(target) {
         /* Create a Proxy wrapper around `target` object. */
         return new Proxy(target, {get: this.proxy_get, set: this.proxy_set, deleteProperty: this.proxy_delete})

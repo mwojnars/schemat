@@ -243,7 +243,7 @@ export class Frame {
     // }
 
     async exec(command, args = [], caller_ctx = schemat.current_context, tx = null, callback = null, _debug = false) {
-        /* Call agent's `command` in tracked mode, in a proper app context (own or caller's) + schemat.tx context + agent.__frame context.
+        /* Call agent's `command` in tracked mode, in a proper app context (own or caller's) + schemat.tx context.
            Send to DB (but do not commit!) any data modifications that were created locally during command execution.
          */
         let {agent, tag} = this
@@ -300,7 +300,7 @@ export class Frame {
     }
 
     _frame_context(agent, call) {
-        // TODO: remove this method
+        // TODO: remove this method, __frame is no longer used
         /* Run call() on `agent` in the context of this frame (agent.__frame/$frame/$state is set up). */
         assert(!this.locked, `starting a call when another one is executing in exclusive lock, internal management of this.locked is flawed :(`)
         assert(agent.$frame === this)
