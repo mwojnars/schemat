@@ -217,7 +217,7 @@ export class ServerSchemat extends Schemat {
     _analyse_object_graph(deep = true, skip_same_gen = true) {
         /* Statistics of a deep graph of links between web objects in Registry and agent frames. For debugging. */
         let pad = (x) => `[${x}]`.padStart(6, ' ')
-        let accept = (obj) => obj?.__data || obj?.__meta.cache
+        let accept = (obj) => obj?.__data || obj?.__cache
         let agents = this.kernel.frames.all().map(f => f.agent)
         let list   = [this._db, /*this._cluster, this._app,*/ ...this.registry.objects.values(), ...agents]
         let objects = new Set(list.filter(accept))

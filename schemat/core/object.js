@@ -39,7 +39,7 @@ const _EMPTY_ARRAY = Object.freeze([])
 class Intercept {
     /* A Proxy wrapper for all kinds of web objects: stubs, newborns, or loaded from DB.
        Makes loaded properties accessible with the `obj.prop` syntax, on top of plain JS attributes.
-       Performs caching of computed properties in target.__meta.cache. Ensures immutability of regular properties.
+       Performs caching of computed properties in target.__cache. Ensures immutability of regular properties.
        Since a Proxy class can't be subclassed, all methods and properties of Intercept are static.
      */
 
@@ -62,7 +62,7 @@ class Intercept {
         if (deep && prop?.includes?.(SUBFIELD))
             return Intercept._get_deep(target, prop, receiver)
 
-        let val, {cache} = target.__meta
+        let val, cache = target.__cache
 
         // try reading the value from `cache` first, return if found
         if ((val = cache?.get(prop)) !== undefined) return val === Intercept.UNDEFINED ? undefined : val
@@ -253,7 +253,7 @@ export class WebObject {
     // properties that are always taken from regular JS attributes of __self and must not be present in __data when saving a web object;
     // `then` attr is special in JS because when a promise resolves, .then is checked for another chained promise, hence we disallow it as a field
     static RESERVED = new Set([
-        'then', 'id', '__meta', '__data', '__self', '__proxy', '__status', '__ring', '__refresh', '__provisional_id',
+        'then', 'id', '__meta', '__data', '__self', '__proxy', '__cache', '__status', '__ring', '__refresh', '__provisional_id',
         '__frame', '$frame', '$state'
     ])
 
@@ -390,8 +390,8 @@ export class WebObject {
         let flat = this.__index_id ? {id: this.__index_id} : {}
         // let flat = {id: this.id, __provisional_id: this.__provisional_id}
         flat = {...flat, ...(this.__data?.encode() || {})}
-        if (Object.keys(this.__meta).length)            // add __meta but only if it's not empty, drop .cache
-            flat.__meta = copy(this.__meta, {drop: 'cache'})
+        if (Object.keys(this.__meta).length)            // add __meta but only if it's not empty
+            flat.__meta = copy(this.__meta)
         return flat
     }
 
@@ -423,8 +423,9 @@ export class WebObject {
 
     /***  Internal properties  ***/
 
-    __proxy         // Proxy wrapper around this object created during instantiation and used for caching of computed properties
     __self = this   // for direct system-level access to POJO special attributes after proxying
+    __proxy         // Proxy wrapper around this object created during instantiation and used for caching of computed properties
+    __cache         // Map of cached properties: read from __data, imputed, inherited or calculated from getters; ONLY present in immutable object
 
     __meta = {      // special properties grouped here to avoid cluttering the object's interface ...
         // active           set to true after full initialization procedure was completed; implies that full __data is present (newborn or loaded)
@@ -434,7 +435,6 @@ export class WebObject {
         // accessed_at      (NOT USED) the most recent timestamp [ms] when this object (if fully loaded) was requested from the Registry via schemat.get_object/get_loaded() or .refresh()
         // mutable          if true, this object can be edited; the edits are accumulated and committed to DB using .save(); this prop CANNOT be changed after construction; editable objects are excluded from server-side caching
         // obsolete         true if this mutable instance got replaced in the transaction's staging area by another one, so doing mutations on it is no longer allowed; max ONE instance per ID can accept mutations at a given time
-        // cache            Map of cached properties: read from __data, imputed, inherited or calculated from getters; ONLY present in immutable object
         // edits            array of edit operations that were reflected in __data so far, for replay on the DB; each edit is a pair: [op, args]
     }
 
@@ -501,7 +501,7 @@ export class WebObject {
         // only on the client this flag can be changed after object creation
         Object.defineProperty(this.__meta, 'mutable', {value: mutable, writable: CLIENT, configurable: false, enumerable: true})
 
-        if (!mutable) this.__meta.cache = new Map()
+        if (!mutable) this.__cache = new Map()
         else if (id) this.__meta.edits = edits || []        // `edits` not needed for newborns because their full __data is transferred to DB upon save()
     }
 
@@ -1428,7 +1428,7 @@ export class WebObject {
 
     _make_mutable() {
         /* Make itself mutable. This removes the property cache, so read access becomes less efficient. Only allowed on client. */
-        delete this.__meta.cache
+        delete this.__cache
         this.__meta.mutable = true
         this.__meta.edits = []
         return this
