@@ -749,7 +749,7 @@ export class WebObject {
         }
 
         // if the property is atomic (non-repeated and non-compound) and an own value is present, skip inheritance to speed up
-        if (!type.is_repeated() && !type.is_CATALOG() && data.has(prop)) {
+        if (!type.is_repeated() && !type.is_compound() && data.has(prop)) {
             let values = data.getAll(prop)
             if (values.length > 1) print(`WARNING: multiple values present for a property declared as unique (${prop} in [${this.id}]), using the first value only`)
             return [values[0]]

@@ -24,8 +24,8 @@ export function is_valid_field_name(name) {
 
 export class Type extends Struct {
 
+    is_compound()    { return false }   // compound types implement custom merge_inherited(), which prevents some optimizations
     is_CATALOG()     { return false }
-    // is_compound() { return this.is_CATALOG() }     // "compound" types implement a custom merge_inherited(), which prevents some optimizations
 
     is_repeated()    { return this.options.repeated }
     is_editable()    { return this.options.editable }
@@ -624,6 +624,7 @@ export class Compound extends Type {
         repeated: false,
         merged:   true,     // values of compound types are merged by default during inheritance rather than replaced or repeated
     }
+    is_compound() { return true }
 }
 
 export class TYPE extends Compound {
