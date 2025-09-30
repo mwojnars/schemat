@@ -188,9 +188,9 @@ export class Type extends Struct {
         if (repeated) return values         // no impute/merge for multivalued attributes: empty array [] is a valid set of values
 
         let value =
-            values.length > 1 ? this.merge_inherited(values, obj, prop) :       // merge if 2+ values
-            values.length > 0 ? values[0] : this._impute(obj, prop)             // impute if no values
-
+            values.length > 1 && merged ? this.merge_inherited(values, obj, prop) :     // merge if 2+ values and merging allowed
+            values.length === 0         ? this._impute(obj, prop) :                     // impute if no values
+                                          values[0]
 
         // // if no value in `arrays`, use impute/getter/default to impute one...
         // let value
