@@ -36,13 +36,16 @@ export class Type extends Struct {
         info     : undefined,       // human-readable description of this type: what values are accepted and how they are interpreted
         class    : undefined,       // if present, all values (except blank) must be instances of this JS class
         initial  : undefined,       // initial value to be proposed in the UI for a newly created element of this type
-        default  : undefined,       // default value to be used for a non-repeated property when no explicit value was provided;
-                                    // since repeated properties behave like lists of varying length, and zero is a valid length,
+        default  : undefined,       // default value to be used for a single-valued property when no explicit value was provided;
+                                    // since multi-valued properties behave like lists of varying length, and zero is a valid length,
                                     // default value is NOT used for them and should be left undefined (TODO: check & enforce this constraint)
 
         blank    : undefined,       // "empty" value that should be treated similar as null and rejected when required=true, like sometimes '' for strings or [] for arrays
         required : undefined,       // if true, the field described by this type must be present and contain a not-null and non-blank value
-        repeated : undefined,       // if true, the field described by this type can have multiple occurrences, typically inside a CATALOG/RECORD/SCHEMA, and
+
+        // single: true
+        // multiple : undefined,
+        repeated : undefined,       // if true, the field described by this type can take on multiple values, typically inside a CATALOG/RECORD/SCHEMA;
                                     // all values (incl. inherited ones) can be retrieved via .field$; note that setting repeated=true has performance impact,
                                     // because inheritance chain must be inspected every time, even when an occurrence was already found in the child object
 
@@ -50,7 +53,7 @@ export class Type extends Struct {
         merged   : undefined,       // if true, and repeated=false, inherited values of this type get merged (merge_inherited()) rather than being replaced with the youngest one;
 
         impute   : undefined,       // a function or method name that should be called to impute the value if missing (f(obj) or obj.f());
-                                    // only called for non-repeated properties, when `default` is undefined and there are no inherited values;
+                                    // only called for single-valued properties, when `default` is undefined and there are no inherited values;
                                     // the function must be synchronous; if the property has value in DB, no imputation is done, unlike with
                                     // a getter method (getter=true) which overshadows all in-DB values simply because the getter occupies the same JS attribute
 

@@ -740,7 +740,7 @@ export class WebObject {
 
         let type =
             prop === '__category'  ? new REF() :
-            prop === '__prototype' ? new REF({inherited: false}) :
+            prop === '__prototype' ? new REF({inherited: false, repeated: true}) :
                                      proxy.__schema.get(prop)
 
         if (!type) {
@@ -748,7 +748,7 @@ export class WebObject {
             return []
         }
 
-        // if the property is atomic (non-repeated and non-compound) and an own value is present, skip inheritance to speed up
+        // if the property is atomic (single-valued and not compound) and an own value is present, skip inheritance to speed up
         if (!type.is_repeated() && !type.is_compound() && data.has(prop)) {
             let values = data.getAll(prop)
             if (values.length > 1) print(`WARNING: multiple values present for a property declared as unique (${prop} in [${this.id}]), using the first value only`)
@@ -819,7 +819,7 @@ export class WebObject {
                 if (this.__category.allow_custom_fields) continue
                 else throw new ValidationError(`unknown property '${prop}' in ${this}`)
 
-            if (locs.length > 1 && !type.options.repeated)      // single-valued property should have no repetitions
+            if (locs.length > 1 && !type.options.repeated)      // single-valued property should have only one value
                 throw new ValidationError(`multiple occurrences of property '${prop}' declared as single-valued in ${this.id}`)
 
             // if (type.options.getter) throw new ValueError(`cannot write to a property marked as a "getter" ('${prop}')`)

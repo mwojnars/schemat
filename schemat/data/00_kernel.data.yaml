@@ -27,7 +27,7 @@
       value_type:
         "@": schemat/types/type.js:GENERIC
       info: Default values for properties of objects in this category. The key cannot
-        be empty. Same key can be repeated.
+        be empty.
       "@": schemat/types/catalog_type.js:CATALOG
     class_name:
       info: Custom internal name for the Class of this category, for debugging. Also
