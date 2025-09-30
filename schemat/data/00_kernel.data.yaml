@@ -316,7 +316,7 @@
         purged from expired objects. A real number.
       "@": schemat/types/type.js:NUMBER
     evict_records_interval:
-      default: 1.0
+      default: 1
       info: Interval [sec] at which the server-side cache of raw records (in Registry)
         is completely erased. A real number.
       "@": schemat/types/type.js:NUMBER

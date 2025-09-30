@@ -181,9 +181,11 @@ export class Type extends Struct {
          */
         let {repeated, merged, default: default_} = this.options
         let values = arrays.flat()          // concatenate the arrays
-        if (repeated) return values         // no imputation/merge for repeated types: empty array [] is a valid set of values
 
-        // if (prop === 'schema') obj._print(`combine_inherited() of '${prop}'`, repeated, merged, values.length)
+        if (default_ !== undefined)
+            values.push(default_)           // include default value, if present, in the list of multiple values, and in the merge
+
+        if (repeated) return values         // no impute/merge for multivalued attributes: empty array [] is a valid set of values
 
         // if no value in `arrays`, use impute/getter/default to impute one...
         let value
@@ -191,7 +193,7 @@ export class Type extends Struct {
 
         // otherwise, perform merging if allowed, or return the youngest value found
         else if (merged) {
-            if (default_ !== undefined) values.push(default_)       // include default value in the merge, if present
+            // if (default_ !== undefined) values.push(default_)       // include default value in the merge, if present
             value = values.length > 1 ? this.merge_inherited(values, obj, prop) : values[0]
         }
         else value = values[0]
@@ -208,10 +210,10 @@ export class Type extends Struct {
 
     _impute(obj, prop) {
         /* Calculate and return the imputed value for an object's property `prop` described by this type.
-           This may run the options.impute() function, or the obj[options.impute] method on the target object,
-           or use obj[prop] if options.getter=true, or return the options.default value.
+           This may run options.impute() function, or obj[options.impute]() method on the target object,
+           or use obj[prop] if options.getter=true, or return options.default value.
          */
-        let {default: default_, impute, getter} = this.options
+        let {impute, getter} = this.options
 
         if (impute) {
             if (typeof impute === 'function') return impute(obj)
@@ -226,7 +228,7 @@ export class Type extends Struct {
             let value = obj[prop]
             if (value !== undefined) return value
         }
-        return default_
+        // return default_
 
         // // safety: when multiple instances read the same (composite) default and one of them tries (incorrectly) to modify it, cloning prevents interference
         // return Struct.clone(default_)
