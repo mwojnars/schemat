@@ -36,10 +36,7 @@ export class Type extends Struct {
         info     : undefined,       // human-readable description of this type: what values are accepted and how they are interpreted
         class    : undefined,       // if present, all values (except blank) must be instances of this JS class
         initial  : undefined,       // initial value to be proposed in the UI for a newly created element of this type
-        default  : undefined,       // default value to be used for a single-valued property when no explicit value was provided;
-                                    // since multi-valued properties behave like lists of varying length, and zero is a valid length,
-                                    // default value is NOT used for them and should be left undefined (TODO: check & enforce this constraint)
-
+        default  : undefined,       // default value of a single-valued property when no explicit value was provided; appended to the list of (multiple) values in case of a multivalued property
         blank    : undefined,       // "empty" value that should be treated similar as null and rejected when required=true, like sometimes '' for strings or [] for arrays
         required : undefined,       // if true, the field described by this type must be present and contain a not-null and non-blank value
 
@@ -214,9 +211,9 @@ export class Type extends Struct {
     }
 
     _impute(obj, prop) {
-        /* Calculate and return the imputed value for an object's property `prop` described by this type.
-           This may run options.impute() function, or obj[options.impute]() method on the target object,
-           or use obj[prop] if options.getter=true, or return options.default value.
+        /* Calculate an imputed value for object's property `prop` as described by this type.
+           This may run options.impute() function; or obj[options.impute]() method on the target object;
+           or read obj[prop] if options.getter=true.
          */
         let {impute, getter} = this.options
 
@@ -233,7 +230,6 @@ export class Type extends Struct {
             let value = obj[prop]
             if (value !== undefined) return value
         }
-        // return default_
 
         // // safety: when multiple instances read the same (composite) default and one of them tries (incorrectly) to modify it, cloning prevents interference
         // return Struct.clone(default_)
