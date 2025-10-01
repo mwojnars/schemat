@@ -50,7 +50,7 @@ export class Type extends Struct {
         merged   : undefined,       // if true, and repeated=false, inherited values of this type get merged (merge_inherited()) rather than being replaced with the youngest one;
 
         impute   : undefined,       // a function or method name that should be called to impute the value if missing (f(obj) or obj.f());
-                                    // only called for single-valued properties, when `default` is undefined and there are no inherited values;
+                                    // only called when `default` is undefined and there are no explicit (inherited) values;
                                     // the function must be synchronous; if the property has value in DB, no imputation is done, unlike with
                                     // a getter method (getter=true) which overshadows all in-DB values simply because the getter occupies the same JS attribute
 
@@ -177,16 +177,16 @@ export class Type extends Struct {
            is also included in the merge. `obj` is an argument to downstream impute().
          */
         let {repeated, merged, default: default_} = this.options
-        let values = arrays.flat()          // concatenate the arrays
+        let values = arrays.flat()                              // concatenate the arrays
 
-        if (default_ !== undefined) values.push(default_)       // include default value, if present, in the list of multiple values, and in the merge
+        if (default_ !== undefined) values.push(default_)       // include default value, if present, even if explicit values exist (!)
 
         if (!values.length) {
             let value = this._impute(obj)                       // use impute() if still no values
             values = (value !== undefined) ? [value] : []
         }
 
-        if (repeated) return values         // no impute/merge for multivalued attributes: empty array [] is a valid set of values
+        if (repeated) return values                             // no merge if multivalued attribute
 
         // single-valued attribute: merge all values, if allowed, or return the first one only
         let value = (values.length > 1 && merged) ? this.merge_inherited(values, obj) : values[0]
