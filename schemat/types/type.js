@@ -47,7 +47,7 @@ export class Type extends Struct {
                                     // because inheritance chain must be inspected every time, even when an occurrence was already found in the child object
 
         inherited: true,            // if false, inheritance is disabled for this field (applied to certain system fields)
-        merged   : undefined,       // if true, and repeated=false, inherited values of this type get merged (merge_inherited()) rather than being replaced with the youngest one;
+        mergeable: undefined,       // if true, and repeated=false, inherited values of this type get merged (merge_inherited()) rather than replaced with the youngest one
 
         impute   : undefined,       // a function or method name that should be called to impute the value if missing (f(obj) or obj.f());
                                     // only called when `default` is undefined and there are no explicit (inherited) values;
@@ -176,7 +176,7 @@ export class Type extends Struct {
            into one, depending on options (repeated, merged). In the latter case, the default value (if present)
            is also included in the merge. `obj` is an argument to downstream impute().
          */
-        let {repeated, merged, default: default_} = this.options
+        let {repeated, mergeable, default: default_} = this.options
         let values = arrays.flat()                              // concatenate the arrays
 
         if (default_ !== undefined) values.push(default_)       // include default value, if present, even if explicit values exist (!)
@@ -189,20 +189,20 @@ export class Type extends Struct {
         if (repeated) return values                             // no merge if multivalued attribute
 
         // single-valued attribute: merge all values, if allowed, or return the first one only
-        let value = (values.length > 1 && merged) ? this.merge_inherited(values, obj) : values[0]
+        let value = (values.length > 1 && mergeable) ? this.merge_inherited(values, obj) : values[0]
         return value !== undefined ? [value] : []
 
         // let value =
-        //     values.length > 1 && merged ? this.merge_inherited(values, obj) :   // merge if 2+ values and merging allowed
-        //     values.length === 0         ? this._impute(obj) :                   // impute if no values
-        //                                   values[0]
+        //     values.length > 1 && mergeable ? this.merge_inherited(values, obj) :   // merge if 2+ values and merging allowed
+        //     values.length === 0            ? this._impute(obj) :                   // impute if no values
+        //                                      values[0]
 
         // // if no value in `arrays`, use impute/getter/default to impute one...
         // let value
         // if (!values.length) value = this._impute(obj)
         //
         // // otherwise, perform merging if allowed, or return the youngest value found
-        // else if (merged) {
+        // else if (mergeable) {
         //     // if (default_ !== undefined) values.push(default_)       // include default value in the merge, if present
         //     value = values.length > 1 ? this.merge_inherited(values, obj) : values[0]
         // }
@@ -635,8 +635,8 @@ export class SHARD extends CUSTOM_OBJECT {
 export class Compound extends Type {
     /* Base class for compound data types: arrays, maps, etc. */
     static options = {
-        repeated: false,
-        merged:   true,     // values of compound types are merged by default during inheritance rather than replaced or repeated
+        repeated:  false,
+        mergeable: true,    // values of compound types are merged by default during inheritance rather than replaced or repeated
     }
     is_compound() { return true }
 }

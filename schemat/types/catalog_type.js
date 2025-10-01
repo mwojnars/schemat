@@ -83,9 +83,9 @@ export class CATALOG extends Compound {
         // 2) "merge":   combine repeated values into one through value_type's custom merging method
         // 3) "replace": take the youngest value per key and ignore all remaining ones
         let merge_values =
-            key_type.options.repeated ? null :
-            value_type.options.merged ? (values) => value_type.merge_inherited(values) :
-                                        (values) => values[0]
+            key_type.options.repeated    ? null :
+            value_type.options.mergeable ? (values) => value_type.merge_inherited(values) :
+                                           (values) => values[0]
 
         // if (prop === 'schema') obj._print(`merge_inherited() of '${prop}'`, merge_values, catalogs.length)
 
