@@ -179,7 +179,7 @@ export class Type extends Struct {
         let {repeated, merged, default: default_} = this.options
         let values = arrays.flat()          // concatenate the arrays
 
-        if (default_ !== undefined) values.push(default_)           // include default value, if present, in the list of multiple values, and in the merge
+        if (default_ !== undefined) values.push(default_)       // include default value, if present, in the list of multiple values, and in the merge
 
         if (!values.length) {
             let value = this._impute(obj, prop)                 // use impute() if still no values
@@ -219,7 +219,7 @@ export class Type extends Struct {
            This may run options.impute() function; or obj[options.impute]() method on the target object;
            or read obj[prop] if options.getter=true.
          */
-        let {impute, getter} = this.options
+        let {impute} = this.options
 
         if (impute) {
             if (typeof impute === 'function') return impute(obj)
@@ -230,10 +230,10 @@ export class Type extends Struct {
             }
             else throw new Error(`incorrect type of 'impute' option (${typeof impute})`)
         }
-        if (getter) {
-            let value = obj[prop]
-            if (value !== undefined) return value
-        }
+        // if (getter) {
+        //     let value = obj[prop]
+        //     if (value !== undefined) return value
+        // }
 
         // // safety: when multiple instances read the same (composite) default and one of them tries (incorrectly) to modify it, cloning prevents interference
         // return Struct.clone(default_)
