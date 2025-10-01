@@ -75,7 +75,7 @@ export class CATALOG extends Compound {
     //     })
     // }
 
-    merge_inherited(catalogs, obj, prop) {
+    merge_inherited(catalogs, obj) {
         let {key_type, value_type} = this.options
 
         // three variants of combining repeated values per key:

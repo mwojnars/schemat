@@ -170,7 +170,7 @@ export class Type extends Struct {
 
     /***  Inheritance & Imputation  ***/
 
-    combine_inherited(arrays, obj, prop) {
+    combine_inherited(arrays, obj) {
         /* Combine arrays of inherited values that match this type, with the youngest value at the *first* position.
            Return an array of values (possibly a singleton array). The arrays are either concatenated, or the values are merged
            into one, depending on options (repeated, merged). In the latter case, the default value (if present)
@@ -182,54 +182,54 @@ export class Type extends Struct {
         if (default_ !== undefined) values.push(default_)       // include default value, if present, in the list of multiple values, and in the merge
 
         if (!values.length) {
-            let value = this._impute(obj, prop)                 // use impute() if still no values
+            let value = this._impute(obj)                       // use impute() if still no values
             values = (value !== undefined) ? [value] : []
         }
 
         if (repeated) return values         // no impute/merge for multivalued attributes: empty array [] is a valid set of values
 
         let value =
-            values.length > 1 && merged ? this.merge_inherited(values, obj, prop) :     // merge if 2+ values and merging allowed
-            // values.length === 0         ? this._impute(obj, prop) :                     // impute if no values
+            values.length > 1 && merged ? this.merge_inherited(values, obj) :       // merge if 2+ values and merging allowed
+            // values.length === 0         ? this._impute(obj) :                    // impute if no values
                                           values[0]
 
         // // if no value in `arrays`, use impute/getter/default to impute one...
         // let value
-        // if (!values.length) value = this._impute(obj, prop)
+        // if (!values.length) value = this._impute(obj)
         //
         // // otherwise, perform merging if allowed, or return the youngest value found
         // else if (merged) {
         //     // if (default_ !== undefined) values.push(default_)       // include default value in the merge, if present
-        //     value = values.length > 1 ? this.merge_inherited(values, obj, prop) : values[0]
+        //     value = values.length > 1 ? this.merge_inherited(values, obj) : values[0]
         // }
         // else value = values[0]
 
         return value !== undefined ? [value] : []
     }
 
-    merge_inherited(objects, obj, prop) {
+    merge_inherited(objects, obj) {
         /* Merge 1+ inherited `objects` matching this type (TODO: check against incompatible inheritance).
            The result may also incorporate the type's imputed value (options.impute()) or default (options.default).
          */
         return objects[0]      // no actual merging by default; override in subclasses
     }
 
-    _impute(obj, prop) {
+    _impute(obj) {
         /* Calculate an imputed value for object's property `prop` as described by this type.
            This may run options.impute() function; or obj[options.impute]() method on the target object;
            or read obj[prop] if options.getter=true.
          */
         let {impute} = this.options
+        if (!impute) return
 
-        if (impute) {
-            if (typeof impute === 'function') return impute(obj)
-            if (typeof impute === 'string') {
-                let method = obj[impute]
-                if (typeof method === 'function') return method.call(obj)
-                if (method !== undefined) throw new Error(`impute option does not point to a method (${impute})`)
-            }
-            else throw new Error(`incorrect type of 'impute' option (${typeof impute})`)
+        if (typeof impute === 'function') return impute(obj)
+        if (typeof impute === 'string') {
+            let method = obj[impute]
+            if (typeof method === 'function') return method.call(obj)
+            if (method !== undefined) throw new Error(`impute option does not point to a method (${impute})`)
         }
+        else throw new Error(`incorrect type of 'impute' option (${typeof impute})`)
+
         // if (getter) {
         //     let value = obj[prop]
         //     if (value !== undefined) return value
