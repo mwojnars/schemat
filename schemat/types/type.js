@@ -179,14 +179,18 @@ export class Type extends Struct {
         let {repeated, merged, default: default_} = this.options
         let values = arrays.flat()          // concatenate the arrays
 
-        if (default_ !== undefined)
-            values.push(default_)           // include default value, if present, in the list of multiple values, and in the merge
+        if (default_ !== undefined) values.push(default_)           // include default value, if present, in the list of multiple values, and in the merge
+
+        if (!values.length) {
+            let value = this._impute(obj, prop)                 // use impute() if still no values
+            values = (value !== undefined) ? [value] : []
+        }
 
         if (repeated) return values         // no impute/merge for multivalued attributes: empty array [] is a valid set of values
 
         let value =
             values.length > 1 && merged ? this.merge_inherited(values, obj, prop) :     // merge if 2+ values and merging allowed
-            values.length === 0         ? this._impute(obj, prop) :                     // impute if no values
+            // values.length === 0         ? this._impute(obj, prop) :                     // impute if no values
                                           values[0]
 
         // // if no value in `arrays`, use impute/getter/default to impute one...

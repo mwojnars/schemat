@@ -720,11 +720,11 @@ export class WebObject {
 
     /***  access to properties  ***/
 
-    _compute_property(prop) {
-        /* Compute a property, `prop`, and return an array of its values. The array consists of own data + inherited
-           (in this order), or just schema default / imputed (if own/inherited are missing).
-           If the schema doesn't allow multiple entries for `prop`, only the first one is included in the result
-           (for atomic types), or the objects (own, inherited & default) get merged altogether (for "mergeable" types like CATALOG).
+    _compute_property(prop) {   // _evaluate/
+        /* Compute an array of all values of a property, `prop`. The array consists of own values + inherited + defaults
+           (in this order), or just an imputed value (if own/inherited are missing). If `prop` is declared as single-valued
+           in schema, only the first value is included in the result (for atomic types), or all values/collections
+           (own & inherited & default) get merged, for "mergeable" types like CATALOG.
          */
         assert(typeof prop === 'string')
 
