@@ -742,41 +742,41 @@ export class MAP extends Type {
 
     static options = {
         class:      Object,                     // class of input objects
-        keys:       new STRING(),               // Type of keys of app-layer dicts
-        values:     generic_type,               // Type of values of app-layer dicts
+        key_type:   new STRING(),               // Type of keys of app-layer dicts
+        value_type: generic_type,               // Type of values of app-layer dicts
     }
 
     collect(assets) {
-        this.options.keys.collect(assets)
-        this.options.values.collect(assets)
+        this.options.key_type.collect(assets)
+        this.options.value_type.collect(assets)
     }
 
     toString() {
         let name = this.constructor.name
-        return `${name}(${this.options.values}, ${this.options.keys})`
+        return `${name}(${this.options.value_type}, ${this.options.key_type})`
     }
 }
 
 export class OBJECTS_MAP extends GENERIC {
     /* Accepts instances of ObjectsMap class. */
     static options = {
-        class:  ObjectsMap,
-        values: generic_type,
+        class:      ObjectsMap,
+        value_type: generic_type,
     }
 
     collect(assets) {
-        this.options.values.collect(assets)
+        this.options.value_type.collect(assets)
     }
 
     _validate(map) {
         map = super._validate(map)
-        let schema = this.options.values
+        let schema = this.options.value_type
         return new ObjectsMap([...map.entries_encoded()].map(([k, v]) => [k, schema.validate(v)]))
     }
 
     toString() {
         let name = this.constructor.name
-        return `${name}(${this.options.values})`
+        return `${name}(${this.options.value_type})`
     }
 }
 
