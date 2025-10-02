@@ -16,13 +16,13 @@ What's new (as compared to traditional web frameworks):
 - schema of application objects is fully stored in DB (Category objects, see 02_app.*.yaml)
   - web interface for schema editing (todo: improve)
   - smooth modifications of the schema in the future; incremental migrations
-  - type attributes: `info`, `repeated`
+  - type attributes: `info`, `multiple`
 - built-in web interface for creating & editing application objects, a la CMS (todo: improve)
 - system URLs: `/$/<id>` -- available out of the box
 - custom URLs: `/books`, `/authors` ??
 - endpoint names in URLs: `::view`, `::inspect`, default endpoint
 - loading objects (`category.list_objects()`, `.load()`)
-- repeated (multi-valued) fields and "plural" property name (`.name$`, `book.author$` vs `book.author`)
+- multivalued fields and "plural" property name (`.name$`, `book.author$` vs `book.author`)
 - versioning ?? (of schema and objects)
 
 

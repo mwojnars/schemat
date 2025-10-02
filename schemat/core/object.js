@@ -740,7 +740,7 @@ export class WebObject {
 
         let type =
             prop === '__category'  ? new REF() :
-            prop === '__prototype' ? new REF({inherited: false, repeated: true}) :
+            prop === '__prototype' ? new REF({inherited: false, multiple: true}) :
                                      proxy.__schema.get(prop)
 
         if (!type) {
@@ -748,15 +748,15 @@ export class WebObject {
             return []
         }
 
+        let {multiple, virtual, alias, inherited} = type.options
+        if (alias) return this._compute_property(alias)
+
         // if the property is atomic (single-valued and not compound) and an own value is present, skip inheritance to speed up
-        if (!type.is_repeated() && !type.is_compound() && data.has(prop)) {
+        if (!multiple && !type.is_compound() && data.has(prop)) {
             let values = data.getAll(prop)
             if (values.length > 1) print(`WARNING: multiple values present for a property declared as unique (${prop} in [${this.id}]), using the first value only`)
             return [values[0]]
         }
-
-        let {alias, virtual, inherited} = type.options
-        if (alias) return this[alias]
 
         let ancestors = inherited && !virtual ? proxy.__ancestors : [proxy]             // `this` included as the first ancestor
         let streams = virtual ? [] : ancestors.map(proto => proto._own_values(prop))    // for virtual property, __data[prop] is not used even if present
@@ -811,7 +811,7 @@ export class WebObject {
                 if (this.__category.allow_custom_fields) continue
                 else throw new ValidationError(`unknown property '${prop}' in ${this}`)
 
-            if (locs.length > 1 && !type.options.repeated)      // single-valued property should have only one value
+            if (locs.length > 1 && !type.options.multiple)      // single-valued property should have only one value
                 throw new ValidationError(`multiple occurrences of property '${prop}' declared as single-valued in ${this.id}`)
 
             if (type.options.virtual) throw new ValidationError(`cannot assign to a virtual property ('${prop}')`)

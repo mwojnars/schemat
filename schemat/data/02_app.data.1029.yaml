@@ -107,7 +107,7 @@
     static error() { throw new Error('Varia/code/error()') }
   schema:
     title:
-      repeated: true
+      multiple: true
       "@": schemat/types/type.js:STRING
     ref:
       "@": schemat/types/type.js:REF
@@ -115,10 +115,10 @@
       strong: true
       "@": schemat/types/type.js:REF
     value_x:
-      repeated: true
+      multiple: true
       "@": schemat/types/type.js:NUMBER
     value_y:
-      repeated: true
+      multiple: true
       "@": schemat/types/type.js:NUMBER
     "@": schemat:Catalog
   __category:

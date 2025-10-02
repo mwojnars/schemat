@@ -34,13 +34,13 @@
         used as an alias when exporting the Class from the category's module.
       "@": schemat/types/type.js:STRING
     class_init:
-      repeated: true
+      multiple: true
       info: Module-level initialization for this category's Javascript class.
         Typically contains import statements and global variables. Precedes the
         Class definition (`class_body`, `views`) in the category's module code.
       "@": schemat/types/type.js:CODE
     class_body:
-      repeated: true
+      multiple: true
       info: Source code of the class (a body without heading) that will be created for
         this category. The class inherits from the `class`, or the class of the
         first base category, or the top-level WebObject.
@@ -142,12 +142,12 @@
       name:
         info: Display name of the object. May contain spaces, punctuation, non-latin
           characters.
-        repeated: true
+        multiple: true
         default: ""
         "@": schemat/types/type.js:STRING
       info:
         info: Description or summary of the object.
-        repeated: true
+        multiple: true
         "@": schemat/types/type.js:TEXT
       id:
         virtual: true
@@ -158,7 +158,7 @@
         "@": schemat/types/type.js:ID
       __cid:
         virtual: true
-        repeated: true
+        multiple: true
         info: Type definition for the special property, `obj.__cid`, which is a getter
           returning ID of the object's __category (if present), or undefined.
         "@": schemat/types/type.js:ID
@@ -166,7 +166,7 @@
         info: Category of this object. Determines its behavior and the schema of its
           properties. Each category itself is an object of the Root Category
           (ID=1).
-        repeated: true
+        multiple: true
         "@": schemat/types/type.js:REF
       __class:
         info: Import path of the JS class ("path/file.js:ClassName") that will be linked
@@ -183,7 +183,7 @@
           not overwritten during inheritance). For example, in this way,
           subcategories inherit individual field schemas from base categories,
           and may add their own fields to the existing ones.
-        repeated: true
+        multiple: true
         inherited: false
         "@": schemat/types/type.js:REF
       __container:
@@ -731,7 +731,7 @@
       "@": schemat/types/type.js:REF
     storage:
       info: "storage type: yaml, json, rocksdb (in the future), ..."
-      repeated: true
+      multiple: true
       "@": schemat/types/type.js:STRING
     keys_start:
       info: The first key of the key range of this block, as a binary vector. Should
@@ -872,7 +872,7 @@
     - id
   fields:
     __cid:
-      repeated: true
+      multiple: true
       "@": schemat/types/type.js:ID
     id:
       "@": schemat/types/type.js:ID

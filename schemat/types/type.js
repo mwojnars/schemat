@@ -27,7 +27,6 @@ export class Type extends Struct {
     is_compound()    { return false }   // compound types implement custom merge_inherited(), which prevents some optimizations
     is_CATALOG()     { return false }
 
-    is_repeated()    { return this.options.repeated }
     is_editable()    { return this.options.editable }
 
     // configuration options: some of them are used internally by the type itself, some others serve as annotations
@@ -40,11 +39,9 @@ export class Type extends Struct {
         blank    : undefined,       // "empty" value that should be treated similar as null and rejected when required=true, like sometimes '' for strings or [] for arrays
         required : undefined,       // if true, the field described by this type must be present and contain a not-null and non-blank value
 
-        // single: true
-        // multiple : undefined,
-        repeated : undefined,       // if true, the field described by this type can take on multiple values, typically inside a CATALOG/RECORD/SCHEMA;
-                                    // all values (incl. inherited ones) can be retrieved via .field$; note that setting repeated=true has performance impact,
-                                    // because inheritance chain must be inspected every time, even when an occurrence was already found in the child object
+        multiple : undefined,       // if true, the field described by this type can take on multiple values, typically inside a CATALOG/RECORD/SCHEMA;
+                                    // all values (incl. inherited ones) can be retrieved via .field$; note that setting multiple=true has performance impact,
+                                    // because inheritance tree must be inspected even when an occurrence was found in the child object
 
         inherited: true,            // if false, inheritance is disabled for this field (applied to certain system fields)
         mergeable: undefined,       // if true, and repeated=false, inherited values of this type get merged (merge_inherited()) rather than replaced with the youngest one
@@ -177,7 +174,7 @@ export class Type extends Struct {
            into one, depending on options (repeated, merged). In the latter case, the default value (if present)
            is also included in the merge. `obj` is an argument to downstream impute().
          */
-        let {repeated, mergeable, default: default_} = this.options
+        let {multiple, mergeable, default: default_} = this.options
         let values = arrays.flat()                              // concatenate the arrays
 
         if (default_ !== undefined) values.push(default_)       // include default value, if present, even if explicit values exist (!)
@@ -187,7 +184,7 @@ export class Type extends Struct {
             values = (value !== undefined) ? [value] : []
         }
 
-        if (repeated) return values                             // no merge if multivalued attribute
+        if (multiple) return values                             // no merge if multivalued attribute
 
         // single-valued attribute: merge all values, if allowed, or return the first one only
         let value = (values.length > 1 && mergeable) ? this.merge_inherited(values, obj) : values[0]
@@ -519,7 +516,7 @@ export class GENERIC extends Type {
 }
 
 // the most generic type for encoding/decoding of objects of any types
-export let generic_type = new GENERIC({repeated: true})
+export let generic_type = new GENERIC({multiple: true})
 
 
 /**********************************************************************************************************************
@@ -636,7 +633,7 @@ export class SHARD extends CUSTOM_OBJECT {
 export class Compound extends Type {
     /* Base class for compound data types: arrays, maps, etc. */
     static options = {
-        repeated:  false,
+        multiple:  false,
         mergeable: true,    // values of compound types are merged by default during inheritance rather than replaced or repeated
     }
     is_compound() { return true }

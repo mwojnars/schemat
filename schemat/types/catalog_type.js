@@ -83,7 +83,7 @@ export class CATALOG extends Compound {
         // 2) "merge":   combine repeated values into one through value_type's custom merging method
         // 3) "replace": take the youngest value per key and ignore all remaining ones
         let merge_values =
-            key_type.options.repeated    ? null :
+            key_type.options.multiple    ? null :
             value_type.options.mergeable ? (values) => value_type.merge_inherited(values) :
                                            (values) => values[0]
 
@@ -99,7 +99,7 @@ export class CATALOG extends Compound {
         for (let key of obj.keys()) key_type.validate(key)
         for (let val of obj.values()) value_type.validate(val)
 
-        if (!key_type.options.repeated) {
+        if (!key_type.options.multiple) {
             let dups = new Set()
             for (let key of obj.keys()) {
                 if (key === undefined || key === null) continue

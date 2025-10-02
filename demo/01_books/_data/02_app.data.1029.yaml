@@ -116,7 +116,7 @@
       "@": schemat/types/type.js:STRING
     author:
       info: Repeat this field to enter multiple authors.
-      repeated: true
+      multiple: true
       category:
         "@": 2102
       "@": schemat/types/type.js:REF
@@ -152,14 +152,14 @@
     nationality:
       "@": schemat/types/type.js:STRING
     notable_work:
-      repeated: true
+      multiple: true
       "@": schemat/types/type.js:STRING
     literary_movement:
       "@": schemat/types/type.js:STRING
     alma_mater:
       "@": schemat/types/type.js:STRING
     award:
-      repeated: true
+      multiple: true
       "@": schemat/types/type.js:STRING
     spouse:
       "@": schemat/types/type.js:STRING
