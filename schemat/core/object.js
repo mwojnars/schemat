@@ -7,7 +7,7 @@
  */
 
 import {ROOT_ID} from '../common/globals.js'
-import {print, assert, T, escape_html, concat, unique, sleep, randint} from '../common/utils.js'
+import {print, assert, T, escape_html, unique, sleep, randint} from '../common/utils.js'
 import {NotLoaded, URLNotFound, ValidationError} from '../common/errors.js'
 import {Catalog, Struct} from '../common/catalog.js'
 import {generic_type, REF} from "../types/type.js"
@@ -134,7 +134,7 @@ export class WebObject {
         // https://en.wikipedia.org/wiki/C3_linearization
         // http://python-history.blogspot.com/2010/06/method-resolution-order.html
         let candidates = this.__prototype$.map(proto => proto.__ancestors)
-        return [this, ...unique(concat(candidates))]
+        return [this, ...unique(candidates.flat())]
     }
 
     get __ancestors_ids() {
@@ -720,7 +720,7 @@ export class WebObject {
 
     /***  access to properties  ***/
 
-    _compute_property(prop) {   // _evaluate/
+    _compute_property(prop) {   // _evaluate/infer/interpolate/resolve/derive
         /* Compute an array of all values of a property, `prop`. The array consists of own values + inherited + defaults
            (in this order), or just an imputed value (if own/inherited are missing). If `prop` is declared as single-valued
            in schema, only the first value is included in the result (for atomic types), or all values/collections
