@@ -134,7 +134,7 @@ export class WebObject {
         // https://en.wikipedia.org/wiki/C3_linearization
         // http://python-history.blogspot.com/2010/06/method-resolution-order.html
         let candidates = this.__prototype$.map(proto => proto.__ancestors)
-        return [this, ...unique(candidates.flat())]
+        return unique([this, ...candidates.flat()])
     }
 
     get __ancestors_ids() {
