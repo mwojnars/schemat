@@ -186,10 +186,10 @@ export class Intercept {
         // write value in __data only IF the `path` is in schema, or the schema is missing (or non-strict) AND the path name is regular
         if (schema?.has(prop) || (!schema?.options.strict && regular)) {
             // if (!target.is_newborn()) print('proxy_set updating:', path)
-            let {alias, getter} = type.options
+            let {alias, virtual} = type.options
 
             if (alias) return receiver[path.replace(prop, alias)] = value
-            // if (getter) throw new Error(`cannot modify a getter property (${prop})`)
+            // if (virtual) throw new Error(`cannot modify a virtual property ('${prop}')`)
 
             if (plural) {
                 if (!(value instanceof Array)) throw new Error(`array expected when assigning to a plural property (${path})`)

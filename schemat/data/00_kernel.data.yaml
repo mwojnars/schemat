@@ -150,14 +150,14 @@
         repeated: true
         "@": schemat/types/type.js:TEXT
       id:
-        getter: true
+        virtual: true
         info: Type definition for the special property `obj.id` (database record ID) of
           every web object. In the database, this property is stored as a record
           key, separately from regular properties which are stored in a record
           value.
         "@": schemat/types/type.js:ID
       __cid:
-        getter: true
+        virtual: true
         repeated: true
         info: Type definition for the special property, `obj.__cid`, which is a getter
           returning ID of the object's __category (if present), or undefined.
@@ -194,13 +194,13 @@
           path is used for the object (/$/id/<id>).
         "@": schemat/types/type.js:REF
       __ident:
-        getter: true
+        virtual: true
         "@": schemat/types/type.js:STRING
       __path:
         impute: _impute__path
         "@": schemat/types/type.js:STRING
       __url:
-        getter: true
+        virtual: true
         "@": schemat/types/type.js:STRING
       __status:
         info: Contains "DELETED" if the corresponding record was deleted from the

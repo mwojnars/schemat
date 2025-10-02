@@ -755,11 +755,11 @@ export class WebObject {
             return [values[0]]
         }
 
-        let {alias, getter, inherited} = type.options
+        let {alias, virtual, inherited} = type.options
         if (alias) return this[alias]
 
-        let ancestors = inherited && !getter ? proxy.__ancestors : [proxy]              // `this` included as the first ancestor
-        let streams = getter ? [] : ancestors.map(proto => proto._own_values(prop))     // for virtual property, __data[prop] is not used even if present
+        let ancestors = inherited && !virtual ? proxy.__ancestors : [proxy]             // `this` included as the first ancestor
+        let streams = virtual ? [] : ancestors.map(proto => proto._own_values(prop))    // for virtual property, __data[prop] is not used even if present
 
         // read `defaults` from the category and combine them with the `streams`
         if (prop !== '__prototype' && prop !== '__category')            // avoid circular dependency for these special props
@@ -814,7 +814,7 @@ export class WebObject {
             if (locs.length > 1 && !type.options.repeated)      // single-valued property should have only one value
                 throw new ValidationError(`multiple occurrences of property '${prop}' declared as single-valued in ${this.id}`)
 
-            // if (type.options.getter) throw new ValueError(`cannot write to a property marked as a "getter" ('${prop}')`)
+            // if (type.options.virtual) throw new ValueError(`cannot assign to a virtual property ('${prop}')`)
 
             try {
                 for (let loc of locs) {
