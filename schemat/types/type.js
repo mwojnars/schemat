@@ -58,13 +58,13 @@ export class Type extends Struct {
                                     // when accessed, the value is generated with a getter, impute(), or default;
                                     // when virtual=true, inheritance is skipped during property calculation like if inherited=false
 
+        alias    : undefined,       // name of a property that this one is an alias for; all reads and writes are redirected to the aliased property; only for top-level properties of web objects
+
         // getter   : undefined,       // if true, the value of the object's corresponding property is imputed from the same-named getter method of the object;
         //                             // similar to impute=true, but does not require explicit function designation, and the function is implemented as a getter which can be more intuitive;
         //                             // although the getter method (if present) hides any persisted value of the property, assigning to the property is *allowed* because the getter method may not be universally present (say, it exists in a subclass, but not in the base class);
         //                             // having a getter alone, without it being explicitly declared as a property with a type, in many cases is good enough, but prevents the property from being used in indexes (missing type definition);
         //                             // this option only has effect for top-level properties of web objects
-
-        alias    : undefined,       // name of a property that this one is an alias for; all reads and writes are redirected to the aliased property; only for top-level properties of web objects
 
         // setter                   // if true, the property's value is never saved in __data nor DB, but passed instead to a setter method, which may write to other props
         // derived
