@@ -80,7 +80,7 @@ export class WebObject {
     __schema                schema of this object's data, as a SCHEMA object
 
     __prototype             direct ancestor (prototype) of this object; there can be multiple __prototype$ for an object
-    __ancestors             array of all ancestors, deduplicated and linearized, with `this` at the first position
+    __ancestors             array of all objects in the inheritance tree, deduplicated and linearized, with `this` at the first position
     __ancestors_ids         a Set of all IDs in the __prototype inheritance chain/graph of this object, including self; for .instanceof() checks
 
     __category              category of this object, as a Category instance; there can be multiple __category$; can be inherited from __prototype$
@@ -782,23 +782,11 @@ export class WebObject {
 
     instanceof(category) {
         /* Check whether this object belongs to `category` or its subcategory.
-           All comparisons along the way use IDs, not object identity. The item must be loaded.
+           All comparisons along the way use IDs, not object identity. The object must be loaded.
         */
-        // TODO: use cachable this.__ancestors_ids instead
         if (!this.is_loaded()) throw new Error(`object ${this} is not loaded, cannot perform instanceof()`)
         return this.__category$.some(cat => cat.__ancestors_ids.has(category.id))
-        // return this.__category$.some(cat => cat.inherits_from(category))
     }
-
-    // inherits_from(parent) {
-    //     /* Return true if `this` inherits from `parent` via __prototype chain (NOT javascript prototypes).
-    //        True if parent==this. All comparisons done by ID.
-    //      */
-    //     if (this.is(parent)) return true
-    //     for (const proto of this.__prototype$)
-    //         if (proto.inherits_from(parent)) return true
-    //     return false
-    // }
 
     validate() {
         /* Check validity of this object's properties before insert/update. */
