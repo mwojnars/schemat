@@ -675,8 +675,8 @@ export class ARRAY extends Compound {
     /* Represents arrays of objects of a given `type` (generic_type by default). */
 
     static options = {
-        type:   generic_type,       // type of all elements in the array, as a Type instance
-        inline: true,               // if true, items are listed on the same line; otherwise, they're separated by <br/>
+        type:   generic_type,       // type of elements in the array, as a Type instance
+        inline: true,               // if true, items are listed on the same line in UI; otherwise, they're separated by <br/>
     }
     static Widget = widgets.ARRAY_Widget
 
@@ -741,9 +741,9 @@ export class MAP extends Type {
     */
 
     static options = {
-        class:      Object,                     // class of input objects
-        key_type:   new STRING(),               // Type of keys of app-layer dicts
-        value_type: generic_type,               // Type of values of app-layer dicts
+        class:      Object,                     // JS class of input objects
+        key_type:   new STRING(),               // Type of keys
+        value_type: generic_type,               // Type of values
     }
 
     collect(assets) {
