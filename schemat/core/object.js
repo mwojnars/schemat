@@ -789,10 +789,14 @@ export class WebObject {
     }
 
     validate() {
-        /* Check validity of this object's properties before insert/update. */
-
+        /* Check that this object satisfies the schema as defined in its __category. All attributes should match
+           their corresponding data types; also, inter-attribute constraints should be satisfied.
+           This method is typically invoked inside data blocks before saving the record to disk,
+           but can also be used on the client to show early warnings when an attribute is invalid.
+         */
         let data = this.__data
         let schema = this.__schema
+        if (!schema) return
 
         // validate each individual property; __data._entries may get directly modified here... (!)
         for (let [prop, locs] of data._keys) {
