@@ -188,8 +188,8 @@ export class Intercept {
             // if (!target.is_newborn()) print('proxy_set updating:', path)
             let {alias, virtual} = type.options
 
+            if (virtual) throw new Error(`cannot modify a virtual property ('${prop}')`)
             if (alias) return receiver[path.replace(prop, alias)] = value
-            // if (virtual) throw new Error(`cannot modify a virtual property ('${prop}')`)
 
             if (plural) {
                 if (!(value instanceof Array)) throw new Error(`array expected when assigning to a plural property (${path})`)

@@ -814,7 +814,7 @@ export class WebObject {
             if (locs.length > 1 && !type.options.repeated)      // single-valued property should have only one value
                 throw new ValidationError(`multiple occurrences of property '${prop}' declared as single-valued in ${this.id}`)
 
-            // if (type.options.virtual) throw new ValueError(`cannot assign to a virtual property ('${prop}')`)
+            if (type.options.virtual) throw new ValidationError(`cannot assign to a virtual property ('${prop}')`)
 
             try {
                 for (let loc of locs) {

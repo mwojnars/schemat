@@ -142,7 +142,7 @@ export class DerivedOperator extends Operator {
             if (!type) throw new Error(`unknown object property '${field}' (not in schema)`)
 
             type = type.clone()
-            type.remove_option('info', 'getter')    // some options are irrelevant for record's schema
+            type.remove_option('info', 'virtual')       // some options are irrelevant for record's schema
 
             entries.push([field, type])
         }
