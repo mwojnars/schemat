@@ -774,7 +774,7 @@ export class WebObject {
         // else if (prop === '__category')
         //     streams.push([schemat.Uncategorized])
 
-        let values = type.combine_inherited(streams, proxy)         // impute/getter/default of the `type` are applied here
+        let values = type.combine_inherited(streams, proxy)             // .default & .impute of `type` are applied here
         return values?.length === 0 ? _EMPTY_ARRAY : values
     }
 

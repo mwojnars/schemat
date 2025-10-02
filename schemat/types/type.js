@@ -54,18 +54,19 @@ export class Type extends Struct {
                                     // the function must be synchronous; if the property has value in DB, no imputation is done, unlike with
                                     // a getter method (getter=true) which overshadows all in-DB values simply because the getter occupies the same JS attribute
 
-        getter   : undefined,       // if true, the value of the object's corresponding property is imputed from the same-named getter method of the object;
-                                    // similar to impute=true, but does not require explicit function designation, and the function is implemented as a getter which can be more intuitive;
-                                    // although the getter method (if present) hides any persisted value of the property, assigning to the property is *allowed* because the getter method may not be universally present (say, it exists in a subclass, but not in the base class);
-                                    // having a getter alone, without it being explicitly declared as a property with a type, in many cases is good enough, but prevents the property from being used in indexes (missing type definition);
-                                    // this option only has effect for top-level properties of web objects
+        // getter   : undefined,       // if true, the value of the object's corresponding property is imputed from the same-named getter method of the object;
+        //                             // similar to impute=true, but does not require explicit function designation, and the function is implemented as a getter which can be more intuitive;
+        //                             // although the getter method (if present) hides any persisted value of the property, assigning to the property is *allowed* because the getter method may not be universally present (say, it exists in a subclass, but not in the base class);
+        //                             // having a getter alone, without it being explicitly declared as a property with a type, in many cases is good enough, but prevents the property from being used in indexes (missing type definition);
+        //                             // this option only has effect for top-level properties of web objects
 
         alias    : undefined,       // name of a property that this one is an alias for; all reads and writes are redirected to the aliased property; only for top-level properties of web objects
 
         // setter                   // if true, the property's value is never saved in __data nor DB, but passed instead to a setter method, which may write to other props
         // derived
 
-        // virtual  : undefined,       // if true, the field is never stored in DB and cannot be directly assigned to, impute() or default value is used instead;
+        // virtual  : undefined,       // if true, the field is never stored in DB and cannot be directly assigned to, but still can be used in indexes (?);
+        //                             // when accessed, the value is calculated with a getter, impute(), or default;
         //                             // when virtual=true, inheritance is skipped during property calculation like if inherited=false
 
         // save_imputed / impute_on_write / explicit / persistent: false  // if true, the imputed value of the field (virtual or regular) is saved to DB to avoid future recalculation or to facilitate indexing
