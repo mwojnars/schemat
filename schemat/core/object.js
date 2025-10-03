@@ -720,7 +720,7 @@ export class WebObject {
 
     /***  access to properties  ***/
 
-    _compute_property(prop) {   // _evaluate/infer/interpolate/resolve/derive
+    _compute_property(prop, own = false) {   // _evaluate/infer/interpolate/resolve/derive
         /* Compute an array of all values of a property, `prop`. The array consists of own values + inherited + defaults
            (in this order), or just an imputed value (if own/inherited are missing). If `prop` is declared as single-valued
            in schema, only the first value is included in the result (for atomic types), or all values/collections
@@ -758,10 +758,11 @@ export class WebObject {
             return [values[0]]
         }
 
-        let ancestors = inherited && !virtual ? proxy.__ancestors : [proxy]             // `this` included as the first ancestor
+        let inherit = inherited && !virtual //&& !own
+        let ancestors = inherit ? proxy.__ancestors : [proxy]                           // `this` included as the first ancestor
         let streams = virtual ? [] : ancestors.map(proto => proto._own_values(prop))    // for virtual property, __data[prop] is not used even if present
 
-        // read `defaults` from the category and combine them with the `streams`
+        // read `defaults` from category and combine them with `streams`
         if (prop !== '__prototype' && prop !== '__category')            // avoid circular dependency for these special props
         {
             let category = proxy.__category

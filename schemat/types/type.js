@@ -38,6 +38,8 @@ export class Type extends Struct {
         default  : undefined,       // default value of a single-valued property when no explicit value was provided; appended to the list of (multiple) values in case of a multivalued property
         blank    : undefined,       // "empty" value that should be treated similar as null and rejected when required=true, like sometimes '' for strings or [] for arrays
         required : undefined,       // if true, the field described by this type must be present and contain a not-null and non-blank value
+        // not_null
+        // not_blank | not_empty
 
         multiple : undefined,       // if true, the field described by this type can take on multiple values, typically inside a CATALOG/RECORD/SCHEMA;
                                     // all values (incl. inherited ones) can be retrieved via .field$; note that setting multiple=true has performance impact,
@@ -144,13 +146,13 @@ export class Type extends Struct {
 
         if (value === undefined) value = null       // undefined is always converted to null
 
-        if (required && (value === null || value === blank))    // null and `blank` are forbidden if required=true
+        if (required && (value == null || value === blank))    // null and `blank` are forbidden if required=true
             throw new ValueError(`expected a non-blank and non-missing value, got '${value}'`)
 
         if (value === null) return null             // null is never passed further to custom _validate()
 
         if (class_ && !(value instanceof class_))
-            throw new ValueError(`expected an instance of ${class_}, got ${value}`)
+            throw new ValueError(`expected instance of ${class_}, got ${value}`)
 
         return this._validate(value)
     }
