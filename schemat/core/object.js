@@ -1249,7 +1249,7 @@ export class WebObject {
     }
 
 
-    /***  "Edit procedures" ("edits") are methods that modify object's __data. They are first applied on the caller;
+    /***  Edit procedures ("edits") are methods that modify object's __data. They are first applied on the caller;
           recorded in __meta.edits; then replayed inside the target DB block where updated record is to be stored.
           Edit methods are synchronous and should not access other web objects.
           !!!  They are called exclusively via this.edit.*()  !!!

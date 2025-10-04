@@ -399,6 +399,7 @@ export class Textual extends Primitive {
     /* Intermediate base class for string-based types: STRING, TEXT, CODE. Provides common widget implementation. */
     static stype = "string"
     static options = {
+        blank:      '',
         initial:    '',
         charset:    undefined,
         // collator                 // optional collator object that defines the sort order and provides a (possibly one-way!) binary encoding for indexing

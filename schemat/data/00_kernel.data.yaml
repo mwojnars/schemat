@@ -886,7 +886,6 @@
         sequence cannot be accessed. For this reason, name is a required
         property.
       required: true
-      blank: ""
       "@": schemat/types/type.js:STRING
     fields:
       info: Names and data types of fields comprising the key and payload of this
