@@ -768,8 +768,8 @@ export class WebObject {
             if (this === category?.__self && prop === 'defaults')       // avoid circular dependency for RootCategory
                 category = undefined
 
-            let defaults = category?.defaults?.getAll(prop)
-            if (defaults?.length) streams.push(defaults)
+            let default_ = category?.defaults?.[prop]
+            if (default_ !== undefined) streams.push([default_])
         }
         // else if (prop === '__category')
         //     streams.push([schemat.Uncategorized])

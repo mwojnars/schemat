@@ -28,7 +28,7 @@
         "@": schemat/types/type.js:GENERIC
       info: Default values for properties of objects in this category. The key cannot
         be empty.
-      "@": schemat/types/catalog_type.js:CATALOG
+      "@": schemat/types/type.js:OBJECT
     class_name:
       info: Custom internal name for the Class of this category, for debugging. Also
         used as an alias when exporting the Class from the category's module.
@@ -229,7 +229,6 @@
           state of this object (from before the last update).
         inherited: false
         "@": schemat/types/type.js:REF
-    "@": schemat:Catalog
   set_version: false
   save_revisions: false
   seal_dependencies: false
@@ -652,7 +651,6 @@
       "@": schemat/types/type.js:INTEGER
   defaults:
     flush_delay: 0.01
-    "@": schemat:Catalog
   __category:
     "@": 1
 - id: 14
@@ -664,7 +662,6 @@
   class: schemat/db/sequence.js:DataSequence
   defaults:
     filled: true
-    "@": schemat:Catalog
   __prototype:
     "@": 13
   __category:
@@ -702,7 +699,6 @@
     fields:
       id:
         "@": schemat/types/type.js:ID
-    "@": schemat:Catalog
   __prototype:
     "@": 24
   __category:
@@ -738,7 +734,6 @@
   defaults:
     concurrent: true
     controller: BLOCKS
-    "@": schemat:Catalog
   class: schemat/db/block.js:Block
   __prototype:
     "@": 29
@@ -763,7 +758,6 @@
       "@": schemat/types/type.js:SHARD
   defaults:
     switch_context: true
-    "@": schemat:Catalog
   class: schemat/db/block.js:DataBlock
   __prototype:
     "@": 18

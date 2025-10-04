@@ -837,7 +837,7 @@ export class Catalog {
         if (__class && !T.isString(__class)) __class = schemat.get_classpath(__class)     // convert __class to a classpath string
 
         // drop __class if it's already defined through category's default (by literal equality of classpath strings)
-        if (__class === __category?.defaults?.get('__class')) __class = undefined
+        if (__class === __category?.defaults?.['__class']) __class = undefined
 
         let props = {...obj, __category, __class}
 
