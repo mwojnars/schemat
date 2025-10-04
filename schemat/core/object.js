@@ -798,7 +798,9 @@ export class WebObject {
         let schema = this.__schema
         if (!schema) return
 
-        // let required = this.__category.required     // names of required properties
+        // check that all required attributes are present in `data`
+        for (let prop of this.__category.required_attrs)
+            if (!data.has(prop)) throw new ValidationError(`missing required property '${prop}' in ${this}`)
 
         // validate each individual property; __data._entries may get directly modified here... (!)
         for (let [prop, locs] of data._keys) {
@@ -814,7 +816,7 @@ export class WebObject {
                 else throw new ValidationError(`unknown property '${prop}' in ${this}`)
 
             if (locs.length > 1 && !type.options.multiple)      // single-valued property should have only one value
-                throw new ValidationError(`multiple occurrences of property '${prop}' declared as single-valued in ${this.id}`)
+                throw new ValidationError(`multiple occurrences of property '${prop}' declared as single-valued in ${this}`)
 
             if (type.options.virtual) throw new ValidationError(`cannot assign to a virtual property ('${prop}')`)
 
