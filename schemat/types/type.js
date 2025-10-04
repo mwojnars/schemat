@@ -147,14 +147,12 @@ export class Type extends Struct {
            Return the processed value, or raise an exception if the value is invalid.
          */
         let {required, class: class_} = this.options
-
-        if (value === undefined) value = null       // undefined is always converted to null
         let blank = this.is_blank(value)
 
         if (required && blank)                      // blank values are forbidden if required=true
             throw new ValueError(`expected a non-blank value, got ${value} instead`)
 
-        if (value === null) return null             // null is never passed further to custom _validate()
+        if (value == null) return null              // undefined converted to null; neither is passed down to _validate()
 
         if (class_ && !(value instanceof class_))
             throw new ValueError(`expected instance of ${class_}, got ${value}`)
