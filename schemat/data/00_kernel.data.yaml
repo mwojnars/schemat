@@ -78,6 +78,7 @@
       value_type:
         "@": schemat/types/type.js:TYPE
       info: Names and data types of properties of objects in this category.
+      default: {}
       "@": schemat/types/type.js:OBJECT
     allow_custom_fields:
       default: false

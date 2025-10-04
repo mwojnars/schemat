@@ -39,9 +39,9 @@ export class Category extends WebObject {
         return schemat.import(this.class)
     }
 
-    get required() {
-        /* List of child attributes that have required=true in `schema`. */
-
+    get required_attrs() {
+        /* List of attributes that have required=true in `schema`. */
+        return Object.entries(this.schema).filter(([_, type]) => type.options.required).map(([attr]) => attr)
     }
 
     // get has_strong_refs() {
