@@ -30,9 +30,8 @@ export class Category extends WebObject {
 
     get child_schema() {
         /* Schema of objects in this category, as a SCHEMA instance. NOT the schema of self (.__schema). */
-        let fields = this.schema //.object()
-        let custom = this.allow_custom_fields
-        return new SCHEMA({fields, strict: custom !== true})
+        let strict = !this.allow_custom_fields
+        return new SCHEMA({fields: this.schema, strict})
     }
 
     get child_class() {
