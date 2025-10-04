@@ -40,6 +40,11 @@ export class Category extends WebObject {
         return schemat.import(this.class)
     }
 
+    get required() {
+        /* List of child attributes that have required=true in `schema`. */
+        
+    }
+
     // get has_strong_refs() {
     //     /* Check if child_schema contains any REF objects with ref.options.strong=true. */
     //     let refs = []
