@@ -30,7 +30,7 @@ export class Category extends WebObject {
 
     get child_schema() {
         /* Schema of objects in this category, as a SCHEMA instance. NOT the schema of self (.__schema). */
-        let fields = this.schema.object()
+        let fields = this.schema //.object()
         let custom = this.allow_custom_fields
         return new SCHEMA({fields, strict: custom !== true})
     }
@@ -42,7 +42,7 @@ export class Category extends WebObject {
 
     get required() {
         /* List of child attributes that have required=true in `schema`. */
-        
+
     }
 
     // get has_strong_refs() {
@@ -67,7 +67,7 @@ export class Category extends WebObject {
 
     async _init_schema() {
         // initialize Type objects inside `schema`; in particular, TypeWrapper requires explicit async initialization to load sublinked items
-        let fields = this.__data.get('schema') || []
+        let fields = Object.values(this.__data.get('schema') || {})
         let calls  = fields.map(type => type.init()).filter(res => res instanceof Promise)
         assert(!calls.length, 'TypeWrapper shall not be used for now')
         if (calls.length) return Promise.all(calls)
@@ -228,8 +228,8 @@ export class RootCategory extends Category {
 
     get child_schema() {
         /* In RootCategory, this == this.__category, and to avoid infinite recursion we must perform schema inheritance manually. */
-        let root_fields = this.__data.get('schema')
-        let default_fields = this.__data.get('defaults').get('schema')
+        let root_fields = Object.entries(this.__data.get('schema'))
+        let default_fields = Object.entries(this.__data.get('defaults').get('schema'))
         let fields = new Catalog([...root_fields, ...default_fields])
         let custom = this.__data.get('allow_custom_fields')
         return new SCHEMA({fields: fields.object(), strict: custom !== true})

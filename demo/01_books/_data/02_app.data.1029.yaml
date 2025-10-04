@@ -138,7 +138,6 @@
       "@": schemat/types/type.js:NUMBER
     cover_image:
       "@": schemat/types/type.js:URL
-    "@": schemat:Catalog
   __category:
     "@": 1
 - id: 2102
@@ -165,7 +164,6 @@
       "@": schemat/types/type.js:STRING
     bio:
       "@": schemat/types/type.js:TEXT
-    "@": schemat:Catalog
   __category:
     "@": 1
 - id: 2103

@@ -120,7 +120,6 @@
     value_y:
       multiple: true
       "@": schemat/types/type.js:NUMBER
-    "@": schemat:Catalog
   __category:
     "@": 1
 - id: 2102

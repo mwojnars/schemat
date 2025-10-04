@@ -138,7 +138,7 @@ export class DerivedOperator extends Operator {
         let entries = []
         for (let field of fields) {     // find out the type of every field to build a catalog of {field: type} pairs
             field = drop_plural(field)
-            let type = schema.get(field)
+            let type = schema[field]
             if (!type) throw new Error(`unknown object property '${field}' (not in schema)`)
 
             type = type.clone()

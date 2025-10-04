@@ -124,7 +124,6 @@ export class WebObject {
 
     get __schema() {
         return this.__category?.child_schema || new SCHEMA_GENERIC()
-               // new SCHEMA_GENERIC({fields: schemat.root_category['defaults.schema']?.object() || {}})
     }
 
     get __proto_versions() { return this.__prototype$.map(proto => proto.__ver || 0) }      // DRAFT
