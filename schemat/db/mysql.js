@@ -74,7 +74,7 @@ export class MySQL extends DataBlock {
 
     _convert(row, category) {
         /* Clean and convert a `row` of data to JSON string compatible with the category's schema. */
-        let schema = category.__child_schema
+        let schema = category.child_schema
         let keys   = Object.keys(row)
         for (let key of keys) if (!schema.isValidKey(key)) delete row[key]     // drop DB fields with no corresponding category field
         row['__category'] = {'@': category.id}

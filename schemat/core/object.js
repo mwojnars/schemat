@@ -123,7 +123,7 @@ export class WebObject {
     }
 
     get __schema() {
-        return this.__category?.__child_schema || new SCHEMA_GENERIC()
+        return this.__category?.child_schema || new SCHEMA_GENERIC()
                // new SCHEMA_GENERIC({fields: schemat.root_category['defaults.schema']?.object() || {}})
     }
 

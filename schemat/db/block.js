@@ -844,7 +844,7 @@ export class DataBlock extends Block {
          */
         if (!prev) return
         // if (!prev.__category.has_strong_refs) return
-        // TODO: check if prev.__category.__child_schema has any strong REFs at all (via a cached getter) to avoid traversing __data if possible
+        // TODO: check if prev.__category.child_schema has any strong REFs at all (via a cached getter) to avoid traversing __data if possible
 
         // traverse prev.__data and collect strong references as [path, ref, type] triples
         let prev_refs = prev.collect_typed((ref, type) => ref instanceof WebObject && ref.id && type.is_strong?.())
