@@ -799,6 +799,8 @@ export class WebObject {
         let schema = this.__schema
         if (!schema) return
 
+        // let required = this.__category.required     // names of required properties
+
         // validate each individual property; __data._entries may get directly modified here... (!)
         for (let [prop, locs] of data._keys) {
 

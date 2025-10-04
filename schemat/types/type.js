@@ -38,21 +38,13 @@ export class Type extends Struct {
         default  : undefined,       // default value of a single-valued property when no explicit value was provided; appended to the list of (multiple) values in case of a multivalued property
 
         required : undefined,       // if true, the attribute/field described by this type must be present (not undefined)
-        not_blank: true,            // if true, null and blank values (type.is_blank(val)) are rejected, but missing values are still accepted unless required=true
+        not_blank: true,            // if true, the value must be not-null and not-blank (type.is_blank(val)); missing values are accepted unless required=true
         // blank_as : undefined,       // if defined, its value (typically, `null`) is used as a replacement for blank values
         // null_as  : undefined,       // if defined, its value (typically, something like "") is used as a replacement for null values
 
         multiple : undefined,       // if true, the field described by this type can take on multiple values, typically inside a CATALOG/RECORD/SCHEMA;
                                     // all values (incl. inherited ones) can be retrieved via .field$; note that setting multiple=true has performance impact,
                                     // because inheritance tree must be inspected even when an occurrence was found in the child object
-
-        // not_null  ==  value required, but can be blank  .. "required"
-        // not_blank ==  if value present, it must be non-blank (missing allowed)
-        // no_blank
-        // nullable
-        // required:  false, 'not-null', 'not-blank', true (!null && !blank)  ... each option assumes value != undefined
-        // in html forms:  "required" means not-undefined + not-null + not-blank (strict semantics)
-        // ... but in forms, there's no undefined/null value anyway, which suggests "not_blank" is a better-suited option
 
         inherited: true,            // if false, inheritance is disabled for this field (applied to certain system fields)
         mergeable: undefined,       // if true, and repeated=false, inherited values of this type get merged (merge_inherited()) rather than replaced with the youngest one
