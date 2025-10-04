@@ -36,11 +36,7 @@ export class Type extends Struct {
         class    : undefined,       // if present, all values (except blank) must be instances of this JS class
         initial  : undefined,       // initial value to be proposed in the UI for a newly created element of this type
         default  : undefined,       // default value of a single-valued property when no explicit value was provided; appended to the list of (multiple) values in case of a multivalued property
-        blank    : undefined,       // "empty" value that should be treated similar as null and rejected when required=true, like sometimes '' for strings or [] for arrays
         required : undefined,       // if true, the field described by this type must be present and contain a not-null and non-blank value
-        // not_null
-        // not_blank | not_empty
-
         multiple : undefined,       // if true, the field described by this type can take on multiple values, typically inside a CATALOG/RECORD/SCHEMA;
                                     // all values (incl. inherited ones) can be retrieved via .field$; note that setting multiple=true has performance impact,
                                     // because inheritance tree must be inspected even when an occurrence was found in the child object
@@ -138,16 +134,25 @@ export class Type extends Struct {
 
     /***  Validation of values  ***/
 
+    is_blank(value) {
+        /* Returns true if `value` is "empty", that is, it should be treated similar as null
+           and rejected when required=true, like sometimes '' for strings or [] for arrays.
+           By default, only `null` is treated as blank. Subclasses may override this behavior.
+        */
+        return value == null
+    }
+
     validate(value) {
         /* Validate an object/value to be encoded, clean it up and convert to a canonical form if needed.
            Return the processed value, or raise an exception if the value is invalid.
          */
-        let {blank, required, class: class_} = this.options
+        let {required, class: class_} = this.options
 
         if (value === undefined) value = null       // undefined is always converted to null
+        let blank = this.is_blank(value)
 
-        if (required && (value == null || value === blank))    // null and `blank` are forbidden if required=true
-            throw new ValueError(`expected a non-blank and non-missing value, got '${value}'`)
+        if (required && blank)                      // blank values are forbidden if required=true
+            throw new ValueError(`expected a non-blank value, got ${value} instead`)
 
         if (value === null) return null             // null is never passed further to custom _validate()
 
@@ -399,11 +404,14 @@ export class Textual extends Primitive {
     /* Intermediate base class for string-based types: STRING, TEXT, CODE. Provides common widget implementation. */
     static stype = "string"
     static options = {
-        blank:      '',
         initial:    '',
         charset:    undefined,
         // collator                 // optional collator object that defines the sort order and provides a (possibly one-way!) binary encoding for indexing
         // charcase: false,         // 'upper'/'lower' - only upper/lower case characters allowed
+    }
+
+    is_blank(value) {
+        return value == null || value === ''
     }
 
     _validate(str) {
