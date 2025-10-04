@@ -1249,13 +1249,10 @@ export class WebObject {
     }
 
 
-    /***  Individual edits. Should be called via this.edit.*().
-          Edits are methods that manipulate directly on object's __data. They are first applied on the caller (client);
-          recorded in __meta.edits; then replayed in the DB block on origin server for permanent update in the database.
-          New edit methods can be added in subclasses:
-          - they must be synchronous;
-          - they must NOT access the content of other web objects except the one being mutated;
-          - they must NOT modify their arguments as the same args may need to be sent later from client to DB.
+    /***  "Edit procedures" ("edits") are methods that modify object's __data. They are first applied on the caller;
+          recorded in __meta.edits; then replayed inside the target DB block where the updated record is to be stored.
+          Edit methods are synchronous and should NOT access the content of other web objects except the one being mutated.
+          Called exclusively via this.edit.*().
      ***/
 
     'edit.touch'() {}
@@ -1271,7 +1268,7 @@ export class WebObject {
         this.__data.insert(path, pos, key, value)
     }
 
-    'edit.unset'(path) {
+    'edit.unset'(path) {    // edit.delete?
         /* Remove a property or nested element from a sub-catalog/map/array. */
         this.__data.delete(path)
     }

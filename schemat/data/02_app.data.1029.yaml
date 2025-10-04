@@ -99,7 +99,7 @@
     "@": 8
 - id: 2101
   name: Varia
-  info: Category of items that do not belong to any specific category.
+  info: Sample category.
   class_body: >-
     static check() { import('/$/local/schemat/common/utils.js').then(mod =>
     console.log("Varia.code: imported ", mod)) }
