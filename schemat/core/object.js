@@ -1231,7 +1231,7 @@ export class WebObject {
 
         obj.__data && obj._apply_edits(edit)    // __data is not present in editable "remote" objects, but appending to `edits` is enough there
         obj.__meta.edits?.push(edit)            // `edits` is not present in newborns, but editing __data is enough there
-        return obj
+        // return obj
     }
 
     _apply_edits(...edits) {
