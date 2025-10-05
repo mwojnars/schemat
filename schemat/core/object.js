@@ -1168,11 +1168,13 @@ export class WebObject {
            Can be called on client and server alike.
          */
         let obj = this
-        return new Proxy({}, {
+        let proxy = new Proxy({}, {
             get(target, name) {
-                if (typeof name === 'string') return (...args) => obj._make_edit(name, ...args)
+                // when _make_edit() has no return value, `proxy` is returned for chained edits
+                if (typeof name === 'string') return (...args) => obj._make_edit(name, ...args) ?? proxy
             }
         })
+        return proxy
     }
 
     get_mutable() {
@@ -1258,9 +1260,6 @@ export class WebObject {
           !!!  They are called exclusively via this.edit.*()  !!!
      ***/
 
-    'edit.touch'() {}
-        /* No change. Used to enforce a rewrite of the database record, for debugging, etc. */
-
     'edit.set'(path, value) {
         /* Set value of a property or nested element inside a sub-catalog/map/array. */
         this.__data.set(path, value)
@@ -1311,6 +1310,16 @@ export class WebObject {
         assert(this.__ver, 'missing version number in the object')
         this.edit.if_version(this.__ver)
     }
+
+    'edit.touch'() {}
+        /* No change. Used to enforce a rewrite of the database record, for debugging, etc. */
+
+    'edit.save'() {
+        /* Special "edit" that is not a real edit, but calls async save(). Returns a Promise unlike every proper edit. */
+        return this.save()
+    }
+
+
 
     // TODO: implement equivalents of MongoDB's operators:
     //
