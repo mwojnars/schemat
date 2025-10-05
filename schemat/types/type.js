@@ -152,7 +152,7 @@ export class Type extends Struct {
         if (not_blank && blank)                     // blank values are forbidden if required=true
             throw new ValueError(`expected a non-blank value`)
 
-        if (value == null) return null              // undefined converted to null; neither is passed down to _validate()
+        if (value == null) return null              // null is never passed down to _validate()
 
         if (class_ && !(value instanceof class_))
             throw new ValueError(`expected instance of ${class_}, got ${value}`)
@@ -704,6 +704,8 @@ export class OBJECT extends Compound {
        collections of named attributes. During inheritance, OBJECT-type objects are merged by default,
        with younger attributes overriding the same-named older ones.
      */
+    is_blank(obj) { return Object.keys(obj).length === 0 }
+
     _validate(obj) {
         obj = super._validate(obj)
         if (!T.isPlain(obj)) throw new ValueError(`expected a plain object (no custom class), got ${obj}`)

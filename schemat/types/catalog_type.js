@@ -52,6 +52,8 @@ export class CATALOG extends Compound {
             throw new ValidationError(`data type of keys must be an instance of STRING or its subclass, not ${key_type}`)
     }
 
+    is_blank(catalog) { return catalog.size === 0 }
+
     collect(assets) {
         this.options.key_type.collect(assets)
         this.options.value_type.collect(assets)
