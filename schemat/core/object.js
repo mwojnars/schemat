@@ -1165,13 +1165,17 @@ export class WebObject {
 
     get edit() {
         /* Triggers of edit operations: obj.edit.X(...args) invokes obj._make_edit('edit.X', ...args).
+           Edit operations can be chained and async save() can be called at the end: obj.edit.X().Y().Z().save()
            Can be called on client and server alike.
          */
         let obj = this
         let proxy = new Proxy({}, {
             get(target, name) {
                 // when _make_edit() has no return value, `proxy` is returned for chained edits
-                if (typeof name === 'string') return (...args) => obj._make_edit(name, ...args) ?? proxy
+                if (typeof name === 'string') return (...args) => {
+                    if (name === 'save') return obj.save(...args)
+                    return obj._make_edit(name, ...args) ?? proxy
+                }
             }
         })
         return proxy
@@ -1313,11 +1317,6 @@ export class WebObject {
 
     'edit.touch'() {}
         /* No change. Used to enforce a rewrite of the database record, for debugging, etc. */
-
-    'edit.save'() {
-        /* Special "edit" that is not a real edit, but calls async save(). Returns a Promise unlike every proper edit. */
-        return this.save()
-    }
 
 
 
