@@ -800,7 +800,7 @@ export class WebObject {
 
         // check that all required attributes are present in `data`
         for (let prop of this.__category.required_attrs)
-            if (!data.has(prop)) throw new ValidationError(`missing required property '${prop}' in ${this}`)
+            if (data.get(prop) === undefined) throw new ValidationError(`missing required property '${prop}' in ${this}`)
 
         // validate each individual property; __data._entries may get directly modified here... (!)
         for (let [prop, locs] of data._keys) {
