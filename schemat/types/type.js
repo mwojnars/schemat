@@ -135,9 +135,9 @@ export class Type extends Struct {
     is_blank(value) {
         /* Returns true if `value` is "empty", that is, it should be treated similar as null
            and rejected when required=true, like sometimes '' for strings or [] for arrays.
-           By default, only `null` is treated as blank. Subclasses may override this behavior.
+           Subclasses may override this behavior. No need to test against `null`, it is always treated as blank.
         */
-        return value == null
+        return false
     }
 
     validate(value) {
@@ -408,9 +408,7 @@ export class Textual extends Primitive {
         // charcase: false,         // 'upper'/'lower' - only upper/lower case characters allowed
     }
 
-    is_blank(value) {
-        return value == null || value === ''
-    }
+    is_blank(value) { return value === '' }
 
     _validate(str) {
         str = super._validate(str)
@@ -687,14 +685,15 @@ export class ARRAY extends Compound {
     }
     static Widget = widgets.ARRAY_Widget
 
+    is_blank(arr)   { return arr?.length === 0 }
     child(key)      { return this.options.type }
     collect(assets) { this.options.type.collect(assets) }
     toString()      { return `${this.constructor.name}(${this.options.type})` }
 
-    _validate(value) {
-        value = super._validate(value)
-        if (!Array.isArray(value)) throw new ValueError(`expected an array, got ${typeof value}`)
-        return value.map(elem => this.options.type.validate(elem))
+    _validate(arr) {
+        arr = super._validate(arr)
+        if (!Array.isArray(arr)) throw new ValueError(`expected an array, got ${typeof arr}`)
+        return arr.map(elem => this.options.type.validate(elem))
     }
 }
 
