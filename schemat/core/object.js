@@ -1261,9 +1261,9 @@ export class WebObject {
     'edit.touch'() {}
         /* No change. Used to enforce a rewrite of the database record, for debugging, etc. */
 
-    'edit.set'(path, ...values) {
+    'edit.set'(path, value) {
         /* Set value of a property or nested element inside a sub-catalog/map/array. */
-        this.__data.set(path, ...values)
+        this.__data.set(path, value)
     }
 
     'edit.set_at'(path, pos, key, value) {
@@ -1292,7 +1292,7 @@ export class WebObject {
         this.__data.set(path, value + delta)
     }
 
-    'edit.overwrite'(data) {
+    'edit.overwrite'(data) {    // replace
         /* Replace the entire set of own properties, __data, with a new object. */
         if (typeof data === 'string') data = Catalog.load(data)
         assert(data instanceof Catalog)

@@ -187,7 +187,7 @@ export class SCHEMA_GENERIC extends SCHEMA {
  */
 
 export class CatalogTable extends Component {
-    /* React component that displays a Catalog in a tabular form. */
+    /* React component that displays a Catalog/Map/POJO object in tabular form. */
 
     static css_class = "CATALOG"
     static css_file  = import.meta.resolve('./catalog.css')
