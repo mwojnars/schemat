@@ -150,7 +150,7 @@ export class Type extends Struct {
         let blank = (value == null) || this.is_blank(value)
 
         if (not_blank && blank)                     // blank values are forbidden if required=true
-            throw new ValueError(`expected a non-blank value, got ${value} instead`)
+            throw new ValueError(`expected a non-blank value`)
 
         if (value == null) return null              // undefined converted to null; neither is passed down to _validate()
 
