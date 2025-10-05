@@ -1174,7 +1174,8 @@ export class WebObject {
                 // when _make_edit() has no return value, `proxy` is returned for chained edits
                 if (typeof name === 'string') return (...args) => {
                     if (name === 'save') return obj.save(...args)
-                    return obj._make_edit(name, ...args) ?? proxy
+                    obj._make_edit(name, ...args)
+                    return proxy
                 }
             }
         })
