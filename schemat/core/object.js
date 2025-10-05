@@ -1303,17 +1303,17 @@ export class WebObject {
         this.__data = data
     }
 
-    'edit.if_version'(ver) {
+    'edit.assert_version'(ver) {
         /* Only apply the remaining edits if __ver on the server is equal `ver`. */
         if (this.__ver !== ver) throw new Error(`object has changed`)
     }
 
     add_version_check() {
-        /* Insert `edit.if_version` operation to the stream of edits to make sure that the version hasn't changed on the server
+        /* Insert `edit.assert_version` operation to the stream of edits to make sure that the version hasn't changed on the server
            in the meantime. Here, __ver is the client-side version number.
          */
         assert(this.__ver, 'missing version number in the object')
-        this.edit.if_version(this.__ver)
+        this.edit.assert_version(this.__ver)
     }
 
     'edit.touch'() {}
