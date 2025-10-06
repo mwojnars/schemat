@@ -10,7 +10,7 @@ import {assert, print, T} from "../common/utils.js";
 import {Catalog, Struct} from "../common/catalog.js";
 
 import {WebObject} from "./object.js";
-import {SCHEMA} from "../types/catalog_type.js";
+import {SCHEMA} from "../types/type.js";
 import {ReactPage, CategoryInspectView} from "../web/pages.js"
 import {JsonGET} from "../web/services.js"
 import {mWebObjects} from "../web/messages.js"

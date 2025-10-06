@@ -1,10 +1,11 @@
-import {A} from '../web/react-utils.js'
+import {A, cl, DIV, st} from '../web/react-utils.js'
 import {assert, print, T} from '../common/utils.js'
 import {ValidationError, NotImplemented, ValueError} from '../common/errors.js'
 import {encode_uint, decode_uint, encode_int, decode_int} from "../common/binary.js";
 import {ObjectsMap, Shard} from "../common/structs.js";
 import {Catalog, Struct} from "../common/catalog.js";
 import * as widgets from './widgets.js'
+import {Component} from "../web/component.js";
 
 let CatalogTable = import('./catalog_type.js').then(mod => {CatalogTable = mod.CatalogTable})
 
@@ -847,6 +848,7 @@ export class VARIANT extends Type {
 }
 
 
+/**********************************************************************************************************************/
 
 export class RECORD extends Dictionary {
     /* Accepts objects containing predefined fields, like in a database record. Each field may have its own type,
@@ -867,6 +869,47 @@ export class RECORD extends Dictionary {
             type.collect(assets)
         super.collect(assets)
     }
+}
+
+
+export class SCHEMA extends RECORD {
+    /* Type specification for WebObject.__data. Only instantiated locally as `obj.__schema`, not intended for other uses.
+       Not used anywhere in the database.
+     */
+
+    static options = {
+        fields: {},         // plain object with field names and their types; null means that a default data type should be used for a given field
+        strict: true,       // if true, only fields listed in `fields` are allowed; generic_type is assumed for other fields otherwise
+    }
+
+    has(key) { return !!this.options.fields[key] }      // true if `key` is EXPLICITLY declared here as a valid field
+    get(key) { return this.options.fields[key] || (!this.options.strict && generic_type) || undefined }
+
+    subtype(key) {
+        let {fields, strict} = this.options
+        if (strict && !fields.hasOwnProperty(key))
+            throw new ValidationError(`unknown field "${key}", expected one of [${Object.getOwnPropertyNames(fields)}]`)
+        return fields[key] || generic_type
+    }
+    collect(assets) {
+        for (let type of this._types())
+            type.collect(assets)
+        CatalogTable.collect(assets)
+    }
+    _types() {
+        /* List of all types that may occur inside this collection. */
+        let types = Object.values(this.options.fields)
+        if (!this.options.strict) types.push(generic_type)
+        return [...new Set(types)]
+    }
+
+    // isValidKey(key) {return is_valid_field_name(key) && (!this.options.strict || Object.hasOwn(this.options.fields, key))}
+}
+
+
+export class SCHEMA_GENERIC extends SCHEMA {
+    /* Generic SCHEMA used when there's no category/schema for a web object. All field names are allowed, their type is `generic_type`. */
+    static options = {strict: false}
 }
 
 

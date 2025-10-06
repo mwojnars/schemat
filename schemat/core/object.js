@@ -10,8 +10,7 @@ import {ROOT_ID} from '../common/globals.js'
 import {print, assert, T, escape_html, unique, sleep, randint} from '../common/utils.js'
 import {NotLoaded, URLNotFound, ValidationError} from '../common/errors.js'
 import {Catalog, Struct} from '../common/catalog.js'
-import {generic_type, REF} from "../types/type.js"
-import {SCHEMA_GENERIC} from "../types/catalog_type.js"
+import {generic_type, REF, SCHEMA_GENERIC} from "../types/type.js"
 import {Intercept} from "./inter.js";
 
 import {html_page} from "../web/adapters.js"
