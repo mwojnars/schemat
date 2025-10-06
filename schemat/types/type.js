@@ -714,6 +714,18 @@ export class Dictionary extends Compound {
     is_dictionary() { return true }
     child(key)      { return this.options.value_type }     // type of values at `key`; subclasses should throw an exception or return undefined if `key` is not allowed
     valid_keys()    {}
+
+    collect(assets) {
+        this.options.key_type.collect(assets)
+        this.options.value_type.collect(assets)
+        super.collect(assets)
+    }
+
+    toString() {
+        let name = this.constructor.name
+        let {key_type, value_type} = this.options
+        return T.ofType(key_type, FIELD) ? `${name}(${value_type})` : `${name}(${key_type} > ${value_type})`
+    }
 }
 
 export class OBJECT extends Dictionary {
@@ -762,7 +774,7 @@ export class VARIANT extends Type {
     }
 }
 
-export class MAP extends Type {
+export class MAP extends Dictionary {
     /*
     Accepts plain objects as data values, or objects of a given `type`.
     Outputs an object with keys and values encoded through their own type.

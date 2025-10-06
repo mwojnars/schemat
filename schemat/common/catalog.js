@@ -428,11 +428,12 @@ export class Catalog {
 
 
     constructor(entries) {
-        /* Optional `entries` is an iterable that yields [key, value] pairs, or a Catalog, or a plain object (POJO)
+        /* Optional `entries` is an iterable that yields [key, value] pairs, or a Catalog/Map, or a plain object (POJO)
            whose own attributes are to be extracted.
          */
         if (entries == null) return this.init()
         if (entries instanceof Catalog) return this.init(entries._entries)
+        if (entries instanceof Map) return this.init([...entries.entries()])
         if (T.isPOJO(entries)) entries = Object.entries(entries)
         else if (!Array.isArray(entries)) throw new Error(`argument of incorrect type for Catalog.constructor(): ${entries}`)
         return this.init(entries, true)

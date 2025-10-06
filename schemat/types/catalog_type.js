@@ -35,8 +35,6 @@ export class CATALOG extends Dictionary {
 
     static options = {
         class:          Catalog,
-        key_type:       new FIELD(),                // type of keys in the catalog; must be an instance of STRING or its subclass
-        value_type:     generic_type,               // type of values in the catalog
         initial:        () => new Catalog(),
     }
 
@@ -48,18 +46,6 @@ export class CATALOG extends Dictionary {
     }
 
     is_blank(catalog) { return catalog.size === 0 }
-
-    collect(assets) {
-        this.options.key_type.collect(assets)
-        this.options.value_type.collect(assets)
-        CatalogTable.collect(assets)            // CatalogTable is the widget used to display catalogs in the UI
-    }
-
-    toString() {
-        let name = this.constructor.name
-        let {key_type, value_type} = this.options
-        return T.ofType(key_type, FIELD) ? `${name}(${value_type})` : `${name}(${key_type} > ${value_type})`
-    }
 
     // find(path = null) {
     //     /* Return a (nested) type at a given `path`, or `this` if `path` is empty.
