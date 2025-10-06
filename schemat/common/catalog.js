@@ -210,11 +210,19 @@ export class Struct {
             target.clear()
             entries.forEach(e => target.set(...e))
         }
+        else if (T.isPlain(target)) {
+            if (!(prev in target)) throw new Error(`key not found: ${prev}`)
+            const value = target[prev]
+            delete target[prev]
+            target[key] = value
+        }
         else throw new Error(`cannot set key of: ${target}`)
     }
 
     static insert(target, pos, key, ...values) {
+        if (!values.length) return
         let N = Struct.sizeOf(target)
+        
         if (pos < 0) pos = N + pos
         if (pos < 0 || pos > N) throw new Error(`invalid insert position (${pos})`)
 
@@ -241,6 +249,15 @@ export class Struct {
         }
         else if (target instanceof Array)
             target.splice(pos, 0, key, ...values)
+
+        else if (T.isPlain(target)) 
+            if (pos === N) target[key] = values[0]
+            else {
+                let entries = Object.entries(target)
+                Object.keys(target).forEach(k => delete target[k])  // clear the object
+                entries.splice(pos, 0, [key, values[0]])            // insert new entry
+                entries.forEach(([k, v]) => target[k] = v)          // rebuild object
+            }
     }
 
     static delete(target, path) {
