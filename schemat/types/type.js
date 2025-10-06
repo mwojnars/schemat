@@ -709,7 +709,11 @@ export class TYPE extends Compound {
     }
 }
 
-/**********************************************************************************************************************/
+/**********************************************************************************************************************
+ **
+ **  DICTIONARY-like types
+ **
+ */
 
 export class Dictionary extends Compound {
     /* Base class for dictionary-like compound types: OBJECT, MAP, CATALOG. */
@@ -822,13 +826,72 @@ export class OBJECTS_MAP extends GENERIC {  // TODO: extends Dictionary
     }
 }
 
-// CATALOG, SCHEMA -- located in a separate file
+// CATALOG located in a separate file
 
 
-//*********************************************************************************************************************/
-//
-// The classes below are NOT USED ...
-//
+/**********************************************************************************************************************
+ **
+ **  RECORD-like types
+ **
+ */
+
+export class RECORD extends Dictionary {
+    /* Accepts objects containing predefined fields, like in a database record. Each field may have its own type,
+       unlike in a MAP/CATALOG/OBJECT, where all values share the same type.
+    */
+    static options = {
+        fields: {},         // POJO dictionary of field names and their types, {field: type}
+        strict: true,       // if true, only fields listed in `fields` are allowed; generic_type is assumed for other fields otherwise
+    }
+
+    has(key) { return !!this.options.fields[key] }      // true if `key` is EXPLICITLY declared here as a valid field
+    get(key) { return this.options.fields[key] || (!this.options.strict && generic_type) || undefined }
+
+    subtype(key) {
+        let {fields, strict} = this.options
+        if (strict && !fields.hasOwnProperty(key))
+            throw new ValidationError(`unknown field "${key}", expected one of [${Object.getOwnPropertyNames(fields)}]`)
+        return fields[key] || generic_type
+    }
+
+    get_fields({editable = true} = {}) {
+        let fields = Object.getOwnPropertyNames(this.options.fields)
+        fields = fields.filter(f => this.options.fields[f].is_editable())       // only keep user-editable fields
+        return fields.sort()
+    }
+
+    get_types() {
+        /* List of all types that may occur inside this collection. */
+        let types = Object.values(this.options.fields)
+        if (!this.options.strict) types.push(generic_type)
+        return [...new Set(types)]
+    }
+
+    collect(assets) {
+        for (let type of this.get_types())
+            type.collect(assets)
+        super.collect(assets)
+    }
+}
+
+
+export class SCHEMA extends RECORD {
+    /* Type specification for WebObject.__data, instantiated locally as `obj.__schema`, not intended for other uses. */
+    // isValidKey(key) {return is_valid_field_name(key) && (!this.options.strict || Object.hasOwn(this.options.fields, key))}
+}
+
+
+export class SCHEMA_GENERIC extends SCHEMA {
+    /* Generic SCHEMA used when schema for a web object is missing. All field names are allowed, their type is `generic_type`. */
+    static options = {strict: false}
+}
+
+
+/**********************************************************************************************************************
+ **
+ **  Classes below are NOT USED ...
+ **
+ */
 
 export class ENUM extends Type {      // CHOICE
     /* Primitive value selected from a list of predefined choices. */
@@ -845,71 +908,6 @@ export class VARIANT extends Type {
     static options = {
         types: {},          // POJO dictionary of variant names and their types, {name: type}
     }
-}
-
-
-/**********************************************************************************************************************/
-
-export class RECORD extends Dictionary {
-    /* Accepts objects containing predefined fields, like in a database record. Each field may have its own type,
-       unlike in a MAP/CATALOG/OBJECT, where all values share the same type.
-    */
-    static options = {
-        fields: {},         // POJO dictionary of field names and their types, {field: type}
-    }
-
-    get_fields({editable = true} = {}) {
-        let fields = Object.getOwnPropertyNames(this.options.fields)
-        fields = fields.filter(f => this.options.fields[f].is_editable())       // only keep user-editable fields
-        return fields.sort()
-    }
-
-    collect(assets) {
-        for (let type of Object.values(this.options.fields))
-            type.collect(assets)
-        super.collect(assets)
-    }
-}
-
-
-export class SCHEMA extends RECORD {
-    /* Type specification for WebObject.__data. Only instantiated locally as `obj.__schema`, not intended for other uses.
-       Not used anywhere in the database.
-     */
-
-    static options = {
-        fields: {},         // plain object with field names and their types; null means that a default data type should be used for a given field
-        strict: true,       // if true, only fields listed in `fields` are allowed; generic_type is assumed for other fields otherwise
-    }
-
-    has(key) { return !!this.options.fields[key] }      // true if `key` is EXPLICITLY declared here as a valid field
-    get(key) { return this.options.fields[key] || (!this.options.strict && generic_type) || undefined }
-
-    subtype(key) {
-        let {fields, strict} = this.options
-        if (strict && !fields.hasOwnProperty(key))
-            throw new ValidationError(`unknown field "${key}", expected one of [${Object.getOwnPropertyNames(fields)}]`)
-        return fields[key] || generic_type
-    }
-    collect(assets) {
-        for (let type of this._types())
-            type.collect(assets)
-        CatalogTable.collect(assets)
-    }
-    _types() {
-        /* List of all types that may occur inside this collection. */
-        let types = Object.values(this.options.fields)
-        if (!this.options.strict) types.push(generic_type)
-        return [...new Set(types)]
-    }
-
-    // isValidKey(key) {return is_valid_field_name(key) && (!this.options.strict || Object.hasOwn(this.options.fields, key))}
-}
-
-
-export class SCHEMA_GENERIC extends SCHEMA {
-    /* Generic SCHEMA used when there's no category/schema for a web object. All field names are allowed, their type is `generic_type`. */
-    static options = {strict: false}
 }
 
 
