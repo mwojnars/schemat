@@ -75,16 +75,14 @@ export class CATALOG extends Dictionary {
 
     _validate(obj) {
         obj = super._validate(obj)
+        let {key_type} = this.options
 
-        let {key_type, value_type} = this.options
-        for (let key of obj.keys()) key_type.validate(key)
-        for (let val of obj.values()) value_type.validate(val)
-
+        // if multiple values are disallowed, check that every key occurs only once
         if (!key_type.options.multiple) {
             let dups = new Set()
             for (let key of obj.keys()) {
                 if (key === undefined || key === null) continue
-                if (dups.has(key)) throw new ValidationError(`duplicate key (${key})`)
+                if (dups.has(key)) throw new ValidationError(`duplicate key (${key}) in a catalog marked as single-valued`)
                 dups.add(key)
             }
         }

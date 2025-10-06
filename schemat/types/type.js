@@ -709,11 +709,9 @@ export class Dictionary extends Compound {
     static options = {
         key_type:       new FIELD(),                // type of keys; must be an instance of STRING or its subclass
         value_type:     generic_type,               // type of values
-        // initial:        () => new Catalog(),
     }
 
     get Widget()    { return CatalogTable }
-
     is_dictionary() { return true }
     child(key)      { return this.options.value_type }     // type of values at `key`; subclasses should throw an exception or return undefined if `key` is not allowed
     valid_keys()    {}
@@ -728,6 +726,14 @@ export class Dictionary extends Compound {
         let name = this.constructor.name
         let {key_type, value_type} = this.options
         return T.ofType(key_type, FIELD) ? `${name}(${value_type})` : `${name}(${key_type} > ${value_type})`
+    }
+
+    _validate(obj) {
+        obj = super._validate(obj)
+        let {key_type, value_type} = this.options
+        for (let key of obj.keys()) key_type.validate(key)
+        for (let val of obj.values()) value_type.validate(val)
+        return obj
     }
 }
 
