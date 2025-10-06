@@ -143,7 +143,9 @@ export class Struct {
          */
         let [step, ...rest] = path
         if (!rest.length) return Struct._set(target, step, ...values)
+        
         let obj, modified
+        let _numkey = (typeof step === 'number')
 
         if (target instanceof Catalog)
             for (let loc of target.locs(step)) {
@@ -154,17 +156,19 @@ export class Struct {
                 return target
             }
         else if (target instanceof Map) {
+            if (_numkey) step = [...target.keys()][step]
             modified = Struct.set(target.get(step), rest, ...values)
             return target.set(step, modified)
         }
         else if (target instanceof Array) {
-            if (typeof step !== 'number') throw new FieldPathNotFound()
+            if (!_numkey) throw new FieldPathNotFound()
             modified = Struct.set(target[step], rest, ...values)
             target[step] = modified
             return target
         }
         else if (target && typeof target === 'object' && !(target instanceof schemat.WebObject)) {
             let state = getstate(target)
+            if (_numkey) step = Object.keys(state)[step]
             modified = Struct.set(state[step], rest, ...values)
             state[step] = modified
             return state === target ? target : setstate(target.constructor, state)
@@ -176,18 +180,21 @@ export class Struct {
         /* Set the value of `key` entry in the `target` collection or object. No deep paths, no recursion into nested collections. */
         if (!values.length) return
         if (target instanceof Catalog) return target._set(key, ...values)
+
         if (values.length > 1) throw new Error(`cannot set multiple values (${values.length}) for key (${key}) in a non-catalog`)
+        let _numkey = (typeof key === 'number')
 
         if (target instanceof Map) {
-            if (typeof key === 'number') key = [...target.entries()][key][0]
+            if (_numkey) key = [...target.keys()][key]
             return target.set(key, values[0])
         }
         if (target instanceof Array) {
-            if (typeof key !== 'number') throw new FieldPathNotFound(`not an array index (${key}), cannot set a value inside an Array`)
+            if (!_numkey) throw new FieldPathNotFound(`not an array index (${key}), cannot set a value inside an Array`)
             target[key] = values[0]
             return target
         }
         if (target && typeof target === 'object' && !(target instanceof schemat.WebObject)) {
+            if (_numkey) key = Object.keys(target)[key]
             let state = getstate(target)
             state[key] = values[0]
             return state === target ? target : setstate(target.constructor, state)
@@ -261,6 +268,7 @@ export class Struct {
     }
 
     static delete(target, path) {
+        // if (path[0] !== '__meta') print(`Struct.delete(${path})`, {path})
         if (!target || !path.length) return 0
         let [step, ...rest] = path
 
@@ -272,14 +280,18 @@ export class Struct {
             for (let pos of locs.toReversed()) target._delete(pos)
             return locs.length
         }
-        if (target instanceof Map)
+        if (target instanceof Map) {
+            if (typeof step === 'number') step = [...target.keys()][step]
             return rest.length ? Struct.delete(target.get(step), rest) : Number(target.delete(step))
+        }
 
         if (target instanceof Array) {
             if (typeof step !== 'number') return 0
             return rest.length ? Struct.delete(target[step], rest) : target.splice(step, 1).length
         }
         if (T.isPlain(target)) {
+            if (typeof step === 'number') step = Object.keys(target)[step]
+            // print(`Struct.delete() isPlain()`, {target, step, rest})
             if (!target.hasOwnProperty(step)) return 0
             if (rest.length) return Struct.delete(target[step], rest)
             delete target[step]
