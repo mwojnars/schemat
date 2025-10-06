@@ -20,10 +20,8 @@ import {WebRequest} from "../web/request.js"
 import {ReactPage, InspectView} from "../web/pages.js"
 import {Service} from "../web/services.js";
 
-let RootCategory
-
-// due to circular dependency between object.js and category.js, RootCategory must be imported with dynamic import() and NOT awaited:
-import("./category.js").then(module => {RootCategory = module.RootCategory})
+// due to circular dependency between object.js and category.js, RootCategory must be imported with dynamic import() and NOT awaited
+let RootCategory = import("./category.js").then(mod => {RootCategory = mod.RootCategory})
 
 // shared immutable array, used in WebObject's property cache to avoid keeping separate arrays of dozens of empty .xyz$ plural attributes across multiple objects
 const _EMPTY_ARRAY = Object.freeze([])

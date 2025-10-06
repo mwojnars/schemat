@@ -6,6 +6,9 @@ import {ObjectsMap, Shard} from "../common/structs.js";
 import {Catalog, Struct} from "../common/catalog.js";
 import * as widgets from './widgets.js'
 
+let CatalogTable = import('./catalog_type.js').then(mod => {CatalogTable = mod.CatalogTable})
+
+
 // import { Temporal } from './libs/js-temporal/polyfill.js'
 // print('Temporal:', Temporal)  -- improved data struct for date/time handling
 
@@ -715,6 +718,10 @@ export class OBJECT extends Compound {
     merge_inherited(dicts) {
         return Object.assign({}, ...dicts.toReversed())
     }
+
+    // get Widget() {
+    //
+    // }
 }
 
 // CATALOG, SCHEMA -- located in a separate file
