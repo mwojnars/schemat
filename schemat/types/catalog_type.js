@@ -1,7 +1,7 @@
 import {ValidationError} from "../common/errors.js";
 import {T, assert, trycatch, concat, mapEntries} from "../common/utils.js";
 import {Catalog} from '../common/catalog.js'
-import {FIELD, STRING, Compound, generic_string, generic_type, is_valid_field_name} from "./type.js";
+import {FIELD, STRING, Dictionary, generic_string, generic_type, is_valid_field_name} from "./type.js";
 
 import {cl, e, st, FRAGMENT, I, DIV, NBSP, OPTION, SELECT, useState} from "../web/react-utils.js";
 import {MaterialUI} from "../web/resources.js";
@@ -15,7 +15,7 @@ import {TextualWidget} from "./widgets.js";
  **
  */
 
-export class CATALOG extends Compound {
+export class CATALOG extends Dictionary {
     /*
     Data type of objects of the Catalog class or its subclass.
     Validates each `value` of a catalog's entry through a particular "child" type, which may depend
@@ -31,8 +31,6 @@ export class CATALOG extends Compound {
     - keys not allowed (what about labels then?)
      */
 
-    is_CATALOG() { return true }
-
     static get Widget() { return CatalogTable }
 
     static options = {
@@ -41,9 +39,6 @@ export class CATALOG extends Compound {
         value_type:     generic_type,               // type of values in the catalog
         initial:        () => new Catalog(),
     }
-
-    child(key)   { return this.options.value_type }     // type of values of a `key`; subclasses should throw an exception or return undefined if `key` is not allowed
-    valid_keys() { return undefined }
 
     constructor(options = {}) {
         super(options)
@@ -338,6 +333,8 @@ export class CatalogTable extends Component {
         let expand = {state: empty && 'empty' || folded && 'folded' || 'expanded', toggle}
         let key    = this.key(entry, type?.options.info, ops, expand)
 
+        if (T.isPlain(subcat)) subcat = new Catalog(subcat)
+
         return FRAGMENT(
             DIV(cl('entry-head'), {key: 'head'},
                 DIV(cl('cell cell-key'), key, folded ? null : st({borderRight:'none'})),
@@ -401,13 +398,13 @@ export class CatalogTable extends Component {
             })
         },
 
-        initKey: (pos, key, catalogSchema) => {
+        initKey: (pos, key, main_type) => {
             /* Confirm creation of a new entry with a given key; assign an ID to it.
                Store an initial value of a key after new entry creation.
-               `catalogSchema` is a SCHEMA of a parent catalog, for checking if `key` is valid or not.
+               `main_type` can be a SCHEMA of a parent catalog (if at top level), for checking if `key` is valid or not.
              */
 
-            let type = trycatch(() => catalogSchema.child(key))
+            let type = trycatch(() => main_type.child(key))
             if (key !== undefined && !type) {                  // verify if `key` name is allowed by the parent catalog
                 alert(`The name "${key}" for a key is not permitted.`)
                 key = undefined
@@ -427,7 +424,7 @@ export class CatalogTable extends Component {
                 let id  = Math.max(...ids.filter(Number.isInteger)) + 1     // IDs are needed internally as keys in React subcomponents
                 prev[pos] = {id, key, value}
 
-                if (type.is_CATALOG()) item.edit.set_at(path, pos, key, value).save()
+                if (type.is_dictionary()) item.edit.set_at(path, pos, key, value).save()
                 else prev[pos].saveNew = (value) =>
                     item.edit.set_at(path, pos, key, value).save().then(() => unnew())
 
@@ -446,7 +443,7 @@ export class CatalogTable extends Component {
         /* If `start_color` is undefined, the same `color` is used for all rows. */
 
         assert(catalog instanceof Catalog)
-        assert(type?.is_CATALOG(), `type ${type} is not a CATALOG`)
+        assert(type.is_dictionary(), `expected a dictionary-like compound type, got ${type}`)
 
         let getColor = pos => start_color ? 1 + (start_color + pos - 1) % 2 : color
 
@@ -475,7 +472,7 @@ export class CatalogTable extends Component {
             ops.updateValue = val => run.updateValue(pos, val, vschema)
 
             let props   = {item, path: [...path, pos], entry, type: vschema, color, ops}
-            let row     = e(vschema?.is_CATALOG() ? this.EntrySubcat : this.EntryAtomic, props)
+            let row     = e(vschema?.is_dictionary() ? this.EntrySubcat : this.EntryAtomic, props)
             return DIV(cl(`entry entry${color}`), {key: entry.id}, row)
         })
 
@@ -491,5 +488,14 @@ export class CatalogTable extends Component {
     }
 
     render()    { return e(this.Main, this.props) }
+}
+
+
+export class ObjectCatalogTable extends CatalogTable {
+    render() {
+        let {catalog} = this.props
+        catalog = new Catalog(catalog)      // `catalog` must be converted from POJO to Catalog
+        return e(this.Main, {...this.props, catalog})
+    }
 }
 

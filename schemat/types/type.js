@@ -6,7 +6,7 @@ import {ObjectsMap, Shard} from "../common/structs.js";
 import {Catalog, Struct} from "../common/catalog.js";
 import * as widgets from './widgets.js'
 
-let CatalogTable = import('./catalog_type.js').then(mod => {CatalogTable = mod.CatalogTable})
+let ObjectCatalogTable = import('./catalog_type.js').then(mod => {ObjectCatalogTable = mod.ObjectCatalogTable})
 
 
 // import { Temporal } from './libs/js-temporal/polyfill.js'
@@ -28,6 +28,7 @@ export function is_valid_field_name(name) {
 export class Type extends Struct {
 
     is_compound()    { return false }   // compound types implement custom merge_inherited(), which prevents some optimizations
+    is_dictionary()  { return false }
     is_CATALOG()     { return false }
 
     is_editable()    { return this.options.editable }
@@ -700,7 +701,22 @@ export class ARRAY extends Compound {
     }
 }
 
-export class OBJECT extends Compound {
+/**********************************************************************************************************************/
+
+export class Dictionary extends Compound {
+    /* Base class for dictionary-like compound types. */
+
+    static options = {
+        key_type:       new FIELD(),                // type of keys; must be an instance of STRING or its subclass
+        value_type:     generic_type,               // type of values
+        // initial:        () => new Catalog(),
+    }
+    is_dictionary() { return true }
+    child(key)      { return this.options.value_type }     // type of values at `key`; subclasses should throw an exception or return undefined if `key` is not allowed
+    valid_keys()    {}
+}
+
+export class OBJECT extends Dictionary {
     /* Accept plain JavaScript objects (POJO or null-prototype objects) used as data containers (dictionaries).
        The objects must *not* belong to any class other than Object.
        This type can be used as a replacement for MAP or CATALOG when a simpler data structure is needed for holding
@@ -719,9 +735,7 @@ export class OBJECT extends Compound {
         return Object.assign({}, ...dicts.toReversed())
     }
 
-    // get Widget() {
-    //
-    // }
+    get Widget() { return ObjectCatalogTable }
 }
 
 // CATALOG, SCHEMA -- located in a separate file
