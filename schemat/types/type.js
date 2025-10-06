@@ -731,6 +731,7 @@ export class Dictionary extends Compound {
     }
 }
 
+
 export class OBJECT extends Dictionary {
     /* Accept plain JavaScript objects (POJO or null-prototype objects) used as data containers (dictionaries).
        The objects must *not* belong to any class other than Object.
@@ -738,6 +739,9 @@ export class OBJECT extends Dictionary {
        collections of named attributes. During inheritance, OBJECT-type objects are merged by default,
        with younger attributes overriding the same-named older ones.
      */
+    static options = {
+        initial: () => {return {}},
+    }
     is_blank(obj) { return Object.keys(obj).length === 0 }
 
     _validate(obj) {
@@ -746,8 +750,23 @@ export class OBJECT extends Dictionary {
         return obj
     }
 
-    merge_inherited(dicts) {
-        return Object.assign({}, ...dicts.toReversed())
+    merge_inherited(objects) {
+        return Object.assign({}, ...objects.toReversed())
+    }
+}
+
+
+export class MAP extends Dictionary {
+    /* Data type for instances of the Map class. */
+
+    static options = {
+        class:      Map,
+        initial:    () => new Map(),
+    }
+    is_blank(obj) { return obj?.size === 0 }
+
+    merge_inherited(maps) {
+        return new Map([...maps.toReversed()].flatMap(map => [...map.entries()]))
     }
 }
 
@@ -772,30 +791,6 @@ export class VARIANT extends Type {
      */
     static options = {
         choices: {},            // plain object interpreted as a dictionary of choices, {choice-name: type-definition}
-    }
-}
-
-export class MAP extends Dictionary {
-    /*
-    Accepts plain objects as data values, or objects of a given `type`.
-    Outputs an object with keys and values encoded through their own type.
-    If no type is provided, `generic_type` is used as a default for values, or STRING() for keys.
-    */
-
-    static options = {
-        class:      Object,                     // JS class of input objects
-        key_type:   new STRING(),               // Type of keys
-        value_type: generic_type,               // Type of values
-    }
-
-    collect(assets) {
-        this.options.key_type.collect(assets)
-        this.options.value_type.collect(assets)
-    }
-
-    toString() {
-        let name = this.constructor.name
-        return `${name}(${this.options.value_type}, ${this.options.key_type})`
     }
 }
 

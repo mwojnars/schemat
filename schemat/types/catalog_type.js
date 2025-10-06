@@ -43,7 +43,7 @@ export class CATALOG extends Dictionary {
             throw new ValidationError(`data type of keys must be an instance of STRING or its subclass, not ${key_type}`)
     }
 
-    is_blank(catalog) { return catalog.size === 0 }
+    is_blank(catalog) { return catalog?.size === 0 }
 
     // find(path = null) {
     //     /* Return a (nested) type at a given `path`, or `this` if `path` is empty.
@@ -317,7 +317,7 @@ export class CatalogTable extends Component {
         let expand = {state: empty && 'empty' || folded && 'folded' || 'expanded', toggle}
         let key    = this.key(entry, type?.options.info, ops, expand)
 
-        if (T.isPlain(subcat)) subcat = new Catalog(subcat)
+        if (!(subcat instanceof Catalog)) subcat = new Catalog(subcat)
 
         return FRAGMENT(
             DIV(cl('entry-head'), {key: 'head'},
