@@ -777,6 +777,13 @@ export class MAP extends Dictionary {
     }
     is_blank(obj) { return obj?.size === 0 }
 
+    _validate(obj) {
+        obj = super._validate(obj)
+        if (obj instanceof Catalog) return new Map(obj)             // auto-convert Catalogs to Maps
+        if (T.isPlain(obj)) return new Map(Object.entries(obj))     // auto-convert POJOs to Maps
+        return obj
+    }
+
     merge_inherited(maps) {
         return new Map([...maps.toReversed()].flatMap(map => [...map.entries()]))
     }

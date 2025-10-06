@@ -77,6 +77,8 @@ export class CATALOG extends Dictionary {
         obj = super._validate(obj)
         let {key_type} = this.options
 
+        if (obj instanceof Map) return new Catalog(obj)      // auto-convert Maps to Catalogs
+
         // if multiple values are disallowed, check that every key occurs only once
         if (!key_type.options.multiple) {
             let dups = new Set()
