@@ -208,25 +208,32 @@ export class Struct {
     }
 
     static rename(target, prev, key) {
-        /* Change the key from `prev` to `key` of the corresponding entry in the `target` collection. */
+        /* Change name of key from `prev` to `key` in the corresponding entry of the `target` collection.
+           Preserve the order of entries.
+         */
+        let _numkey = (typeof prev === 'number')
+        if (_numkey && prev < 0) prev += Struct.sizeOf(target)
+
         if (target instanceof Catalog) {
-            let pos = (typeof prev === 'string') ? target.loc(prev) : prev
-            if (T.isNullish(pos)) throw new Error(`key (${prev}) not found`)
+            let pos = _numkey ? prev : target.loc(prev)
+            if (pos == null) throw new Error(`key not found (${prev})`)
             target._rename(pos, key)
         }
         else if (target instanceof Map) {
             let entries = [...target.entries()]
-            let pos = (typeof prev === 'number') ? prev : entries.findIndex(e => e[0] === prev)
-            if (pos === -1) throw new Error(`key (${prev}) not found`)
+            let pos = _numkey ? prev : entries.findIndex(e => e[0] === prev)
+            if (pos < 0) throw new Error(`key not found (${prev})`)
             entries[pos] = [key, entries[pos][1]]
             target.clear()
             entries.forEach(e => target.set(...e))
         }
         else if (T.isPlain(target)) {
-            if (!(prev in target)) throw new Error(`key not found: ${prev}`)
-            const value = target[prev]
-            delete target[prev]
-            target[key] = value
+            let entries = Object.entries(target)
+            let pos = _numkey ? prev : entries.findIndex(([k]) => k === prev)
+            if (pos < 0) throw new Error(`key not found (${prev})`)
+            entries[pos][0] = key
+            Object.keys(target).forEach(k => delete target[k])  // clear the object
+            entries.forEach(([k, v]) => target[k] = v)          // rebuild object with updated key
         }
         else throw new Error(`cannot set key of: ${target}`)
     }
@@ -235,7 +242,7 @@ export class Struct {
         if (!values.length) return
         let N = Struct.sizeOf(target)
         
-        if (pos < 0) pos = N + pos
+        if (pos < 0) pos += N
         if (pos < 0 || pos > N) throw new Error(`invalid insert position (${pos})`)
 
         if (target instanceof Catalog)
