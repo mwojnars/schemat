@@ -92,13 +92,15 @@ export class Struct {
     /***  Static methods for use with different data structures  ***/
 
     static isCollection(obj) {
-        return obj instanceof Catalog || obj instanceof Map || obj instanceof Array || obj instanceof Struct
+        // plain objects treated as collections (dicts)
+        return obj instanceof Catalog || obj instanceof Map || obj instanceof Array || obj instanceof Struct || T.isPlain(obj)
     }
 
     static sizeOf(target) {
         if (target instanceof Catalog) return target.length
         if (target instanceof Map) return target.size
         if (target instanceof Array) return target.length
+        if (T.isPlain(target)) return Object.keys(target).length
         throw new Error(`not a collection: ${target}`)
     }
 
@@ -260,12 +262,19 @@ export class Struct {
             if (typeof step !== 'number') return 0
             return rest.length ? Struct.delete(target[step], rest) : target.splice(step, 1).length
         }
+        if (T.isPlain(target)) {
+            if (!target.hasOwnProperty(step)) return 0
+            if (rest.length) return Struct.delete(target[step], rest)
+            delete target[step]
+            return 1
+        }
         return 0
     }
 
     static move(target, pos1, pos2, count = 1) {
-        /* Move the element of `target` (Catalog/Map/Array) from position `pos1` to `pos2`.
+        /* Move the element of `target` (Catalog/Map/Array/POJO) from position `pos1` to `pos2`.
            If `count` is greater than 1, move `count` consecutive elements from `pos1` to `pos2`.
+           For POJOs, positions refer to the order of Object.entries().
          */
         let N = Struct.sizeOf(target)
 
@@ -292,6 +301,14 @@ export class Struct {
         }
         else if (target instanceof Array)
             target.splice(pos2, 0, ...target.splice(pos1, count))
+        
+        else if (T.isPlain(target)) {
+            let entries = Object.entries(target)                        // first, edit the entries array
+            let moved = entries.splice(pos1, count)
+            entries.splice(pos2, 0, ...moved)
+            Object.keys(target).forEach(key => delete target[key])      // then, clear and rebuild the object
+            entries.forEach(([k, v]) => target[k] = v)
+        }
     }
 
     static collect(target, fun, twin = undefined, path = []) {
