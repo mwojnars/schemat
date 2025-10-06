@@ -6,7 +6,7 @@ import {ObjectsMap, Shard} from "../common/structs.js";
 import {Catalog, Struct} from "../common/catalog.js";
 import * as widgets from './widgets.js'
 
-let ObjectCatalogTable = import('./catalog_type.js').then(mod => {ObjectCatalogTable = mod.ObjectCatalogTable})
+let CatalogTable = import('./catalog_type.js').then(mod => {CatalogTable = mod.CatalogTable})
 
 
 // import { Temporal } from './libs/js-temporal/polyfill.js'
@@ -711,6 +711,9 @@ export class Dictionary extends Compound {
         value_type:     generic_type,               // type of values
         // initial:        () => new Catalog(),
     }
+
+    get Widget()    { return CatalogTable }
+
     is_dictionary() { return true }
     child(key)      { return this.options.value_type }     // type of values at `key`; subclasses should throw an exception or return undefined if `key` is not allowed
     valid_keys()    {}
@@ -746,8 +749,6 @@ export class OBJECT extends Dictionary {
     merge_inherited(dicts) {
         return Object.assign({}, ...dicts.toReversed())
     }
-
-    get Widget() { return ObjectCatalogTable }
 }
 
 // CATALOG, SCHEMA -- located in a separate file

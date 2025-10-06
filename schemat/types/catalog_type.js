@@ -31,8 +31,6 @@ export class CATALOG extends Dictionary {
     - keys not allowed (what about labels then?)
      */
 
-    static get Widget() { return CatalogTable }
-
     static options = {
         class:          Catalog,
         initial:        () => new Catalog(),
@@ -473,15 +471,10 @@ export class CatalogTable extends Component {
         return DIV(cl(`catalog catalog-d${depth}`), empty && cl('is-empty'), ...rows)
     }
 
-    render()    { return e(this.Main, this.props) }
-}
-
-
-export class ObjectCatalogTable extends CatalogTable {
     render() {
         let {catalog} = this.props
-        catalog = new Catalog(catalog)      // `catalog` must be converted from POJO to Catalog
+        if (!(catalog instanceof Catalog))
+            catalog = new Catalog(catalog)              // convert `catalog` from POJO/Map to Catalog if needed
         return e(this.Main, {...this.props, catalog})
     }
 }
-
