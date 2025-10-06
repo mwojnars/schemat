@@ -1,7 +1,7 @@
 import {ValidationError} from "../common/errors.js";
 import {T, assert, trycatch, concat, mapEntries} from "../common/utils.js";
 import {Catalog} from '../common/catalog.js'
-import {STRING, Dictionary, generic_string, generic_type, is_valid_field_name} from "./type.js";
+import {STRING, Dictionary, generic_string, generic_type, is_valid_field_name, RECORD} from "./type.js";
 
 import {cl, e, st, FRAGMENT, I, DIV, NBSP, OPTION, SELECT, useState} from "../web/react-utils.js";
 import {MaterialUI} from "../web/resources.js";
@@ -95,7 +95,7 @@ export class CATALOG extends Dictionary {
 
 /**********************************************************************************************************************/
 
-export class SCHEMA extends CATALOG {
+export class SCHEMA extends RECORD {
     /* Type specification for WebObject.__data. Only instantiated locally as `obj.__schema`, not intended for other uses.
        Not used anywhere in the database.
      */
@@ -124,12 +124,6 @@ export class SCHEMA extends CATALOG {
         CatalogTable.collect(assets)
     }
     _all_subtypes() { return Object.values(this.options.fields) }
-
-    valid_keys() {
-        let fields = Object.getOwnPropertyNames(this.options.fields)
-        fields = fields.filter(f => this.options.fields[f].is_editable())       // only keep user-editable fields
-        return fields.sort()
-    }
 }
 
 export class SCHEMA_GENERIC extends SCHEMA {
@@ -366,13 +360,13 @@ export class CatalogTable extends Component {
             })
         },
 
-        initKey: (pos, key, main_type) => {
+        initKey: (pos, key, parent_type) => {
             /* Confirm creation of a new entry with a given key; assign an ID to it.
                Store an initial value of a key after new entry creation.
-               `main_type` can be a SCHEMA of a parent catalog (if at top level), for checking if `key` is valid or not.
+               `parent_type` is usually a SCHEMA of the parent catalog (if at top level), for checking if `key` is valid or not.
              */
 
-            let type = trycatch(() => main_type.subtype(key))
+            let type = trycatch(() => parent_type.subtype(key))
             if (key !== undefined && !type) {                  // verify if `key` name is allowed by the parent catalog
                 alert(`The name "${key}" for a key is not permitted.`)
                 key = undefined
@@ -419,7 +413,7 @@ export class CatalogTable extends Component {
         let [entries, setEntries] = useState(catalog.getRecords().map((ent, pos) => ({...ent, id: pos})))
         let run = this.actions({item, path, setEntries})
 
-        let keyNames = type.valid_keys()
+        let keyNames = type.get_fields()
         let N = entries.length
 
         let rows = entries.map((entry, pos) =>

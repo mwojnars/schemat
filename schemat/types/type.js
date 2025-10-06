@@ -714,14 +714,14 @@ export class Dictionary extends Compound {
     /* Base class for dictionary-like compound types: OBJECT, MAP, CATALOG. */
 
     static options = {
-        key_type:       new FIELD(),                // type of keys; must be an instance of STRING or its subclass
-        value_type:     generic_type,               // type of values
+        key_type:       new FIELD(),    // type of keys; must be an instance of STRING or its subclass
+        value_type:     generic_type,   // type of values
     }
 
     get Widget()    { return CatalogTable }
     is_dictionary() { return true }
     subtype(key)    { return this.options.value_type }     // type of values at `key`; subclasses should throw an exception or return undefined if `key` is not allowed
-    valid_keys()    {}
+    get_fields(opts){}                  // for record-like collections only
 
     collect(assets) {
         this.options.key_type.collect(assets)
@@ -846,12 +846,20 @@ export class VARIANT extends Type {
     }
 }
 
-export class RECORD extends Type {
+
+
+export class RECORD extends Dictionary {
     /* Object containing a list of predefined fields, like in a database record. Each field may have its own type,
        unlike in a MAP/CATALOG/OBJECT, where all values share the same type.
     */
     static options = {
         fields: {},         // POJO dictionary of field names and their types, {field: type}
+    }
+
+    get_fields({editable = true} = {}) {
+        let fields = Object.getOwnPropertyNames(this.options.fields)
+        fields = fields.filter(f => this.options.fields[f].is_editable())       // only keep user-editable fields
+        return fields.sort()
     }
 
     collect(assets) {
