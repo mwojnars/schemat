@@ -738,10 +738,13 @@ export class Dictionary extends Compound {
     _validate(obj) {
         obj = super._validate(obj)
         let {key_type, value_type} = this.options
-        for (let key of obj.keys()) key_type.validate(key)
-        for (let val of obj.values()) value_type.validate(val)
+        for (let key of this._keys(obj)) key_type.validate(key)
+        for (let val of this._values(obj)) value_type.validate(val)
         return obj
     }
+
+    _keys(obj)   { return obj.keys() }      // works for Map/Catalog
+    _values(obj) { return obj.values() }
 }
 
 
@@ -762,6 +765,9 @@ export class OBJECT extends Dictionary {
         if (!T.isPlain(obj)) throw new ValueError(`expected a plain object (no custom class), got ${obj}`)
         return obj
     }
+
+    _keys(obj)   { return Object.keys(obj) }
+    _values(obj) { return Object.values(obj) }
 
     merge_inherited(objects) {
         return Object.assign({}, ...objects.toReversed())
@@ -832,7 +838,7 @@ export class ENUM extends Type {      // CHOICE
 }
 
 export class VARIANT extends Type {
-    /* Selection from a number of predefined (sub)types. The value must be a plain object of the form {variant: value},
+    /* Selection from a number of predefined (sub)types, as a plain object of the form {variant: value},
        where `variant` is one of the eligible variant names, and `value` matches this variant's corresponding type.
      */
     static options = {
