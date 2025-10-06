@@ -102,12 +102,8 @@ export class SCHEMA extends RECORD {
 
     static options = {
         fields: {},         // plain object with field names and their types; null means that a default data type should be used for a given field
-        strict: true,       // if true, only fields listed in `fields` are allowed; generic_type is assumed for other fields
+        strict: true,       // if true, only fields listed in `fields` are allowed; generic_type is assumed for other fields otherwise
     }
-
-    // isValidKey(key) {
-    //     return is_valid_field_name(key) && (!this.options.strict || Object.hasOwn(this.options.fields, key))
-    // }
 
     has(key) { return !!this.options.fields[key] }      // true if `key` is EXPLICITLY declared here as a valid field
     get(key) { return this.options.fields[key] || (!this.options.strict && generic_type) || undefined }
@@ -119,24 +115,25 @@ export class SCHEMA extends RECORD {
         return fields[key] || generic_type
     }
     collect(assets) {
-        for (let type of this._all_subtypes())
+        for (let type of this._types())
             type.collect(assets)
         CatalogTable.collect(assets)
     }
-    _all_subtypes() {
+    _types() {
+        /* List of all types that may occur inside this collection. */
         let types = Object.values(this.options.fields)
         if (!this.options.strict) types.push(generic_type)
         return [...new Set(types)]
     }
+
+    // isValidKey(key) {return is_valid_field_name(key) && (!this.options.strict || Object.hasOwn(this.options.fields, key))}
 }
 
 export class SCHEMA_GENERIC extends SCHEMA {
-    /* Generic SCHEMA, used when there's no category for a web object. All property names are allowed in the web object,
-       and their type is `generic_type`.
+    /* Generic SCHEMA used when there's no category/schema for a web object.
+       All field names are allowed and their type is `generic_type`.
      */
     static options = {strict: false}
-    // subtype(key)    { return this.options.fields[key] || generic_type }
-    // _all_subtypes() { return [...super._all_subtypes(), generic_type] }
 }
 
 
