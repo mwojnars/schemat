@@ -452,7 +452,7 @@ export class CatalogTable extends Component {
     render() {
         let {catalog} = this.props
         if (!(catalog instanceof Catalog))
-            catalog = new Catalog(catalog)              // convert `catalog` from POJO/Map to Catalog if needed
+            catalog = new Catalog(catalog)              // convert `catalog` from POJO/Map to Catalog
         return e(this.Main, {...this.props, catalog})
     }
 }
