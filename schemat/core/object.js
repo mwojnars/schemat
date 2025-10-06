@@ -799,26 +799,26 @@ export class WebObject {
         if (!schema) return
 
         // check that all required attributes are present in `data`
-        for (let prop of this.__category.required_attrs)
-            if (data.get(prop) === undefined) throw new ValidationError(`missing required property '${prop}' in ${this}`)
+        for (let attr of this.__category.required_attrs)
+            if (data.get(attr) === undefined) throw new ValidationError(`missing required attribute '${attr}' in ${this}`)
 
-        // validate each individual property; __data._entries may get directly modified here... (!)
-        for (let [prop, locs] of data._keys) {
+        // validate each individual attribute; __data._entries may get directly modified here... (!)
+        for (let [attr, locs] of data._keys) {
 
-            // make sure the property name is not missing nor reserved: id, __meta, __self, __proxy, __status, etc.
-            if (!prop) throw new ValidationError(`missing property name (${prop === '' ? `''` : prop})`)
-            if (Intercept.RESERVED.has(prop)) throw new ValidationError(`reserved property name ('${prop}')`)
+            // make sure the attribute name is not missing nor reserved: id, __meta, __self, __proxy, __status, etc.
+            if (!attr) throw new ValidationError(`missing attribute name (${attr === '' ? `''` : attr})`)
+            if (Intercept.RESERVED.has(attr)) throw new ValidationError(`reserved attribute name ('${attr}')`)
 
-            let type = schema.get(prop)
+            let type = schema.get(attr)
 
-            if (!type)                                          // property not in schema? skip or raise error
+            if (!type)                                          // attribute not in schema? skip or raise error
                 if (this.__category.allow_custom_fields) continue
-                else throw new ValidationError(`unknown property '${prop}' in ${this}`)
+                else throw new ValidationError(`unknown attribute '${attr}' in ${this}`)
 
-            if (locs.length > 1 && !type.options.multiple)      // single-valued property should have only one value
-                throw new ValidationError(`multiple occurrences of property '${prop}' declared as single-valued in ${this}`)
+            if (locs.length > 1 && !type.options.multiple)      // single-valued attribute should have only one value
+                throw new ValidationError(`multiple occurrences of attribute '${attr}' declared as single-valued in ${this}`)
 
-            if (type.options.virtual) throw new ValidationError(`cannot assign to a virtual property ('${prop}')`)
+            if (type.options.virtual) throw new ValidationError(`cannot assign to a virtual attribute ('${attr}')`)
 
             try {
                 for (let loc of locs) {
@@ -827,8 +827,8 @@ export class WebObject {
                 }
             }
             catch (ex) {
-                // add name of the property to the exception message
-                ex.message = `invalid value of '${prop}' in ${this}: ${ex.message}`
+                // add name of the attribute to the exception message
+                ex.message = `invalid value of '${attr}' in ${this}: ${ex.message}`
                 throw ex
             }
         }
