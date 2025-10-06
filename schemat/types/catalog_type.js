@@ -1,7 +1,7 @@
 import {ValidationError} from "../common/errors.js";
 import {T, assert, trycatch, concat, mapEntries} from "../common/utils.js";
 import {Catalog} from '../common/catalog.js'
-import {FIELD, STRING, Dictionary, generic_string, generic_type, is_valid_field_name} from "./type.js";
+import {STRING, Dictionary, generic_string, generic_type, is_valid_field_name} from "./type.js";
 
 import {cl, e, st, FRAGMENT, I, DIV, NBSP, OPTION, SELECT, useState} from "../web/react-utils.js";
 import {MaterialUI} from "../web/resources.js";
@@ -96,8 +96,8 @@ export class CATALOG extends Dictionary {
 /**********************************************************************************************************************/
 
 export class SCHEMA extends CATALOG {
-    /* Like CATALOG, but provides distinct value types for different predefined keys (fields) of a catalog.
-       Used as a value type for WebObject.__data, not intended for other uses.
+    /* Type specification for WebObject.__data. Only instantiated locally as `obj.__schema`, not intended for other uses.
+       Not used anywhere in the database.
      */
 
     static options = {
@@ -105,9 +105,9 @@ export class SCHEMA extends CATALOG {
         strict: true,       // if true, only fields listed in `fields` are allowed; generic_type is assumed for other fields
     }
 
-    isValidKey(key) {
-        return is_valid_field_name(key) && (!this.options.strict || Object.hasOwn(this.options.fields, key))
-    }
+    // isValidKey(key) {
+    //     return is_valid_field_name(key) && (!this.options.strict || Object.hasOwn(this.options.fields, key))
+    // }
 
     has(key) { return !!this.options.fields[key] }      // true if `key` is EXPLICITLY declared here as a valid field
     get(key) { return this.options.fields[key] || (!this.options.strict && generic_type) || undefined }
@@ -116,7 +116,7 @@ export class SCHEMA extends CATALOG {
         let {fields} = this.options
         if (!fields.hasOwnProperty(key) && this.options.strict)
             throw new ValidationError(`Unknown field "${key}", expected one of [${Object.getOwnPropertyNames(fields)}]`)
-        return fields[key] || this.options.value_type
+        return fields[key] || generic_type
     }
     collect(assets) {
         for (let type of this._all_subtypes())
@@ -143,22 +143,6 @@ export class SCHEMA_GENERIC extends SCHEMA {
     subtype(key)    { return this.options.fields[key] || generic_type }
     _all_subtypes() { return [...super._all_subtypes(), generic_type] }
 }
-
-
-// export class DATA_SCHEMA extends TYPE {
-//     /* An (imputed) instance of SCHEMA that represents schema of objects in a category, wrapped up in a SCHEMA. */
-//
-//     static options = {
-//         editable: false,
-//         impute() {
-//             /* `this` is expected to be a Category object that defines items' schema through its `fields` property. */
-//             // assert(this instanceof Category)
-//             let fields = this.schema.object()
-//             let custom = this.allow_custom_fields
-//             return new SCHEMA({fields, strict: custom !== true})
-//         }
-//     }
-// }
 
 
 /**********************************************************************************************************************

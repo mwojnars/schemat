@@ -711,7 +711,7 @@ export class TYPE extends Compound {
 /**********************************************************************************************************************/
 
 export class Dictionary extends Compound {
-    /* Base class for dictionary-like compound types. */
+    /* Base class for dictionary-like compound types: OBJECT, MAP, CATALOG. */
 
     static options = {
         key_type:       new FIELD(),                // type of keys; must be an instance of STRING or its subclass
