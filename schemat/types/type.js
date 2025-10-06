@@ -587,11 +587,37 @@ export class BINARY extends Atomic {
 }
 
 
-export class ENUM extends Atomic {      // CHOICE
-    /* Primitive value selected from a list of predefined choices. */
+export class ENUM extends Atomic {
+    /* Atomic value selected from a list of predefined choices. */
     static options = {
-        choices: {},        // eligible choice values (as keys); values can be HTML descriptions, or dicts with arbitrary info, or nulls;
+        choices: {},        // eligible choice values (as keys); values can be HTML labels, or dicts with arbitrary info, or nulls;
                             // alternatively, `choices` can be an array of values (no metadata)
+    }
+
+    _validate(value) {
+        value = super._validate(value)
+        let choices = this._choices()
+        if (!choices.includes(value)) throw new ValueError(`invalid choice: ${value}, expected one of [${choices.join(', ')}]`)
+        return value
+    }
+
+    _choices() {
+        /* Flat list of all possible values without metadata. */
+        let {choices} = this.options
+        return Array.isArray(choices) ? choices : Object.keys(choices)
+    }
+
+    static Widget = class extends widgets.TypeWidget {
+        view(value) {
+            let {choices} = this.type.options
+            if (Array.isArray(choices)) return value
+            
+            // If choices contain HTML labels or metadata, display the label if available
+            let meta = choices[value]
+            if (meta && typeof meta === 'object' && meta.label) return meta.label
+            if (typeof meta === 'string') return meta
+            return value
+        }
     }
 }
 
