@@ -685,7 +685,7 @@
         belonging to this category are included in the output sequence. Category
         membership is checked by __cid comparison, so the object must belong
         exactly to `category`, not a subcategory.
-      "@": schemat/types/type.js:REF_CATEGORY
+      "@": schemat/types/type.js:REF
   class: schemat/db/operator.js:DerivedOperator
   __prototype:
     "@": 24

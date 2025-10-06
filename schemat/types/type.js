@@ -580,17 +580,21 @@ export class REF extends Type {
     }
 }
 
-export class REF_CATEGORY extends REF {
-    _init_options() {
-        super._init_options()
-        this.options.category ??= schemat.root_category
-    }
-}
 
 export class BINARY extends Atomic {
     /* Type of Uint8Array objects. */
     static options = {class: Uint8Array}
 }
+
+
+export class ENUM extends Atomic {      // CHOICE
+    /* Primitive value selected from a list of predefined choices. */
+    static options = {
+        choices: {},        // eligible choice values (as keys); values can be HTML descriptions, or dicts with arbitrary info, or nulls;
+                            // alternatively, `choices` can be an array of values (no metadata)
+    }
+}
+
 
 /**********************************************************************************************************************/
 
@@ -892,14 +896,6 @@ export class SCHEMA_GENERIC extends SCHEMA {
  **  Classes below are NOT USED ...
  **
  */
-
-export class ENUM extends Type {      // CHOICE
-    /* Primitive value selected from a list of predefined choices. */
-    static options = {
-        choices: {},        // eligible choice values (as keys); values can be HTML descriptions, or dicts with arbitrary info, or nulls;
-                            // alternatively, `choices` can be an array of values (no metadata)
-    }
-}
 
 export class VARIANT extends Type {
     /* Selection from a number of predefined (sub)types, as a plain object of the form {variant: value},
