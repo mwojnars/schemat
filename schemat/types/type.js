@@ -849,7 +849,7 @@ export class VARIANT extends Type {
 
 
 export class RECORD extends Dictionary {
-    /* Object containing a list of predefined fields, like in a database record. Each field may have its own type,
+    /* Accepts objects containing predefined fields, like in a database record. Each field may have its own type,
        unlike in a MAP/CATALOG/OBJECT, where all values share the same type.
     */
     static options = {

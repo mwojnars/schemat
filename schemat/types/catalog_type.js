@@ -113,9 +113,9 @@ export class SCHEMA extends RECORD {
     get(key) { return this.options.fields[key] || (!this.options.strict && generic_type) || undefined }
 
     subtype(key) {
-        let {fields} = this.options
-        if (!fields.hasOwnProperty(key) && this.options.strict)
-            throw new ValidationError(`Unknown field "${key}", expected one of [${Object.getOwnPropertyNames(fields)}]`)
+        let {fields, strict} = this.options
+        if (strict && !fields.hasOwnProperty(key))
+            throw new ValidationError(`unknown field "${key}", expected one of [${Object.getOwnPropertyNames(fields)}]`)
         return fields[key] || generic_type
     }
     collect(assets) {
@@ -123,19 +123,20 @@ export class SCHEMA extends RECORD {
             type.collect(assets)
         CatalogTable.collect(assets)
     }
-    _all_subtypes() { return Object.values(this.options.fields) }
+    _all_subtypes() {
+        let types = Object.values(this.options.fields)
+        if (!this.options.strict) types.push(generic_type)
+        return [...new Set(types)]
+    }
 }
 
 export class SCHEMA_GENERIC extends SCHEMA {
     /* Generic SCHEMA, used when there's no category for a web object. All property names are allowed in the web object,
        and their type is `generic_type`.
      */
-    static options = {
-        fields: {},
-        strict: false,
-    }
-    subtype(key)    { return this.options.fields[key] || generic_type }
-    _all_subtypes() { return [...super._all_subtypes(), generic_type] }
+    static options = {strict: false}
+    // subtype(key)    { return this.options.fields[key] || generic_type }
+    // _all_subtypes() { return [...super._all_subtypes(), generic_type] }
 }
 
 
