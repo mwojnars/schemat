@@ -120,7 +120,8 @@ export class Type extends Struct {
         return this instanceof typeClass
     }
 
-    child(key) {}
+    child(key)      { return this.subtype(key) }
+    subtype(key)    {}
         /* In compound types, return the Type of values stored under `key`, or undefined if `key` is not allowed. */
 
 
@@ -523,7 +524,7 @@ export class DATETIME extends STRING {
 export class GENERIC extends Type {
     /* Accept all types of values like the base Type, but display them with a generic JSON widget. */
     static Widget = widgets.GENERIC_Widget
-    child(key) { return generic_type }
+    subtype(key) { return generic_type }
 }
 
 // the most generic type for encoding/decoding of objects of any types
@@ -537,7 +538,7 @@ export let generic_type = new GENERIC({multiple: true})
  */
 
 export class Atomic extends GENERIC {
-    child(key) {}
+    subtype(key) {}
 }
 
 export class REF extends Type {
@@ -661,7 +662,7 @@ export class ARRAY extends Compound {
     static Widget = widgets.ARRAY_Widget
 
     is_blank(arr)   { return arr?.length === 0 }
-    child(key)      { return this.options.type }
+    subtype(key)    { return this.options.type }
     collect(assets) { this.options.type.collect(assets) }
     toString()      { return `${this.constructor.name}(${this.options.type})` }
 
@@ -719,7 +720,7 @@ export class Dictionary extends Compound {
 
     get Widget()    { return CatalogTable }
     is_dictionary() { return true }
-    child(key)      { return this.options.value_type }     // type of values at `key`; subclasses should throw an exception or return undefined if `key` is not allowed
+    subtype(key)    { return this.options.value_type }     // type of values at `key`; subclasses should throw an exception or return undefined if `key` is not allowed
     valid_keys()    {}
 
     collect(assets) {
@@ -789,31 +790,9 @@ export class MAP extends Dictionary {
     }
 }
 
-// CATALOG, SCHEMA -- located in a separate file
 
-
-//*********************************************************************************************************************/
-//
-// The classes below are NOT USED ...
-//
-
-export class CHOICE extends Type {      // ENUM ?
-    /* List of choices, the value must be one of them. */
-    static options = {
-        values: [],             // eligible choice values
-    }
-}
-
-export class VARIANT extends Type {
-    /* Selection from a number of predefined (sub)types. The value must be a plain object of the form {choice: value},
-       where `choice` is one of the eligible choice names, and `value` matches this choice's corresponding type.
-     */
-    static options = {
-        choices: {},            // plain object interpreted as a dictionary of choices, {choice-name: type-definition}
-    }
-}
-
-export class OBJECTS_MAP extends GENERIC {
+// NOT USED...
+export class OBJECTS_MAP extends GENERIC {  // TODO: extends Dictionary
     /* Accepts instances of ObjectsMap class. */
     static options = {
         class:      ObjectsMap,
@@ -836,20 +815,43 @@ export class OBJECTS_MAP extends GENERIC {
     }
 }
 
-export class RECORD extends Type {
-    /*
-    Value type for data objects containing some predefined fields, each one having ITS OWN type
-    - unlike in a MAP, where all values share the same type.
-    `this.type`, if present, is an exact class (NOT a base class) of accepted objects.
-    */
+// CATALOG, SCHEMA -- located in a separate file
 
+
+//*********************************************************************************************************************/
+//
+// The classes below are NOT USED ...
+//
+
+export class ENUM extends Type {      // CHOICE
+    /* Primitive value selected from a list of predefined choices. */
     static options = {
-        fields: {},                     // object containing field names and their schemas
+        choices: {},        // eligible choice values (as keys); values can be HTML descriptions, or dicts with arbitrary info, or nulls;
+                            // alternatively, `choices` can be an array of values (no metadata)
+    }
+}
+
+export class VARIANT extends Type {
+    /* Selection from a number of predefined (sub)types. The value must be a plain object of the form {variant: value},
+       where `variant` is one of the eligible variant names, and `value` matches this variant's corresponding type.
+     */
+    static options = {
+        types: {},          // POJO dictionary of variant names and their types, {name: type}
+    }
+}
+
+export class RECORD extends Type {
+    /* Object containing a list of predefined fields, like in a database record. Each field may have its own type,
+       unlike in a MAP/CATALOG/OBJECT, where all values share the same type.
+    */
+    static options = {
+        fields: {},         // POJO dictionary of field names and their types, {field: type}
     }
 
     collect(assets) {
         for (let type of Object.values(this.options.fields))
             type.collect(assets)
+        super.collect(assets)
     }
 }
 

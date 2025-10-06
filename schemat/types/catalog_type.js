@@ -52,7 +52,7 @@ export class CATALOG extends Dictionary {
     //      */
     //     return Path.find(this, path, (type, key) => {
     //         if (!type.is_CATALOG()) throw new Error(`data type path not found: ${path}`)
-    //         return [type.child(key)]
+    //         return [type.subtype(key)]
     //     })
     // }
 
@@ -112,7 +112,7 @@ export class SCHEMA extends CATALOG {
     has(key) { return !!this.options.fields[key] }      // true if `key` is EXPLICITLY declared here as a valid field
     get(key) { return this.options.fields[key] || (!this.options.strict && generic_type) || undefined }
 
-    child(key) {
+    subtype(key) {
         let {fields} = this.options
         if (!fields.hasOwnProperty(key) && this.options.strict)
             throw new ValidationError(`Unknown field "${key}", expected one of [${Object.getOwnPropertyNames(fields)}]`)
@@ -140,7 +140,7 @@ export class SCHEMA_GENERIC extends SCHEMA {
         fields: {},
         strict: false,
     }
-    child(key)      { return this.options.fields[key] || generic_type }
+    subtype(key)    { return this.options.fields[key] || generic_type }
     _all_subtypes() { return [...super._all_subtypes(), generic_type] }
 }
 
@@ -342,7 +342,7 @@ export class CatalogTable extends Component {
     //     /* Check that the key name at position `pos` in `entries` is allowed to be changed to `key`
     //        according to the `type`; return true, or alert the user and raise an exception. */
     //     // verify that a `key` name is allowed by the catalog's type
-    //     let child = trycatch(() => type.child(key))
+    //     let child = trycatch(() => type.subtype(key))
     //     if (!child) {
     //         let msg = `The name "${key}" for a key is not permitted by the type.`
     //         alert(msg); throw new Error(msg)
@@ -388,7 +388,7 @@ export class CatalogTable extends Component {
                `main_type` can be a SCHEMA of a parent catalog (if at top level), for checking if `key` is valid or not.
              */
 
-            let type = trycatch(() => main_type.child(key))
+            let type = trycatch(() => main_type.subtype(key))
             if (key !== undefined && !type) {                  // verify if `key` name is allowed by the parent catalog
                 alert(`The name "${key}" for a key is not permitted.`)
                 key = undefined
@@ -442,7 +442,7 @@ export class CatalogTable extends Component {
         {
             let {key}   = entry
             let isnew   = (entry.id === 'new')
-            let vschema = isnew ? undefined : type.child(key)
+            let vschema = isnew ? undefined : type.subtype(key)
             let color   = getColor(pos)
 
             // insert `pos` as the 1st arg in all actions of `run`
