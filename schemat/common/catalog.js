@@ -207,12 +207,12 @@ export class Struct {
         throw new FieldPathNotFound(`not a collection nor an object: ${target}`)
     }
 
-    static setkey(target, prev, key) {
+    static rename(target, prev, key) {
         /* Change the key from `prev` to `key` of the corresponding entry in the `target` collection. */
         if (target instanceof Catalog) {
             let pos = (typeof prev === 'string') ? target.loc(prev) : prev
             if (T.isNullish(pos)) throw new Error(`key (${prev}) not found`)
-            target._setkey(pos, key)
+            target._rename(pos, key)
         }
         else if (target instanceof Map) {
             let entries = [...target.entries()]
@@ -599,9 +599,9 @@ export class Catalog {
         // return this
     }
 
-    setkey(path, key) {
+    rename(path, key) {
         let [target, prev] = this._targetKey(path)
-        Struct.setkey(target, prev, key)
+        Struct.rename(target, prev, key)
         return this
     }
 
@@ -760,7 +760,7 @@ export class Catalog {
 
     /***  Write access  ***/
 
-    _setkey(pos, key) {
+    _rename(pos, key) {
         /* Change (in place) the key of the entry at a given position in this._entries. */
         let e = this._entries[pos]
         let prev = e[0]

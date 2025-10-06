@@ -1280,7 +1280,7 @@ export class WebObject {
 
     'edit.rename'(path, key) {
         /* Change the key of a property or nested element inside a sub-catalog/map. */
-        this.__data.setkey(path, key)
+        this.__data.rename(path, key)
     }
 
     'edit.move'(path, {pos, delta, count}) {
