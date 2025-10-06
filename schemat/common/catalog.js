@@ -113,23 +113,28 @@ export class Struct {
 
         if (target !== undefined && !path.length) { yield target; return }
         if (!target) return
+        
         let [step, ...rest] = path
+        let _numkey = (typeof step === 'number')
 
         if (target instanceof Catalog)
             for (let obj of target._getAll(step))
                 yield* Struct.yieldAll(obj, rest, _objects)
 
-        else if (target instanceof Map)
+        else if (target instanceof Map) {
+            if (_numkey) step = [...target.keys()][step]                // convert numeric step to key
             yield* Struct.yieldAll(target.get(step), rest, _objects)
+        }
 
         else if (target instanceof Array) {
-            if (typeof step === 'number') yield* Struct.yieldAll(target[step], rest, _objects)
+            if (_numkey) yield* Struct.yieldAll(target[step], rest, _objects)
         }
 
         // walking into an object is only allowed for non-WebObjects, and uses the *state* of the object rather than the object itself
         // (this is compatible with JSONx encoding, except that unknown object classes are still walked into without raising errors)
         else if (_objects && typeof target === 'object' && !(target instanceof schemat.WebObject)) {
             let state = getstate(target)
+            if (_numkey) step = Object.keys(state)[step]
             if (state?.hasOwnProperty?.(step))
                 yield* Struct.yieldAll(state[step], rest, _objects)
         }
@@ -271,6 +276,7 @@ export class Struct {
         // if (path[0] !== '__meta') print(`Struct.delete(${path})`, {path})
         if (!target || !path.length) return 0
         let [step, ...rest] = path
+        let _numkey = (typeof step === 'number')
 
         if (target instanceof Catalog) {
             let locs = target.locs(step)            // more steps to be done? delete recursively
@@ -281,16 +287,16 @@ export class Struct {
             return locs.length
         }
         if (target instanceof Map) {
-            if (typeof step === 'number') step = [...target.keys()][step]
+            if (_numkey) step = [...target.keys()][step]
             return rest.length ? Struct.delete(target.get(step), rest) : Number(target.delete(step))
         }
 
         if (target instanceof Array) {
-            if (typeof step !== 'number') return 0
+            if (!_numkey) return 0
             return rest.length ? Struct.delete(target[step], rest) : target.splice(step, 1).length
         }
         if (T.isPlain(target)) {
-            if (typeof step === 'number') step = Object.keys(target)[step]
+            if (_numkey) step = Object.keys(target)[step]
             // print(`Struct.delete() isPlain()`, {target, step, rest})
             if (!target.hasOwnProperty(step)) return 0
             if (rest.length) return Struct.delete(target[step], rest)
