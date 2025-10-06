@@ -155,13 +155,13 @@
           every web object. In the database, this property is stored as a record
           key, separately from regular properties which are stored in a record
           value.
-        "@": schemat/types/type.js:ID
+        "@": schemat/types/type.js:OBJECT_ID
       __cid:
         virtual: true
         multiple: true
         info: Type definition for the special property, `obj.__cid`, which is a getter
           returning ID of the object's __category (if present), or undefined.
-        "@": schemat/types/type.js:ID
+        "@": schemat/types/type.js:OBJECT_ID
       __category:
         info: Category of this object. Determines its behavior and the schema of its
           properties. Each category itself is an object of the Root Category
@@ -699,7 +699,7 @@
       - id
     fields:
       id:
-        "@": schemat/types/type.js:ID
+        "@": schemat/types/type.js:OBJECT_ID
   __prototype:
     "@": 24
   __category:
@@ -850,9 +850,9 @@
   fields:
     __cid:
       multiple: true
-      "@": schemat/types/type.js:ID
+      "@": schemat/types/type.js:OBJECT_ID
     id:
-      "@": schemat/types/type.js:ID
+      "@": schemat/types/type.js:OBJECT_ID
   __category:
     "@": 15
 - id: 24

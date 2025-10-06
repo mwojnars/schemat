@@ -393,7 +393,7 @@ export class UNSIGNED extends INTEGER {
     static options = {signed: false}
 }
 
-export class ID extends UNSIGNED {
+export class OBJECT_ID extends UNSIGNED {
     /* Database ID of an object. */
     static options = {min: 1}
 }
