@@ -1166,7 +1166,7 @@ export class WebObject {
            Can be called on client and server alike.
          */
         let obj = this
-        let proxy = new Proxy({}, {
+        let handler = {
             get(target, name) {
                 // when _make_edit() has no return value, `proxy` is returned for chained edits
                 if (typeof name === 'string') return (...args) => {
@@ -1175,8 +1175,8 @@ export class WebObject {
                     return proxy
                 }
             }
-        })
-        return proxy
+        }
+        return new Proxy({}, handler)
     }
 
     get_mutable() {

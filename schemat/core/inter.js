@@ -100,12 +100,11 @@ export class Intercept {
         let id = target.id
         assert(id, `trying to access a newborn object as agent`)
 
-        // `current_opts`: opts from $ROLE(opts) remembered here (shared variable!) until $ROLE(opts).fun is accessed;
+        // `external_opts`: opts from $ROLE(opts) remembered here (shared variable!) until $ROLE(opts).fun is accessed;
         // WARNING: never separate $ROLE(opts) from *.fun, as this may result in wrong `opts` being passed to `fun` (!)
-        let current_opts = {}
+        let external_opts = {}
 
-        // create a parameterized handler
-        // let create_handler = (use_opts) => ({
+        // proxy handler with a "get" trap that uses `external_opts` if provided
         let handler = {
             get(target, name) {
                 if (typeof name !== 'string' || name === '__getstate__') return
@@ -118,9 +117,8 @@ export class Intercept {
                 // if (name === 'state') return frame?.state
                 assert(name !== 'state')
 
-                // let opts = use_opts ? {broadcast, ...current_opts, role} : {broadcast, role}
-                let opts = {broadcast, ...current_opts, role}
-                current_opts = {}       // clear external opts after use
+                let opts = {broadcast, ...external_opts, role}
+                external_opts = {}       // clear external opts after use
 
                 // if the target object is deployed here on the current process, call it directly without RPC
                 if (frame && !opts.broadcast) return (...args) => frame.exec(name, args)
@@ -131,17 +129,17 @@ export class Intercept {
             }
         }
 
-        // this proxy is returned after a parameterized call: $ROLE(...)
-        let parameterized_proxy = new Proxy({}, handler)  //create_handler(true))
+        // this proxy is used after a parameterized call: $ROLE(...)
+        let parameterized_proxy = new Proxy({}, handler)
 
-        // create a function that updates current_opts and returns the parameterized proxy
+        // create a function that sets external_opts and returns the parameterized proxy
         let func = function(opts = {}) {
-            current_opts = opts
+            external_opts = opts
             return parameterized_proxy
         }
 
         // make the function itself a proxy that handles the direct access
-        return new Proxy(func, handler)  //create_handler(false))
+        return new Proxy(func, handler)
     }
 
     static _get_deep(target, path, receiver) {
