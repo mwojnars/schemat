@@ -710,7 +710,7 @@ export class ARRAY extends ArrayLike {
         return arr.map(elem => type.validate(elem))
     }
 
-    merge_inherited(arrays) { return arrays.toReversed().flat() }
+    merge_inherited(arrays) { return arrays.flat() }
 }
 
 
@@ -730,7 +730,10 @@ export class SET extends ArrayLike {
         return new Set([...set].map(elem => type.validate(elem)))
     }
 
-    merge_inherited(sets) { return new Set([...sets.toReversed()].flat()) }
+    merge_inherited(sets) {
+        // multiple reversing is needed to preserve the order of elements: youngest at the beginning
+        return new Set(sets.map(s => [...s].reverse()).reverse().flat().reverse())
+    }
 }
 
 
@@ -832,7 +835,7 @@ export class OBJECT extends DictLike {
     _values(obj) { return Object.values(obj) }
 
     merge_inherited(objects) {
-        return Object.assign({}, ...objects.toReversed())
+        return Object.assign({}, ...objects.toReversed())       // TODO: multiple reverse() is needed for proper ordering
     }
 }
 
@@ -854,7 +857,7 @@ export class MAP extends DictLike {
     }
 
     merge_inherited(maps) {
-        return new Map([...maps.toReversed()].flatMap(map => [...map.entries()]))
+        return new Map([...maps.toReversed()].flatMap(map => [...map.entries()]))       // TODO: multiple reverse() is needed for proper ordering
     }
 }
 
