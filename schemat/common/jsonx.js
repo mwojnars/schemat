@@ -99,8 +99,6 @@ export class JSONx {
         let cls = Object.getPrototypeOf(obj).constructor
 
         try {
-            if (cls === Array) return this.encode_array(obj)
-
             if (T.isPlain(obj)) {
                 obj = this.encode_object(obj)
                 if (!(ATTR_CLASS in obj)) return obj
@@ -112,7 +110,11 @@ export class JSONx {
                 throw new Error(`can't encode a reference to a newborn object without a provisional ID: ${obj}`)
             }
 
-            if (obj instanceof Uint8Array) {
+            let state
+
+            if (cls === Array) return this.encode_array(obj)
+
+            if (cls === Uint8Array) {
                 let state = bin_to_hex(obj)
                 return {[ATTR_STATE]: state, [ATTR_CLASS]: FLAG_BIN}
             }
@@ -124,8 +126,6 @@ export class JSONx {
                 let state = schemat.get_classpath(obj)
                 return {[ATTR_STATE]: state, [ATTR_CLASS]: FLAG_TYPE}
             }
-
-            let state
 
             if (cls === Date)       state = obj.getTime()     // integer: milliseconds since the Unix epoch, e.g., 1759779318091
             else if (cls === Map)   state = this.encode_object(Object.fromEntries(obj.entries()))
