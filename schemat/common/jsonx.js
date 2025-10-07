@@ -126,9 +126,11 @@ export class JSONx {
             }
 
             let state
-            
+
             if (topclass === Map)
                 state = this.encode_object(Object.fromEntries(obj.entries()))
+            else if (topclass === Date)
+                state = obj.getTime()       // integer: milliseconds since the Unix epoch, e.g., 1759779318091
             else if (topclass === Error)
                 state = this.encode_error(obj)
             else {
@@ -206,6 +208,7 @@ export class JSONx {
 
         // instantiate the output object; special handling for standard JSON types
         if (T.isPrimitiveClass(cls))  return state
+        if (cls === Date)             return new Date(state)
         if (cls === Object)           return this.decode_object(state)
         if (cls === Array)            return this.decode_array(state)
         if (cls === Map)              return new Map(Object.entries(this.decode_object(state)))
