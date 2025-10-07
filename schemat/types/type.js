@@ -504,7 +504,7 @@ export class IMPORT extends STRING {
 
 export class GENERIC extends Type {
     /* Accept all types of values like the base Type, but display them with a generic JSON widget. */
-    static Widget = widgets.GENERIC_Widget
+    static Widget = widgets.JSON_Widget
     subtype(key) { return generic_type }
 }
 
@@ -611,6 +611,7 @@ export class ENUM extends Atomic {
  export class DATE extends Atomic {
     /* Accepts objects of Date class, they represent timestamps as milliseconds since Unix epoch. If needed, converts
        a number (milliseconds since epoch), or string (YYYY-MM-DD, YYYY-MM-DD hh:mm:ss, ISO UTC format) to a Date.
+       When converting from a non-ISO-UTC string, local timezone is assumed (!).
      */
     static options = {
         class: Date,

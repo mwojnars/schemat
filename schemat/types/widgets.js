@@ -270,8 +270,8 @@ export class CODE_Widget extends TEXT_Widget {
 
 /**********************************************************************************************************************/
 
-export class GENERIC_Widget extends TEXT_Widget {
-    /* Display raw JSON representation of a value using a standard text editor */
+export class JSON_Widget extends TEXT_Widget {
+    /* Display raw JSONx representation of `value` using a standard text editor. */
     empty(value)    { return TypeWidget.prototype.empty.call(this, value) }
     view(value)     { return JSONx.stringify(value) }               // JSON string is pretty-printed for edit
     encode(value)   { return JSONx.stringify(value, null, 2) }      // JSON string is pretty-printed for edit
@@ -280,7 +280,7 @@ export class GENERIC_Widget extends TEXT_Widget {
 
 /**********************************************************************************************************************/
 
-export class TYPE_Widget extends GENERIC_Widget {
+export class TYPE_Widget extends JSON_Widget {
 
     static css_class = "TYPE"
 
@@ -332,7 +332,7 @@ export const REF_Widget = ItemLoadingHOC(class extends TypeWidget {
     }
 })
 
-export class ARRAY_Widget extends GENERIC_Widget {
+export class ARRAY_Widget extends JSON_Widget {
     view(array) {
         if (!Array.isArray(array)) array = [...array]
         let array_type = this.props.type

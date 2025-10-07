@@ -6,10 +6,10 @@
 
 import {TypeWrapper} from "./type.js";
 import {truncate} from "../common/utils.js";
-import {GENERIC_Widget, TypeWidget} from "./widgets.js";
+import {JSON_Widget, TypeWidget} from "./widgets.js";
 
 
-export class TYPE_Widget__ extends GENERIC_Widget {
+export class TYPE_Widget__ extends JSON_Widget {
 
     viewer()  { return TypeWidget.prototype.viewer.call(this) }
     view() {
