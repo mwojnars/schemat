@@ -622,6 +622,11 @@ export class ENUM extends Atomic {
         if (!(date instanceof Date)) date = new Date(date)      // convert from milliseconds since epoch, or data/datetime string
         return super._validate(date)
     }
+
+    static Widget = class extends widgets.TypeWidget {
+        encode(date) { return date.toISOString() }
+        decode(str)  { return new Date(str) }
+    }
 }
 
 // export class CALENDAR_DATE extends Atomic {
