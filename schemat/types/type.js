@@ -495,26 +495,6 @@ export class IMPORT extends STRING {
      */
 }
 
-/**********************************************************************************************************************
- **
- **  DATE* types
- **
- */
-
-export class DATE extends STRING {
-    /* Date (no time, no timezone). Serialized to a string "YYYY-MM-DD". */
-
-    _validate(value) {
-        value = super._validate(value)
-        if (!(value instanceof Date)) throw new ValueError(`expected a Date, got ${value} instead`)
-        return value
-    }
-}
-
-export class DATETIME extends STRING {
-    /* Date+time. May contain a timezone specification. Serialized to a string. */
-}
-
 
 /**********************************************************************************************************************
  **
@@ -622,6 +602,32 @@ export class ENUM extends Atomic {
 }
 
 
+/**********************************************************************************************************************
+ **
+ **  DATE & TIME
+ **
+ */
+
+ export class DATE extends Atomic {
+    /* Accepts objects of Date class, they represent timestamps as milliseconds since Unix epoch. If needed, converts
+       a number (milliseconds since epoch), or string (YYYY-MM-DD, YYYY-MM-DD hh:mm:ss, ISO UTC format) to a Date.
+     */
+    static options = {
+        class:  Date,
+        initial: () => new Date(),
+    }
+
+    _validate(date) {
+        if (!(date instanceof Date)) date = new Date(date)      // convert from milliseconds since epoch, or data/datetime string
+        return super._validate(date)
+    }
+}
+
+// export class CALENDAR_DATE extends Atomic {
+//     /* Calendar date as an object of CalendarDate instance that keeps "days since epoch" internally. */
+// }
+
+
 /**********************************************************************************************************************/
 
 export class CUSTOM_OBJECT extends Atomic {
@@ -698,8 +704,8 @@ export class ArrayLike extends Compound {
 export class ARRAY extends ArrayLike {
     /* Type of arrays (Array class) of objects of a given `type` (generic_type by default). */
     static options = {
-        class:      Array,
-        initial:    () => [],
+        class: Array,
+        initial: () => [],
     }
 
     is_blank(arr) { return arr?.length === 0 }
@@ -717,8 +723,8 @@ export class ARRAY extends ArrayLike {
 export class SET extends ArrayLike {
     /* Type of sets (Set class) of objects of a given `type`. */
     static options = {
-        class:      Set,
-        initial:    () => new Set(),
+        class: Set,
+        initial: () => new Set(),
     }
 
     is_blank(set) { return set?.size === 0 }
