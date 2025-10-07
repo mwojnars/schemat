@@ -122,6 +122,8 @@
       "@": schemat/types/type.js:NUMBER
     value_date:
       "@": schemat/types/type.js:DATE
+    value_set:
+      "@": schemat/types/type.js:SET
   __category:
     "@": 1
 - id: 2102
