@@ -772,7 +772,7 @@ export class TYPE extends Compound {
  **
  */
 
-export class Dictionary extends Compound {
+export class DictLike extends Compound {
     /* Base class for dictionary-like compound types: OBJECT, MAP, CATALOG. */
 
     static options = {
@@ -810,7 +810,7 @@ export class Dictionary extends Compound {
 }
 
 
-export class OBJECT extends Dictionary {
+export class OBJECT extends DictLike {
     /* Accept plain JavaScript objects (POJO or null-prototype objects) used as data containers (dictionaries).
        The objects must *not* belong to any class other than Object.
        This type can be used as a replacement for MAP or CATALOG when a simpler data structure is needed for holding
@@ -837,7 +837,7 @@ export class OBJECT extends Dictionary {
 }
 
 
-export class MAP extends Dictionary {
+export class MAP extends DictLike {
     /* Data type for instances of the Map class. */
 
     static options = {
@@ -860,7 +860,7 @@ export class MAP extends Dictionary {
 
 
 // NOT USED...
-export class OBJECTS_MAP extends GENERIC {  // TODO: extends Dictionary
+export class OBJECTS_MAP extends GENERIC {  // TODO: extends DictLike
     /* Accepts instances of ObjectsMap class. */
     static options = {
         class:      ObjectsMap,
@@ -892,7 +892,7 @@ export class OBJECTS_MAP extends GENERIC {  // TODO: extends Dictionary
  **
  */
 
-export class RECORD extends Dictionary {
+export class RECORD extends DictLike {
     /* Accepts objects containing predefined fields, like in a database record. Each field may have its own type,
        unlike in a MAP/CATALOG/OBJECT, where all values share the same type.
     */

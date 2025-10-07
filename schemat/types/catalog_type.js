@@ -1,7 +1,7 @@
 import {ValidationError} from "../common/errors.js";
 import {T, assert, trycatch, concat, mapEntries} from "../common/utils.js";
 import {Catalog} from '../common/catalog.js'
-import {STRING, Dictionary, generic_string, generic_type, is_valid_field_name, RECORD} from "./type.js";
+import {STRING, DictLike, generic_string, generic_type, is_valid_field_name, RECORD} from "./type.js";
 
 import {cl, e, st, FRAGMENT, I, DIV, NBSP, OPTION, SELECT, useState} from "../web/react-utils.js";
 import {MaterialUI} from "../web/resources.js";
@@ -15,7 +15,7 @@ import {TextualWidget} from "./widgets.js";
  **
  */
 
-export class CATALOG extends Dictionary {
+export class CATALOG extends DictLike {
     /*
     Data type of objects of the Catalog class or its subclass.
     Validates each `value` of a catalog's entry through a particular "child" type, which may depend
