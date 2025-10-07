@@ -95,12 +95,12 @@ export class JSONx {
         this.#references.add(obj)
 
         // find the top-most base class of the object to avoid repeated instanceof checks against different base types
-        let baseclass
-        let proto = obj && (typeof obj === 'object') && Object.getPrototypeOf(obj)
-        while (proto && proto !== Object.prototype) {
-            baseclass = proto.constructor
-            proto = Object.getPrototypeOf(proto)
-        }
+        let baseclass = T.getTopClass(obj)
+        // let proto = obj && (typeof obj === 'object') && Object.getPrototypeOf(obj)
+        // while (proto && proto !== Object.prototype) {
+        //     baseclass = proto.constructor
+        //     proto = Object.getPrototypeOf(proto)
+        // }
 
         try {
             if (baseclass === Array) return this.encode_array(obj)

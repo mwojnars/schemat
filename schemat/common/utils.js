@@ -408,6 +408,14 @@ export class Types {
     static getClassName = (obj) => (obj == null) ? null : Object.getPrototypeOf(obj).constructor.name
     static getClass     = (obj) => (obj == null) ? null : Object.getPrototypeOf(obj).constructor      // reading constructor from prototype is slightly safer than directly from obj
     static setClass     = (obj,cls) => Object.setPrototypeOf(obj, cls.prototype)
+    static getTopClass  = (obj) => {
+        let top, proto = obj && (typeof obj === 'object') && Object.getPrototypeOf(obj)
+        while (proto && proto !== Object.prototype) {
+            top = proto.constructor
+            proto = Object.getPrototypeOf(proto)
+        }
+        return top
+    }
 
     static isPrimitive      = (obj) => ["number", "string", "boolean"].includes(typeof obj) || obj === null
     static isPrimitiveClass = (cls) => [Number, String, Boolean, null].includes(cls)
