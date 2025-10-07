@@ -437,6 +437,8 @@ export class Struct {
         }
         if (target instanceof Array)
             return target.map(value => Struct.clone(value))
+        if (target instanceof Set)
+            return new Set([...target].map(value => Struct.clone(value)))
 
         if (target instanceof Uint8Array)
             return new Uint8Array(target)

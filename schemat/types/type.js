@@ -613,7 +613,7 @@ export class ENUM extends Atomic {
        a number (milliseconds since epoch), or string (YYYY-MM-DD, YYYY-MM-DD hh:mm:ss, ISO UTC format) to a Date.
      */
     static options = {
-        class:  Date,
+        class: Date,
         initial: () => new Date(),
     }
 
