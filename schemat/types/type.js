@@ -152,16 +152,13 @@ export class Type extends Struct {
          */
         assert(value !== undefined)
 
-        let {not_blank, class: class_} = this.options
+        let {not_blank} = this.options
         let blank = (value == null) || this.is_blank(value)
 
         if (not_blank && blank)                     // blank values are forbidden if required=true
             throw new ValueError(`expected a non-blank value`)
 
         if (value == null) return null              // null is never passed down to _validate()
-
-        if (class_ && !(value instanceof class_))
-            throw new ValueError(`expected instance of ${class_}, got ${value}`)
 
         return this._validate(value)
     }
@@ -173,6 +170,10 @@ export class Type extends Struct {
               value = super._validate(value)
            to allow for any super-class validation and normalization to take place.
          */
+        let {class: class_} = this.options
+        if (class_ && !(value instanceof class_))
+            throw new ValueError(`expected instance of ${class_}, got ${value}`)
+
         return value
     }
 
