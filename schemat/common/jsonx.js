@@ -127,12 +127,9 @@ export class JSONx {
 
             let state
 
-            if (topclass === Map)
-                state = this.encode_object(Object.fromEntries(obj.entries()))
-            else if (topclass === Date)
-                state = obj.getTime()       // integer: milliseconds since the Unix epoch, e.g., 1759779318091
-            else if (topclass === Error)
-                state = this.encode_error(obj)
+            if (topclass === Date)        state = obj.getTime()     // integer: milliseconds since the Unix epoch, e.g., 1759779318091
+            else if (topclass === Map)    state = this.encode_object(Object.fromEntries(obj.entries()))
+            else if (topclass === Error)  state = this.encode_error(obj)
             else {
                 state = getstate(obj)
                 state = (obj !== state) ? this.encode(state) : this.encode_object(state)
