@@ -614,13 +614,13 @@ export class ENUM extends Atomic {
        When converting from a non-ISO-UTC string, local timezone is assumed (!).
      */
     static options = {
-        class: Date,
         initial: () => new Date(),
     }
 
-    _validate(date) {
-        if (!(date instanceof Date)) date = new Date(date)      // convert from milliseconds since epoch, or data/datetime string
-        return super._validate(date)
+    _validate(value) {
+        let date = (value instanceof Date) ? value : new Date(value)    // convert from milliseconds since epoch, or from date/datetime string
+        if (isNaN(date.getTime())) throw new ValueError(`invalid date: ${date}`)
+        return date
     }
 
     static Widget = class extends widgets.TypeWidget {
