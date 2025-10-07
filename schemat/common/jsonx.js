@@ -95,15 +95,10 @@ export class JSONx {
         this.#references.add(obj)
 
         // find the top-most base class of the object to avoid repeated instanceof checks against different base types
-        let baseclass = T.getTopClass(obj)
-        // let proto = obj && (typeof obj === 'object') && Object.getPrototypeOf(obj)
-        // while (proto && proto !== Object.prototype) {
-        //     baseclass = proto.constructor
-        //     proto = Object.getPrototypeOf(proto)
-        // }
+        let topclass = T.getTopClass(obj)
 
         try {
-            if (baseclass === Array) return this.encode_array(obj)
+            if (topclass === Array) return this.encode_array(obj)
 
             if (T.isPlain(obj)) {
                 obj = this.encode_object(obj)
@@ -111,7 +106,7 @@ export class JSONx {
                 return {[ATTR_STATE]: obj, [ATTR_CLASS]: FLAG_WRAP}
             }
 
-            if (baseclass === schemat.WebObject) {
+            if (topclass === schemat.WebObject) {
                 if (obj.__index_id) return {[ATTR_CLASS]: obj.__index_id}     // ref to a newly created object uses __provisional_id
                 throw new Error(`can't encode a reference to a newborn object without a provisional ID: ${obj}`)
             }
@@ -122,7 +117,7 @@ export class JSONx {
             }
             
             // if (typeof obj === 'bigint')    // handle BigInt values
-            if (baseclass === BigInt)
+            if (topclass === BigInt)
                 return {[ATTR_STATE]: obj.toString(), [ATTR_CLASS]: FLAG_BIGINT}
 
             if (T.isClass(obj)) {
@@ -131,9 +126,10 @@ export class JSONx {
             }
 
             let state
-            if (baseclass === Map)
+            
+            if (topclass === Map)
                 state = this.encode_object(Object.fromEntries(obj.entries()))
-            else if (baseclass === Error)
+            else if (topclass === Error)
                 state = this.encode_error(obj)
             else {
                 state = getstate(obj)
