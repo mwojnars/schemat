@@ -683,31 +683,58 @@ export class Compound extends Type {
 }
 
 
-export class ARRAY extends Compound {
-    /* Represents arrays of objects of a given `type` (generic_type by default). */
-
+export class ArrayLike extends Compound {
     static options = {
-        type:       generic_type,   // type of elements in the array, as a Type instance
+        type:       generic_type,   // type of elements, as a Type instance
         inline:     true,           // if true, items are listed on the same line in UI; otherwise, they're separated by <br/>
     }
     static Widget = widgets.ARRAY_Widget
 
-    is_blank(arr)   { return arr?.length === 0 }
     subtype(key)    { return this.options.type }
     collect(assets) { this.options.type.collect(assets) }
     toString()      { return `${this.constructor.name}(${this.options.type})` }
-
-    _validate(arr) {
-        arr = super._validate(arr)
-        if (!Array.isArray(arr)) throw new ValueError(`expected an array, got ${typeof arr}`)
-        return arr.map(elem => this.options.type.validate(elem))
-    }
-
-    merge_inherited(arrays) {
-        return arrays.toReversed().flat()
-    }
 }
 
+export class ARRAY extends ArrayLike {
+    /* Type of arrays (Array class) of objects of a given `type` (generic_type by default). */
+    static options = {
+        class:      Array,
+        initial:    () => [],
+    }
+
+    is_blank(arr) { return arr?.length === 0 }
+
+    _validate(arr) {
+        let {type} = this.options
+        arr = super._validate(arr)
+        return arr.map(elem => type.validate(elem))
+    }
+
+    merge_inherited(arrays) { return arrays.toReversed().flat() }
+}
+
+
+export class SET extends ArrayLike {
+    /* Type of sets (Set class) of objects of a given `type`. */
+    static options = {
+        class:      Set,
+        initial:    () => new Set(),
+    }
+
+    is_blank(set) { return set?.size === 0 }
+
+    _validate(set) {
+        let {type} = this.options
+        if (set instanceof Array) set = new Set(set)
+        set = super._validate(set)
+        return new Set([...set].map(elem => type.validate(elem)))
+    }
+
+    merge_inherited(sets) { return new Set([...sets.toReversed()].flat()) }
+}
+
+
+/**********************************************************************************************************************/
 
 export class TYPE extends Compound {
     /* Values of this type are Type instances, `type`, which internally contain options, `type.options`,

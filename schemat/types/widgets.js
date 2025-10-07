@@ -334,6 +334,7 @@ export const REF_Widget = ItemLoadingHOC(class extends TypeWidget {
 
 export class ARRAY_Widget extends GENERIC_Widget {
     view(array) {
+        if (!Array.isArray(array)) array = [...array]
         let array_type = this.props.type
         let {type, inline} = array_type.options
         // let items = array.map(value => type.Widget.inline({value, type}))
