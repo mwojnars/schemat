@@ -102,10 +102,11 @@ export class Intercept {
 
         // `current_opts`: opts from $ROLE(opts) remembered here (shared variable!) until $ROLE(opts).fun is accessed;
         // WARNING: never separate $ROLE(opts) from *.fun, as this may result in wrong `opts` being passed to `fun` (!)
-        let current_opts
+        let current_opts = {}
 
-        // create a parameterized handler factory
-        let create_handler = (use_opts) => ({
+        // create a parameterized handler
+        // let create_handler = (use_opts) => ({
+        let handler = {
             get(target, name) {
                 if (typeof name !== 'string' || name === '__getstate__') return
                 // if (!role || role === AgentRole.GENERIC)    // "$agent" as a requested role matches all role names at the target
@@ -117,8 +118,9 @@ export class Intercept {
                 // if (name === 'state') return frame?.state
                 assert(name !== 'state')
 
-                let opts = use_opts ? {broadcast, ...current_opts, role} : {broadcast, role}
-                current_opts = null
+                // let opts = use_opts ? {broadcast, ...current_opts, role} : {broadcast, role}
+                let opts = {broadcast, ...current_opts, role}
+                current_opts = {}       // clear external opts after use
 
                 // if the target object is deployed here on the current process, call it directly without RPC
                 if (frame && !opts.broadcast) return (...args) => frame.exec(name, args)
@@ -127,10 +129,10 @@ export class Intercept {
                 assert(schemat.node, `the node must be initialized before remote agent [${id}].${role}.${name}() is called`)
                 return (...args) => schemat.node.rpc(id, name, args, opts)
             }
-        })
+        }
 
-        // create both proxies using the handler factory
-        let parameterized_proxy = new Proxy({}, create_handler(true))
+        // this proxy is returned after a parameterized call: $ROLE(...)
+        let parameterized_proxy = new Proxy({}, handler)  //create_handler(true))
 
         // create a function that updates current_opts and returns the parameterized proxy
         let func = function(opts = {}) {
@@ -139,7 +141,7 @@ export class Intercept {
         }
 
         // make the function itself a proxy that handles the direct access
-        return new Proxy(func, create_handler(false))
+        return new Proxy(func, handler)  //create_handler(false))
     }
 
     static _get_deep(target, path, receiver) {
