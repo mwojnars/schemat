@@ -74,7 +74,9 @@ export class Category extends WebObject {
 
     new(props = null, ...args) {
         /* Create a new object in this category and execute its __new__(...args). Return the object (no ID yet). */
-        return this.child_class._new([this], props, args)
+        // let cls = props?.get?.('__class') || props?.__class || this.child_class   // TODO: replace __class in `props` with schemat.get_classpath(cls)
+        let cls = this.child_class
+        return cls._new([this], props, args)
     }
 
     async list_objects(opts = {}) {
