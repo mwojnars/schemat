@@ -110,22 +110,14 @@ export class JSONx {
                 throw new Error(`can't encode a reference to a newborn object without a provisional ID: ${obj}`)
             }
 
+            switch (cls) {
+                case Array:         return this.encode_array(obj)
+                case Uint8Array:    return {[ATTR_STATE]: bin_to_hex(obj), [ATTR_CLASS]: FLAG_BIN}
+                case BigInt:        return {[ATTR_STATE]: obj.toString(), [ATTR_CLASS]: FLAG_BIGINT}
+            }
+            if (T.isClass(obj))     return {[ATTR_STATE]: schemat.get_classpath(obj), [ATTR_CLASS]: FLAG_TYPE}
+
             let state
-
-            if (cls === Array) return this.encode_array(obj)
-
-            if (cls === Uint8Array) {
-                let state = bin_to_hex(obj)
-                return {[ATTR_STATE]: state, [ATTR_CLASS]: FLAG_BIN}
-            }
-            
-            if (cls === BigInt)
-                return {[ATTR_STATE]: obj.toString(), [ATTR_CLASS]: FLAG_BIGINT}
-
-            if (T.isClass(obj)) {
-                let state = schemat.get_classpath(obj)
-                return {[ATTR_STATE]: state, [ATTR_CLASS]: FLAG_TYPE}
-            }
 
             if (cls === Date)       state = obj.getTime()     // integer: milliseconds since the Unix epoch, e.g., 1759779318091
             else if (cls === Map)   state = this.encode_object(Object.fromEntries(obj.entries()))
@@ -148,6 +140,7 @@ export class JSONx {
             this.#references.delete(obj)  // cleanup after encoding is done
         }
     }
+
 
     decode(state) {
         /*
