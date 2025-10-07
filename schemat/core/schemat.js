@@ -167,7 +167,7 @@ export class Schemat {
         let builtin = this.builtin = new Classpath()
 
         // standard JS classes have an empty file part of the path (e.g., ":Map")
-        let std_objects = [Date, Map, Error, TypeError, RangeError, ReferenceError, SyntaxError, EvalError, URIError, AggregateError]
+        let std_objects = [Date, Map, Set, Error, TypeError, RangeError, ReferenceError, SyntaxError, EvalError, URIError, AggregateError]
         for (let obj of std_objects)
             builtin.set(`:${obj.name}`, obj)
 
