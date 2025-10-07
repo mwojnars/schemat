@@ -91,6 +91,8 @@ export class Struct {
 
     /***  Static methods for use with different data structures  ***/
 
+    // TODO: add support for Set objects
+
     static isCollection(obj) {
         // plain objects treated as collections (dicts)
         return obj instanceof Catalog || obj instanceof Map || obj instanceof Array || obj instanceof Struct || T.isPlain(obj)

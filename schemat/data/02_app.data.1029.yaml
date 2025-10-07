@@ -145,6 +145,14 @@
   strong_ref:
     "@": 2106
   value_x: 123.4
+  value_set:
+    =:
+      - 1
+      - 2
+    "@": :Set
+  value_date:
+    =: 1760010502111
+    "@": :Date
   __category:
     "@": 2101
 - id: 2106
