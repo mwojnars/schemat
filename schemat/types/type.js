@@ -698,7 +698,12 @@ export class ArrayLike extends Compound {
 
     subtype(key)    { return this.options.type }
     collect(assets) { this.options.type.collect(assets) }
-    toString()      { return `${this.constructor.name}(${this.options.type})` }
+
+    toString() {
+        let {type} = this.options
+        let name = this.constructor.name
+        return type === generic_type ? name : `${name}(${type})`
+    }
 }
 
 export class ARRAY extends ArrayLike {
