@@ -329,6 +329,7 @@ export class Primitive extends Type {
     static stype        // the predefined standard type (typeof...) of app-layer values; same type for db-layer values
 
     _validate(value) {
+        value = super._validate(value)
         let t = this.constructor.stype
         if (typeof value !== t) throw new ValueError(`expected a primitive value of type "${t}", got "${typeof value}" instead (${value})`)
         return value
@@ -619,6 +620,7 @@ export class ENUM extends Atomic {
     }
 
     _validate(value) {
+        value = super._validate(value)
         let date = (value instanceof Date) ? value : new Date(value)    // convert from milliseconds since epoch, or from date/datetime string
         if (isNaN(date.getTime())) throw new ValueError(`invalid date: ${date}`)
         return date
