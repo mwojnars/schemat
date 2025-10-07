@@ -96,9 +96,10 @@ export class JSONx {
 
         // find the top-most base class of the object to avoid repeated instanceof checks against different base types
         let topclass = T.getTopClass(obj)
+        let cls = Object.getPrototypeOf(obj).constructor
 
         try {
-            if (topclass === Array) return this.encode_array(obj)
+            if (cls === Array) return this.encode_array(obj)
 
             if (T.isPlain(obj)) {
                 obj = this.encode_object(obj)
@@ -116,8 +117,7 @@ export class JSONx {
                 return {[ATTR_STATE]: state, [ATTR_CLASS]: FLAG_BIN}
             }
             
-            // if (typeof obj === 'bigint')    // handle BigInt values
-            if (topclass === BigInt)
+            if (cls === BigInt)
                 return {[ATTR_STATE]: obj.toString(), [ATTR_CLASS]: FLAG_BIGINT}
 
             if (T.isClass(obj)) {
@@ -127,10 +127,10 @@ export class JSONx {
 
             let state
 
-            if (topclass === Date)        state = obj.getTime()     // integer: milliseconds since the Unix epoch, e.g., 1759779318091
-            else if (topclass === Map)    state = this.encode_object(Object.fromEntries(obj.entries()))
-            else if (topclass === Set)    state = this.encode_array([...obj])
-            else if (topclass === Error)  state = this.encode_error(obj)
+            if (cls === Date)       state = obj.getTime()     // integer: milliseconds since the Unix epoch, e.g., 1759779318091
+            else if (cls === Map)   state = this.encode_object(Object.fromEntries(obj.entries()))
+            else if (cls === Set)   state = this.encode_array([...obj])
+            else if (topclass === Error) state = this.encode_error(obj)
             else {
                 state = getstate(obj)
                 state = (obj !== state) ? this.encode(state) : this.encode_object(state)
