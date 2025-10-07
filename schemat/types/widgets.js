@@ -11,7 +11,8 @@ import {Component} from "../web/component.js"
 
 export class TypeWidget extends Component {
     /* Base class for UI "view-edit" widgets that display and let users edit atomic (non-catalog) values
-       of a particular data type.
+       of a particular data type. The most important methods are viewer() and editor() which return React elements
+       for rendering the widget in "view" and "edit" modes, respectively.
      */
     static defaultProps = {
         type:   undefined,      // Type of the `value` to be displayed
@@ -35,11 +36,11 @@ export class TypeWidget extends Component {
         }
     }
 
-    empty(v)    { return T.isNullish(v) && I('undefined') }     // view of an empty value, for display() and viewer()
-    view(v)     { return this.encode(v) }                       // view of a non-empty value, for display() and viewer()
-    display(v)  { return this.empty(v) || this.view(v) }        // convert a value to a UI element for display in viewer()
-    encode(v)   { return JSONx.stringify(v) }                   // convert a value to its editable representation
-    decode(v)   { return JSONx.parse(v) }                       // ...and back
+    empty(v)    { return v == null && I('undefined') }      // view of an empty value, for display() and viewer()
+    view(v)     { return this.encode(v) }                   // view of a non-empty value, for display() and viewer()
+    display(v)  { return this.empty(v) || this.view(v) }    // convert a value to a UI element for display in viewer()
+    encode(v)   { return JSONx.stringify(v) }               // convert a value to its editable representation
+    decode(v)   { return JSONx.parse(v) }                   // ...and back
 
     viewer()    { return DIV(cl('viewer'), {onDoubleClick: e => this.open(e)}, this.display(this.props.value)) }
     editor()    { return INPUT({
