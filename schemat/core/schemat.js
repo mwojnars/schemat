@@ -66,7 +66,7 @@ class Classpath {
     get_object(path) {
         /* Return object pointed to by a given path. */
         let obj = this.cache.get(path)
-        if (obj === undefined) throw new Error(`Unknown prefetched path: ${path}`)
+        if (obj === undefined) throw new Error(`unknown prefetched path: ${path}`)
         return obj
     }
 
@@ -75,7 +75,7 @@ class Classpath {
            under different names (paths), the most recently assigned path is returned.
         */
         let path = this.inverse.get(obj)
-        if (path === undefined) throw new Error(`Not in prefetched: ${obj.name || obj}`)
+        if (path === undefined) throw new Error(`import path not found for: ${obj}`)
         return path
     }
 }
@@ -259,7 +259,7 @@ export class Schemat {
          */
         if (typeof cls === "object")            // if `cls` is a class prototype, take its constructor instead
             cls = cls.constructor
-        if (!cls) throw `Argument is empty or not a class: ${cls}`
+        if (!cls) throw new Error(`Argument is empty or not a class: ${cls}`)
 
         return this.builtin.get_path(cls)
     }

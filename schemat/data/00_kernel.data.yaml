@@ -11,7 +11,7 @@
         defined in this class are treated as endpoints of the category object,
         not instances.'
       default: schemat:WebObject
-      "@": schemat/types/type.js:STRING
+      "@": schemat/types/type.js:IMPORT
     std:
       value_type:
         "@": schemat/types/type.js:REF

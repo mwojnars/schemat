@@ -492,9 +492,14 @@ export class PATH extends STRING {
 }
 
 export class IMPORT extends STRING {
-    /* Import path of the form "a/b/c.../file.js" or ".../file.js:object_name", pointing to a module or a symbol
-       (class, function etc.) inside a JS module.
+    /* Import path of the form "a/b/c.../file.js" or ".../file.js:object_name", pointing to a module or symbol
+       (class, function etc.) inside a JS module. During validation, a class/function can be passed as `value`,
+       which will be converted to an import path through
      */
+    _validate(value) {
+        let path = (typeof path !== "string") ? schemat.get_classpath(value) : value
+        return super._validate(path)
+    }
 }
 
 
@@ -620,10 +625,9 @@ export class ENUM extends Atomic {
     }
 
     _validate(value) {
-        value = super._validate(value)
         let date = (value instanceof Date) ? value : new Date(value)    // convert from milliseconds since epoch, or from date/datetime string
-        if (isNaN(date.getTime())) throw new ValueError(`invalid date: ${date}`)
-        return date
+        if (isNaN(date.getTime())) throw new ValueError(`invalid date: ${value}`)
+        return super._validate(date)
     }
 
     static Widget = class extends widgets.TypeWidget {
