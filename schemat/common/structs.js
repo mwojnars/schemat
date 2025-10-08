@@ -350,7 +350,8 @@ export class SpotDiff {
        The maximum number of replacements that can be returned is 2^max_depth -- if this is smaller than
        the actual number of changes, some neighboring changes are represented by a single replacement.
        If no good (short enough) replacement can be found, undefined is returned, meaning that it is more efficient
-       to replace the entire string than to compute a difference. Spot-diff is a heuristic, it occasionally returns suboptimal plans.
+       to replace the entire string than to compute a difference. Spot-diff is a heuristic algorithm,
+       and it may occasionally return suboptimal plans.
      */
 
     static apply(s, replacements) {
@@ -360,7 +361,7 @@ export class SpotDiff {
         return s
     }
 
-    static compute(s1, s2, max_depth = 3, num_patches = 15, min_len = 4, min_patches = 4, min_improvement = 0.1, penalty = 10) {
+    static compute(s1, s2, {max_depth = 3, num_patches = 15, min_len = 4, min_patches = 4, min_improvement = 0.1, penalty = 10} = {}) {
 
         let M = s1.length
         let N = s2.length

@@ -161,7 +161,6 @@ export class Type extends Struct {
         if (class_ && !(value instanceof class_)) throw new ValueError(`expected instance of ${class_}, got ${value}`)
 
         return value
-        // return this._validate(value)
     }
 
     // _validate(value) {
