@@ -153,16 +153,12 @@ export class Type extends Struct {
          */
         if (value === undefined) throw new ValueError(`expected a value, got undefined`)
 
-        let {not_null, not_blank} = this.options
+        let {not_null, not_blank, class: class_} = this.options
         let blank = (value == null) || this.is_blank(value)
 
-        if (not_blank && blank)                     // blank values are forbidden if required=true
-            throw new ValueError(`expected a non-blank value`)
-
-        if (not_null && value === null)
-            throw new ValueError(`expected a non-null value`)
-
-        // if (value == null) return null              // null is never passed down to _validate()
+        if (not_null && value == null) throw new ValueError(`expected a non-null value`)
+        if (not_blank && blank) throw new ValueError(`expected a non-blank value`)
+        if (class_ && !(value instanceof class_)) throw new ValueError(`expected instance of ${class_}, got ${value}`)
 
         return this._validate(value)
     }
