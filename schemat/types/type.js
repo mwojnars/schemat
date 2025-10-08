@@ -43,6 +43,7 @@ export class Type extends Struct {
         default  : undefined,       // default value of a single-valued property when no explicit value was provided; appended to the list of (multiple) values in case of a multivalued property
 
         required : undefined,       // if true, the attribute/field described by this type must be present (not undefined)
+        not_null : true,            // if true, `null` is not accepted as a valid value
         not_blank: true,            // if true, the value must be not-null and not-blank (type.is_blank(val)); missing values are accepted unless required=true
         // blank_as : undefined,       // if defined, its value (typically, `null`) is used as a replacement for blank values
         // null_as  : undefined,       // if defined, its value (typically, something like "") is used as a replacement for null values
@@ -150,15 +151,18 @@ export class Type extends Struct {
         /* Validate an object/value to be encoded, clean it up and convert to a canonical form if needed.
            Return the processed value, or raise an exception if the value is invalid.
          */
-        assert(value !== undefined)
+        if (value === undefined) throw new ValueError(`expected a value, got undefined`)
 
-        let {not_blank} = this.options
+        let {not_null, not_blank} = this.options
         let blank = (value == null) || this.is_blank(value)
 
         if (not_blank && blank)                     // blank values are forbidden if required=true
             throw new ValueError(`expected a non-blank value`)
 
-        if (value == null) return null              // null is never passed down to _validate()
+        if (not_null && value === null)
+            throw new ValueError(`expected a non-null value`)
+
+        // if (value == null) return null              // null is never passed down to _validate()
 
         return this._validate(value)
     }
@@ -729,8 +733,8 @@ export class ARRAY extends ArrayLike {
     is_blank(arr) { return arr?.length === 0 }
 
     _validate(arr) {
-        let {type} = this.options
         arr = super._validate(arr)
+        let {type} = this.options
         return arr.map(elem => type.validate(elem))
     }
 
