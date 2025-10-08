@@ -160,22 +160,23 @@ export class Type extends Struct {
         if (not_blank && blank) throw new ValueError(`expected a non-blank value`)
         if (class_ && !(value instanceof class_)) throw new ValueError(`expected instance of ${class_}, got ${value}`)
 
-        return this._validate(value)
-    }
-
-    _validate(value) {
-        /* Subclasses should override this method instead of validate(). This method  is only called after `value`
-           was already checked against blanks and an incorrect class, so the subclass may assume that the value
-           is non-blank and of the proper class. Every subclass implementation should first execute:
-              value = super._validate(value)
-           to allow for any super-class validation and normalization to take place.
-         */
-        let {class: class_} = this.options
-        if (class_ && !(value instanceof class_))
-            throw new ValueError(`expected instance of ${class_}, got ${value}`)
-
         return value
+        // return this._validate(value)
     }
+
+    // _validate(value) {
+    //     /* Subclasses should override this method instead of validate(). This method  is only called after `value`
+    //        was already checked against blanks and an incorrect class, so the subclass may assume that the value
+    //        is non-blank and of the proper class. Every subclass implementation should first execute:
+    //           value = super._validate(value)
+    //        to allow for any super-class validation and normalization to take place.
+    //      */
+    //     let {class: class_} = this.options
+    //     if (class_ && !(value instanceof class_))
+    //         throw new ValueError(`expected instance of ${class_}, got ${value}`)
+    //
+    //     return value
+    // }
 
 
     /***  Inheritance & Imputation  ***/
@@ -328,8 +329,8 @@ export class Primitive extends Type {
 
     static stype        // the predefined standard type (typeof...) of app-layer values; same type for db-layer values
 
-    _validate(value) {
-        value = super._validate(value)
+    validate(value) {
+        value = super.validate(value)
         let t = this.constructor.stype
         if (typeof value !== t) throw new ValueError(`expected a primitive value of type "${t}", got "${typeof value}" instead (${value})`)
         return value
@@ -352,8 +353,8 @@ export class NUMBER extends Primitive {
         max_decimals:   undefined,
         accept_string:  true,
     }
-    _validate(value) {
-        value = super._validate(value)
+    validate(value) {
+        value = super.validate(value)
         let {accept_string, min, max} = this.options
         if (accept_string && typeof value === 'string') value = Number(value)
         if (min !== undefined && value < min) throw new ValueError(`the number (${value}) is out of bounds, should be >= ${min}`)
@@ -370,8 +371,8 @@ export class INTEGER extends NUMBER {
         length:  undefined,     // number of bytes to be used to store values in DB indexes; adaptive encoding if undefined (for uint), or 6 (for signed int)
     }
 
-    _validate(value) {
-        value = super._validate(value)
+    validate(value) {
+        value = super.validate(value)
         if (!Number.isInteger(value)) throw new ValueError(`expected an integer, got ${value} instead`)
         if (!this.options.signed && value < 0) throw new ValueError(`expected a positive integer, got ${value} instead`)
         if (value < Number.MIN_SAFE_INTEGER) throw new ValueError(`the integer (${value}) is too small to be stored in JavaScript`)
@@ -418,8 +419,8 @@ export class Textual extends Primitive {
 
     is_blank(value) { return value === '' }
 
-    _validate(str) {
-        str = super._validate(str)
+    validate(str) {
+        str = super.validate(str)
         let {charset} = this.options
         if (charset) {
             let regex = new RegExp(`^[${charset}]*$`, 'u')
@@ -435,8 +436,8 @@ export class STRING extends Textual {
     static options = {
         trim: true,                 // if true (default), the strings are trimmed before insertion to DB
     }
-    _validate(str) {
-        str = super._validate(str)
+    validate(str) {
+        str = super.validate(str)
         return this.options.trim ? str.trim() : str               // trim leading/trailing whitespace
     }
 }
@@ -463,8 +464,8 @@ export class URL extends STRING {
     static pattern = /^([a-z]{3,6}:\/\/)?[a-z\d.-]+\.[a-z]{2,}(?:\/[^\s]*)?$/i
     // static pattern = /^([a-z]{3,6}:\/\/)?((([a-z\d]([a-z\d-]*[a-z\d])*)\.)+[a-z]{2,}|((\d{1,3}\.){3}\d{1,3}))(\:\d+)?(\/[-a-z\d%_.~+]*)*(\?[;&a-z\d%_.~+=-]*)?(\#[-a-z\d_]*)?$/i
 
-    _validate(url) {
-        url = super._validate(url)
+    validate(url) {
+        url = super.validate(url)
         if (!this.constructor.pattern.test(url)) throw new ValueError(`invalid URL: ${url}`)
         return url
     }
@@ -496,9 +497,9 @@ export class IMPORT extends STRING {
        (class, function etc.) inside a JS module. During validation, a class/function can be passed as `value`,
        which will be converted to an import path through
      */
-    _validate(value) {
+    validate(value) {
         let path = (typeof path !== "string") ? schemat.get_classpath(value) : value
-        return super._validate(path)
+        return super.validate(path)
     }
 }
 
@@ -545,8 +546,8 @@ export class REF extends Type {
 
     is_strong() { return this.options.strong }
 
-    _validate(obj) {
-        obj = super._validate(obj)
+    validate(obj) {
+        obj = super.validate(obj)
         if (!(obj instanceof schemat.WebObject)) throw new ValueError(`expected a WebObject, got ${obj} instead`)
         if (!obj.id) throw new ValueError(`found a reference to newborn object ${obj}, it should be inserted first`)
 
@@ -581,8 +582,8 @@ export class ENUM extends Atomic {
                             // alternatively, `choices` can be an array of values (no metadata)
     }
 
-    _validate(value) {
-        value = super._validate(value)
+    validate(value) {
+        value = super.validate(value)
         let choices = this._choices()
         if (!choices.includes(value)) throw new ValueError(`invalid choice: ${value}, expected one of [${choices.join(', ')}]`)
         return value
@@ -624,10 +625,10 @@ export class ENUM extends Atomic {
         initial: () => new Date(),
     }
 
-    _validate(value) {
+    validate(value) {
         let date = (value instanceof Date) ? value : new Date(value)    // convert from milliseconds since epoch, or from date/datetime string
         if (isNaN(date.getTime())) throw new ValueError(`invalid date: ${value}`)
-        return super._validate(date)
+        return super.validate(date)
     }
 
     static Widget = class extends widgets.TypeWidget {
@@ -651,8 +652,8 @@ export class CUSTOM_OBJECT extends Atomic {
         attrs:  undefined,      // optional plain object interpreted as a dictionary of allowed attributes, {attr: type};
                                 // values of attributes are *not* replaced during validation
     }
-    _validate(obj) {
-        obj = super._validate(obj)
+    validate(obj) {
+        obj = super.validate(obj)
         let {attrs, strict} = this.options
         if (!attrs) return obj
         if (strict)
@@ -678,8 +679,8 @@ export class SHARD extends CUSTOM_OBJECT {
 // export class CLASS extends GENERIC {
 //     /* Accept objects that represent classes to be encoded through Classpath. */
 //
-//     _validate(cls) {
-//         cls = super._validate(cls)
+//     validate(cls) {
+//         cls = super.validate(cls)
 //         if (!T.isClass(cls)) throw new ValueError(`expected a class, got ${cls} instead`)
 //         return cls
 //     }
@@ -728,8 +729,8 @@ export class ARRAY extends ArrayLike {
 
     is_blank(arr) { return arr?.length === 0 }
 
-    _validate(arr) {
-        arr = super._validate(arr)
+    validate(arr) {
+        arr = super.validate(arr)
         let {type} = this.options
         return arr.map(elem => type.validate(elem))
     }
@@ -747,10 +748,10 @@ export class SET extends ArrayLike {
 
     is_blank(set) { return set?.size === 0 }
 
-    _validate(set) {
+    validate(set) {
         let {type} = this.options
         if (set instanceof Array) set = new Set(set)
-        set = super._validate(set)
+        set = super.validate(set)
         return new Set([...set].map(elem => type.validate(elem)))
     }
 
@@ -824,8 +825,8 @@ export class DictLike extends Compound {
         return T.ofType(key_type, FIELD) ? `${name}(${value_type})` : `${name}(${key_type} > ${value_type})`
     }
 
-    _validate(obj) {
-        obj = super._validate(obj)
+    validate(obj) {
+        obj = super.validate(obj)
         let {key_type, value_type} = this.options
         for (let key of this._keys(obj)) key_type.validate(key)
         for (let val of this._values(obj)) value_type.validate(val)
@@ -849,8 +850,8 @@ export class OBJECT extends DictLike {
     }
     is_blank(obj) { return Object.keys(obj).length === 0 }
 
-    _validate(obj) {
-        obj = super._validate(obj)
+    validate(obj) {
+        obj = super.validate(obj)
         if (!T.isPlain(obj)) throw new ValueError(`expected a plain object (no custom class), got ${obj}`)
         return obj
     }
@@ -873,8 +874,8 @@ export class MAP extends DictLike {
     }
     is_blank(obj) { return obj?.size === 0 }
 
-    _validate(obj) {
-        obj = super._validate(obj)
+    validate(obj) {
+        obj = super.validate(obj)
         if (obj instanceof Catalog) return new Map(obj)             // auto-convert Catalogs to Maps
         if (T.isPlain(obj)) return new Map(Object.entries(obj))     // auto-convert POJOs to Maps
         return obj
@@ -898,8 +899,8 @@ export class OBJECTS_MAP extends GENERIC {  // TODO: extends DictLike
         this.options.value_type.collect(assets)
     }
 
-    _validate(map) {
-        map = super._validate(map)
+    validate(map) {
+        map = super.validate(map)
         let schema = this.options.value_type
         return new ObjectsMap([...map.entries_encoded()].map(([k, v]) => [k, schema.validate(v)]))
     }

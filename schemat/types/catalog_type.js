@@ -73,8 +73,8 @@ export class CATALOG extends DictLike {
         return Catalog.merge(catalogs, merge_values)
     }
 
-    _validate(obj) {
-        obj = super._validate(obj)
+    validate(obj) {
+        obj = super.validate(obj)
         let {key_type} = this.options
 
         if (obj instanceof Map) return new Catalog(obj)      // auto-convert Maps to Catalogs
