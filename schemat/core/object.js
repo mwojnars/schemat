@@ -1166,6 +1166,7 @@ export class WebObject {
            Can be called on client and server alike.
          */
         let obj = this
+        let path = null
         let handler = {
             get(target, name) {
                 // when _make_edit() has no return value, `proxy` is returned for chained edits

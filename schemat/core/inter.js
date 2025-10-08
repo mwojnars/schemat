@@ -129,16 +129,16 @@ export class Intercept {
             }
         }
 
-        // this proxy is used after a parameterized call: $ROLE(...)
-        let parameterized_proxy = new Proxy({}, handler)
+        // this proxy is used after a parameterized call to func(): $ROLE(...).*
+        let proxy = new Proxy({}, handler)
 
         // create a function that sets external_opts and returns the parameterized proxy
         let func = function(opts = {}) {
             external_opts = opts
-            return parameterized_proxy
+            return proxy
         }
 
-        // make the function itself a proxy that handles the direct access
+        // this proxy is used with direct access: $ROLE.*
         return new Proxy(func, handler)
     }
 
