@@ -1173,11 +1173,22 @@ export class WebObject {
                 if (typeof name === 'string') return (...args) => {
                     if (name === 'save') return obj.save(...args)
                     obj._make_edit(name, ...args)
+                    // obj._make_edit_v2(path, name, ...args)
+                    // path = null
                     return proxy
                 }
             }
         }
-        return new Proxy({}, handler)
+        // proxy used after a parameterized call: .edit(path).*
+        let proxy = new Proxy({}, handler)
+
+        // function executed during parameterized call: it sets the context (`path`) and returns the proxy
+        let func = function(path_) {
+            path = path_
+            return proxy
+        }
+
+        return new Proxy(func, handler)
     }
 
     get_mutable() {

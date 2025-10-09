@@ -747,7 +747,7 @@ export class DataBlock extends Block {
             let prev = await WebObject.inactive(id, data)
             let obj  = prev._clone()                // dependencies (category, container, prototypes) are loaded, but references NOT (!)
 
-            obj._apply_edits(...edits)              // apply edits; TODO SECURITY: check if edits are safe; prevent modification of internal props (__ver, __seal etc)
+            obj._apply_edits(...edits)              // apply edits; TODO SEC: check if edits are safe; prevent modification of internal props (__ver, __seal etc)
             await obj._initialize(false)            // reinitialize the dependencies (category, class, ...) WITHOUT sealing! they may have been altered by the edits
 
             obj.validate()                          // validate object properties: each one individually and all of them together; may raise exceptions

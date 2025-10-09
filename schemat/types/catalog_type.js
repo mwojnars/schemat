@@ -298,14 +298,14 @@ export class CatalogTable extends Component {
         delete: async (pos) => {
             /* delete the entry at position `pos`; TODO: only mark the entry as deleted (entry.deleted=true) and allow undelete */
             // TODO: lock/freeze/suspense the UI until the server responds to prevent user from making multiple modifications at the same time
-            await item.edit.unset([...path, pos]).save()
+            await item.edit.unset([...path, pos]).save()    //item.edit(path).delete_index(pos).save()
             setEntries(prev => [...prev.slice(0,pos), ...prev.slice(pos+1)])
         },
 
         move: async (pos, delta) => {
             // move the entry at position `pos` by `delta` positions up or down, delta = +1 or -1
             assert(delta === -1 || delta === +1)
-            await item.edit.move([...path, pos], {delta}).save()
+            await item.edit.move([...path, pos], {delta}).save()    //item.edit(path).move(pos, delta).save()
             setEntries(prev => {
                 // if (pos+delta < 0 || pos+delta >= prev.length) return prev
                 let entries = [...prev];
@@ -340,7 +340,7 @@ export class CatalogTable extends Component {
                 let id  = Math.max(...ids.filter(Number.isInteger)) + 1     // IDs are needed internally as keys in React subcomponents
                 prev[pos] = {id, key, value}
 
-                if (type.is_dictionary()) item.edit.set_at(path, pos, key, value).save()
+                if (type.is_dictionary()) item.edit.set_at(path, pos, key, value).save()    //item.edit(path).add_entry(key, value, pos).save()
                 else prev[pos].saveNew = (value) =>
                     item.edit.set_at(path, pos, key, value).save().then(() => unnew())
 
@@ -348,10 +348,10 @@ export class CatalogTable extends Component {
             })
         },
         updateKey: (pos, newKey) => {
-            return item.edit.rename([...path, pos], newKey).save()
+            return item.edit.rename([...path, pos], newKey).save()      // item.edit(path).rename([pos], newKey)
         },
         updateValue: (pos, newValue, type) => {
-            return item.edit.set([...path, pos], newValue).save()
+            return item.edit.set([...path, pos], newValue).save()       // item.edit(path).set([pos], newValue)
         }
     }}
 
