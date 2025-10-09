@@ -649,12 +649,12 @@ export class WebObject {
         return obj?.is_loaded() ? obj : this
     }
 
-    async reload() {
+    async reload(force = false) {
         /* Create a new instance of this object using the most recent version of this object's content
            as available in the registry or downloaded from the DB. Can be overridden in subclasses to provide
            deep reload of child objects; the base implementation only reloads the parent object, so any nested
            objects (if present) may still be outdated. */
-        return schemat.reload(this.id)
+        return schemat.reload(this.id, force)
     }
 
 

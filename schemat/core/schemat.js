@@ -342,18 +342,20 @@ export class Schemat {
         return this.get_loaded(...args)
     }
 
-    async reload(id, strict = false) {
+    async reload(id, force = false) {
         /* Load contents into an existing stub, or create a new instance of the object using the most recent record from the registry
-           (download from DB if missing). When the object is fully initialized replace the existing instance in the registry. Return the object.
-           If strict=true, a new instance is always created.
+           (download from DB if missing). When the object is fully initialized replace the existing instance in the registry.
+           Return the object. If force=true, a new instance is always created, and the cached record is removed beforehand,
+           so the download of the newest DB record is enforced.
          */
         assert(id)
         let loading = this._loading.get(id)
-        if (loading && !strict) return loading
+        if (loading && !force) return loading
 
         let prev = this.get_if_present(id)
+        if (force) this.registry.delete_record(id)
 
-        if (strict || prev?.is_loaded()) {      // create a new instance, but don't replace the existing one in the cache until loading is finished
+        if (force || prev?.is_loaded()) {      // create a new instance, but don't replace the existing one in cache until loading is finished
             let stub = WebObject.stub(id)
             loading = stub.load().then(() => this.registry.set_object(stub)).finally(() => {
                 if (this._loading.get(id) === loading) this._loading.delete(id)
