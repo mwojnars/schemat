@@ -171,7 +171,7 @@ export class Schemat {
         for (let obj of std_objects)
             builtin.set(`:${obj.name}`, obj)
 
-        // WARN: concurrent fetching with fetch_all() may NOT be faster than sequential .fetch() -- this should be tested and compared in production
+        // WARN: concurrent fetching with fetch_all() may NOT be faster than sequential .fetch() -- this should be tested and compared in browsers!
         await builtin.fetch_all(
             ["../index.js", {path: 'schemat'}],         // Schemat core classes, e.g., "schemat:WebObject"
             "../common/structs.js",
@@ -230,7 +230,7 @@ export class Schemat {
         assert(T.isNumber(id), `Invalid application ID: ${id}`)
 
         this._essential.push(id)
-        this._app = await this.reload(id, true)
+        this._app = await this.reload(id) //, true)
         assert(this.app?.is_loaded())
     }
 
