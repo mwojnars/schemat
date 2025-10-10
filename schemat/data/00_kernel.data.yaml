@@ -286,6 +286,7 @@
       "@": schemat/types/type.js:REF
     logger:
       info: Logger object that collects all log messages produced in the cluster.
+      autoload: server
       category:
         "@": 33
       "@": schemat/types/type.js:REF
@@ -293,6 +294,7 @@
       info: "Root of the object hierarchy and the starting point for URL routing: each
         URL path is mapped to an object placed somewhere below the `root`
         container."
+      autoload: server
       category:
         "@": 3
       "@": schemat/types/type.js:REF

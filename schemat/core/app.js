@@ -42,8 +42,6 @@ export class Application extends WebObject {
 
     async __load__() {
         if (SERVER) {
-            await this.root?.load()
-            await this.logger?.load()
             // this._vm = await import('node:vm')
             if (this.default_path) this._check_default_container()      // no await to avoid blocking the app's startup
         }
