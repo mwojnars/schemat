@@ -6,7 +6,7 @@
  *
  */
 
-import {ROOT_ID} from '../common/globals.js'
+import {ROOT_ID, as_plural} from '../common/globals.js'
 import {print, assert, T, escape_html, unique, sleep, randint} from '../common/utils.js'
 import {NotLoaded, URLNotFound, ValidationError} from '../common/errors.js'
 import {Catalog, Struct} from '../common/catalog.js'
@@ -502,6 +502,11 @@ export class WebObject {
             await this._initialize(sealed)
             if (!activate) return this                      // activation involves both __load__() and _activate(); none of these is executed when activate=false
 
+            // autoload the REF attributes that have load=true option set up
+            let load_attrs = this.__category?.autoload_attrs || []
+            let load_refs = load_attrs.flatMap(attr => this.all_values(attr).filter(ref => !ref.is_loaded()))
+            if (load_refs.length) await Promise.all(load_refs.map(ref => ref.load()))
+
             let init = this.__load__()                      // loading of related objects after the main __data is loaded (optional)
             if (init instanceof Promise) await init
 
@@ -756,7 +761,7 @@ export class WebObject {
 
         let inherit = inherited && !virtual //&& !own
         let ancestors = inherit ? proxy.__ancestors : [proxy]                           // `this` included as the first ancestor
-        let streams = virtual ? [] : ancestors.map(proto => proto._own_values(prop))    // for virtual property, __data[prop] is not used even if present
+        let streams = virtual ? [] : ancestors.map(proto => proto.own_values(prop))     // for virtual property, __data[prop] is not used even if present
 
         // read `defaults` from category and combine them with `streams`
         if (prop !== '__prototype' && prop !== '__category')            // avoid circular dependency for these special props
@@ -775,7 +780,8 @@ export class WebObject {
         return values?.length === 0 ? _EMPTY_ARRAY : values
     }
 
-    _own_values(prop)  { return this.__data.getAll(prop) }
+    own_values(prop)  { return this.__data.getAll(prop) }
+    all_values(prop)  { return this[as_plural(prop)] }
 
     instanceof(category) {
         /* Check whether this object belongs to `category` or its subcategory.
@@ -796,7 +802,7 @@ export class WebObject {
         if (!schema) return
 
         // check that all required attributes are present in `data`
-        for (let attr of this.__category.required_attrs)
+        for (let attr of this.__category?.required_attrs || [])
             if (data.get(attr) === undefined) throw new ValidationError(`missing required attribute '${attr}' in ${this}`)
 
         // validate each individual attribute; __data._entries may get directly modified here... (!)
