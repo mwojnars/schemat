@@ -55,6 +55,7 @@ export const SUBFIELD = '.'
 /**********************************************************************************************************************/
 
 export function is_plural(path) { return path.endsWith(PLURAL) }
+export function as_plural(path) { return path.endsWith(PLURAL) ? path : path + PLURAL }
 export function drop_plural(path) { return path.endsWith(PLURAL) ? path.slice(0, -1) : path }
 export function check_plural(path) {
     let plural = path.endsWith(PLURAL)
