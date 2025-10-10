@@ -538,9 +538,9 @@ export class REF extends Type {
     static options = {
         // category:  undefined,       // if present, the referenced object must be loaded and belong to `category`
         // exact:     false,           // if true, the objects must belong to this exact `category`, not any of its subcategories
-        load:   false,      // if true, and the type defines a top-level attribute of an object, the referenced object is automatically loaded with the referrer;
+        autoload: false,    // if true, and the type defines a top-level attribute of an object, the referenced object is automatically loaded with the referrer;
                             // if "server" or "client", the autoloading only takes place in this environment, not the other
-        strong: false,      // if true, the referenced object is considered an essential part of the current one ("strong ownership")
+        strong:   false,    // if true, the referenced object is considered an essential part of the current one ("strong ownership")
                             // and is removed automatically when the parent is deleted (but NOT when the parent is updated and the link alone is removed!)
     }
     static Widget = widgets.REF_Widget

@@ -47,7 +47,7 @@ export class Category extends WebObject {
     get autoload_attrs() {
         /* List of REF attributes that have load=true in `schema`. */
         return Object.entries(this.schema)
-                     .filter(([_, type]) => type.options.load === true || type.options.load === CLIENT_SERVER)
+                     .filter(([_, type]) => type.options.autoload === true || type.options.autoload === CLIENT_SERVER)
                      .map(([attr]) => attr)
     }
 
