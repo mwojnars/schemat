@@ -22,6 +22,7 @@ globalThis.DEBUG = true         // may impede performance; turn to false in prod
 
 globalThis.SERVER = (typeof window === 'undefined')
 globalThis.CLIENT = !globalThis.SERVER
+globalThis.CLIENT_SERVER = SERVER ? 'server' : 'client'     // explicit name of the current environment: client/server
 
 // globalThis.isNodeJS =
 //     typeof process !== 'undefined' &&               // `process` is a global object in Node.js but not in browsers

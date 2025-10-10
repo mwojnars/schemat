@@ -44,6 +44,13 @@ export class Category extends WebObject {
         return Object.entries(this.schema).filter(([_, type]) => type.options.required).map(([attr]) => attr)
     }
 
+    get autoload_attrs() {
+        /* List of REF attributes that have load=true in `schema`. */
+        return Object.entries(this.schema)
+                     .filter(([_, type]) => type.options.load === true || type.options.load === CLIENT_SERVER)
+                     .map(([attr]) => attr)
+    }
+
     // get has_strong_refs() {
     //     /* Check if child_schema contains any REF objects with ref.options.strong=true. */
     //     let refs = []
