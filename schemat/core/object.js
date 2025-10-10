@@ -820,7 +820,8 @@ export class WebObject {
             try {
                 for (let loc of locs) {
                     let entry = data._entries[loc]          // validate the value and possibly replace it IN PLACE with a normalized value
-                    entry[1] = type.validate(entry[1])      // ... may raise an exception
+                    if (entry[1] === undefined) continue    // undefined value will be dropped during serialization
+                    entry[1] = type.validate(entry[1])      // may raise an exception
                 }
             }
             catch (ex) {

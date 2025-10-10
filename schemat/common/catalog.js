@@ -838,9 +838,10 @@ export class Catalog {
 
     __getstate__() {
         /* Encode this Catalog's state either as an object (more compact but requires unique string keys),
-           or as an array of [key, value] tuples.
+           or as an array of [key, value] tuples. The entries whose value=undefined are *dropped* from serialization.
+           Undefined keys are replaced with null.
          */
-        let defined = (x) => x === undefined ? null : x             // function to replace "undefined" with null
+        let defined = (x) => x === undefined ? null : x             // function to replace key=undefined with null
         let entries = this._entries.filter(e => e[1] !== undefined).map(e => [defined(e[0]), e[1]])
 
         if (!this.hasUniqueKeys()) {
