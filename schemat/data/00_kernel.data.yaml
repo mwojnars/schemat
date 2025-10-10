@@ -488,6 +488,7 @@
     top_ring:
       info: Reference to the top-most Ring of this database. Other rings are found by
         following the `base_ring` chain of references.
+      autoload: server
       category:
         "@": 12
       "@": schemat/types/type.js:REF
@@ -516,13 +517,15 @@
   schema:
     main_sequence:
       info: DataSequence that keeps all primary objects of this ring
+      autoload: server
+      strong: true
       category:
         "@": 14
-      strong: true
       "@": schemat/types/type.js:REF
     base_ring:
       info: Reference to the lower ring. If an object is not found in this ring, it is
         searched for in the base_ring.
+      autoload: server
       category:
         "@": 12
       "@": schemat/types/type.js:REF

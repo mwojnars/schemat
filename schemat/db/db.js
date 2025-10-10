@@ -100,17 +100,7 @@ export class Ring extends WebObject {
     //         this.sequences_array.push(seq.__category.new({ring: this, operator: seq.operator}))
     // }
 
-    async __load__() {
-        /* Initialize the ring after it's been loaded from DB. */
-        if (CLIENT) return
-        // print(`... ring [${this.id || '---'}] ${this.name} (${this.readonly ? 'readonly' : 'writable'})`)
-
-        await super.__load__()
-        await this.base_ring?.load()
-        await this.main_sequence.load()
-
-        this.validate_zones()
-    }
+    async __load__() { this.validate_zones() }
 
     // async erase(req) {
     //     /* Remove all records from this ring; open() should be called first. */
@@ -289,13 +279,6 @@ export class Database extends WebObject {
     get bottom_ring()       { return this.stack[0] }
     get ring_ids()          { return new Map(this.stack.map(r => [r.id, r])) }
 
-
-    async __load__() {
-        if (CLIENT) return
-        // print(`initializing database [${this.id}] ...`)
-        // assert(this.top_ring, 'missing rings in the database')
-        await this.top_ring?.load()
-    }
 
     get_ring(ring) {
         /* Return the top-most ring with a given name or ID, throw an error if not found; `ring` can also be a Ring object,
