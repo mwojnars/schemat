@@ -713,6 +713,7 @@
   schema:
     sequence:
       info: parent Sequence this block is a part of
+      autoload: server
       "@": schemat/types/type.js:REF
     storage:
       info: "storage type: yaml, json, rocksdb (in the future), ..."
