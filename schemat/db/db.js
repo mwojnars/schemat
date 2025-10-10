@@ -345,7 +345,7 @@ export class Database extends WebObject {
         return sum(counts)
     }
 
-    async submit(inserts = null, updates = null, deletes = null, opts = {}) {
+    async execute(inserts = null, updates = null, deletes = null, opts = {}) {
         /* Called by Transaction to perform a batch of mutations of mixed types. Arguments:
            - inserts = an array of [negative-provisional-id, data] entries to insert;
            - updates = an array of [id, array_of_edits] pairs for objects to be mutated;

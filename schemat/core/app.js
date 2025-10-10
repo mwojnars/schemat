@@ -163,7 +163,7 @@ export class Application extends WebObject {
 
 
     // runs inside a TX, so updated DB records are captured at the end and returned to caller
-    async 'ax.db_submit'(...args) { return await schemat.db.submit(...args) }
+    async 'ax.db_execute'(...args) { return await schemat.db.execute(...args) }
 
 
     /***  Dynamic imports  ***/

@@ -175,7 +175,7 @@ export class Transaction {
             newborn.forEach(obj => this._staging.delete(obj))       // drop every newborn from _staging, it will be reinserted later
         }
 
-        let result = await schemat.db.submit(ins_datas, upd_edits, del_ids, opts)
+        let result = await schemat.db.execute(ins_datas, upd_edits, del_ids, opts)
         let {inserted} = result
 
         if (newborn.length) {
