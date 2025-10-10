@@ -87,6 +87,8 @@ export class Ring extends WebObject {
         return [A, B || C, C]
     }
 
+    async __load__() { this.validate_zones() }
+
     // async __setup__() {
     //     /* Re-create `main_sequence` and all derived sequences from the lower ring. */
     //
@@ -99,8 +101,6 @@ export class Ring extends WebObject {
     //     for (let seq of base.derived)
     //         this.sequences_array.push(seq.__category.new({ring: this, operator: seq.operator}))
     // }
-
-    async __load__() { this.validate_zones() }
 
     // async erase(req) {
     //     /* Remove all records from this ring; open() should be called first. */

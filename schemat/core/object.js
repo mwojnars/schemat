@@ -502,7 +502,7 @@ export class WebObject {
             await this._initialize(sealed)
             if (!activate) return this                      // activation involves both __load__() and _activate(); none of these is executed when activate=false
 
-            // autoload the REF attributes that have load=true option set up
+            // load references that have `autoload` option set up
             let load_attrs = this.__category?.autoload_attrs || []
             let load_refs = load_attrs.flatMap(attr => this.all_values(attr).filter(ref => !ref.is_loaded()))
             if (load_refs.length) await Promise.all(load_refs.map(ref => ref.load()))
