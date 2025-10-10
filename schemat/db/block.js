@@ -217,9 +217,7 @@ export class Block extends Agent {
     }
 
     async __load__() {
-        if (CLIENT) return              // don't initialize internals when on client
-
-        if (!this.ring.is_loaded())
+        if (SERVER && !this.ring.is_loaded())       // internals initialized on server only
             await this.ring.load()
     }
 
