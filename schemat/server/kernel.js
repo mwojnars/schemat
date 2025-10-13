@@ -71,7 +71,8 @@ export class Kernel {
        Delegates some other duties to the Node class.
      */
 
-    // booting = new Promise(resolve => this._booting_resolve = resolve)   // resolves when the kernel is fully booted; false after that
+    // resolves when all initial agents are started; false after that
+    booting = new Promise(resolve => this._booting_resolve = resolve)
 
     node_id                     // ID of `node`
     frames = new FramesTable()  // {fid, id, role, frame} records of currently running agents
@@ -158,6 +159,7 @@ export class Kernel {
             role ??= AgentRole.GENERIC
             await this.start_agent(id, role, {fid})
         }
+        this._booting_resolve()
     }
 
     async stop() {

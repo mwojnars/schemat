@@ -455,9 +455,20 @@ export class Node extends Agent {
         let {id, role, cmd, args, ctx, tx} = RPC_Request.parse(message)
         if (tx?.debug) this._print("rpc_exec():", JSON.stringify(message))
 
-        // locate the agent by its `id`, should be running here in this process
-        let frame = schemat.get_frame(id, role)
-        if (!frame) throw new Error(`[${id}].${role || AgentRole.GENERIC} not found on this process to execute RPC message ${JSON.stringify(message)}`)
+        // // locate the agent by its `id`, should be running here in this process
+        // let frame = schemat.get_frame(id, role)
+        // if (!frame) {
+        //     if (schemat.kernel.booting) await schemat.kernel.booting
+        //     else throw new Error(`[${id}].${role || AgentRole.GENERIC} not found on this process to execute RPC message ${JSON.stringify(message)}`)
+        // }
+
+        let frame
+        do {
+            frame = schemat.get_frame(id, role)
+            if (frame) break
+            if (schemat.kernel.booting) await schemat.kernel.booting
+            else throw new Error(`[${id}].${role || AgentRole.GENERIC} not found on this process to execute RPC message ${JSON.stringify(message)}`)
+        } while (!frame)
 
         return frame.exec(cmd, args, ctx, tx, (out, err) => RPC_Response.create(out, err))
     }
