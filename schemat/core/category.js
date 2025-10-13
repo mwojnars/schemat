@@ -106,7 +106,7 @@ export class Category extends WebObject {
     /***  URL routing  ***/
 
     member_url(obj) {
-        /* Complete URL path of a given member object. */
+        /* Canonical public URL path of a given member object. */
         let base = this.base_url || ''
         if (base && !base.endsWith('/')) base += '/'
         return base + this.member_class.get_slug(obj)

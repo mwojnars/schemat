@@ -881,7 +881,7 @@ export class WebObject {
     //     return this.__category?.member_url(this) || this.system_url
     // }
 
-    admin_slug() {
+    system_slug() {
         /* This object's URL slug for administrative purposes. */
         assert(this.id)
         return `${this.id}`
@@ -891,7 +891,7 @@ export class WebObject {
         /* Slug to be used in public (non-admin) URLs of this object. Can be overridden in subclasses.
            If this method is async (returns a Promise), __slug should be stored directly in DB -- not supported yet.
          */
-        return this.admin_slug()
+        return this.system_slug()
     }
 
     static get_slug(obj) {
