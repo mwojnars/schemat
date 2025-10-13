@@ -9,8 +9,8 @@ const {DELETED} = WebObject.Status
 /**********************************************************************************************************************/
 
 export class Session {
-    /* A group of related database mutations that will be pushed together to the DB.
-       Does NOT currently provide ACID guarantees of consistency and atomicity.
+    /* A group of related database mutations that will be pushed together to the DB (saved and/or committed).
+       Currently, there are NO transactions and ACID guarantees are not fulfilled.
 
        The role of session/transaction is to:
        - track mutations applied to web objects in a given execution thread;
@@ -321,7 +321,7 @@ export class LiteSession extends ServerSession {
      */
 
     constructor()   { super({lite: true}) }
-    commit()        { throw new Error(`lite transaction cannot be committed`) }
+    commit()        { throw new Error(`lite session cannot be committed`) }
     dump_tx()       {}
     capture(...recs) {
         this._snap = new Map(recs.map(r => [r.id, r.data]))

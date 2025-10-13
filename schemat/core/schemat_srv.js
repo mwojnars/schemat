@@ -29,14 +29,15 @@ export class ServerSchemat extends Schemat {
 
     _cluster        // Cluster object of the previous generation, remembered here to keep the .cluster() getter operational during complete cache erasure
     _generation     // current generation number: 1,2,3... increased during complete cache erasure
-    _transaction    // AsyncLocalStorage that holds a Session describing the currently executed DB action
-    _lite_tx        // LiteSession object, global to this Schemat context, used as a fallback when no request-specific transaction is present
+
+    _session        // AsyncLocalStorage that holds a Session describing the currently executed DB action
+    _lite_session   // LiteSession object, global to this Schemat context, used as a fallback when no request-specific transaction is present
 
     // on_exit = new Set()     // callbacks to be executed when this process is exiting
 
 
     get db()        { return this._boot_db || this._db }
-    get tx()        { return this._transaction.getStore() || this._lite_tx }
+    get tx()        { return this._session.getStore() || this._lite_session }
     get node()      { return this.kernel?.node }        // host Node (web object) of the current process, initialized and periodically reloaded in Server; has .$state and .$frame attributes
     get cluster()   { return this.get_if_loaded(this._cluster?.id, obj => {this._cluster = obj}) || this._cluster }
 
@@ -82,8 +83,8 @@ export class ServerSchemat extends Schemat {
         assert(fs.existsSync(this.PATH_WORKING + '/schemat/core/schemat.js'), 'working directory does not contain the Schemat installation with ./schemat source tree')
 
         this._generation = 1
-        this._transaction = new AsyncLocalStorage()
-        this._lite_tx = new LiteSession()
+        this._session = new AsyncLocalStorage()
+        this._lite_session = new LiteSession()
         // this.loader = new Loader(import.meta.url)
     }
 
@@ -401,7 +402,7 @@ export class ServerSchemat extends Schemat {
         assert(this === schemat)
         let tid = tx?.tid
         tx = new ServerSession({tid})
-        let result = await this._transaction.run(tx, async () => {
+        let result = await this._session.run(tx, async () => {
             let res = await callback()
             if (!tid) await tx.commit()
             // if (tid) await tx.flush(); else await tx.commit()
