@@ -289,14 +289,14 @@ export class ServerSession extends Session {
     /*  Serialization  */
 
     static load({tid, debug}) {
-        let tx = new ServerSession()
-        tx.tid = tid
-        tx.debug = debug
+        let sess = new ServerSession()
+        sess.tid = tid
+        sess.debug = debug
         // tx._snap = records || []
-        return tx
+        return sess
     }
 
-    dump_tx() {
+    dump_session() {
         let {tid, debug} = this
         return {tid, debug}
     }
@@ -322,7 +322,7 @@ export class LiteSession extends ServerSession {
 
     constructor()   { super({lite: true}) }
     commit()        { throw new Error(`lite session cannot be committed`) }
-    dump_tx()       {}
+    dump_session()  {}
     capture(...recs) {
         this._snap = new Map(recs.map(r => [r.id, r.data]))
     }

@@ -1069,8 +1069,8 @@ export class WebObject {
 
     update_self(props = {}) {
         /* Copy all `props` entries into `this`. */
-        // schemat.tx.config({capture: false, atomic: true})
-        // schemat.tx.default({capture: false, atomic: true}) -- has effect unless the property was already configured by client
+        // schemat.session.config({capture: false, atomic: true})
+        // schemat.session.default({capture: false, atomic: true}) -- has effect unless the property was already configured by client
         for (let [key, val] of Object.entries(props))
             this[key] = val
         return this

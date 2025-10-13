@@ -415,7 +415,7 @@ export class ServerSchemat extends Schemat {
 
     // in_tx_context(ctx, tx, callback) {
     //     /* Run callback() inside a double async context created by first setting the global `schemat`
-    //        to the context built around `ctx`, and then setting schemat.tx to `tx`. Both arguments are optional.
+    //        to the context built around `ctx`, and then setting schemat.session to `tx`. Both arguments are optional.
     //      */
     //     let call = tx ? () => schemat.in_transaction(callback, tx, false) : callback    // critical to use `schemat` not `this` here, bcs context changes!
     //     return this.app_context(ctx, call)

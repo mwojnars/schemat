@@ -41,7 +41,7 @@ export class Sequence extends WebObject {
         this._print('Sequence.__setup__() creating a block')
         let Block = schemat.std.Block
         this.blocks = [Block.new({sequence: this, storage: 'json'})]
-        // this._print(`tx._staging:`, schemat.tx._staging)
+        // this._print(`tx._staging:`, schemat.session._staging)
     }
 
     async __delete__() {
@@ -134,7 +134,7 @@ export class Sequence extends WebObject {
         /* Create a derived sequence that will capture changes from this sequence and apply `operator` to them. */
 
         assert(this.__ring)
-        // assert(schemat.tx.lite, `create_derived() can only be executed in a lite transaction`)
+        // assert(schemat.session.lite, `create_derived() can only be executed in a lite transaction`)
 
         let seq = schemat.std.Sequence.new({ring: this.ring, source: this, operator})
         seq = await seq.save({ring: this.__ring, broadcast: true})  // {snap: true}
@@ -143,14 +143,14 @@ export class Sequence extends WebObject {
 
         // tx.is_lite() / tx.no_rollback  -- whatever was saved to DB cannot be rolled back;
         // only in this mode it's allowed to perform mutating operations on the cluster within a DB transaction
-        // schemat.tx.epilog(() => {})
+        // schemat.session.epilog(() => {})
 
         await seq._deploy()
         this.derived = [...this.derived || [], seq]
 
         // this.blocks.map(b => b.edit.touch()) -- touch all blocks to let them know about the new derived sequence ??
-        // schemat.tx.save({broadcast: true})   -- broadcast performed AFTER commit
-        // schemat.tx.broadcast()       = commit + broadcast
+        // schemat.session.save({broadcast: true})   -- broadcast performed AFTER commit
+        // schemat.session.broadcast()       = commit + broadcast
     }
 
     async _deploy() {
