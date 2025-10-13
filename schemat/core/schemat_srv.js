@@ -383,7 +383,7 @@ export class ServerSchemat extends Schemat {
         if (!obj.is_loaded()) await obj.load()
         // obj = obj.get_mutable()
 
-        let func = obj.__self[`ax.${action}`]
+        let func = obj.__self[`act.${action}`]
         if (!func) throw new Error(`action method not found: '${action}'`)
         obj._print(`execute_action(${action}) ...`)
 

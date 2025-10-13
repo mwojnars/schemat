@@ -1033,10 +1033,9 @@ export class WebObject {
 
     /***  Web Triggers  ***/
 
-    get ax() {
-        // TODO: rename to server() or remote() ?? ... use as: obj.server.method()
-        /* Triggers of server-side actions: obj.ax.X(...args) invokes app.POST.action(id, 'X', args),
-           which forwards the call to obj['ax.X'](...args) on server. Inside the 'ax.X'() method,
+    get act() {
+        /* Triggers of server-side actions: obj.act.X(...args) invokes app.POST.action(id, 'X', args),
+           which forwards the call to obj['act.X'](...args) on server. Inside the 'act.X'() method,
            `this` object is made mutable, so it can be easily edited. Any modified records are returned to the caller
            and saved in Registry, so the caller can recreate corresponding objects with their most recent content
            by simply refreshing/reloading them. Action triggers can be called on stubs without fully loading the target object.
@@ -1048,7 +1047,7 @@ export class WebObject {
         return new Proxy({}, {
             get(target, name) {
                 if (typeof name === 'string')
-                    if (CLIENT && name[0] === '_') throw new Error(`private ax.${name}() can only be invoked on server`)
+                    if (CLIENT && name[0] === '_') throw new Error(`private act.${name}() can only be invoked on server`)
                     else return (...args) => SERVER ? schemat.execute_action(obj, name, args, false) : schemat.app.POST.action(id, name, args)
             }
         })
@@ -1356,7 +1355,7 @@ export class WebObject {
 
     /***  Actions  ***/
 
-    async 'ax.move_to'(directory, overwrite = false) {
+    async 'act.move_to'(directory, overwrite = false) {
         /* Move this object from its current __container to `directory`, which must be a Directory object, or its URL. */
 
         if (typeof directory === 'number') directory = await schemat.get_loaded(directory)

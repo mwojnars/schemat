@@ -50,7 +50,7 @@ export class Client extends Schemat {
             let {data} = await fetch(url).then(response => response.json())     // {id, data} encoded
             return JSON.stringify(data)
         },
-        async execute(...args) { return schemat.app.ax.db_execute(...args) },
+        async execute(...args) { return schemat.app.act.db_execute(...args) },
     }
 }
 

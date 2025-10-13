@@ -498,7 +498,7 @@ export class Schemat {
     }
 
     // /* Proxy object that handles both direct calls (remote(code)) and property access (remote.XYZ).
-    //    Direct calls execute code on the server via eval, while property access forwards to app.ax.XYZ().
+    //    Direct calls execute code on the server via eval, while property access forwards to app.act.XYZ().
     //  */
     // remote = new Proxy(
     //     async (code) => this.app.POST.server(code),       // handle direct calls like remote(code)

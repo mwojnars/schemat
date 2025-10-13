@@ -480,7 +480,7 @@ export class Database extends WebObject {
 
     /***  Administration  ***/
 
-    async 'ax.admin_reinsert'(ids, {id: new_id, ring, compact = false} = {}) {
+    async 'act.admin_reinsert'(ids, {id: new_id, ring, compact = false} = {}) {
         /* Remove object(s) from its current ring and reinsert under new `id` into `ring` (if present), or to the top-most ring.
            Only for development purposes, this operation may lead to data inconsistencies. Changing object IDs should never
            be done in production, especially that the entire database is scanned for references after each re-insert.

@@ -243,7 +243,7 @@ export class JsonPOST extends HttpService {
 // export class Network {
 //     /*
 //        Network interface of a `target` object. Handles incoming communication through resolve(), and outgoing
-//        communication through action calls: ax.*(). The API exposed on the interface is defined by `api`.
+//        communication through action calls: act.*(). The API exposed on the interface is defined by `api`.
 //        Typically, this class is instantiated as a .net property of the target, so the entire network-related
 //        functionality is accessible through a single property and doesn't clutter the target's own interface.
 //        Typically, a Network adapter is created for a WebObject, but it may also be used for other JS objects.
