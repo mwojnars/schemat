@@ -109,12 +109,6 @@ export class Category extends WebObject {
         /* Web object of this category pointed to by a given URL `slug` or `path`. */
     }
 
-    static slug(obj) {
-        /* URL slug to be used/imputed as obj.__slug for a given member object. To be overridden in subclasses. */
-        assert(obj.id)
-        return `${obj.id}`
-    }
-
     member_slug(obj) {
         /* Calculate URL slug for a given member object. */
     }

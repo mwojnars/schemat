@@ -668,35 +668,6 @@ export class WebObject {
     }
 
 
-    /***  URLs and URL paths  ***/
-
-    get url() { return this.get_url() }
-
-    get system_url() {
-        /* The internal URL of this object, typically /$/id/<ID> */
-        return schemat.app.default_path_of(this)
-    }
-
-    _impute_path() {
-        /* Imputation function for __path. Root container must have its path='/' configured in DB, and so this method cannot be a getter. */
-        return this.__container?.get_access_path(this) || this.system_url
-    }
-
-    get __url() {
-        /* Calculation of __url if missing: same as __path but with blank routes (*ROUTE) removed. */
-        return this.__path?.replace(/\/\*[^/]*/g, '') || this.system_url    // no-category objects may have no __path because of lack of schema and imputation
-    }
-
-    // get __ident() { return this.__container?.identify(this) }
-
-    make_slug() {
-        /* URL slug to be used/imputed as this.__slug. Can be overridden in subclasses. If this method is async
-           (returns a Promise), __slug is (should be) stored directly in DB -- not supported yet. */
-        assert(this.id)
-        return `${this.id}`
-    }
-
-
     /***  access to properties  ***/
 
     _compute_property(prop, own = false) {   // _evaluate/infer/interpolate/resolve/derive
@@ -834,21 +805,6 @@ export class WebObject {
         console.log(`[${this.id}] ${msg}`)
     }
 
-    get $_wrap() {
-        /* RPC mock-up triggers: $_wrap.X() calls $agent.X() as a plain method with this.$state explicitly supplied. For internal use only. */
-        let id = this.id
-        let obj = this
-        return new Proxy({}, {
-            get(target, name) {
-                if (typeof name === 'string') return (state, ...args) => {
-                    Object.defineProperty(obj.__self, '$state', {value: state, writable: true})
-                    let method = obj.__self[`$agent.${name}`]
-                    return method.call(obj, ...args)
-                }
-            }
-        })
-    }
-
 
     /***  Hooks  ***/
 
@@ -896,6 +852,35 @@ export class WebObject {
 
     // __done__() {}
     //     /* Custom clean up to be executed after the item was evicted from the registry cache. Can be async. */
+
+
+    /***  URLs and URL paths  ***/
+
+    get url() { return this.get_url() }
+
+    get system_url() {
+        /* The internal URL of this object, typically /$/id/<ID> */
+        return schemat.app.default_path_of(this)
+    }
+
+    _impute_path() {
+        /* Imputation function for __path. Root container must have its path='/' configured in DB, and so this method cannot be a getter. */
+        return this.__container?.get_access_path(this) || this.system_url
+    }
+
+    get __url() {
+        /* Calculation of __url if missing: same as __path but with blank routes (*ROUTE) removed. */
+        return this.__path?.replace(/\/\*[^/]*/g, '') || this.system_url    // no-category objects may have no __path because of lack of schema and imputation
+    }
+
+    // get __ident() { return this.__container?.identify(this) }
+
+    make_slug() {
+        /* URL slug to be used/imputed as this.__slug. Can be overridden in subclasses. If this method is async
+           (returns a Promise), __slug is (should be) stored directly in DB -- not supported yet. */
+        assert(this.id)
+        return `${this.id}`
+    }
 
 
     /***  Networking  ***/
@@ -1059,6 +1044,23 @@ export class WebObject {
     //     this.__handlers = new Map(handlers)
     // }
     //
+
+    /***  RPC  ***/
+
+    get $_wrap() {
+        /* RPC mock-up triggers: $_wrap.X() calls $agent.X() as a plain method with this.$state explicitly supplied. For internal use only. */
+        let id = this.id
+        let obj = this
+        return new Proxy({}, {
+            get(target, name) {
+                if (typeof name === 'string') return (state, ...args) => {
+                    Object.defineProperty(obj.__self, '$state', {value: state, writable: true})
+                    let method = obj.__self[`$agent.${name}`]
+                    return method.call(obj, ...args)
+                }
+            }
+        })
+    }
 
 
     /***  Database operations on self  ***/
