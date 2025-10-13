@@ -1,0 +1,20 @@
+import { readFile } from 'fs/promises'
+import { fileURLToPath, pathToFileURL } from 'url'
+import { compile } from 'svelte/compiler'
+
+export async function load(url, context, defaultLoad) {
+    // handle only .svelte files, fallback to default loader for all other files
+    if (!url.endsWith('.svelte')) return defaultLoad(url, context, defaultLoad)
+
+    const filename = fileURLToPath(url)
+    const source = await readFile(filename, 'utf8')
+
+    // Compile using Svelte compiler
+    const {js} = compile(source, {
+        filename,
+        format: 'esm',
+        css: true,
+        generate: 'dom'
+    })
+    return {format: 'module', source: js.code}
+}
