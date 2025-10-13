@@ -1187,7 +1187,7 @@ export class WebObject {
                 // when _make_edit() has no return value, `proxy` is returned for chained edits
                 if (typeof name === 'string') return (...args) => {
                     if (name === 'save') return obj.save(...args)
-                    obj._make_edit(name, ...args)
+                    obj._make_edit('v1', name, ...args)
                     // obj._make_edit_v2(path, name, ...args)
                     // path = null
                     return proxy
@@ -1245,14 +1245,14 @@ export class WebObject {
         return this
     }
 
-    _make_edit(op, ...args) {
+    _make_edit(ver, op, ...args) {
         /* Perform an edit locally on the caller and append to __meta.edits so it can be submitted to the DB with save().
            Return `this`, or whatever the mutable version of this object is registered in the current transaction (if `this` is immutable).
          */
         if (this.__meta.obsolete) throw new Error(`this instance of ${this} is obsolete, reload it to edit`)
 
         let obj = this.get_mutable()            // the edit may go to a different instance (a mutable one), not `this`!
-        let edit = [op, ...args]
+        let edit = [ver, op, ...args]
 
         obj.__data && obj._apply_edits(edit)    // __data is not present in editable "remote" objects, but appending to `edits` is enough there
         obj.__meta.edits?.push(edit)            // `edits` is not present in newborns, but editing __data is enough there
@@ -1262,7 +1262,7 @@ export class WebObject {
     _apply_edits(...edits) {
         /* Apply `edits` to the __data. Each `edit` is an array: [op-name, ...args]. */
         for (const edit of edits) {
-            let [op, ...args] = edit
+            let [ver, op, ...args] = edit
             let func = this.__self[`edit.${op}`]
             if (!func) throw new Error(`edit method not found: '${op}'`)
             func.call(this, ...args)
@@ -1398,7 +1398,7 @@ export class WebObject {
     'GET.json'({res})       { res.json(this.__record) }
     'GET.inspect'()         { return new ReactPage(InspectView) }
 
-    'LOCAL.self'()          { return this }
+    'LOCAL.self'()          { return this }     // TODO: apparently not needed, tests pass without this method
 
     // inspect()         { return react_page(InspectView) }
     // inspect()         { return InspectView.page(this) }

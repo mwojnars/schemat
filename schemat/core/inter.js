@@ -193,9 +193,9 @@ export class Intercept {
 
             if (plural) {
                 if (!(value instanceof Array)) throw new Error(`array expected when assigning to a plural property (${path})`)
-                receiver._make_edit('set', base, ...value)
+                receiver._make_edit('v1', 'set', base, ...value)
             }
-            else receiver._make_edit('set', path, value)
+            else receiver._make_edit('v1', 'set', path, value)
             return true
         }
         else if (regular) throw new Error(`property not in object schema (${prop})`)
@@ -208,7 +208,7 @@ export class Intercept {
     static proxy_delete(target, path) {
         if (Intercept._is_special(path)) return Reflect.deleteProperty(target, path)
         let [base] = check_plural(path)         // property name without the $ suffix
-        target._make_edit('unset', base)
+        target._make_edit('v1', 'unset', base)
         return true
     }
 }
