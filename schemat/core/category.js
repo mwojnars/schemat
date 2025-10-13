@@ -27,7 +27,7 @@ export class Category extends WebObject {
 
     class
     lib
-    base_url        -- URL path prepended to member URLs
+    base_url        -- prefix of URL paths of members of this category
 
     */
 
@@ -105,19 +105,15 @@ export class Category extends WebObject {
 
     /***  URL routing  ***/
 
-    static resolve(slug, path) {
-        /* Web object of this category pointed to by a given URL `slug` or `path`. */
-    }
-
-    member_slug(obj) {
-        /* Calculate URL slug for a given member object. */
-    }
-
     member_url(obj) {
         /* Complete URL path of a given member object. */
         let base = this.base_url || ''
         if (base && !base.endsWith('/')) base += '/'
-        return base + obj.__slug   //this.member_class.slug(obj)
+        return base + this.member_class.get_slug(obj)
+    }
+
+    resolve_url(slug, path) {
+        return this.member_class.resolve_url(slug, path)
     }
 
 

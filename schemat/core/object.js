@@ -90,6 +90,7 @@ export class WebObject {
     __ttl                   time-to-live of this object in the registry, in seconds; 0 = immediate eviction on the next cache purge
     __ttl_ms                same as __ttl, but in milliseconds
 
+    __slug                  last part of a URL path of this object, "web identifier" of the object within its category
     //__ident                 (virtual) string identifier of this object inside its __container
     __path                  (virtual) URL path of this object; similar to __url, but contains blanks segments; imputed via _impute_path()
     __url                   (virtual) absolute URL path of this object, calculated via __url() getter
@@ -875,11 +876,28 @@ export class WebObject {
 
     // get __ident() { return this.__container?.identify(this) }
 
-    make_slug() {
-        /* URL slug to be used/imputed as this.__slug. Can be overridden in subclasses. If this method is async
-           (returns a Promise), __slug is (should be) stored directly in DB -- not supported yet. */
+    admin_slug() {
+        /* This object's URL slug for administrative purposes. */
         assert(this.id)
         return `${this.id}`
+    }
+
+    make_slug() {
+        /* Slug to be used in public (non-admin) URLs of this object. Can be overridden in subclasses.
+           If this method is async (returns a Promise), __slug should be stored directly in DB -- not supported yet.
+         */
+        return this.admin_slug()
+    }
+
+    static get_slug(obj) {
+        let slug = obj.__slug || obj.make_slug()
+        if (slug instanceof Promise) throw new Error(`slug generation in make_slug() is asynchronous, result should be stored explicitly in __slug`)
+        return slug
+    }
+
+    static resolve_url(slug, path) {
+        /* Category method to be overridden in subclasses (see Category.resolve_url()).
+           Maps a URL `slug` or `path` back to a member object of this category. */
     }
 
 
