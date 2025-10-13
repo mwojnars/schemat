@@ -158,10 +158,6 @@ export class HttpService extends Service {
     static output = mString
     static error  = mJsonError
 
-    // _address(target) {
-    //     return target.url(this.endpoint_name)      // `target` should be a WebObject with .url()
-    // }
-
     async _submit(target, message) {
         /* `message`, if present, should be a plain object to be encoded into GET query string ?k=v&... */
         let url = target.url(this.endpoint_name)

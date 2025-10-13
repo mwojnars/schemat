@@ -979,7 +979,7 @@ export class WebObject {
         throw new URLNotFound(`endpoint not specified (protocol ${protocol})`, {path: request.path})
     }
 
-    url(endpoint, args) {
+    url(endpoint, args) {   // TODO: get_url(), .url should remain an attribute/getter
         /* Return the canonical URL of this object. `endpoint` is an optional name of ::endpoint,
            `args` will be appended to URL as a query string.
          */
