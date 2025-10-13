@@ -377,9 +377,9 @@ export class ServerSchemat extends Schemat {
 
     /***  Actions / Transactions  ***/
 
-    async execute_action(obj, action, args, _return_tx = true) {
+    async execute_action(obj, action, args, _return_session = true) {
         /* Low-level server-side execution of an action: no network comm, no encoding/decoding of args & result.
-           Returns a pair: [result, tx], or `result` alone if _return_tx=false.
+           Returns a pair: [result, sess], or `result` alone if _return_session=false.
          */
         if (!obj.is_loaded()) await obj.load()
         // obj = obj.get_mutable()
@@ -388,27 +388,27 @@ export class ServerSchemat extends Schemat {
         if (!func) throw new Error(`action method not found: '${action}'`)
         obj._print(`execute_action(${action}) ...`)
 
-        let [result, tx] = await this.new_session(() => func.call(obj, ...args))
+        let [result, sess] = await this.new_session(() => func.call(obj, ...args))
 
-        obj._print(`execute_action(${action}) done: result=${result} tx=${JSON.stringify(copy(tx, {keep:'tid _provisional'}))}`)
-        return _return_tx ? [result, tx] : result
+        obj._print(`execute_action(${action}) done: result=${result} sess=${JSON.stringify(copy(sess, {keep:'tid _provisional'}))}`)
+        return _return_session ? [result, sess] : result
     }
 
-    async new_session(callback, tx = this.session, _return_tx = true) {
-        /* Run callback() inside a new Session object, with TID inherited from `tx` or this.tx, or created anew.
+    async new_session(callback, sess = this.session, _return_session = true) {
+        /* Run callback() inside a new Session object, with TID inherited from `sess` or this.session, or created anew.
            If a new TID was assigned, the session is committed at the end. After the call, the session object
            contains info about the execution, esp. a list of records updated.
          */
         assert(this === schemat)
-        let tid = tx?.tid
-        tx = new ServerSession({tid})
-        let result = await this._session.run(tx, async () => {
+        let tid = sess?.tid
+        sess = new ServerSession({tid})
+        let result = await this._session.run(sess, async () => {
             let res = await callback()
-            if (!tid) await tx.commit()
-            // if (tid) await tx.flush(); else await tx.commit()
+            if (!tid) await sess.commit()
+            // if (tid) await sess.flush(); else await sess.commit()
             return res
         })
-        return _return_tx ? [result, tx] : result
+        return _return_session ? [result, sess] : result
     }
 
     // in_tx_context(ctx, tx, callback) {
