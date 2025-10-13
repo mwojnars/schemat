@@ -21,13 +21,15 @@ import {mWebObjects} from "../web/messages.js"
 export class Category extends WebObject {
     /* A category is an object that describes other objects: their schema and functionality;
        also acts as a manager that controls access to, and creation of, new instances ("members") of this category.
+       If this category has a `class` defined, all static methods of the corresponding class are accessible via
+       this [category] object (they are copied as regular methods into this object).
      */
 
     /* Properties:
 
-    class
+    class           import path of the JavaScript class that should be attached to member objects
     lib
-    base_url        -- canonical public URL base of member objects, i.e., prefix of all URL paths of member objects
+    base_url        canonical public URL base of member objects, i.e., prefix of all URL paths of member objects
 
     */
 
@@ -111,11 +113,11 @@ export class Category extends WebObject {
         return this.GET.list_objects(opts)
     }
 
-    _get_handler(endpoint) {
-        /* Web handler can be defined as a *static* method of this category's member_class. */
-        assert(!(this.member_class instanceof Promise))
-        return this.__self[endpoint] || this.member_class[endpoint]
-    }
+    // _get_handler(endpoint) {
+    //     /* Web handler can be defined as a *static* method of this category's member_class. */
+    //     assert(!(this.member_class instanceof Promise))
+    //     return this.__self[endpoint] || this.member_class[endpoint]
+    // }
 
     /***  URL routing  ***/
 
