@@ -8,11 +8,11 @@ const {DELETED} = WebObject.Status
 
 /**********************************************************************************************************************/
 
-export class Transaction {
-    /* Logical transaction. A group of related database mutations that will be pushed together to the DB.
+export class Session {
+    /* A group of related database mutations that will be pushed together to the DB.
        Does NOT currently provide ACID guarantees of consistency and atomicity.
 
-       The role of transaction is to:
+       The role of session/transaction is to:
        - track mutations applied to web objects in a given execution thread;
        - track new object instantiations; count newborn objects and assign provisional IDs;
        - send these changes to the database upon request, or when the transaction is committed;
@@ -26,10 +26,10 @@ export class Transaction {
 
     /* Attributes:
 
-       tid              Transaction ID (on server only)
+       tid              Session ID (on server only)
        debug            if true, debug info should be printed/collected while executing this transaction
        committed        becomes true after commit(), indicates that this transaction is closed (no more objects can be added)
-       ?? derived       true in a derived TX object that was spawned by a parent Transaction; the child inherits `tid`, but cannot commit the transaction (not a coordinator)
+       ?? derived       true in a derived TX object that was spawned by a parent Session; the child inherits `tid`, but cannot commit the transaction (not a coordinator)
     */
 
     _staging = new Objects()    // staging area: a set of mutated or newborn objects that wait for being saved to DB
@@ -147,7 +147,7 @@ export class Transaction {
 
         // objects.forEach(obj => {
         //     if (obj.id && !obj.__meta.edits) {
-        //         schemat._print(`Transaction.save() missing edits:`, obj.__content)
+        //         schemat._print(`Session.save() missing edits:`, obj.__content)
         //         obj._print_stack()
         //     }
         // })
@@ -231,7 +231,7 @@ export class Transaction {
 
 /**********************************************************************************************************************/
 
-export class ServerTransaction extends Transaction {
+export class ServerTransaction extends Session {
     /* Server-side transaction object. */
 
     lite
@@ -331,7 +331,7 @@ export class LiteTransaction extends ServerTransaction {
 
 /**********************************************************************************************************************/
 
-export class ClientTransaction extends Transaction {
+export class ClientTransaction extends Session {
     /* Client-side transaction object. No TID. No commits. Exists permanently. */
 
     commit() { throw new Error(`client-side transaction cannot be committed`) }

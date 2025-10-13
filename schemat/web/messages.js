@@ -130,8 +130,8 @@ export class mActionResult extends MessageEncoder {
     /* After an action (or transaction) was executed, this encoder transmits {status, result, error, records} encoded with JSONx,
        where `status` is "success" or "error"; `result` is the returned value of the action (missing if undefined);
        `error` is the error message if exception was caught; and `records` is an array of all the modified records
-       (inserted, updated, deleted) as pulled from the Transaction object, `tx`. After decoding, the `records` are
-       automatically put in the caller's registry and registered with the local Transaction, if present.
+       (inserted, updated, deleted) as pulled from the Session object, `tx`. After decoding, the `records` are
+       automatically put in the caller's registry and registered with the local Session, if present.
      */
     array = true
     encode(result, tx) {

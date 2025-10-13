@@ -98,7 +98,7 @@ export class Schemat {
     registry        // cache of web objects, records and indexes loaded from DB
     builtin         // a Classpath containing built-in classes and their paths
     booting         // a Promise that resolves when this Schemat is fully booted; false after that
-    // tx           // a Transaction that collects object modifications (inserts/updates/deletes) before sending them to DB
+    // tx           // a Session that collects object modifications (inserts/updates/deletes) before sending them to DB
 
     get root_category() { return this.get_object(ROOT_ID) }
     get app()           { return this.get_if_loaded(this.app_id, obj => {this._app = obj}) || this._app }

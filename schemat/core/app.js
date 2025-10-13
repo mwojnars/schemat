@@ -149,7 +149,7 @@ export class Application extends WebObject {
     }
 
     'POST.action'() {
-        /* Execute a server-side action inside a Transaction so that record modifications are captured and sent back to caller. */
+        /* Execute a server-side action inside a Session so that record modifications are captured and sent back to caller. */
         return new JsonPOST({
             server: (id, action, args) => {
                 let obj = schemat.get_object(id)

@@ -29,7 +29,7 @@ export class ServerSchemat extends Schemat {
 
     _cluster        // Cluster object of the previous generation, remembered here to keep the .cluster() getter operational during complete cache erasure
     _generation     // current generation number: 1,2,3... increased during complete cache erasure
-    _transaction    // AsyncLocalStorage that holds a Transaction describing the currently executed DB action
+    _transaction    // AsyncLocalStorage that holds a Session describing the currently executed DB action
     _lite_tx        // LiteTransaction object, global to this Schemat context, used as a fallback when no request-specific transaction is present
 
     // on_exit = new Set()     // callbacks to be executed when this process is exiting
@@ -394,7 +394,7 @@ export class ServerSchemat extends Schemat {
     }
 
     async in_transaction(callback, tx = this.tx, _return_tx = true) {
-        /* Run callback() inside a new Transaction object, with TID inherited from `tx` or this.tx, or created anew.
+        /* Run callback() inside a new Session object, with TID inherited from `tx` or this.tx, or created anew.
            If a new TID was assigned, the transaction is committed at the end. After the call, the transaction object
            contains info about the execution, esp. a list of records updated.
          */
