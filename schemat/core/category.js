@@ -28,14 +28,16 @@ export class Category extends WebObject {
     // class
     // lib
 
-    get child_schema() {    // member_schema  instance_schema  object_schema
+    get member_schema() {
         /* Schema of descendant objects in this category, as a SCHEMA instance. NOT the schema of self (.__schema). */
         let strict = !this.allow_custom_fields
         return new SCHEMA({fields: this.schema, strict})
     }
 
-    get child_class() {
-        /* Imported JS class of objects in this category. */
+    get member_class() {
+        /* JS class of objects in this category, as an imported constructor function. Initially, this property is
+           a Promise, which is resolved and replaced with a final value in cache only during this.__load__().
+         */
         return schemat.import(this.class)
     }
 
@@ -52,10 +54,10 @@ export class Category extends WebObject {
     }
 
     // get has_strong_refs() {
-    //     /* Check if child_schema contains any REF objects with ref.options.strong=true. */
+    //     /* Check if member_schema contains any REF objects with ref.options.strong=true. */
     //     let refs = []
     //     let collect = (ref) => {if (ref.is_strong?.()) refs.push(ref)}
-    //     Struct.collect(this.child_schema, collect)
+    //     Struct.collect(this.member_schema, collect)
     //     return refs.length
     // }
 
@@ -63,7 +65,7 @@ export class Category extends WebObject {
     is_category()   { return true }
 
     async __load__(no_await = false) {
-        await this.child_class            // from now on, child_class is a regular value in cache, not a promise
+        await this.member_class             // from now on, member_class is a regular value in cache, not a promise
         if (SERVER && this.std) {
             let promise = Promise.all(Object.values(this.std).map(obj => obj.load()))
             if (!no_await) await promise    // root category cannot await the related objects, otherwise a deadlock occurs
@@ -81,7 +83,7 @@ export class Category extends WebObject {
 
     new(props = null, ...args) {
         /* Create a new object in this category and execute its __new__(...args). Return the object (no ID yet). */
-        let cls = props?.get?.('__class') || props?.__class || this.child_class
+        let cls = props?.get?.('__class') || props?.__class || this.member_class
         if (typeof cls === 'string') cls = schemat.get_object(cls)
         assert(!(cls instanceof Promise), `cannot instantly import ${this.class} class to create a new instance of ${this}`)
         return cls._new([this], props, args)
@@ -93,9 +95,9 @@ export class Category extends WebObject {
     }
 
     _get_handler(endpoint) {
-        /* Web handler can be defined as a *static* method of this category's child_class. */
-        assert(!(this.child_class instanceof Promise))
-        return this.__self[endpoint] || this.child_class[endpoint]
+        /* Web handler can be defined as a *static* method of this category's member_class. */
+        assert(!(this.member_class instanceof Promise))
+        return this.__self[endpoint] || this.member_class[endpoint]
     }
 
     // get_defaults(prop) {
@@ -103,7 +105,7 @@ export class Category extends WebObject {
     //        OR in the type's own `default` property. NO imputation even if defined in the prop's type,
     //        because the imputation depends on the target object which is missing here.
     //      */
-    //     let type = this.child_schema.get(prop) || generic_type
+    //     let type = this.member_schema.get(prop) || generic_type
     //     let defaults = this.defaults?.getAll(prop) || []
     //     return type.combine_inherited([defaults])
     // }
@@ -115,7 +117,7 @@ export class Category extends WebObject {
 
     // get schema_assets() {
     //     let assets = new Assets()
-    //     this.child_schema.collect(assets)
+    //     this.member_schema.collect(assets)
     //     return this.CACHED_PROP(assets)
     // }
 
@@ -236,7 +238,7 @@ export class RootCategory extends Category {
     get __category()  { return this.__proxy }       // root category is a category for itself
     set __category(c) {}                            // only needed due to caching in Intercept; TODO: remove when a proper `cache` sub-object is introduced in Intercept
 
-    get child_schema() {
+    get member_schema() {
         /* In RootCategory, this == this.__category, and to avoid infinite recursion we must perform schema inheritance manually. */
         let root_fields = Object.entries(this.__data.get('schema'))
         let default_fields = Object.entries(this.__data.get('defaults')['schema'])

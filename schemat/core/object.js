@@ -125,7 +125,7 @@ export class WebObject {
     }
 
     get __schema() {
-        return this.__category?.child_schema || new SCHEMA_GENERIC()
+        return this.__category?.member_schema || new SCHEMA_GENERIC()
     }
 
     get __proto_versions() { return this.__prototype$.map(proto => proto.__ver || 0) }      // DRAFT
