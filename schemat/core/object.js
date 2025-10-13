@@ -90,7 +90,7 @@ export class WebObject {
     __ttl                   time-to-live of this object in the registry, in seconds; 0 = immediate eviction on the next cache purge
     __ttl_ms                same as __ttl, but in milliseconds
 
-    __ident                 (virtual) string identifier of this object inside its __container
+    //__ident                 (virtual) string identifier of this object inside its __container
     __path                  (virtual) URL path of this object; similar to __url, but contains blanks segments; imputed via _impute_path()
     __url                   (virtual) absolute URL path of this object, calculated via __url() getter
 
@@ -687,7 +687,7 @@ export class WebObject {
         return this.__path?.replace(/\/\*[^/]*/g, '') || this.system_url    // no-category objects may have no __path because of lack of schema and imputation
     }
 
-    get __ident() { return this.__container?.identify(this) }
+    // get __ident() { return this.__container?.identify(this) }
 
 
     /***  access to properties  ***/
