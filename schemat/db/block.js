@@ -596,8 +596,8 @@ export class DataBlock extends Block {
         // __load__() & _activate() are NOT executed (performance) unless a custom __setup__() needs to be called (below)
         let objects = await Promise.all(entries.map(([provisional, data]) => {
             let _id = id || this._assign_id(opts)
-            return WebObject.from_data(_id, data, {mutable: true, provisional})
-            // return WebObject.inactive(_id, data, {mutable: true, provisional})
+            return WebObject.inactive(_id, data, {mutable: true, provisional})
+            // return WebObject.from_data(_id, data, {mutable: true, provisional})
         }))
         let ids = objects.map(obj => obj.id)
 
@@ -612,16 +612,18 @@ export class DataBlock extends Block {
         schemat.session.enter_insert_mode(on_newborn_created)
 
         // go through all the objects and call __setup__(), which may create new related objects (!)
-        // that are added to the `objects` queue by on_newborn_created() that's called via TX
+        // that are added to the `objects` queue by on_newborn_created() that's called via session
 
         for (let pos = 0; pos < objects.length; pos++) {
             let obj = objects[pos]
-            if (obj.__setup__ === WebObject.prototype.__setup__) continue       // skip loading if no custom __setup__() present
+            // TODO: initialize obj.__slug
 
-            // this._print(`calling custom ${obj}.__setup__()`)
-            if (!obj.is_loaded()) await obj.load()
-            let setup = obj.__setup__()  //{}, {ring: this.ring, block: this})
-            if (setup instanceof Promise) await setup
+            if (obj.__setup__ === WebObject.prototype.__setup__) {      // skip loading if a custom __setup__() is not present
+                // this._print(`calling custom ${obj}.__setup__()`)
+                if (!obj.is_loaded()) await obj.load()
+                let setup = obj.__setup__()  //{}, {ring: this.ring, block: this})
+                if (setup instanceof Promise) await setup
+            }
         }
 
         // save records to the store
