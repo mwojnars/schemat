@@ -980,8 +980,8 @@ export class WebObject {
     }
 
     get_url(endpoint, args) {
-        /* Return canonical URL of this object; `endpoint` is an optional name of ::endpoint selector to be appended
-           (for PROTO.endpoint() method to be called on server), `args` will be added as a query string.
+        /* Canonical URL of this object, possibly with ::endpoint and ?args strings added. The ::endpoint directs to
+           PROTO.endpoint() on server, and `args` are appended as a URL query string.
          */
         let url = `${this.__url}`
         if (endpoint) url += WebRequest.SEP_ENDPOINT + endpoint        // append ::endpoint and ?args if present...
