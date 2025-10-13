@@ -876,6 +876,11 @@ export class WebObject {
 
     // get __ident() { return this.__container?.identify(this) }
 
+
+    // get __url() {
+    //     return this.__category?.member_url(this) || this.system_url
+    // }
+
     admin_slug() {
         /* This object's URL slug for administrative purposes. */
         assert(this.id)
@@ -895,9 +900,15 @@ export class WebObject {
         return slug
     }
 
-    static resolve_url(slug, path) {
+    static async resolve_url(slug) {
         /* Category method to be overridden in subclasses (see Category.resolve_url()).
-           Maps a URL `slug` or `path` back to a member object of this category. */
+           Maps a URL `slug` or `path` back to a member object of this category.
+         */
+        try {
+            let id = Number(slug)
+            return isNaN(id) ? null : await schemat.get_loaded(id)
+        }
+        catch (ex) { return null }
     }
 
 

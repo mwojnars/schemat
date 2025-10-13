@@ -27,7 +27,7 @@ export class Category extends WebObject {
 
     class
     lib
-    base_url        -- prefix of URL paths of members of this category
+    base_url        -- canonical public URL base of member objects, i.e., prefix of all URL paths of member objects
 
     */
 
@@ -112,8 +112,9 @@ export class Category extends WebObject {
         return base + this.member_class.get_slug(obj)
     }
 
-    resolve_url(slug, path) {
-        return this.member_class.resolve_url(slug, path)
+    async resolve_url(slug) {
+        let obj = await this.member_class.resolve_url(slug)
+        return obj.instanceof(this) ? obj : null        // by default, only objects that belong to this category can be resolved
     }
 
 
@@ -266,6 +267,15 @@ export class RootCategory extends Category {
 
     async __load__(no_await = false) {
         await super.__load__(true)
+    }
+
+    member_url(obj) {
+        assert(false)   //TODO
+    }
+
+    async resolve_url(slug) {
+        /* Resolves to an object of any category. `slug` is an ID. */
+        return this.constructor.resolve_url(slug)
     }
 }
 
