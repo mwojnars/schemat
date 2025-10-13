@@ -30,7 +30,7 @@ export class ServerSchemat extends Schemat {
     _cluster        // Cluster object of the previous generation, remembered here to keep the .cluster() getter operational during complete cache erasure
     _generation     // current generation number: 1,2,3... increased during complete cache erasure
 
-    _session        // AsyncLocalStorage that holds a Session describing the currently executed DB action
+    _session        // AsyncLocalStorage that holds a Session for the currently executing web action or RPC request
     _lite_session   // LiteSession object, global to this Schemat context, used as a fallback when no request-specific transaction is present
 
     // on_exit = new Set()     // callbacks to be executed when this process is exiting
@@ -378,7 +378,7 @@ export class ServerSchemat extends Schemat {
     /***  Actions / Transactions  ***/
 
     async execute_action(obj, action, args, _return_tx = true) {
-        /* Server-side execution of an action: no network communication, no encoding/decoding of args & result.
+        /* Low-level server-side execution of an action: no network comm, no encoding/decoding of args & result.
            Returns a pair: [result, tx], or `result` alone if _return_tx=false.
          */
         if (!obj.is_loaded()) await obj.load()
@@ -388,15 +388,15 @@ export class ServerSchemat extends Schemat {
         if (!func) throw new Error(`action method not found: '${action}'`)
         obj._print(`execute_action(${action}) ...`)
 
-        let [result, tx] = await this.in_transaction(() => func.call(obj, ...args))
+        let [result, tx] = await this.new_session(() => func.call(obj, ...args))
 
         obj._print(`execute_action(${action}) done: result=${result} tx=${JSON.stringify(copy(tx, {keep:'tid _provisional'}))}`)
         return _return_tx ? [result, tx] : result
     }
 
-    async in_transaction(callback, tx = this.session, _return_tx = true) {
+    async new_session(callback, tx = this.session, _return_tx = true) {
         /* Run callback() inside a new Session object, with TID inherited from `tx` or this.tx, or created anew.
-           If a new TID was assigned, the transaction is committed at the end. After the call, the transaction object
+           If a new TID was assigned, the session is committed at the end. After the call, the session object
            contains info about the execution, esp. a list of records updated.
          */
         assert(this === schemat)
@@ -415,7 +415,7 @@ export class ServerSchemat extends Schemat {
     //     /* Run callback() inside a double async context created by first setting the global `schemat`
     //        to the context built around `ctx`, and then setting schemat.session to `tx`. Both arguments are optional.
     //      */
-    //     let call = tx ? () => schemat.in_transaction(callback, tx, false) : callback    // critical to use `schemat` not `this` here, bcs context changes!
+    //     let call = tx ? () => schemat.new_session(callback, tx, false) : callback    // critical to use `schemat` not `this` here, bcs context changes!
     //     return this.app_context(ctx, call)
     // }
 

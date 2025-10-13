@@ -139,7 +139,7 @@ export class Application extends WebObject {
         return new JsonPOST({
             server: async (code, in_tx = false) => {
                 if (!this.eval_allowed) throw new Error(`custom server-side code execution is not allowed`)
-                let result = await (in_tx ? schemat.in_transaction(() => eval(code)) : eval(code))
+                let result = await (in_tx ? schemat.new_session(() => eval(code)) : eval(code))
                 await schemat.save()
                 return result
             },

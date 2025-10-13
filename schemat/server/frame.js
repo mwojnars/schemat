@@ -282,7 +282,7 @@ export class Frame {
             if (_debug) schemat._print(`exec ${this.agent}.${method}(${args}) done`)
             return callback ? callback(result, error) : result
         }
-        return agent.app_context(tx ? () => schemat.in_transaction(callB, tx, false) : callB, caller_ctx)
+        return agent.app_context(tx ? () => schemat.new_session(callB, tx, false) : callB, caller_ctx)
     }
 
     _find_command(command) {
