@@ -1,8 +1,10 @@
 import { readFile } from 'fs/promises'
-import { fileURLToPath, pathToFileURL } from 'url'
+import { fileURLToPath } from 'url'
 import { compile } from 'svelte/compiler'
 
 export async function load(url, context, defaultLoad) {
+    // console.log(`svelte_loader.load(${url})`)
+
     // handle only .svelte files, fallback to default loader for all other files
     if (!url.endsWith('.svelte')) return defaultLoad(url, context, defaultLoad)
 
