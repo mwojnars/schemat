@@ -689,6 +689,13 @@ export class WebObject {
 
     // get __ident() { return this.__container?.identify(this) }
 
+    make_slug() {
+        /* URL slug to be used/imputed as this.__slug. Can be overridden in subclasses. If this method is async
+           (returns a Promise), __slug is (should be) stored directly in DB -- not supported yet. */
+        assert(this.id)
+        return `${this.id}`
+    }
+
 
     /***  access to properties  ***/
 
