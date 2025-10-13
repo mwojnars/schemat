@@ -2,7 +2,7 @@ import "../common/globals.js"           // global flags: CLIENT, SERVER
 
 import {assert, print} from "../common/utils.js";
 import {Schemat} from "../core/schemat.js";
-import {ClientTransaction} from "../core/transact.js"
+import {ClientSession} from "../core/transact.js"
 import {RequestContext} from "./request.js"
 
 
@@ -38,7 +38,7 @@ export class Client extends Schemat {
         this.object = this.target = this.get_object(ctx.target)
         this.object.assert_loaded()
 
-        this.tx = new ClientTransaction()
+        this.tx = new ClientSession()
         // check()
     }
 

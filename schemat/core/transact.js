@@ -231,8 +231,7 @@ export class Session {
 
 /**********************************************************************************************************************/
 
-export class ServerTransaction extends Session {
-    /* Server-side transaction object. */
+export class ServerSession extends Session {
 
     lite
 
@@ -290,7 +289,7 @@ export class ServerTransaction extends Session {
     /*  Serialization  */
 
     static load({tid, debug}) {
-        let tx = new ServerTransaction()
+        let tx = new ServerSession()
         tx.tid = tid
         tx.debug = debug
         // tx._snap = records || []
@@ -311,7 +310,7 @@ export class ServerTransaction extends Session {
     }
 }
 
-export class LiteTransaction extends ServerTransaction {
+export class LiteSession extends ServerSession {
     /* A server-side transaction without TID. It allows non-atomic save(), but no commit/rollback of transaction as a whole.
        Lite transaction does *not* provide (and will never provide) atomicity, but it is (potentially) faster,
        does not block other concurrent transactions, and is the only type of transaction that can be mixed
@@ -331,10 +330,10 @@ export class LiteTransaction extends ServerTransaction {
 
 /**********************************************************************************************************************/
 
-export class ClientTransaction extends Session {
-    /* Client-side transaction object. No TID. No commits. Exists permanently. */
+export class ClientSession extends Session {
+    /* Client-side session. No TID. No commits. Exists permanently. */
 
-    commit() { throw new Error(`client-side transaction cannot be committed`) }
+    commit() { throw new Error(`client-side session cannot be committed`) }     // TODO: it should be possible to commit() on client
     capture(...records) {}      // on client, records are saved in Registry and this is enough
 }
 
