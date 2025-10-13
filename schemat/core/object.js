@@ -684,12 +684,7 @@ export class WebObject {
 
     get __url() {
         /* Calculation of __url if missing: same as __path but with blank routes (*ROUTE) removed. */
-        return this.__path?.replace(/\/\*[^/]*/g, '') || this.system_url
-        // let [url, on_blank_route] = WebObject._decode_access_path(this.__path)
-        // if (on_blank_route)                                         // if any of the ancestor containers has the same URL, use the system URL instead for this object
-        //     for (let parent = this.__container; parent; parent = parent.__container)
-        //         if (url === parent.__url) return this.system_url
-        // return url
+        return this.__path?.replace(/\/\*[^/]*/g, '') || this.system_url    // no-category objects may have no __path because of lack of schema and imputation
     }
 
     get __ident() { return this.__container?.identify(this) }
@@ -988,10 +983,10 @@ export class WebObject {
         /* Return canonical URL of this object; `endpoint` is an optional name of ::endpoint selector to be appended
            (for PROTO.endpoint() method to be called on server), `args` will be added as a query string.
          */
-        let path = this.__url || this.system_url                        // no-category objects may have no __url because of lack of schema and __url imputation
-        if (endpoint) path += WebRequest.SEP_ENDPOINT + endpoint        // append ::endpoint and ?args if present...
-        if (args) path += '?' + new URLSearchParams(args).toString()
-        return path
+        let url = `${this.__url}`
+        if (endpoint) url += WebRequest.SEP_ENDPOINT + endpoint        // append ::endpoint and ?args if present...
+        if (args) url += '?' + new URLSearchParams(args).toString()
+        return url
     }
 
     get_stamp({html = true, brackets = true, max_len = null, ellipsis = '...'} = {}) {
