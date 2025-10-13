@@ -73,7 +73,21 @@ export class Category extends WebObject {
             let promise = Promise.all(Object.values(this.std).map(obj => obj.load()))
             if (!no_await) await promise    // root category cannot await the related objects, otherwise a deadlock occurs
         }
+        this._init_static()
         return this._init_schema()
+    }
+
+    _init_static() {
+        /* Copy all static methods of `member_class` into self as regular methods of `this`. */
+        let cls = this.member_class
+        if (!cls) return
+        
+        // get all static methods from member_class, including inherited ones
+        let static_methods = Object.getOwnPropertyNames(cls).filter(name => typeof cls[name] === 'function')
+        
+        // copy each static method to this instance
+        for (let method of static_methods)
+            this.__self[method] = cls[method].bind(this)
     }
 
     async _init_schema() {
