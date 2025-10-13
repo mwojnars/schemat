@@ -243,7 +243,7 @@ export class Frame {
     // }
 
     async exec(command, args = [], caller_ctx = schemat.current_context, tx = null, callback = null, _debug = false) {
-        /* Call agent's `command` in tracked mode, in a proper app context (own or caller's) + schemat.tx context.
+        /* Call agent's `command` in tracked mode, in a proper app context (own or caller's) + session context.
            Send to DB (but do not commit!) any data modifications that were created locally during command execution.
          */
         let {agent, tag} = this
@@ -278,7 +278,7 @@ export class Frame {
                 agent._print_error(`${method}(${s_args}) failed with`, ex)      // ${ex.constructor.name}: ${ex.message}
                 error = ex
             })
-            if (!error && schemat.tx.is_nonempty()) await schemat.tx.save()
+            if (!error && schemat.session.is_nonempty()) await schemat.session.save()
             if (_debug) schemat._print(`exec ${this.agent}.${method}(${args}) done`)
             return callback ? callback(result, error) : result
         }

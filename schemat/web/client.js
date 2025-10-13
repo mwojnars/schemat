@@ -38,7 +38,7 @@ export class Client extends Schemat {
         this.object = this.target = this.get_object(ctx.target)
         this.object.assert_loaded()
 
-        this.tx = new ClientSession()
+        this.tx = this.session = new ClientSession()
         // check()
     }
 

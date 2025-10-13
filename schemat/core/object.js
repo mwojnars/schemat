@@ -338,8 +338,8 @@ export class WebObject {
 
         obj.__new__(...args)
 
-        if (!draft)                     // schemat.tx is missing during boot, that's why draft objects can't be staged
-            if (schemat.tx) schemat.stage(obj)
+        if (!draft)                     // session is missing during boot, that's why draft objects can't be staged
+            if (schemat.session) schemat.stage(obj)
             else throw new Error(`cannot create a newborn object when outside a transaction`)
 
         return obj
@@ -1169,13 +1169,13 @@ export class WebObject {
     }
 
     get_mutable() {
-        /* Return the mutable instance of this object as currently recorded in the transaction under this ID;
-           or itself if `this` is already mutable (which does NOT imply it is included in the transaction!
-           but normally, __meta.obsolete should be true if this instance got excluded from the TX).
+        /* Return the mutable instance of this object as recorded in the current session under this ID;
+           or itself if `this` is already mutable (which does NOT imply it is included in the session!
+           but normally, __meta.obsolete should be true if this instance got excluded from the session).
          */
         if (this.__meta.mutable) return this
-        if (schemat.tx) return schemat.tx.get_mutable(this)
-        throw new Error(`cannot create a mutable copy of ${this} outside a transaction`)
+        if (schemat.session) return schemat.session.get_mutable(this)
+        throw new Error(`cannot create a mutable copy of ${this} outside a session`)
     }
 
     _get_mutable(opts = {}) {

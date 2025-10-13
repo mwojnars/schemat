@@ -438,7 +438,7 @@ export class Schemat {
     register_changes(...records) {
         // this._print(`register_changes() tid=${this.tx.tid}, |records| = ${records.length}, |tx._snap| = ${this.tx._snap?.length}`)
         records.forEach(rec => this.register_record(rec))
-        this.tx.capture(...records)
+        this.session.capture(...records)
     }
 
     register_record(record /*{id, data}*/) {
@@ -512,9 +512,9 @@ export class Schemat {
 
     /***  Transactions  ***/
 
-    stage(...args)      { return this.tx.stage(...args) }
-    async save(...args) { return this.tx.save(...args) }
-    async commit(opts)  { return this.tx.commit(opts) }
+    stage(...args)      { return this.session.stage(...args) }
+    async save(...args) { return this.session.save(...args) }
+    async commit(opts)  { return this.session.commit(opts) }
 
 
     /***  Events & Debugging  ***/

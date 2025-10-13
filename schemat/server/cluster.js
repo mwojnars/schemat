@@ -146,10 +146,10 @@ export class Cluster extends Agent {
               may last for a long time, e.g., when install/uninstall of local environment is involved,
               so running them in a transaction might block other DB transactions.
         */
-        assert(!schemat.tx?.tid, `$state should only be modified outside a transaction`)
+        assert(!schemat.session?.tid, `$state should only be modified outside a transaction`)
 
         // this._print_stack()
-        this._print(`$leader.create_node() context: ${schemat.db}, ${schemat.app}, ${schemat.tx}`)
+        this._print(`$leader.create_node() context: ${schemat.db}, ${schemat.app}, ${schemat.session}`)
 
         let args = typeof props === 'string' ? [{}, props] : [props]
         let node = await schemat.std.Node.new(...args).save()

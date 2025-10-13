@@ -147,7 +147,7 @@ class RPC_Request {
 
         if (role === AgentRole.GENERIC) delete opts.role        // default role passed implicitly
 
-        let tx = schemat.tx?.dump_tx()
+        let tx = schemat.session?.dump_tx()
         let ctx = schemat.db.id
         opts = {...opts, ctx, tx}
 
@@ -182,7 +182,7 @@ class RPC_Response {
          */
         if (err) return JSONx.encode({err})
         let response = {}
-        let snap = schemat.tx?.dump_records()
+        let snap = schemat.session?.dump_records()
 
         if (ret !== undefined) response.ret = ret
         if (snap?.length) response.snap = snap

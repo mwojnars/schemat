@@ -609,7 +609,7 @@ export class DataBlock extends Block {
             obj.id = this._assign_id(opts)
             objects.push(obj)
         }
-        schemat.tx.enter_insert_mode(on_newborn_created)
+        schemat.session.enter_insert_mode(on_newborn_created)
 
         // go through all the objects and call __setup__(), which may create new related objects (!)
         // that are added to the `objects` queue by on_newborn_created() that's called via TX
@@ -630,7 +630,7 @@ export class DataBlock extends Block {
             await this._save(obj)
         }
 
-        schemat.tx.exit_insert_mode()
+        schemat.session.exit_insert_mode()
         return ids
     }
 

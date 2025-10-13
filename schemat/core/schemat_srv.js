@@ -37,9 +37,11 @@ export class ServerSchemat extends Schemat {
 
 
     get db()        { return this._boot_db || this._db }
-    get tx()        { return this._session.getStore() || this._lite_session }
     get node()      { return this.kernel?.node }        // host Node (web object) of the current process, initialized and periodically reloaded in Server; has .$state and .$frame attributes
     get cluster()   { return this.get_if_loaded(this._cluster?.id, obj => {this._cluster = obj}) || this._cluster }
+
+    get tx()        { return this._session.getStore() || this._lite_session }
+    get session()   { return this.tx }
 
     kernel_context          // db.id of the kernel database, initialized in the kernel's ServerSchemat and inherited by child contexts
     get current_context()   { return this._db.id }
@@ -394,7 +396,7 @@ export class ServerSchemat extends Schemat {
         return _return_tx ? [result, tx] : result
     }
 
-    async in_transaction(callback, tx = this.tx, _return_tx = true) {
+    async in_transaction(callback, tx = this.session, _return_tx = true) {
         /* Run callback() inside a new Session object, with TID inherited from `tx` or this.tx, or created anew.
            If a new TID was assigned, the transaction is committed at the end. After the call, the transaction object
            contains info about the execution, esp. a list of records updated.
