@@ -677,8 +677,8 @@ export class WebObject {
         return schemat.app.default_path_of(this)
     }
 
-    _impute__path() {
-        /* Calculation of __path if missing. Root container must have its path='/' configured in DB, this is the reason why this method cannot be a getter. */
+    _impute_path() {
+        /* Imputation function for __path. Root container must have its path='/' configured in DB, and so this method cannot be a getter. */
         return this.__container?.get_access_path(this) || this.system_url
     }
 

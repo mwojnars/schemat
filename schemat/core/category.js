@@ -115,8 +115,8 @@ export class Category extends WebObject {
         return `${obj.id}`
     }
 
-    get_slug(obj) {
-        /* Calculate URL slug for a given object, as it is being saved to the database. */
+    member_slug(obj) {
+        /* Calculate URL slug for a given member object. */
     }
 
     member_url(obj) {

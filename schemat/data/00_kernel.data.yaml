@@ -197,7 +197,7 @@
         virtual: true
         "@": schemat/types/type.js:STRING
       __path:
-        impute: _impute__path
+        impute: _impute_path
         "@": schemat/types/type.js:STRING
       __url:
         virtual: true
