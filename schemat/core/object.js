@@ -100,6 +100,11 @@ export class WebObject {
     __json                  stringified representation of this object's __data; can be passed to Catalog.load() to recreate the original __data structure
     __assets                cached web Assets of this object's __schema
 
+    OTHER properties:
+
+    url
+    system_url
+
     */
 
     set id(id) {
@@ -665,6 +670,8 @@ export class WebObject {
 
     /***  URLs and URL paths  ***/
 
+    get url() { return this.get_url() }
+
     get system_url() {
         /* The internal URL of this object, typically /$/id/<ID> */
         return schemat.app.default_path_of(this)
@@ -685,9 +692,7 @@ export class WebObject {
         // return url
     }
 
-    get __ident() {
-        return this.__container?.identify(this)
-    }
+    get __ident() { return this.__container?.identify(this) }
 
     // async _init_url() {
     //     while (!schemat.app) {                                      // wait until the app is created; important for bootstrap objects
@@ -979,9 +984,9 @@ export class WebObject {
         throw new URLNotFound(`endpoint not specified (protocol ${protocol})`, {path: request.path})
     }
 
-    get_url(endpoint, args) {   // TODO: .url should remain an attribute/getter
-        /* Return the canonical URL of this object. `endpoint` is an optional name of ::endpoint,
-           `args` will be appended to URL as a query string.
+    get_url(endpoint, args) {
+        /* Return canonical URL of this object; `endpoint` is an optional name of ::endpoint selector to be appended
+           (for PROTO.endpoint() method to be called on server), `args` will be added as a query string.
          */
         let path = this.__url || this.system_url                        // no-category objects may have no __url because of lack of schema and __url imputation
         if (endpoint) path += WebRequest.SEP_ENDPOINT + endpoint        // append ::endpoint and ?args if present...
@@ -998,7 +1003,7 @@ export class WebObject {
         if (max_len && cat.length > max_len) cat = cat.slice(max_len-3) + ellipsis
         if (html) {
             cat = escape_html(cat)
-            let url = this.__category?.get_url()
+            let url = this.__category?.url
             if (url) cat = `<a href="${url}">${cat}</a>`          // TODO SEC: {url} should be URL-encoded or injected in a different way
         }
         let stamp = cat ? `${cat}:${this.id}` : `${this.id}`

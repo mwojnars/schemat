@@ -313,7 +313,7 @@ export const REF_Widget = ItemLoadingHOC(class extends TypeWidget {
         if (!loaded(obj))                           // SSR outputs "loading..." only (no actual item loading), hence warnings must be suppressed client-side
             return SPAN({suppressHydrationWarning: true}, "loading...")
 
-        let url = obj.get_url()
+        let url = obj.url
         let name = obj.name
         let linked = (txt) => url ? A({href: url}, txt) : txt
         let label = name ? linked(name) : SPAN('[', linked(`${obj.id}`), ']')
