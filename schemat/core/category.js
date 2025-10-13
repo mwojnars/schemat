@@ -19,8 +19,8 @@ import {mWebObjects} from "../web/messages.js"
 /**********************************************************************************************************************/
 
 export class Category extends WebObject {
-    /* A category is an item that describes other items: their schema and functionality;
-       also acts as a manager that controls access to and creation of new items within category.
+    /* A category is an object that describes other objects: their schema and functionality;
+       also acts as a manager that controls access to, and creation of, new instances ("members") of this category.
      */
 
     // properties:
@@ -28,7 +28,7 @@ export class Category extends WebObject {
     // class
     // lib
 
-    get child_schema() {
+    get child_schema() {    // member_schema  instance_schema  object_schema
         /* Schema of descendant objects in this category, as a SCHEMA instance. NOT the schema of self (.__schema). */
         let strict = !this.allow_custom_fields
         return new SCHEMA({fields: this.schema, strict})
@@ -63,7 +63,7 @@ export class Category extends WebObject {
     is_category()   { return true }
 
     async __load__(no_await = false) {
-        await this.child_class            // from now on, child_class is a regular value not a promise
+        await this.child_class            // from now on, child_class is a regular value in cache, not a promise
         if (SERVER && this.std) {
             let promise = Promise.all(Object.values(this.std).map(obj => obj.load()))
             if (!no_await) await promise    // root category cannot await the related objects, otherwise a deadlock occurs
@@ -83,6 +83,7 @@ export class Category extends WebObject {
         /* Create a new object in this category and execute its __new__(...args). Return the object (no ID yet). */
         let cls = props?.get?.('__class') || props?.__class || this.child_class
         if (typeof cls === 'string') cls = schemat.get_object(cls)
+        assert(!(cls instanceof Promise), `cannot instantly import ${this.class} class to create a new instance of ${this}`)
         return cls._new([this], props, args)
     }
 
@@ -92,7 +93,8 @@ export class Category extends WebObject {
     }
 
     _get_handler(endpoint) {
-        // the handler can be defined as a *static* method of this category's child_class
+        /* Web handler can be defined as a *static* method of this category's child_class. */
+        assert(!(this.child_class instanceof Promise))
         return this.__self[endpoint] || this.child_class[endpoint]
     }
 
