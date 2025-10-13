@@ -22,6 +22,7 @@ export class Book extends schemat.WebObject {
     // }
 
     static async 'GET.view'() {
+        /* Category-level HTML page with a listing of all books. */
         let books = await this.list_objects({load: true})
 
         for (let book of books)
@@ -32,6 +33,7 @@ export class Book extends schemat.WebObject {
     }
 
     async 'GET.view'() {
+        /* Object-level HTML page that displays profile of a specific book represented by `this`. */
         for (let author of this.author$) await author.load()
         let path = import.meta.resolve('./book.ejs')
         return html_page(path, {book: this, authors: []})

@@ -23,10 +23,13 @@ export class Category extends WebObject {
        also acts as a manager that controls access to, and creation of, new instances ("members") of this category.
      */
 
-    // properties:
+    /* Properties:
 
-    // class
-    // lib
+    class
+    lib
+    base_url        -- URL path prepended to member URLs
+
+    */
 
     get member_schema() {
         /* Schema of descendant objects in this category, as a SCHEMA instance. NOT the schema of self (.__schema). */
@@ -99,6 +102,30 @@ export class Category extends WebObject {
         assert(!(this.member_class instanceof Promise))
         return this.__self[endpoint] || this.member_class[endpoint]
     }
+
+    /***  URL routing  ***/
+
+    static resolve(slug, path) {
+        /* Web object pointed to by a given URL `slug` or `path`. */
+    }
+
+    static slug(obj) {
+        /* URL slug to be used as obj.__slug of a given member object. To be overridden in subclasses. */
+        assert(obj.id)
+        return `${obj.id}`
+    }
+
+    get_slug(obj) {
+        /* Calculate URL slug for a given object, as it is being saved to the database. */
+    }
+
+    member_url(obj) {
+        /* Complete URL path of a given member object. */
+        let base = this.base_url || ''
+        if (base && !base.endsWith('/')) base += '/'
+        return base + obj.__slug   //this.member_class.slug(obj)
+    }
+
 
     // get_defaults(prop) {
     //     /* Return an array of default value(s) for a given `prop` as defined in this category's `defaults`
