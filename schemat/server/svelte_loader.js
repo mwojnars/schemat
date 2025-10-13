@@ -11,7 +11,7 @@ export async function load(url, context, defaultLoad) {
     const filename = fileURLToPath(url)
     const source = await readFile(filename, 'utf8')
 
-    // Compile using Svelte compiler
+    // use Svelte compiler
     const {js} = compile(source, {
         filename,
         format: 'esm',
