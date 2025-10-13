@@ -457,7 +457,7 @@ export class Node extends Agent {
 
         // locate the agent by its `id`, should be running here in this process
         let frame = schemat.get_frame(id, role)
-        if (!frame) throw new Error(`[${id}].${role} not found on this process (worker #${this.worker_id}) to execute RPC message ${JSON.stringify(message)}`)
+        if (!frame) throw new Error(`[${id}].${role || AgentRole.GENERIC} not found on this process to execute RPC message ${JSON.stringify(message)}`)
 
         return frame.exec(cmd, args, ctx, tx, (out, err) => RPC_Response.create(out, err))
     }
