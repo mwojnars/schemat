@@ -39,9 +39,7 @@ export class ServerSchemat extends Schemat {
     get db()        { return this._boot_db || this._db }
     get node()      { return this.kernel?.node }        // host Node (web object) of the current process, initialized and periodically reloaded in Server; has .$state and .$frame attributes
     get cluster()   { return this.get_if_loaded(this._cluster?.id, obj => {this._cluster = obj}) || this._cluster }
-
-    get tx()        { return this._session.getStore() || this._lite_session }
-    get session()   { return this.tx }
+    get session()   { return this._session.getStore() || this._lite_session }
 
     kernel_context          // db.id of the kernel database, initialized in the kernel's ServerSchemat and inherited by child contexts
     get current_context()   { return this._db.id }
