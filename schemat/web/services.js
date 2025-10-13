@@ -160,7 +160,7 @@ export class HttpService extends Service {
 
     async _submit(target, message) {
         /* `message`, if present, should be a plain object to be encoded into GET query string ?k=v&... */
-        let url = target.url(this.endpoint_name)
+        let url = target.get_url(this.endpoint_name)
         if (!T.isEmpty(message)) {
             if (!T.isPlain(message)) throw new Error(`cannot encode as a HTTP GET query string (${message})`)
             url = url_query(url, message)
@@ -223,7 +223,7 @@ export class JsonPOST extends HttpService {
     static output = mJsonx          // server responds with a single JSONx-encoded object
 
     async _submit(target, message) {
-        let url = target.url(this.endpoint_name)
+        let url = target.get_url(this.endpoint_name)
         if (this.endpoint_type !== 'POST') throw new Error(`JsonPOST can only be exposed at HTTP POST endpoint, not ${this.endpoint}`)
         if (message && typeof message !== 'string') message = JSON.stringify(message)
         let params = {method: 'POST', body: message, headers: {}}

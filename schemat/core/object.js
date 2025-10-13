@@ -979,7 +979,7 @@ export class WebObject {
         throw new URLNotFound(`endpoint not specified (protocol ${protocol})`, {path: request.path})
     }
 
-    url(endpoint, args) {   // TODO: get_url(), .url should remain an attribute/getter
+    get_url(endpoint, args) {   // TODO: .url should remain an attribute/getter
         /* Return the canonical URL of this object. `endpoint` is an optional name of ::endpoint,
            `args` will be appended to URL as a query string.
          */
@@ -998,7 +998,7 @@ export class WebObject {
         if (max_len && cat.length > max_len) cat = cat.slice(max_len-3) + ellipsis
         if (html) {
             cat = escape_html(cat)
-            let url = this.__category?.url()
+            let url = this.__category?.get_url()
             if (url) cat = `<a href="${url}">${cat}</a>`          // TODO SEC: {url} should be URL-encoded or injected in a different way
         }
         let stamp = cat ? `${cat}:${this.id}` : `${this.id}`

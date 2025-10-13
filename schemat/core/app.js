@@ -119,7 +119,7 @@ export class Application extends WebObject {
         if (typeof object === 'function') return object(request)        // `object` can be a tail function, just call it then
         if (!object.is_loaded()) await object.load()
 
-        // if (path !== object.url()) {
+        // if (path !== object.get_url()) {
         //     // TODO: redirect to the canonical URL
         // }
         request.set_target(object)
