@@ -44,6 +44,7 @@
     "react-scripts": "4.0.1",
     "rocksdb": "^5.2.1",
     "styled-components": "^5.3.3",
+    "svelte": "^5.39.11",
     "use-sse": "^2.0.1",
     "web-vitals": "^0.2.4",
     "yaml": "^1.10.2",
