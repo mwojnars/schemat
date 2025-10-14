@@ -2,7 +2,6 @@
  * PROMPT:
  * In Node.js, how to programmatically build ESM dependency graph of a specific .js file, in the way a bundler does (like Vite)? Write the code. Use ESBuild.
  * The files should be listed at the end, and a bundled JS code string produced (no save). If needed, add a plugin to let ESBuild handle *.svelte files.
- * Write the code with 4-space indentation. Drop trailing commas and braces where possible.
  */
 
 import esbuild from 'esbuild'
@@ -43,6 +42,16 @@ async function buildDependencyGraph(entryFile) {
     if (result.metafile)
         for (const file of Object.keys(result.metafile.inputs))
             files.add(path.resolve(file))
+
+    // collect import statements
+    for (const [filePath, info] of Object.entries(result.metafile.inputs)) {
+        console.log('Resolved file:', filePath)
+        if (info.imports.length)
+            for (const imp of info.imports) {
+                console.log('  Imported as:', imp.path)
+            }
+        // TODO: unwrap `result.metafile.inputs` and `result.metafile.outputs` for import path -> file path mapping
+    }
 
     return {
         files: Array.from(files),
