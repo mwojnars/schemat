@@ -190,7 +190,7 @@ export class HttpService extends Service {
     }
 
     _parse_request(request) {
-        return request.req.query                            // plain object carrying all GET query string parameters
+        return request.query                                // plain object carrying all GET query string parameters
     }
 
     _decode_args(msg) {                                     // on the server, decode the arguments from the request

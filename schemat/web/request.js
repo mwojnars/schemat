@@ -20,7 +20,7 @@ export class WebRequest {   // WebConnection (conn)
 
     url             // complete URL, with protocol, domain name and ?x=y query string
     path            // URL path with trailing ::endpoint removed
-    query           // object containing a property for each query string parameter (?x=y) in the original URL
+    query           // plain object containing a property for each query string parameter (?x=y) of the original URL
     endpoints = []  // candidate endpoints that should be tried if `endpoint` is not yet decided; the first one that's present in the `target` is used, or 'default' if empty
 
     // TODO add after Svelte's RequestEvent:
