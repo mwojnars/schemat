@@ -1,7 +1,9 @@
 import {print, assert, splitLast} from "../common/utils.js";
 import {RecentObjects} from "../common/structs.js";
-// import {Readable} from "node:stream";
 
+const stream = await server_import('node:stream')
+
+/**********************************************************************************************************************/
 
 export class WebRequest {   // WebConnection (conn)
     /* Schemat's own representation of a web request (or internal request), plus context information
@@ -9,8 +11,7 @@ export class WebRequest {   // WebConnection (conn)
      */
     static SEP_ENDPOINT = '::'          // separator of endpoint name within a URL path
 
-    // request         // instance of standard Request (Fetch API)
-
+    request         // instance of standard Request (Fetch API)
     req             // Express's request (req) object
     res             // Express's response (res) object
 
@@ -48,23 +49,26 @@ export class WebRequest {   // WebConnection (conn)
         this.query = req.query
 
         this.protocol =
-            !this.req                   ? "LOCAL" :         // LOCAL = internal call through Application.route_local()
-            this.req.method === 'GET'   ? "GET"  :          // GET  = read access through HTTP GET
-                                          "POST"            // POST = write access through HTTP POST
+            !this.req                   ? "LOCAL" :     // LOCAL = internal call through Application.route_local()
+            this.req.method === 'GET'   ? "GET"  :      // GET  = read access through HTTP GET
+                                          "POST"        // POST = write access through HTTP POST
 
-        // // create a standard Request object (this.request) from `req`
-        // let init = {
-        //     method: req.method,
-        //     headers: req.headers,
-        //     body: ['GET', 'HEAD'].includes(req.method)
-        //         ? undefined
-        //         : Readable.toWeb(req)       // convert Node stream to Web ReadableStream
-        // }
-        // this.request = new Request(this.url, init)
+        // create a standard Request object (this.request) from `req`
+        if (SERVER)
+            this.request = new Request(this.url, {
+                method: req.method,
+                headers: req.headers,
+                duplex: 'half',
+                body: ['GET', 'HEAD'].includes(req.method)
+                    ? undefined
+                    : typeof req.body === 'string' ? req.body
+                    : stream.Readable.toWeb(req)        // convert Node stream to Web ReadableStream
+            })
     }
 
     _from_request(request) {
         /* Initialization based on standard Request object (Fetch API). */
+        this.request = request
         this.url = request.url
         let _url = new URL(request.url)
         this.query = Object.fromEntries(_url.searchParams.entries())

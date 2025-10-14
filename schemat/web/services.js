@@ -176,7 +176,7 @@ export class HttpService extends Service {
 
     async handle(target, request /*WebRequest*/) {
         try {
-            let msg = this._parse_request(request)
+            let msg = await this._parse_request(request)
             let args = this._decode_args(msg)
             let result = this.server(target, request, ...args)
             if (isPromise(result)) result = await result
@@ -231,9 +231,10 @@ export class JsonPOST extends HttpService {
         return fetch(url, params)
     }
 
-    _parse_request(request) {
+    async _parse_request(request) {
         /* The request body should be empty or contain a JSON array of arguments: [...args]. */
-        let body = request.req.body             // `req` is Express's request object
+        // let body = request.req.body             // `req` is Express's request object
+        let body = await request.request.text()
         assert(typeof body === 'string')
         return body
     }
