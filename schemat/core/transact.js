@@ -9,8 +9,12 @@ const {DELETED} = WebObject.Status
 /**********************************************************************************************************************/
 
 export class Session {
-    /* A group of related database mutations that will be pushed together to the DB (saved and/or committed).
-       Currently, there are NO transactions and ACID guarantees are not fulfilled.
+    /* Logical transaction.
+       A group of related local mutations that will be pushed together to the DB (saved and/or committed).
+       Currently, there is NO atomicity and no ACID guarantees.
+
+       TODO: this class may need to be split into Session/Transaction, esp. when multiple `transaction` objects
+             with separate TIDs are to be allowed within a single session
 
        The role of session/transaction is to:
        - track mutations applied to web objects in a given execution thread;
@@ -26,7 +30,7 @@ export class Session {
 
     /* Attributes:
 
-       tid              Session ID (on server only)
+       tid              transaction ID (on server only)
        debug            if true, debug info should be printed/collected while executing this transaction
        committed        becomes true after commit(), indicates that this transaction is closed (no more objects can be added)
        ?? derived       true in a derived TX object that was spawned by a parent Session; the child inherits `tid`, but cannot commit the transaction (not a coordinator)

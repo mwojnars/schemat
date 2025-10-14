@@ -534,7 +534,10 @@ export class Schemat {
     /***  Dynamic imports  ***/
 
     import(path) {
-        /* May return a Promise. */
+        /* May return a Promise.
+           See also "importmap" (import maps) for client-side customization of imports with a prefix like "$lib/*"
+           https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/script/type/importmap
+         */
         if (path.startsWith('schemat:') || !this.app?.is_loaded())
             return this.get_builtin(path)
         if (path[0] === '/') return this.import_global(path)    // NOT USED currently
