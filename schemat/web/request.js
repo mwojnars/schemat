@@ -3,8 +3,8 @@ import {RecentObjects} from "../common/structs.js";
 
 
 export class WebRequest {
-    /* Schemat's own representation of a web request (or internal request);
-       together with context information that may evolve during the routing procedure.
+    /* Schemat's own representation of a web request (or internal request), plus context information
+       that may evolve during the routing procedure.
      */
     static SEP_ENDPOINT = '::'          // separator of endpoint name within a URL path
 
@@ -18,6 +18,16 @@ export class WebRequest {
     path            // URL path with trailing ::endpoint removed
     endpoints = []  // candidate endpoints that should be tried if `endpoint` is not yet decided; the first one that's present in the `target` is used, or 'default' if empty
 
+    // TODO add after Svelte's RequestEvent:
+    // url: URL
+    // params: Record<string, string>
+    // cookies: {get, set, delete, serialize}
+    // locals: App.Locals   (auth/session info)
+    // fetch    (function to fetch other endpoints (respects hooks, credentials)
+
+    // TODO add after Express API:
+    // send()
+    // status()
 
     constructor({path, req, res}) {
         this.req = req
