@@ -35,7 +35,7 @@ export class WebRequest {   // WebConnection (conn)
 
     constructor({path, req, res}) {
         if (req) this._from_express(req, res)
-        if (path) this.path = path
+        if (path) this.path = path      // this is used by LOCAL calls (import_global(), app.route_local())
         this._set_path(this.path)
     }
 

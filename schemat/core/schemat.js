@@ -537,7 +537,7 @@ export class Schemat {
         /* May return a Promise. */
         if (path.startsWith('schemat:') || !this.app?.is_loaded())
             return this.get_builtin(path)
-        if (path[0] === '/') return this.import_global(path)
+        if (path[0] === '/') return this.import_global(path)    // NOT USED currently
         return this.import_local(path)
     }
 
