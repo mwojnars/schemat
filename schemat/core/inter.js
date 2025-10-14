@@ -26,17 +26,10 @@ export class Intercept {
     static wrap(target) {
         /* Create a Proxy wrapper around `target` object. */
         return new Proxy(target, {
-            construct:      this.proxy_construct,
             get:            this.proxy_get,
             set:            this.proxy_set,
             deleteProperty: this.proxy_delete,
         })
-    }
-
-    static proxy_construct(target, args) {
-        /* `target` should be a Category instance. */
-        assert(target.is_loaded())
-        return target.new(...args)      // should redirect to Category:new()
     }
 
     static proxy_get(target, prop, receiver, deep = true)
