@@ -2,34 +2,24 @@ import {print, assert, splitLast} from "../common/utils.js";
 import {RecentObjects} from "../common/structs.js";
 
 
-export class Request {
-    /* Base class for network requests submitted over different protocols: HTTP(S) GET, POST, Kafka, ... */
-
-    target          // target web object (recipient of the request)
-    endpoint        // full name of the network endpoint that should handle the request (e.g., "GET.json")
-    protocol        // endpoint type: LOCAL, GET, POST, ... (SOCK in the future)
-
-    set_target(target) { this.target = target }
-    set_endpoint(endpoint) { this.endpoint = endpoint }
-}
-
-
-export class WebRequest extends Request {
-    /* Schemat's own representation of a web request, OR internal request;
+export class WebRequest {
+    /* Schemat's own representation of a web request (or internal request);
        together with context information that may evolve during the routing procedure.
      */
     static SEP_ENDPOINT = '::'          // separator of endpoint name within a URL path
 
-    req             // instance of node.js express' Request
-    res             // instance of node.js express' Response
+    req             // Express's request (req) object
+    res             // Express's response (res) object
+
+    target          // target web object (recipient of the request)
+    endpoint        // full name of the network endpoint that should handle the request (e.g., "GET.json")
+    protocol        // endpoint type: LOCAL, GET, POST, ... (SOCK in the future)
 
     path            // URL path with trailing ::endpoint removed
     endpoints = []  // candidate endpoints that should be tried if `endpoint` is not yet decided; the first one that's present in the `target` is used, or 'default' if empty
 
 
     constructor({path, req, res}) {
-        super()
-
         this.req = req
         this.res = res
 
@@ -48,13 +38,6 @@ export class WebRequest extends Request {
         this._push(sep + endp)
     }
 
-    _prepare(endpoint) {
-        if (!endpoint) return endpoint
-        let sep = WebRequest.SEP_ENDPOINT
-        assert(endpoint.startsWith(sep), `endpoint must start with '${sep}' (${endpoint})`)
-        return endpoint.slice(sep.length)
-    }
-
     _push(...endpoints) {
         /* Append names to this.endpoints. Each name must start with '::' for easier detection of endpoint names
            in a source code - this prefix is truncated when appended to this.endpoints.
@@ -64,6 +47,16 @@ export class WebRequest extends Request {
             if (m && !this.endpoints.includes(m)) this.endpoints.push(m)
         }
     }
+
+    _prepare(endpoint) {
+        if (!endpoint) return endpoint
+        let sep = WebRequest.SEP_ENDPOINT
+        assert(endpoint.startsWith(sep), `endpoint must start with '${sep}' (${endpoint})`)
+        return endpoint.slice(sep.length)
+    }
+
+    set_target(target) { this.target = target }
+    set_endpoint(endpoint) { this.endpoint = endpoint }
 }
 
 
