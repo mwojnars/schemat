@@ -1,3 +1,9 @@
+/**
+ * DRAFT...
+ * Example load balancer implementation. Receives HTTP(S) requests and distributes them to predefined `nodes` (IP/PORT).
+ * The worker node is selected by hashing of incoming IP.
+ */
+
 import http from 'http'
 import https from 'https'
 import fs from 'fs'
