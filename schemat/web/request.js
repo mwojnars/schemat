@@ -60,11 +60,16 @@ export class WebRequest {   // WebConnection (conn)
                                           "POST"            // POST = write access through HTTP POST
 
         path ??= this.req.path
+        this._set_path(path)
+    }
+
+    _set_path(path) {
+        /* Set this.path by removing ::endpoint from `path`; this.endpoints may get extended. */
         let endp, sep = WebRequest.SEP_ENDPOINT;
         [this.path, endp] = path.includes(sep) ? splitLast(path, sep) : [path, '']
 
-        // in Express, the web path always starts with at least on character, '/', even if the URL contains a domain alone;
-        // this leading-trailing slash has to be truncated for correct segmentation and detection of an empty path
+        // in Express, the web path always starts with at least one character, '/', even if the URL contains a domain alone;
+        // this leading-trailing slash has to be truncated for correct segmentation and detection of empty path
         if (this.path === '/') this.path = ''
         this._push(sep + endp)
     }
@@ -73,7 +78,7 @@ export class WebRequest {   // WebConnection (conn)
         /* Append names to this.endpoints. Each name must start with '::' for easier detection of endpoint names
            in a source code - this prefix is truncated when appended to this.endpoints.
          */
-        for (const endpoint of endpoints) {
+        for (let endpoint of endpoints) {
             let m = this._prepare(endpoint)
             if (m && !this.endpoints.includes(m)) this.endpoints.push(m)
         }
