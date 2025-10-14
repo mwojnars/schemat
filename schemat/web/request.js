@@ -34,13 +34,24 @@ export class WebRequest {   // WebConnection (conn)
     // status()
 
     constructor({path, req, res}) {
-    //     if (path) this.path = path
-    //     if (req) this._from_express(req, res)
-    // }
-    //
-    // _from_express(req, res) {
+        if (req) this._from_express(req, res)
+        if (path) this.path = path
+        this._set_path(this.path)
+    }
 
-        let url = `${req.protocol}://${req.get('host')}${req.originalUrl}`  // req.url does NOT contain protocol & domain
+    _from_express(req, res) {
+        this.req = req
+        this.res = res
+
+        this.url = `${req.protocol}://${req.get('host')}${req.originalUrl}`  // req.url does NOT contain protocol & domain
+        this.path = this.req.path
+
+        this.protocol =
+            !this.req                   ? "LOCAL" :         // LOCAL = internal call through Application.route_local()
+            this.req.method === 'GET'   ? "GET"  :          // GET  = read access through HTTP GET
+                                          "POST"            // POST = write access through HTTP POST
+
+        // // create a standard Request object (this.request) from `req`
         // let init = {
         //     method: req.method,
         //     headers: req.headers,
@@ -48,19 +59,7 @@ export class WebRequest {   // WebConnection (conn)
         //         ? undefined
         //         : Readable.toWeb(req)       // convert Node stream to Web ReadableStream
         // }
-        // this.request = new Request(url, init)
-
-        this.url = url
-        this.req = req
-        this.res = res
-
-        this.protocol =
-            !this.req                   ? "LOCAL" :         // LOCAL = internal call through Application.route_local()
-            this.req.method === 'GET'   ? "GET"  :          // GET  = read access through HTTP GET
-                                          "POST"            // POST = write access through HTTP POST
-
-        path ??= this.req.path
-        this._set_path(path)
+        // this.request = new Request(this.url, init)
     }
 
     _set_path(path) {
