@@ -4,7 +4,7 @@ import {AsyncLocalStorage} from 'node:async_hooks'
 import {AgentRole} from "../common/globals.js";
 import {assert, print, copy, fluctuate} from '../common/utils.js'
 import {Schemat} from './schemat.js'
-import {RequestContext} from "../web/request.js";
+import {WebContext} from "../web/request.js";
 import {LiteSession, ServerSession} from "./transact.js";
 import {Struct} from "../common/catalog.js";
 
@@ -140,13 +140,13 @@ export class ServerSchemat extends Schemat {
         /* HTML code to be placed in an HTML page by the server, to load `schemat` on the client side upon page load.
            If used inside an EJS template, the output string must be inserted unescaped (!), typically with <%- tag instead of <%=
                 <%- schemat.client_block(request, '#context-path') %>
-           `id_context` must be an ID of the HTML element of the result page where RequestContext for the client-side Schemat is to be written.
+           `id_context` must be an ID of the HTML element of the result page where WebContext for the client-side Schemat is to be written.
          */
         if (!id_context) throw new Error(`id_context is missing: ID of the HTML element containing request context must be provided`)
         assert(!id_context.includes('"'))
         assert(!id_context.includes('#'))
 
-        let ctx = RequestContext.from_request(request, ...objects)
+        let ctx = WebContext.from_request(request, ...objects)
         let script = `<script async type="module">${this.init_client(id_context)}</script>`
         let context = `<p id="${id_context}" style="display:none">${ctx.encode()}</p>`
 

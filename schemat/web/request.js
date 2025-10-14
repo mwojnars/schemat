@@ -62,9 +62,10 @@ export class WebRequest {
 
 /**********************************************************************************************************************/
 
-export class RequestContext {
-    /* Seed web objects and request-related context information to be embedded in HTML response and then unpacked on the client
-       to enable boot up of a client-side Schemat. The objects are flattened (state-encoded), but not yet stringified.
+export class WebContext {
+    /* Context information and seed web objects related to a particular web request; embedded in HTML response
+       and sent back implicitly to the client to enable boot up of a client-side Schemat.
+       The objects are flattened (state-encoded), but not yet stringified.
      */
     app             // ID of the application object
     target          // ID of the requested object (target of the web request)
@@ -75,7 +76,7 @@ export class RequestContext {
         /* For use on the server. Optional `objects` are included in the context as seed objects together
            with `target`, `app` and `app.global` objects.
          */
-        let ctx = new RequestContext()
+        let ctx = new WebContext()
         let app = schemat.app
         let target = request.target
 
@@ -104,7 +105,7 @@ export class RequestContext {
     }
 
     static from_element(selector) {
-        /* For use on the client. Extract text contents of the DOM element pointed to by a CSS `selector` and decode back into RequestContext. */
+        /* For use on the client. Extract text contents of the DOM element pointed to by a CSS `selector` and decode back into WebContext. */
         let node = document.querySelector(selector)
         return this.decode(node.textContent)
     }
@@ -116,7 +117,7 @@ export class RequestContext {
 
     static decode(text) {
         let state = JSON.parse(decodeURIComponent(atob(text)))
-        return Object.assign(new RequestContext(), state)
+        return Object.assign(new WebContext(), state)
     }
 }
 

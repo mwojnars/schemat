@@ -6,7 +6,7 @@ import {e, useState, useRef, NBSP, DIV, A, P, H1, H2, H3, SPAN, FORM, INPUT, FIE
 import {HttpService} from "./services.js";
 import {Styled} from "./component.js";
 import {CatalogTable} from "../types/catalog_type.js";
-import {RequestContext} from "./request.js";
+import {WebContext} from "./request.js";
 
 
 /**********************************************************************************************************************/
@@ -147,7 +147,7 @@ export class RenderedPage extends HtmlPage {
             return ''
         }
 
-        page_context(props) { return RequestContext.from_request(props.request) }
+        page_context(props) { return WebContext.from_request(props.request) }
 
         page_script(props) {
             return schemat.init_client('page-data') +
@@ -159,7 +159,7 @@ export class RenderedPage extends HtmlPage {
 
         component_frame({html, data, code}) {
             /* The HTML wrapper for the page's main component, `html`, and its `data` and the launch script, `code`.
-               All these elements will be placed together inside <body>...</body>. `data` must be an instance of RequestContext.
+               All these elements will be placed together inside <body>...</body>. `data` must be an instance of WebContext.
              */
             return `
                 <div id="page-main">${html}</div>

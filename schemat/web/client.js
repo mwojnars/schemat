@@ -3,7 +3,7 @@ import "../common/globals.js"           // global flags: CLIENT, SERVER
 import {assert, print} from "../common/utils.js";
 import {Schemat} from "../core/schemat.js";
 import {ClientSession} from "../core/transact.js"
-import {RequestContext} from "./request.js"
+import {WebContext} from "./request.js"
 
 
 /**********************************************************************************************************************/
@@ -15,7 +15,7 @@ export class Client extends Schemat {
     object          // ... alias
 
     constructor(context_path) {
-        let ctx = RequestContext.from_element(context_path)
+        let ctx = WebContext.from_element(context_path)
         print('request context:', ctx)
         super(ctx)
     }
