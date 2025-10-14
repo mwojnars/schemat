@@ -104,6 +104,14 @@ export class WebRequest {   // WebConnection (conn)
 
     set_target(target) { this.target = target }
     set_endpoint(endpoint) { this.endpoint = endpoint }
+
+
+    /*  Access methods  */
+
+    async text() {
+        /* Like Request.text() API. */
+        return this.req && (typeof this.req.body === 'string') ? this.req.body : this.request.text()
+    }
 }
 
 

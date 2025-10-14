@@ -233,10 +233,7 @@ export class JsonPOST extends HttpService {
 
     async _parse_request(request) {
         /* The request body should be empty or contain a JSON array of arguments: [...args]. */
-        // let body = request.req.body             // `req` is Express's request object
-        let body = await request.request.text()
-        assert(typeof body === 'string')
-        return body
+        return request.text()
     }
 }
 
