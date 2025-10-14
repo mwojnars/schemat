@@ -112,6 +112,11 @@ export class WebRequest {   // WebConnection (conn)
         /* Like Request.text() API. */
         return this.req && (typeof this.req.body === 'string') ? this.req.body : this.request.text()
     }
+
+    async json() {
+        /* Like Request.json() API. */
+        return this.text().then(text => JSON.parse(text))
+    }
 }
 
 
