@@ -18,12 +18,12 @@ export class WebRequest {   // WebConnection (conn)
     endpoint        // full name of the network endpoint that should handle the request (e.g., "GET.json")
     protocol        // endpoint type: LOCAL, GET, POST, ... (SOCK in the future)
 
-    url             // complete URL, with protocol and domain name
+    url             // complete URL, with protocol, domain name and ?x=y query string
     path            // URL path with trailing ::endpoint removed
+    query           // object containing a property for each query string parameter (?x=y) in the original URL
     endpoints = []  // candidate endpoints that should be tried if `endpoint` is not yet decided; the first one that's present in the `target` is used, or 'default' if empty
 
     // TODO add after Svelte's RequestEvent:
-    // url: URL
     // params: Record<string, string>
     // cookies: {get, set, delete, serialize}
     // locals: App.Locals   (auth/session info)
@@ -44,7 +44,8 @@ export class WebRequest {   // WebConnection (conn)
         this.res = res
 
         this.url = `${req.protocol}://${req.get('host')}${req.originalUrl}`  // req.url does NOT contain protocol & domain
-        this.path = this.req.path
+        this.path = req.path
+        this.query = req.query
 
         this.protocol =
             !this.req                   ? "LOCAL" :         // LOCAL = internal call through Application.route_local()
@@ -60,6 +61,13 @@ export class WebRequest {   // WebConnection (conn)
         //         : Readable.toWeb(req)       // convert Node stream to Web ReadableStream
         // }
         // this.request = new Request(this.url, init)
+    }
+
+    _from_request(request) {
+        /* Initialization based on standard Request object (Fetch API). */
+        this.url = request.url
+        let _url = new URL(request.url)
+        this.query = Object.fromEntries(_url.searchParams.entries())
     }
 
     _set_path(path) {
