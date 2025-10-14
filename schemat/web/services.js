@@ -124,8 +124,8 @@ export class Service {
         return this.output.decode(result)
     }
 
-    handle(target, request) {
-        /* Server-side request handler that decodes arguments passed from the client(), executes the server(), and sends back the result. */
+    handle(target, request /*WebRequest*/) {
+        /* On server, decode request from client(), execute server(), send back the result. */
         throw new Error(`no server-side request handler for the service`)
     }
 
@@ -169,11 +169,12 @@ export class HttpService extends Service {
     }
 
     async _parse_response(response) {
+        /* On client, parse the Response received from server. */
         let result = await response.text()
         return response.ok ? result : this.error.decode_error(result, response.status)
     }
 
-    async handle(target, request) {
+    async handle(target, request /*WebRequest*/) {
         try {
             let msg = this._parse_request(request)
             let args = this._decode_args(msg)

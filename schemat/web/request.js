@@ -3,13 +3,13 @@ import {RecentObjects} from "../common/structs.js";
 // import {Readable} from "node:stream";
 
 
-export class WebRequest {
+export class WebRequest {   // WebConnection (conn)
     /* Schemat's own representation of a web request (or internal request), plus context information
        that may evolve during the routing procedure.
      */
     static SEP_ENDPOINT = '::'          // separator of endpoint name within a URL path
 
-    request         // instance of standard Request (Fetch API)
+    // request         // instance of standard Request (Fetch API)
 
     req             // Express's request (req) object
     res             // Express's response (res) object
@@ -18,7 +18,7 @@ export class WebRequest {
     endpoint        // full name of the network endpoint that should handle the request (e.g., "GET.json")
     protocol        // endpoint type: LOCAL, GET, POST, ... (SOCK in the future)
 
-    url
+    url             // complete URL, with protocol and domain name
     path            // URL path with trailing ::endpoint removed
     endpoints = []  // candidate endpoints that should be tried if `endpoint` is not yet decided; the first one that's present in the `target` is used, or 'default' if empty
 
@@ -34,8 +34,13 @@ export class WebRequest {
     // status()
 
     constructor({path, req, res}) {
+    //     if (path) this.path = path
+    //     if (req) this._from_express(req, res)
+    // }
+    //
+    // _from_express(req, res) {
 
-        // let url = `${req.protocol}://${req.get('host')}${req.originalUrl}`
+        let url = `${req.protocol}://${req.get('host')}${req.originalUrl}`  // req.url does NOT contain protocol & domain
         // let init = {
         //     method: req.method,
         //     headers: req.headers,
@@ -44,8 +49,8 @@ export class WebRequest {
         //         : Readable.toWeb(req)       // convert Node stream to Web ReadableStream
         // }
         // this.request = new Request(url, init)
-        // this.url = url
 
+        this.url = url
         this.req = req
         this.res = res
 
