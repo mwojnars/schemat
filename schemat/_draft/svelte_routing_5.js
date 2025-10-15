@@ -1,3 +1,45 @@
+/*
+    Simplistic SvelteKit-like routing.
+    - Filesystem-based routing (routes/...)
+    - +page.svelte and +layout.svelte with $props() and {@render children()}
+    - Simple data loading via +page.js / load()
+    - Basic nesting of layouts (1-level)
+
+    Missing SvelteKit functionality:
+    - No parameter parsing or route precedence.
+    - No CSR.
+    Other:
+    - `sirv` web server, as used by SvelteKit for serving static files
+      - maps file extensions to MIME types
+      - caching support: ETag and Last-Modified headers
+      - compression (gzip/Brotli)
+      - security: prevents directory traversal
+
+     INFO. SvelteKit 5 routing, overall procedure:
+
+        Request →
+          hooks.server.js (handle)
+          [route matching]                          -- uses precomputed "manifest" list of all routes
+          +server.js                                -- API "endpoint" route, only runs GET/POST() func; +page / +layout ("page route") files not used!
+          +layout.server.js & +layout.js (data)     -- load() functions executed across all folder levels, from top to bottom
+          +page.server.js & +page.js (data)         -- load() function(s) executed in bottom-most foler .. all `data` objects from load() calls merged
+          +layout.svelte (render)                   -- all nested layouts rendered with `let {data,children}=$props()`: rootLayout.render({children: () => blogLayout.render({children: () => page.render()})
+          +page.svelte (render)                     -- rendered as the deepest view during layout chain rendering
+          +error.svelte & layout.error.svelte       -- if error occurred above, the nearest +error.svelte in the layout chain is rendered instead
+          hooks.server.js (handleFetch/Error)
+        Response                                    -- merged `data` is sent as inline JSON block in the HTML for hydration
+
+        Client:
+        1. The browser loads the SvelteKit client runtime.
+        2. It hydrates the SSR’d markup into interactive components.
+        3. Client-side navigation begins:
+           - Only runs +layout.js and +page.js (not the server versions)
+           - Reuses persisted layouts
+           - Updates {@render children()} accordingly
+
+        Async code (await) can be used in all .js files; in .svelte files, it's allowed inside functions, but NOT at top-level in <script>.
+ */
+
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
