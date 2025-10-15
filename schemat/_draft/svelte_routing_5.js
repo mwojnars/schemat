@@ -15,7 +15,8 @@
       - compression (gzip/Brotli)
       - security: prevents directory traversal
 
-     INFO. SvelteKit 5 routing, overall procedure:
+
+    INFO. SvelteKit 5 routing, overall procedure:
 
         Request →
           hooks.server.js (handle)
@@ -38,6 +39,77 @@
            - Updates {@render children()} accordingly
 
         Async code (await) can be used in all .js files; in .svelte files, it's allowed inside functions, but NOT at top-level in <script>.
+
+
+    Svelte component compilation on server:
+
+        import { compile } from 'svelte/compiler'
+
+        let source = fs.readFileSync('MyComponent.svelte', 'utf-8')
+        let {js, css} = compile(source, {
+          filename: 'MyComponent.svelte',
+          generate: 'dom', // 'ssr' is also an option
+          format: 'esm'
+        })
+        console.log(js.code) // The JS code that will run in the browser
+
+    Component import+render on server:
+
+        import MyComponent from './MyComponent.svelte'
+        const { html, css, head } = MyComponent.render({ name: 'World' })       // runs synchronously !!! async code is not awaited
+        console.log(html)
+
+    Async wrapper for render, for async execution on server -- load() is moved into the component itself:
+
+        async function render_async(Component, props) {
+            // preload any async data here before rendering
+            if (Component.load) props = { ...props, ...(await Component.load(props)) }
+            return Component.render(props)
+        }
+
+        // component.svelte
+        <script context="module">                   // context="module" says this code is "static": runs once when the JS module is first loaded
+            export async function load() {
+                const data = await db.getAll()
+                return { data }
+            }
+        </script>
+        <script>
+            let { data } = $props()
+        </script>
+        <h1>{data.title}</h1>
+
+    Injection of a component on client [index.html]:
+
+        <html>
+          <body>
+            <div id="target"></div>
+
+            <script type="module">
+              import MyComponent from './MyComponent.svelte'
+              const component = new MyComponent({
+                target: document.getElementById('target'),
+                props: { name: 'World' }
+              });
+            </script>
+          </body>
+        </html>
+
+    Alternative way of injecting on client:
+
+        // main.js
+        import MyComponent from './MyComponent.svelte'
+        const app = new MyComponent({
+            target: document.getElementById('app'),
+            props: { name: 'World' }
+        })
+
+        // page.html
+        <body>
+          <div id="app"></div>
+          <script type="module" src="/main.js"></script>
+        </body>
+
  */
 
 import fs from 'fs'
