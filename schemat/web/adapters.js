@@ -33,7 +33,7 @@ export function html_page(path, locals = {}, opts = {}) {
     }
 }
 
-/* SVELTE component compilation:
+/* Svelte/SvelteKit component compilation:
 
     import { compile } from 'svelte/compiler'
 
