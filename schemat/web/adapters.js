@@ -14,7 +14,7 @@ export function html_page(path, locals = {}, opts = {}) {
     /* Returns a function that loads an HTML page: either from a static .html file, or from a template (.ejs).
        In the latter case, the template is rendered with `locals` as its variables, and special variables: `schemat`, `request` - are added by default.
      */
-    return (request) => {
+    return async (request) => {
         if (path.startsWith('file://')) path = path.slice(7)
         const ext = path.includes('.') ? path.split('.').pop().toLowerCase() : 'html'
         // console.log('path:', path)
@@ -27,13 +27,14 @@ export function html_page(path, locals = {}, opts = {}) {
             // async=true below allows EJS templates to include async code like `await import(...)` or `await fetch_data()`
             opts = {filename: path, views: schemat.PATH_WORKING, async: true, ...opts}
             const template = fs.readFileSync(path, 'utf-8')
-            return ejs.render(template, {schemat, request, ...locals}, opts)
+            return await ejs.render(template, {schemat, request, ...locals}, opts)
         }
         throw new Error(`Unsupported file type: ${ext}`)
     }
 }
 
-/* Svelte/SvelteKit component compilation:
+/*
+// Svelte/SvelteKit component compilation on server:
 
     import { compile } from 'svelte/compiler'
 
@@ -44,22 +45,43 @@ export function html_page(path, locals = {}, opts = {}) {
       format: 'esm'
     })
     console.log(js.code) // The JS code that will run in the browser
- */
-/* SVELTE injection of a component on client [index.html]:
+
+// Svelte component import+render on server:
+
+    import MyComponent from './MyComponent.svelte'
+    const { html, css, head } = MyComponent.render({ name: 'World' })       // runs synchronously !!! async code is not awaited
+    console.log(html)
+
+
+// Svelte injection of a component on client [index.html]:
 
     <html>
       <body>
         <div id="target"></div>
 
         <script type="module">
-          import MyComponent from './MyComponent.svelte';
-          const target = document.getElementById('target');
+          import MyComponent from './MyComponent.svelte'
           const component = new MyComponent({
-            target,
+            target: document.getElementById('target'),
             props: { name: 'World' }
           });
         </script>
       </body>
     </html>
+
+// Alternative way of injecting on client:
+
+    // main.js
+    import MyComponent from './MyComponent.svelte'
+    const app = new MyComponent({
+        target: document.getElementById('app'),
+        props: { name: 'World' }
+    })
+
+    // page.html
+    <body>
+      <div id="app"></div>
+      <script type="module" src="/main.js"></script>
+    </body>
 
  */
