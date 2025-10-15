@@ -24,7 +24,8 @@ export function html_page(path, locals = {}, opts = {}) {
             return fs.readFileSync(path, 'utf-8')
         
         if (ext === 'ejs') {
-            opts = {filename: path, views: schemat.PATH_WORKING, ...opts}
+            // async=true below allows EJS templates to include async code like `await import(...)` or `await fetch_data()`
+            opts = {filename: path, views: schemat.PATH_WORKING, async: true, ...opts}
             const template = fs.readFileSync(path, 'utf-8')
             return ejs.render(template, {schemat, request, ...locals}, opts)
         }
