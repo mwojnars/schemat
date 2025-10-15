@@ -8,7 +8,7 @@ const {DELETED} = WebObject.Status
 
 /**********************************************************************************************************************/
 
-export class Session {
+export class Session {  // Transaction, Action
     /* Logical transaction.
        A group of related local mutations that will be pushed together to the DB (saved and/or committed).
        Currently, there is NO atomicity and no ACID guarantees.
@@ -285,6 +285,7 @@ export class ServerSession extends Session {
 
     async commit(opts = {}) {
         /* Save all pending changes to DB and mark this transaction as completed and closed. */
+        if (!this.tid) throw new Error(`cannot commit when outside a transaction`)
         await this.flush(opts)
         this.committed = true
         // TODO: when atomic transactions are implemented, the transaction will be marked here as completed
@@ -314,7 +315,7 @@ export class ServerSession extends Session {
     }
 }
 
-export class LiteSession extends ServerSession {
+export class LiteSession extends ServerSession {        // lite transaction, anonymous transaction
     /* A server-side transaction without TID. It allows non-atomic save(), but no commit/rollback of transaction as a whole.
        Lite transaction does *not* provide (and will never provide) atomicity, but it is (potentially) faster,
        does not block other concurrent transactions, and is the only type of transaction that can be mixed
