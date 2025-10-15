@@ -2,7 +2,7 @@ import "../common/globals.js"           // global flags: CLIENT, SERVER
 
 import {assert, print} from "../common/utils.js";
 import {Schemat} from "../core/schemat.js";
-import {ClientSession} from "../core/transact.js"
+import {ClientSession} from "../core/session.js"
 import {WebContext} from "./request.js"
 
 
