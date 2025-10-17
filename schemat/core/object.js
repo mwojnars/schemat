@@ -751,10 +751,6 @@ export class WebObject {
         let schema = this.__schema
         if (!schema) return
 
-        // check that all required attributes are present in `data`
-        for (let attr of this.__category?.required_attrs || [])
-            if (data.get(attr) === undefined) throw new ValidationError(`missing required attribute '${attr}' in ${this}`)
-
         // validate each individual attribute; __data._entries may get directly modified here... (!)
         for (let [attr, locs] of data._keys) {
 
@@ -786,6 +782,10 @@ export class WebObject {
                 throw ex
             }
         }
+
+        // check that all required attributes are present in `data` (*after* normalization, not before, because normalization may remove blank values)
+        for (let attr of this.__category?.required_attrs || [])
+            if (data.get(attr) === undefined) throw new ValidationError(`missing required attribute '${attr}' in ${this}`)
 
         // check multi-field constraints ...
 
