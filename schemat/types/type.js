@@ -947,10 +947,8 @@ export class RECORD extends DictLike {
 
         for (let key of Object.keys(obj)) {
             let type = fields[key]
-            if (!type)
-                if (strict) throw new ValidationError(`unknown field "${key}", expected one of [${this.get_fields()}]`)
-                else continue
-            obj[key] = type.validate(obj[key])
+            if (type) obj[key] = type.validate(obj[key])
+            else if (strict) throw new ValidationError(`unknown field "${key}", expected one of [${this.get_fields()}]`)
         }
         return obj
     }
