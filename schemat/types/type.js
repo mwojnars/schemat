@@ -835,8 +835,10 @@ export class DictLike extends Compound {
         return T.ofType(key_type, FIELD) ? `${name}(${value_type})` : `${name}(${key_type} > ${value_type})`
     }
 
-    validate(obj) {
+    validate(obj, record = false) {
         obj = super.validate(obj)
+        if (record) return obj
+
         let {key_type, value_type} = this.options
         for (let key of this._keys(obj)) key_type.validate(key)
         for (let val of this._values(obj)) value_type.validate(val)
@@ -940,7 +942,7 @@ export class RECORD extends DictLike {
     }
 
     validate(obj) {
-        obj = super.validate(obj)
+        obj = super.validate(obj, true)
         let {fields, strict} = this.options
 
         for (let key of Object.keys(obj)) {
