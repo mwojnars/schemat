@@ -856,7 +856,7 @@ export class DictLike extends Compound {
     }
 
     _entries(obj)           { return [...obj.entries()] }
-    _rebuild(obj, entries)  { return obj }
+    _rebuild(obj, entries)  { /* remove and re-add all entries in `obj` */ }
 }
 
 
@@ -880,6 +880,13 @@ export class OBJECT extends DictLike {
 
     _entries(obj) { return Object.entries(obj) }
 
+    _rebuild(obj, entries) {
+        for (let key of Object.keys(obj))     // remove all entries
+            delete obj[key]
+        for (let [key, value] of entries)     // add new entries
+            obj[key] = value
+    }
+
     merge_inherited(objects) {
         return Object.assign({}, ...objects.toReversed())       // TODO: multiple reverse() is needed for proper ordering
     }
@@ -900,6 +907,12 @@ export class MAP extends DictLike {
         if (obj instanceof Catalog) return new Map(obj)             // auto-convert Catalogs to Maps
         if (T.isPlain(obj)) return new Map(Object.entries(obj))     // auto-convert POJOs to Maps
         return obj
+    }
+
+    _rebuild(obj, entries) {
+        obj.clear()
+        for (let [key, value] of entries)
+            obj.set(key, value)
     }
 
     merge_inherited(maps) {

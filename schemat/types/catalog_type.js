@@ -90,6 +90,12 @@ export class CATALOG extends DictLike {
         }
         return obj
     }
+
+    _rebuild(catalog, entries) {
+        catalog.clear()
+        for (let [key, value] of entries)
+            catalog._append(key, value)
+    }
 }
 
 
