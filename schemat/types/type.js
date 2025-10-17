@@ -841,12 +841,15 @@ export class DictLike extends Compound {
 
         let {key_type, value_type} = this.options
         for (let key of this._keys(obj)) key_type.validate(key)         // TODO: this._reset_key(obj, key, ...)  -- recursive normalization of keys
-        for (let val of this._values(obj)) value_type.validate(val)     // TODO: this._reset_val(obj, val, ...)  -- recursive normalization of values
+        for (let val of this._values(obj)) value_type.validate(val)     // TODO: this._reset_val(obj, key, val, ...)  -- recursive normalization of values
         return obj
     }
 
     _keys(obj)   { return obj.keys() }      // works for Map/Catalog
     _values(obj) { return obj.values() }
+
+    _reset_key(obj, key, new_key) {}        // TODO: after validation, change `key` to a normalized `new_key`
+    _reset_val(obj, key, val, new_val) {}
 }
 
 
