@@ -412,6 +412,8 @@ export class Textual extends Primitive {
     static options = {
         initial:    '',
         charset:    undefined,
+        min_length: undefined,
+        max_length: undefined,
         // collator                 // optional collator object that defines the sort order and provides a (possibly one-way!) binary encoding for indexing
         // charcase: false,         // 'upper'/'lower' - only upper/lower case characters allowed
     }
@@ -420,7 +422,11 @@ export class Textual extends Primitive {
 
     validate(str) {
         str = super.validate(str)
-        let {charset} = this.options
+        let {charset, min_length, max_length} = this.options
+        if (min_length != null && str.length < min_length)
+            throw new ValueError(`the string (${str}) is too short, should be >= ${min_length} characters`)
+        if (max_length != null && str.length > max_length)
+            throw new ValueError(`the string (${str}) is too long, should be <= ${max_length} characters`)
         if (charset) {
             let regex = new RegExp(`^[${charset}]*$`, 'u')
             if (!regex.test(str)) throw new ValueError(`some characters are outside the charset (${charset})`)
