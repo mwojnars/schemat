@@ -30,9 +30,12 @@ export class WebRequest {   // WebConnection (conn)
     // locals: App.Locals   (auth/session info)
     // fetch    (function to fetch other endpoints (respects hooks, credentials)
 
-    // TODO add after Express API:
+    // TODO response generation:
     // send()
-    // status()
+    // send_status()
+    // send_json()
+    // send_header(), send_redirect(), send_file(), send_download(), send_location(), send_cookie(), send_clear_cookie() ...
+    // send_response() --
 
     constructor({path, req, res}) {
         if (req) this._from_express(req, res)
