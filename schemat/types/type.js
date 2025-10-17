@@ -820,7 +820,8 @@ export class DictLike extends Compound {
     get Widget()    { return CatalogTable }
     is_dictionary() { return true }
     subtype(key)    { return this.options.value_type }     // type of values at `key`; subclasses should throw an exception or return undefined if `key` is not allowed
-    get_fields(opts){}                  // for record-like collections only
+
+    get_fields_editable() {}            // for record-like collections only
 
     collect(assets) {
         this.options.key_type.collect(assets)
@@ -938,20 +939,35 @@ export class RECORD extends DictLike {
         strict: true,       // if true, only fields listed in `fields` are allowed; generic_type is assumed for other fields otherwise
     }
 
+    validate(obj) {
+        obj = super.validate(obj)
+        let {fields, strict} = this.options
+
+        for (let key of Object.keys(obj)) {
+            let type = fields[key]
+            if (!type)
+                if (strict) throw new ValidationError(`unknown field "${key}", expected one of [${this.get_fields()}]`)
+                else continue
+            obj[key] = type.validate(obj[key])
+        }
+        return obj
+    }
+
     has(key) { return !!this.options.fields[key] }      // true if `key` is EXPLICITLY declared here as a valid field
     get(key) { return this.options.fields[key] || (!this.options.strict && generic_type) || undefined }
 
     subtype(key) {
         let {fields, strict} = this.options
         if (strict && !fields.hasOwnProperty(key))
-            throw new ValidationError(`unknown field "${key}", expected one of [${Object.getOwnPropertyNames(fields)}]`)
+            throw new ValidationError(`unknown field "${key}", expected one of [${this.get_fields()}]`)
         return fields[key] || generic_type
     }
 
-    get_fields({editable = true} = {}) {
-        let fields = Object.getOwnPropertyNames(this.options.fields)
-        fields = fields.filter(f => this.options.fields[f].is_editable())       // only keep user-editable fields
-        return fields.sort()
+    get_fields() { return Object.getOwnPropertyNames(this.options.fields) }
+
+    get_fields_editable() {
+        let names = this.get_fields().filter(f => this.options.fields[f].is_editable())     // only keep user-editable fields
+        return names.sort()
     }
 
     get_types() {

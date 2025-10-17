@@ -367,7 +367,7 @@ export class CatalogTable extends Component {
         let [entries, setEntries] = useState(catalog.getRecords().map((ent, pos) => ({...ent, id: pos})))
         let run = this.actions({item, path, setEntries})
 
-        let keyNames = type.get_fields()
+        let keyNames = type.get_fields_editable()
         let N = entries.length
 
         let rows = entries.map((entry, pos) =>
