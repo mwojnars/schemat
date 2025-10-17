@@ -953,6 +953,12 @@ export class RECORD extends DictLike {
             if (type) obj[key] = type.validate(obj[key])
             else if (strict) throw new ValidationError(`unknown field "${key}", expected one of [${this.get_fields()}]`)
         }
+
+        // check that all required fields are present
+        for (let [key, type] of Object.entries(fields))
+            if (type.options.required && obj[key] === undefined)
+                throw new ValidationError(`missing required field "${key}" in ${obj}`)
+
         return obj
     }
 
