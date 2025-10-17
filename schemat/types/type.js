@@ -160,6 +160,8 @@ export class Type extends Struct {
         if (not_blank && blank) throw new ValueError(`expected a non-blank value`)
         if (class_ && !(value instanceof class_)) throw new ValueError(`expected instance of ${class_}, got ${value}`)
 
+        if (blank) return undefined         // blank values are removed from record
+
         return value
     }
 
