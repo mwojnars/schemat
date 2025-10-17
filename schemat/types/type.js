@@ -840,24 +840,23 @@ export class DictLike extends Compound {
         if (record) return obj
 
         let {key_type, value_type} = this.options
+        let entries = []
+        let dirty = false
 
-        // TODO: loop over entries
         for (let [key, val] of this._entries(obj)) {
-            key_type.validate(key)          // TODO: this._reset_key(obj, key, ...)  -- recursive normalization of keys
-            value_type.validate(val)        // TODO: this._reset_val(obj, key, val, ...)  -- recursive normalization of values
+            let new_key = key_type.validate(key)
+            let new_val = value_type.validate(val)
+            entries.push([new_key, new_val])
+            if (new_key !== key || new_val !== val)
+                dirty = true
         }
 
-        // for (let key of this._keys(obj)) key_type.validate(key)         // TODO: this._reset_key(obj, key, ...)  -- recursive normalization of keys
-        // for (let val of this._values(obj)) value_type.validate(val)     // TODO: this._reset_val(obj, key, val, ...)  -- recursive normalization of values
+        if (dirty) this._rebuild(obj, entries)
         return obj
     }
 
-    // _keys(obj)   { return obj.keys() }      // works for Map/Catalog
-    // _values(obj) { return obj.values() }
-    _entries(obj) { return [...obj.entries()] }
-
-    _reset_key(obj, key, new_key) {}        // TODO: after validation, change `key` to a normalized `new_key`
-    _reset_val(obj, key, val, new_val) {}
+    _entries(obj)           { return [...obj.entries()] }
+    _rebuild(obj, entries)  { return obj }
 }
 
 
@@ -879,8 +878,6 @@ export class OBJECT extends DictLike {
         return obj
     }
 
-    // _keys(obj)   { return Object.keys(obj) }
-    // _values(obj) { return Object.values(obj) }
     _entries(obj) { return Object.entries(obj) }
 
     merge_inherited(objects) {
