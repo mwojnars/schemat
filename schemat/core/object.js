@@ -1250,6 +1250,7 @@ export class WebObject {
            Return `this`, or whatever the mutable version of this object is registered in the current transaction (if `this` is immutable).
          */
         if (this.__meta.obsolete) throw new Error(`this instance of ${this} is obsolete, reload it to edit`)
+        if (this.is_deleted()) throw new Error(`${this} object is marked for deletion, no more edits allowed`)
 
         let obj = this.get_mutable()            // the edit may go to a different instance (a mutable one), not `this`!
         let edit = [ver, op, ...args]
