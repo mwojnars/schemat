@@ -5,7 +5,7 @@ import {WebObject} from './object.js'
 import {JsonPOST} from "../web/services.js";
 import {mActionResult, mString} from "../web/messages.js";
 
-const node_path = SERVER && await import('node:path')
+const mod_path = SERVER && await import('node:path')
 
 
 /**********************************************************************************************************************/
@@ -105,12 +105,17 @@ export class Application extends WebObject {
         // return WebRequest.run_with({path}, () => this.route(request))
     }
 
-    async _route_file_based(request) {
-        /* Find the path on disk, then return the static file / render .ejs / execute .js function */
+    async _route_file_based(request, root = 'schemat') {
+        /* Find the path on disk, then return the static file / render .ejs / execute .js function.
+           `root` is a directory path relative to schemat.PATH_PROJECT (typically, the parent dir of node_modules).
+         */
+        // make `root` an absolute directory path
+        if (root[0] !== '/') root = mod_path.normalize(schemat.PATH_PROJECT + '/' + root)
 
-        // schemat.PATH_PROJECT
+        // HTTP request path converted to local file path
+        let path = mod_path.normalize(root + '/' + request.path)
 
-        let file_path = this._find_target(request.path)
+        //
 
     }
 
