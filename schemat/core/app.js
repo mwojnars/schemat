@@ -5,6 +5,7 @@ import {WebObject} from './object.js'
 import {JsonPOST} from "../web/services.js";
 import {mActionResult, mString} from "../web/messages.js";
 
+const node_path = SERVER && await import('node:path')
 
 
 /**********************************************************************************************************************/
@@ -104,8 +105,10 @@ export class Application extends WebObject {
         // return WebRequest.run_with({path}, () => this.route(request))
     }
 
-    async _route_filebased(request) {
-        // find the path on disk, then return the static file / render .ejs / execute .js function
+    async _route_file_based(request) {
+        /* Find the path on disk, then return the static file / render .ejs / execute .js function */
+
+        // schemat.PATH_PROJECT
 
         let file_path = this._find_target(request.path)
 
