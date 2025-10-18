@@ -124,7 +124,7 @@ export class Application extends WebObject {
         // }
         request.set_target(object)
 
-        return object._handle_request(request)
+        return object._handle_request(request)      // a promise
     }
 
     async resolve(path) { return this.root.resolve(path) }
