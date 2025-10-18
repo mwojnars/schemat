@@ -1,4 +1,6 @@
 import fs from 'node:fs'
+import path from 'node:path'
+import {fileURLToPath} from "node:url"
 import {AsyncLocalStorage} from 'node:async_hooks'
 
 import {AgentRole} from "../common/globals.js";
@@ -75,12 +77,17 @@ export class ServerSchemat extends Schemat {
         assert(ServerSchemat.get_context(this.app_id) === undefined, `ServerSchemat context for app_id=${this.app_id} is already registered`)
         ServerSchemat.set_context(this)
 
-        this.PATH_WORKING = process.cwd()               // initialize PATH_WORKING from the current working dir
-        this.PATH_CLUSTER = this.PATH_WORKING + '/cluster'
-        // this.PATH_SCHEMAT = this.PATH_WORKING + '/schemat'
+        let __filename = fileURLToPath(import.meta.url)
+        let __dirname  = path.dirname(__filename)
 
-        // check that PATH_WORKING points to the Schemat root folder
-        assert(fs.existsSync(this.PATH_WORKING + '/schemat/core/schemat.js'), 'working directory does not contain the Schemat installation with ./schemat source tree')
+        this.PATH_SCHEMAT = path.normalize(__dirname + '/..')       // src/schemat
+        this.PATH_PROJECT = path.normalize(__dirname + '/../..')    // src      -- same as PATH_WORKING
+        this.PATH_WORKING = this.PATH_PROJECT
+        this.PATH_CLUSTER = this.PATH_PROJECT + '/cluster'
+
+        // this.PATH_WORKING = process.cwd()               // initialize PATH_WORKING from the current working dir
+        // // check that PATH_WORKING points to the Schemat root folder
+        // assert(fs.existsSync(this.PATH_WORKING + '/schemat/core/schemat.js'), 'working directory does not contain the Schemat installation with ./schemat source tree')
 
         this._generation = 1
         this._session = new AsyncLocalStorage()

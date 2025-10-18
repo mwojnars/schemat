@@ -6,12 +6,6 @@ import {JsonPOST} from "../web/services.js";
 import {mActionResult, mString} from "../web/messages.js";
 
 
-// Currently, vm.Module (Application.import_module()) cannot import builtin modules, as they are not instances of vm.Module.
-// For this reason, importLocal() is added to the global context, so that the modules imported from DB can use it
-// as an alias for standard (non-VM) import(). Adding this function in a call to vm.createContext() instead of here raises errors.
-
-// set_global({importLocal: (p) => import(p)})
-
 
 /**********************************************************************************************************************/
 
@@ -110,8 +104,18 @@ export class Application extends WebObject {
         // return WebRequest.run_with({path}, () => this.route(request))
     }
 
+    async _route_filebased(request) {
+        // find the path on disk, then return the static file / render .ejs / execute .js function
+
+        let file_path = this._find_target(request.path)
+
+    }
+
     async route(request) {
         /* Find the object pointed to by the request's URL path and execute its endpoint function through handle(). */
+        // let handled = await this._route_filebased(request)
+        // if (handled)
+
         let path = request.path.slice(1)                // drop the leading slash
         let object = await this.resolve(path)
         if (!object) throw new URLNotFound({path})
@@ -165,6 +169,13 @@ export class Application extends WebObject {
 
 
     /***  Dynamic imports  ***/
+
+    // Currently, vm.Module (Application.import_module()) cannot import builtin modules, as they are not instances of vm.Module.
+    // For this reason, importLocal() is added to the global context, so that the modules imported from DB can use it
+    // as an alias for standard (non-VM) import(). Adding this function in a call to vm.createContext() instead of here raises errors.
+    //
+    // set_global({importLocal: (p) => import(p)})
+
 
     // async import_module(path, referrer) {
     //     /* Custom import of JS files and code snippets from Schemat's Uniform Namespace (SUN). Returns a vm.Module object. */
