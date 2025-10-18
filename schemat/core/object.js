@@ -508,7 +508,7 @@ export class WebObject {
             await this._initialize(sealed)
             if (!activate) return this                      // activation involves both __load__() and _activate(); none of these is executed when activate=false
 
-            // load references that have `autoload` option set up
+            // load references that have autoload=true
             let load_attrs = this.__category?.autoload_attrs || []
             let load_refs = load_attrs.flatMap(attr => this.all_values(attr).filter(ref => !ref.is_loaded()))
             if (load_refs.length) await Promise.all(load_refs.map(ref => ref.load()))
@@ -526,7 +526,7 @@ export class WebObject {
         } finally {
             if (schemat._loading.get(id) === this.__meta.loading)
                 schemat._loading.delete(id)
-            this.__meta.loading = false                     // cleanup to allow another load attempt, even after an error
+            this.__meta.loading = false                     // clean up to allow another load attempt, even after error
             schemat.after_data_loading(this)
         }
     }
@@ -789,8 +789,7 @@ export class WebObject {
 
         // check multi-field constraints ...
 
-        // run category-specific validation
-        this.__validate__()
+        this.__validate__()         // any additional custom validation
     }
 
     log(msg, args = null, level = 'INFO') {
@@ -847,8 +846,9 @@ export class WebObject {
          */
 
     __validate__() {}
-        /* Validate this object's own properties during insert/update. Called *after* validation of individual values through their schema.
-           Called on a NON-activated object: should NOT require that __load__() or _activate() was called beforehand!
+        /* Custom validation of this object's own properties. Invoked at the end of validate(),
+           after standard validation of individual values through their schemas.
+           Called on inactive object, where __load__() was *not* executed beforehand.
          */
 
     // __done__() {}
