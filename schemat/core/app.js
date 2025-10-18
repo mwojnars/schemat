@@ -112,22 +112,33 @@ export class Application extends WebObject {
     }
 
     async _route_file_based(request, root = 'schemat') {
-        /* Find the path on disk, then return the static file / render .ejs / execute .js function.
-           `root` is a directory path relative to schemat.PATH_PROJECT (typically, the parent dir of node_modules).
+        /* Find request.path on disk, then return the static file, or render .ejs, or execute .js function.
+           `root` is a directory path relative to schemat.PATH_PROJECT.
          */
         let not_found = () => {throw new URLNotFound({path: request.path})}
 
+        // make sure that no segment in request.path starts with a forbidden prefix (_private_routes)
+        if (this._is_private.test(request.path)) not_found()
+
         // make `root` an absolute directory path
         if (root[0] !== '/') root = mod_path.normalize(schemat.PATH_PROJECT + '/' + root)
-
-        // make sure that no segment in request.path starts with a forbidden prefix (in _private_routes)
-        if (this._is_private.test(request.path)) not_found()
 
         // HTTP request path converted to a local file path
         let path = mod_path.normalize(root + '/' + request.path)
         if (!path.startsWith(root)) not_found()
 
-        //
+        // check if the target `path` is a static file, to be returned as-is
+        
+
+        // if (this._static_exts.some(ext => path.endsWith(ext))) return path
+
+        // check if the target `path` is a directory, then render .ejs
+        if (mod_path.isDirectory(path)) return path
+
+        // check if the target `path` is a file, then execute .js function
+        if (mod_path.isFile(path)) return path
+
+        not_found()
 
     }
 
