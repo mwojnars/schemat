@@ -310,10 +310,10 @@
         be served as static assets directly from the application folder.
       "@": schemat/types/type.js:STRING
     private_routes:
-      default: _ .
-      info: Space-separated list of prefixes that mark a file or directory as private
-        during routing. If any of these prefixes is found in a URL path segment, the 
-        request is rejected with "not found" error.
+      default: _ . +
+      info: Space-separated list of prefixes that indicate the file or directory is
+        private and not accessible for routing procedure. If any of these prefixes is
+        found in a URL path segment, the request is rejected with "not found" error.
       "@": schemat/types/type.js:STRING
     global:
       value_type:

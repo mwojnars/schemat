@@ -30,10 +30,16 @@ export class Application extends WebObject {
     cluster
     webserver
     default_path
+    static_extensions
+    private_routes
     purge_objects_interval
     evict_records_interval
     eval_allowed
     logger
+
+    get _static_exts()      { return this.static_extensions.toLowerCase().split(/[ ,;:]+/) }
+    get _private_routes()   { return this.private_routes.split(/\s+/) || [] }
+    get _is_private()       { return new RegExp(`^/(${this._private_routes.join('|')})`) }
 
     async __load__() {
         if (SERVER) {
@@ -109,11 +115,17 @@ export class Application extends WebObject {
         /* Find the path on disk, then return the static file / render .ejs / execute .js function.
            `root` is a directory path relative to schemat.PATH_PROJECT (typically, the parent dir of node_modules).
          */
+        let not_found = () => {throw new URLNotFound({path: request.path})}
+
         // make `root` an absolute directory path
         if (root[0] !== '/') root = mod_path.normalize(schemat.PATH_PROJECT + '/' + root)
 
-        // HTTP request path converted to local file path
+        // make sure that no segment in request.path starts with a forbidden prefix (in _private_routes)
+        if (this._is_private.test(request.path)) not_found()
+
+        // HTTP request path converted to a local file path
         let path = mod_path.normalize(root + '/' + request.path)
+        if (!path.startsWith(root)) not_found()
 
         //
 
