@@ -1,4 +1,3 @@
-import fs from 'node:fs'
 import path from 'node:path'
 import {fileURLToPath} from "node:url"
 import {AsyncLocalStorage} from 'node:async_hooks'
@@ -81,11 +80,10 @@ export class ServerSchemat extends Schemat {
         let __dirname  = path.dirname(__filename)
 
         this.PATH_SCHEMAT = path.normalize(__dirname + '/..')       // src/schemat
-        this.PATH_PROJECT = path.normalize(__dirname + '/../..')    // src      -- same as PATH_WORKING
-        this.PATH_WORKING = this.PATH_PROJECT
+        this.PATH_PROJECT = path.normalize(__dirname + '/../..')    // src
         this.PATH_CLUSTER = this.PATH_PROJECT + '/cluster'
 
-        // this.PATH_WORKING = process.cwd()               // initialize PATH_WORKING from the current working dir
+        // this.PATH_WORKING = process.cwd()               // initialize PATH_PROJECT from the current working dir
         // // check that PATH_WORKING points to the Schemat root folder
         // assert(fs.existsSync(this.PATH_WORKING + '/schemat/core/schemat.js'), 'working directory does not contain the Schemat installation with ./schemat source tree')
 

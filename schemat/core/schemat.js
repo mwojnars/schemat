@@ -552,7 +552,7 @@ export class Schemat {
          */
         // print(`Application.import():  ${path}`)
         let [file_path, symbol] = splitLast(path || '', ':')
-        let import_path = CLIENT ? this.app.get_module_url(file_path) : this.PATH_WORKING + '/' + file_path
+        let import_path = CLIENT ? this.app.get_module_url(file_path) : this.PATH_PROJECT + '/' + file_path
 
         // print(`...importing:  ${import_path}`)
         let module = this._modules_cache.get(import_path)       // first, try taking the module from the cache - returns immediately

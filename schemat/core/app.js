@@ -75,7 +75,7 @@ export class Application extends WebObject {
     get_file_url(path) {
         /* Convert a local file path to its corresponding URL-path (href=...). Typically used for loading assets on the client. */
         if (path.startsWith('file://')) path = path.slice(7)                // trim leading 'file://' if present
-        let root = schemat.PATH_WORKING
+        let root = schemat.PATH_PROJECT
         if (!path.startsWith(root + '/')) throw new Error(`path is not accessible via URL: ${path}`)
         return path.replace(root, Application.URL_LOCAL)
     }
