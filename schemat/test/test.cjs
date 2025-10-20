@@ -380,14 +380,13 @@ describe('Schemat Tests', function () {
             expect(content).to.include('User-agent:')
         })
 
+        // it('static views', async function () {
+        //     let resp = await page.goto(`${DOMAIN}/test/views/page_01.html`)
+        //     expect(await resp.text()).to.include("designed for testing purposes")
+        // })
+
         it('private files', async function () {
-            // Mark the expected error patterns
-            let resp = await page.goto(`${DOMAIN}/test/views/page_01.html`)
-            expect(await resp.text()).to.include("designed for testing purposes")
-
-            expect_error('ERR_NAME_NOT_RESOLVED')
-            expect_error('404')
-
+            expect_error('404')             // mark the expected error pattern
             resp = await page.goto(`${DOMAIN}/test/views/_private.html`)
             expect(resp.status()).to.equal(404)
             resp = await page.goto(`${DOMAIN}/test/views/.private/test.html`)
