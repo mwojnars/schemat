@@ -19,6 +19,7 @@ export class WebRequest {   // WebConnection (conn)
     target          // target web object (recipient of the request)
     endpoint        // full name of the network endpoint that should handle the request (e.g., "GET.json")
     protocol        // endpoint type: LOCAL, GET, POST, ... (SOCK in the future)
+    // http_verb       // GET, POST, PUT ... alias for `protocol`, should replace the latter ??
 
     url             // complete URL, with protocol, domain name and ?x=y query string
     path            // URL path with trailing ::endpoint removed

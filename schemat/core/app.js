@@ -5,9 +5,11 @@ import {WebObject} from './object.js'
 import {JsonPOST} from "../web/services.js";
 import {mActionResult, mString} from "../web/messages.js";
 
+const fs  = SERVER && await import('fs')
+const ejs = SERVER && await import('ejs')
 const mod_path = SERVER && await import('node:path')
+const {readFile} = SERVER && await import('node:fs/promises') || {}
 const {check_file_type} = SERVER && await import('../common/utils_srv.js') || {}
-
 
 /**********************************************************************************************************************/
 
@@ -45,6 +47,7 @@ export class Application extends WebObject {
         let pattern = `/(${prefixes.join('|')})`
         return new RegExp(pattern)
     }
+    get _app_root() { return schemat.PATH_PROJECT }
 
     async __load__() {
         if (SERVER) {
@@ -118,7 +121,7 @@ export class Application extends WebObject {
 
     async _route_file_based(request, root = 'schemat') {
         /* Find request.path on disk, then return the static file, or render .ejs, or execute .js function.
-           `root` is a directory path relative to schemat.PATH_PROJECT.
+           `root` is a directory path relative to this._app_root.
          */
         // this._print(`request.path:`, request.path)
         let not_found = () => {throw new URLNotFound({path: request.path})}
@@ -129,7 +132,7 @@ export class Application extends WebObject {
         if (this._is_private.test(url_path)) not_found()
 
         // make `root` an absolute directory path
-        if (root[0] !== '/') root = mod_path.normalize(schemat.PATH_PROJECT + '/' + root)
+        if (root[0] !== '/') root = mod_path.normalize(this._app_root + '/' + root)
 
         // HTTP request path converted to a local file path
         let path = mod_path.normalize(root + '/' + url_path)
@@ -137,7 +140,9 @@ export class Application extends WebObject {
 
         // this._print(`file path:`, path)
         let ext = fileExtension(path).toLowerCase()
-        let type = await check_file_type(path)
+        let type = await check_file_type(path)          // TODO: replace any dynamic filesystem checks with the use of precomputed manifest
+
+        // TODO: detect parameter names and values, as embedded in file path & route path
 
         // if `path` points to a static file, return the file as is
         if (type === 'file' && this._static_exts.includes(ext)) {
@@ -145,10 +150,47 @@ export class Application extends WebObject {
             return true
         }
 
-        //
+        // render/execute single files: templates (ejs) or executables (js/jsx/svelte);
+        // automatically detect the file extension to be added to `path`; the path should *not* include an extension yet
+
+        // try to find a matching file with supported extension
+        for (let _ext of ['js', 'jsx', 'svelte', 'ejs']) {
+            let _path = path + '.' + _ext
+            if (fs.existsSync(_path)) {
+                await this._render_file(_path, request)
+                return true
+            }
+        }
+
+        // // execute directory-based views: path/+page.svelte  .. . TODO: +layout +page.js
+        // if (type === 'directory') {
+        //     let page_path = mod_path.join(path, '+page.svelte')
+        //     if (await check_file_type(page_path) === 'file') {
+        //         let module = await import(page_path)
+        //         if (typeof module.default === 'function') {
+        //             await module.default(request)
+        //             return true
+        //         }
+        //     }
+        // }
 
         return false
         // not_found()
+    }
+
+    async _render_file(path, request, params = {}) {
+        /* Render/execute a template file (ejs) or an executable (js/jsx/svelte). */
+        let ext = fileExtension(path).toLowerCase()
+        if (ext === 'ejs') {
+            // async=true below allows EJS templates to include async code like `await import(...)` or `await fetch_data()`
+            let opts = {filename: path, views: this._app_root, async: true}
+            let template = await readFile(path, 'utf-8')
+            return ejs.render(template, {schemat, request, ...params}, opts)
+        }
+
+        let module = await import(path)
+        if (typeof module.default === 'function')
+            return module.default(request)
     }
 
     async route(request) {
