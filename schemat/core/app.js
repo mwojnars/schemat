@@ -185,7 +185,7 @@ export class Application extends WebObject {
             let opts = {filename: path, views: [this._app_root], async: true}
             let template = await readFile(path, 'utf-8')
             let html = await ejs.render(template, {schemat, request, ...params}, opts)
-            request.send(html)
+            return request.send(html)
         }
 
         let module = await import(path)
