@@ -28,6 +28,7 @@ export class Application extends WebObject {
     __global                        // plain object {...} holding all references from `global` (TODO: is not .std enough?)
 
     // properties:
+    get root_folder() { return 'schemat' }     // TODO: move this to DB
     root
     global
     cluster
@@ -40,6 +41,7 @@ export class Application extends WebObject {
     eval_allowed
     logger
 
+    get _app_root()         { return mod_path.normalize(schemat.PATH_PROJECT + '/' + this.root_folder) }
     get _static_exts()      { return this.static_extensions.toLowerCase().split(/[ ,;:]+/) }
     get _private_routes()   { return this.private_routes.split(/\s+/) || [] }
     get _is_private() {
@@ -47,7 +49,6 @@ export class Application extends WebObject {
         let pattern = `/(${prefixes.join('|')})`
         return new RegExp(pattern)
     }
-    get _app_root() { return schemat.PATH_PROJECT }
 
     async __load__() {
         if (SERVER) {
@@ -119,10 +120,8 @@ export class Application extends WebObject {
         // return WebRequest.run_with({path}, () => this.route(request))
     }
 
-    async _route_file_based(request, root = 'schemat') {
-        /* Find request.path on disk, then return the static file, or render .ejs, or execute .js function.
-           `root` is a directory path relative to this._app_root.
-         */
+    async _route_file_based(request) {
+        /* Find request.path on disk, then return the static file, or render .ejs, or execute .js function. */
         // this._print(`request.path:`, request.path)
         let not_found = () => {throw new URLNotFound({path: request.path})}
         let url_path = request.path || '/'
@@ -131,10 +130,8 @@ export class Application extends WebObject {
         // make sure that no segment in request.path starts with a forbidden prefix (_private_routes)
         if (this._is_private.test(url_path)) not_found()
 
-        // make `root` an absolute directory path
-        if (root[0] !== '/') root = mod_path.normalize(this._app_root + '/' + root)
-
-        // HTTP request path converted to a local file path
+        // convert HTTP request path to a local file path
+        let root = this._app_root
         let path = mod_path.normalize(root + '/' + url_path)
         if (!path.startsWith(root + '/')) not_found()
 
