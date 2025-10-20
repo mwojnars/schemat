@@ -16,6 +16,7 @@ const {expect, assert} = require('chai')
 const puppeteer = require('puppeteer')
 const http = require('http')
 const {exec} = require('child_process')
+const {Transform} = require('stream')
 
 /**********************************************************************************************************************/
 
@@ -28,6 +29,23 @@ const {exec} = require('child_process')
 
 let print = console.log
 let delay = ms => new Promise(resolve => setTimeout(resolve, ms))
+
+function create_error_filter(expected_errors) {
+    return new Transform({
+        transform(chunk, encoding, callback) {
+            const text = chunk.toString()
+
+            // if this is an error message that matches any expected error, filter it out
+            for (let expected of expected_errors)
+                if (text.includes(expected)) {
+                    callback(null, null)                // filter out this chunk
+                    return
+                }
+
+            callback(null, chunk)                       // otherwise let it through
+        }
+    })
+}
 
 
 function check_internet(fail, retries = 2) {
@@ -149,8 +167,14 @@ function server_setup({nodes = null, node = NODE, port = PORT, tcp_port = TCP_PO
         for (let node of nodes) {
             let srv = await start_server(node, port++, tcp_port++, args)
             servers.push(srv)
-            srv.stdout.pipe(process.stdout)                     // pipe output in real-time
-            srv.stderr.pipe(process.stderr)
+            
+            // create error filters for both stdout and stderr
+            let stdout_filter = create_error_filter(expected_errors)
+            let stderr_filter = create_error_filter(expected_errors)
+            
+            // pipe through the filters
+            srv.stdout.pipe(stdout_filter).pipe(process.stdout)
+            srv.stderr.pipe(stderr_filter).pipe(process.stderr)
         }
         server = servers[0]
 
