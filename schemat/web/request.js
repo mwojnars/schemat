@@ -162,7 +162,8 @@ export class WebContext {
         while (queue.length) {
             let obj = queue.pop()
             if (!obj || items.hasNewer(obj)) continue
-            obj.assert_loaded()
+            if (!obj.is_loaded()) continue
+            // obj.assert_loaded()
 
             items.add(obj)
             queue.push(...obj.__category$)
