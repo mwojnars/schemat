@@ -8,7 +8,7 @@ export async function check_file_type(path) {
         let stats = await stat(path)
 
         if (stats.isFile()) return 'file'
-        if (stats.isDirectory()) return 'dir'
+        if (stats.isDirectory()) return 'directory'
         if (stats.isSymbolicLink()) return 'symlink'
         if (stats.isSocket()) return 'socket'
         if (stats.isFIFO()) return 'fifo'

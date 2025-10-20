@@ -372,7 +372,7 @@ export function joinPath(...parts) {
 
 export function escapeRegExp(str) {
     /* Escape special characters in `str` for safe inclusion inside a RegExp. */
-    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')       // character class [.*+?^${}()|[\]\\] matches every special char, \\$& means "insert a backslash before the entire matched char"
 }
 
 const htmlEscapes = {
