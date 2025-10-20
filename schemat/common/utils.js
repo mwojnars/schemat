@@ -334,7 +334,13 @@ export function comma(items, sep = ', ') {
 }
 
 
-export function fileBaseName(filepath) {
+/*************************************************************************************************
+ **
+ **  FILE PATHS
+ **
+ */
+
+ export function fileBaseName(filepath) {
     /* Extract the file name from the file path: drop the directory path and extension.
        Similar (although not identical) to: path.basename(filepath, path.extname(filepath))
        without importing the 'path' module.
@@ -362,6 +368,13 @@ export function normalizePath(path) {
 export function joinPath(...parts) {
     /* Join path parts into a single path. */
     return normalizePath(parts.join('/'))
+}
+
+export function fileExtension(filepath) {
+    /* Extract the file extension from the file path, that is, the substring after the last dot. No case conversion. 
+       Unlike mod_path.extname(), this function does *not* include the dot in the returned extension.
+     */
+    return filepath.split('.').pop()
 }
 
 /*************************************************************************************************
