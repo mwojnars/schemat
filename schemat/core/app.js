@@ -122,16 +122,18 @@ export class Application extends WebObject {
          */
         // this._print(`request.path:`, request.path)
         let not_found = () => {throw new URLNotFound({path: request.path})}
-        assert(request.path[0] === '/')
+        let url_path = request.path
+        // if (url_path[0] !== '/') url_path = '/' + url_path
+        assert(url_path[0] === '/')
 
         // make sure that no segment in request.path starts with a forbidden prefix (_private_routes)
-        if (this._is_private.test(request.path)) not_found()
+        if (this._is_private.test(url_path)) not_found()
 
         // make `root` an absolute directory path
         if (root[0] !== '/') root = mod_path.normalize(schemat.PATH_PROJECT + '/' + root)
 
         // HTTP request path converted to a local file path
-        let path = mod_path.normalize(root + '/' + request.path)
+        let path = mod_path.normalize(root + '/' + url_path)
         if (!path.startsWith(root + '/')) not_found()
 
         // this._print(`file path:`, path)
