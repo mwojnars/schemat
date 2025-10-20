@@ -1,7 +1,8 @@
 import {print, assert, splitLast} from "../common/utils.js";
 import {RecentObjects} from "../common/structs.js";
 
-const stream = await server_import('node:stream')
+const stream = SERVER && await import('node:stream')
+const {promisify} = SERVER && await import('node:util') || {}
 
 /**********************************************************************************************************************/
 
@@ -34,6 +35,7 @@ export class WebRequest {   // WebConnection (conn)
     // send()
     // send_status()
     // send_json()
+    // send_mimetype()
     // send_header(), send_redirect(), send_file(), send_download(), send_location(), send_cookie(), send_clear_cookie() ...
     // send_response() --
 
@@ -119,6 +121,12 @@ export class WebRequest {   // WebConnection (conn)
     async json() {
         /* Like Request.json() API. */
         return this.text().then(text => JSON.parse(text))
+    }
+
+    /* Response generation */
+
+    async send_file(path) {
+        return promisify(this.res.sendFile).call(this.res, path)
     }
 }
 
