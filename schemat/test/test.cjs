@@ -141,6 +141,7 @@ async function start_server(node, port, tcp_port, args = '') {
 
 function server_setup({nodes = null, node = NODE, port = PORT, tcp_port = TCP_PORT, args = ''} = {}) {
     let server, servers = [], browser, page, messages
+    let expected_errors = new Set()         // track expected errors for each test
 
     before(async function() {
         nodes ??= [node]
@@ -171,7 +172,10 @@ function server_setup({nodes = null, node = NODE, port = PORT, tcp_port = TCP_PO
         await delay(1500)
     })
 
-    beforeEach(() => { messages = [] })
+    beforeEach(() => { 
+        messages = []
+        expected_errors.clear()         // clear expected errors before each test
+    })
 
     afterEach(async () => {
         await page.waitForNetworkIdle()                         // wait for page to render completely
@@ -181,7 +185,15 @@ function server_setup({nodes = null, node = NODE, port = PORT, tcp_port = TCP_PO
         for (let msg of messages)
             msg.type ? console.log(`Console [${msg.type()}]: `, msg.text()) : console.log(msg)
 
-        let error = messages.find(msg => msg.type?.() === 'error')
+        let error = messages.find(msg => {
+            if (msg.type?.() !== 'error') return false
+            
+            let error_text = msg.text()                 // check if this is an expected error
+            for (let expected of expected_errors)
+                if (error_text.includes(expected)) return false
+
+            return true
+        })
         assert(!error, `(on client) ${error?.text() || error}`)
 
         // if (page_error) {
@@ -213,7 +225,10 @@ function server_setup({nodes = null, node = NODE, port = PORT, tcp_port = TCP_PO
         await Promise.all(exiting)      // wait for server processes to actually exit
     })
 
-    return () => ({server, servers, browser, page, messages})
+    return () => ({
+        server, servers, browser, page, messages,
+        expect_error: (error_text) => expected_errors.add(error_text)
+    })
 }
 
 
@@ -238,9 +253,9 @@ describe('Schemat Tests', function () {
     describe('Web Application', function () {
 
         let setup = server_setup({nodes: ['sample/node.1024', 'sample/node.1036']})
-        let server, browser, page, messages
+        let server, browser, page, messages, expect_error
 
-        before(async function () {({server, browser, page, messages} = setup())})
+        before(async function () {({server, browser, page, messages, expect_error} = setup())})
 
         // it('/$/sys', async function () {
         //     /* Test of React rendering around system-level bootstrap objects. Must be run first, otherwise the error doesn't show up. */
@@ -359,10 +374,24 @@ describe('Schemat Tests', function () {
         })
 
         it('robots.txt', async function () {
-            const response = await page.goto(`${DOMAIN}/robots.txt`)
-            expect(response.status()).to.equal(200)
-            const content = await response.text()
+            let resp = await page.goto(`${DOMAIN}/robots.txt`)
+            expect(resp.status()).to.equal(200)
+            let content = await resp.text()
             expect(content).to.include('User-agent:')
+        })
+
+        it('private files', async function () {
+            // Mark the expected error patterns
+            let resp = await page.goto(`${DOMAIN}/test/views/page_01.html`)
+            expect(await resp.text()).to.include("designed for testing purposes")
+
+            expect_error('ERR_NAME_NOT_RESOLVED')
+            expect_error('404')
+
+            resp = await page.goto(`${DOMAIN}/test/views/_private.html`)
+            expect(resp.status()).to.equal(404)
+            resp = await page.goto(`${DOMAIN}/test/views/.private/test.html`)
+            expect(resp.status()).to.equal(404)
         })
 
         // describe('UI Actions on $/id/1000', function () {
