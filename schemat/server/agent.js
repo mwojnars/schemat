@@ -225,7 +225,7 @@ export class WebServer extends Agent {
         catch (ex) {
             this._print(`web request ${req.url} failed with`, ex)
             let code = ex.code || 500
-            
+
             if (!res.headersSent)
                 if (code === 'ENOENT')                           // file not found error
                     res.status(404).send('File not found')

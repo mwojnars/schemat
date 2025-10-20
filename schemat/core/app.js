@@ -192,7 +192,9 @@ export class Application extends WebObject {
             let template = await readFile(path, 'utf-8')
             if (this.async_ejs === 'auto') opts.async = /\bawait\b/.test(template)
 
-            let html = await ejs.render(template, {schemat, request, ...params, import: import_, import_}, opts)
+            // here, trying to override the standard `import` symbol with `import_` does NOT work, so import_ is passed separately;
+            // this modified function must be used for all relative imports inside .ejs instead of the standard one - the latter resolves against node_modules/ejs/lib
+            let html = await ejs.render(template, {schemat, request, ...params, import_}, opts)
             return request.send(html)
         }
 

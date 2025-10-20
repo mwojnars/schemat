@@ -20,7 +20,7 @@
         <h2>Dynamic Content Test</h2>
 
         <%# Test async data loading %>
-        <% const testData = await import_('./data/test_data.js') %>
+        <% const testData = await import_('data/test_data.js') %>
         <% const articles = testData.articles %>
 
         <div class="articles">
