@@ -28,8 +28,7 @@ export class Application extends WebObject {
     __global                        // plain object {...} holding all references from `global` (TODO: is not .std enough?)
 
     // properties:
-    get root_folder() { return 'schemat' }      // TODO: move this to DB
-    get async_ejs()   { return 'auto' }         // when true, .ejs templates may include async instructions, but then, all include() stmts must be awaited! If "auto", async is set to true only if "await" keyword was found in the template string.
+    root_folder
     root
     global
     cluster
@@ -41,6 +40,7 @@ export class Application extends WebObject {
     evict_records_interval
     eval_allowed
     logger
+    async_ejs
 
     get _app_root()         { return mod_path.normalize(schemat.PATH_PROJECT + '/' + this.root_folder) }
     get _static_exts()      { return this.static_extensions.toLowerCase().split(/[ ,;:]+/) }

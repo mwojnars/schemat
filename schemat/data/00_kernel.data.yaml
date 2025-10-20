@@ -298,6 +298,11 @@
       category:
         "@": 3
       "@": schemat/types/type.js:REF
+    root_folder:
+      info: Local directory that is the root of URL routing. An an absolute path, or
+        relative to the project root.
+      default: schemat
+      "@": schemat/types/type.js:PATH
     default_path:
       info: URL path of a default container that can be used to access any object via
         its ID. For internal purposes. Should contain a leading slash and no
@@ -336,6 +341,14 @@
       default: false
       info: If true, schemat.app.POST.server() and schemat.server() calls are allowed.
       "@": schemat/types/type.js:BOOLEAN
+    async_ejs:
+      default: auto
+      info: If true, EJS templates may include async instructions, but then, all
+        include() statements must be awaited (!). If 'auto', async mode is used
+        only when 'await' keyword is found inside the template. In async mode, a
+        special function, async import_(), can be used in place of import() for
+        importing paths relative to the template file.
+      "@": schemat/types/type.js:GENERIC
   __prototype:
     "@": 5
   __category:
