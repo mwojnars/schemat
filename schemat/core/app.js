@@ -29,7 +29,7 @@ export class Application extends WebObject {
 
     // properties:
     get root_folder() { return 'schemat' }      // TODO: move this to DB
-    get async_ejs()   { return false }          // when true, .ejs templates may include async instructions, but then, all include() stmts must be awaited! If "auto", async is set to true only if "await" keyword was found in the template string.
+    get async_ejs()   { return 'auto' }         // when true, .ejs templates may include async instructions, but then, all include() stmts must be awaited! If "auto", async is set to true only if "await" keyword was found in the template string.
     root
     global
     cluster
@@ -192,7 +192,7 @@ export class Application extends WebObject {
             let template = await readFile(path, 'utf-8')
             if (this.async_ejs === 'auto') opts.async = /\bawait\b/.test(template)
 
-            let html = await ejs.render(template, {schemat, request, ...params, import: import_}, opts)
+            let html = await ejs.render(template, {schemat, request, ...params, import: import_, import_}, opts)
             return request.send(html)
         }
 

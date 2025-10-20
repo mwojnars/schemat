@@ -11,7 +11,7 @@
 </head>
 <body>
     <%# Include the header with custom navigation %>
-    <%- include('partials/header', {
+    <%- await include('partials/header', {
         title: 'EJS Test Page',
         navLinks: ['Home', 'Articles', 'About']
     }) %>
@@ -19,10 +19,32 @@
     <main>
         <h2>Dynamic Content Test</h2>
 
+        <%# Test async data loading %>
+        <% const testData = await import_('./data/test_data.js') %>
+        <% const articles = testData.articles %>
+
+        <div class="articles">
+            <% for (const article of articles) { %>
+                <div class="article">
+                    <h3><%= article.title %></h3>
+                    <p><%= article.content %></p>
+                </div>
+            <% } %>
+        </div>
+
+        <%# Test async function call %>
+        <% const specificArticle = await testData.fetchArticle(1) %>
+        <div class="featured-article">
+            <h2>Featured Article</h2>
+            <div class="article">
+                <h3><%= specificArticle.title %></h3>
+                <p><%= specificArticle.content %></p>
+            </div>
+        </div>
     </main>
 
     <%# Include the footer with custom links %>
-    <%- include('partials/footer', {
+    <%- await include('partials/footer', {
         footerLinks: [
             { url: '/privacy', text: 'Privacy Policy' },
             { url: '/terms', text: 'Terms of Service' }
