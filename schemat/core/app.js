@@ -1,4 +1,4 @@
-import {print, assert, T, sleep, splitLast, normalizePath} from '../common/utils.js'
+import {print, assert, T, sleep, splitLast, normalizePath, escapeRegExp, fileExtension} from '../common/utils.js'
 import {URLNotFound} from "../common/errors.js"
 import {WebRequest} from '../web/request.js'
 import {WebObject} from './object.js'
@@ -6,6 +6,7 @@ import {JsonPOST} from "../web/services.js";
 import {mActionResult, mString} from "../web/messages.js";
 
 const mod_path = SERVER && await import('node:path')
+const {check_file_type} = SERVER && await import('../common/utils_srv.js') || {}
 
 
 /**********************************************************************************************************************/
@@ -39,7 +40,10 @@ export class Application extends WebObject {
 
     get _static_exts()      { return this.static_extensions.toLowerCase().split(/[ ,;:]+/) }
     get _private_routes()   { return this.private_routes.split(/\s+/) || [] }
-    get _is_private()       { return new RegExp(`^/(${this._private_routes.join('|')})`) }
+    get _is_private() {
+        let prefixes = this._private_routes.map(route => escapeRegExp(route))
+        return new RegExp(`^/(${prefixes.join('|')})`)
+    }
 
     async __load__() {
         if (SERVER) {
@@ -115,6 +119,7 @@ export class Application extends WebObject {
         /* Find request.path on disk, then return the static file, or render .ejs, or execute .js function.
            `root` is a directory path relative to schemat.PATH_PROJECT.
          */
+        // this._print(`request.path:`, request.path)
         let not_found = () => {throw new URLNotFound({path: request.path})}
 
         // make sure that no segment in request.path starts with a forbidden prefix (_private_routes)
@@ -125,27 +130,29 @@ export class Application extends WebObject {
 
         // HTTP request path converted to a local file path
         let path = mod_path.normalize(root + '/' + request.path)
-        if (!path.startsWith(root)) not_found()
+        if (!path.startsWith(root + '/')) not_found()
 
-        // check if the target `path` is a static file, to be returned as-is
-        
+        // this._print(`file path:`, path)
+        let ext = fileExtension(path).toLowerCase()
+        let type = await check_file_type(path)
 
-        // if (this._static_exts.some(ext => path.endsWith(ext))) return path
+        // if `path` points to a static file, return the file as is
+        if (type === 'file' && this._static_exts.includes(ext)) {
+            await request.send_file(path)
+            return true
+        }
 
-        // check if the target `path` is a directory, then render .ejs
-        if (mod_path.isDirectory(path)) return path
+        //
 
-        // check if the target `path` is a file, then execute .js function
-        if (mod_path.isFile(path)) return path
-
-        not_found()
-
+        return false
+        // not_found()
     }
 
     async route(request) {
         /* Find the object pointed to by the request's URL path and execute its endpoint function through handle(). */
-        // let handled = await this._route_filebased(request)
-        // if (handled)
+
+        let handled = await this._route_file_based(request)
+        if (handled) return
 
         let path = request.path.slice(1)                // drop the leading slash
         let object = await this.resolve(path)
