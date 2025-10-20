@@ -224,11 +224,15 @@ export class WebServer extends Agent {
         }
         catch (ex) {
             this._print(`web request ${req.url} failed with`, ex)
+            let code = ex.code || 500
+            
             if (!res.headersSent)
-                if (ex.code === 'ENOENT')                           // file not found error
+                if (code === 'ENOENT')                           // file not found error
                     res.status(404).send('File not found')
-                else
-                    res.status(ex.code || 500).send(ex.message || 'Internal Server Error')
+                else {
+                    if (typeof code === 'number' && code >= 100 && code < 600) res.status(code)
+                    res.send(ex.message || 'Internal Server Error')
+                }
             else
                 res.end()               // if headers were sent already, we need to end the response
 
