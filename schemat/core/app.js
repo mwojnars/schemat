@@ -155,7 +155,8 @@ export class Application extends WebObject {
         for (let _ext of ['js', 'jsx', 'svelte', 'ejs']) {
             let _path = path + '.' + _ext
             if (fs.existsSync(_path)) {
-                await this._render_file(_path, request)
+                let method = `_render_${_ext}`
+                await this[method](_path, request)
                 return true
             }
         }
@@ -176,28 +177,29 @@ export class Application extends WebObject {
         // not_found()
     }
 
-    async _render_file(path, request, params = {}) {
-        /* Render/execute a template file (ejs) or an executable (js/jsx/svelte). */
-        let ext = fileExtension(path).toLowerCase()
-        if (ext === 'ejs') {
-            // `views` is an array of search paths that would be used as roots for resolving relative include(path) statements,
-            // but *only* if the resolution relative to `filename` fails;
-            // `async`=true allows EJS templates to include async JS code like `await import(...)` or `await fetch_data()`
-            let opts = {filename: path, views: [this._app_root], async: !!this.async_ejs}
-            let root = mod_path.dirname(path)
-            let import_ = async (_path) => _path.startsWith('$') || _path.startsWith('node:') ?
-                                import(_path) :
-                                import(mod_path.resolve(root, _path))
+    async _render_ejs(path, request, params = {}) {
+        /* Render an EJS template file. It may include() other templates and async import_() other JS modules. */
 
-            let template = await readFile(path, 'utf-8')
-            if (this.async_ejs === 'auto') opts.async = /\bawait\b/.test(template)
+        // `views` is an array of search paths that would be used as roots for resolving relative include(path) statements,
+        // but *only* if the resolution relative to `filename` fails;
+        // `async`=true allows EJS templates to include async JS code like `await import(...)` or `await fetch_data()`
+        let opts = {filename: path, views: [this._app_root], async: !!this.async_ejs}
+        let root = mod_path.dirname(path)
+        let import_ = async (_path) => _path.startsWith('$') || _path.startsWith('node:') ?
+                            import(_path) :
+                            import(mod_path.resolve(root, _path))
 
-            // here, trying to override the standard `import` symbol with `import_` does NOT work, so import_ is passed separately;
-            // this modified function must be used for all relative imports inside .ejs instead of the standard one - the latter resolves against node_modules/ejs/lib
-            let html = await ejs.render(template, {schemat, request, ...params, import_}, opts)
-            return request.send(html)
-        }
+        let template = await readFile(path, 'utf-8')
+        if (this.async_ejs === 'auto') opts.async = /\bawait\b/.test(template)
 
+        // here, trying to override the standard `import` symbol with `import_` does NOT work, so import_ is passed separately;
+        // this modified function must be used for all relative imports inside .ejs instead of the standard one - the latter resolves against node_modules/ejs/lib
+        let html = await ejs.render(template, {schemat, request, ...params, import_}, opts)
+        request.send(html)
+    }
+
+    async _render_js(path, request, params = {}) {
+        /* Execute GET/POST/PUT/... function from a .js file pointed to by `path`. */
         let module = await import(path)
         if (typeof module.default === 'function')
             return module.default(request)
