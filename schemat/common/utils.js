@@ -364,6 +364,16 @@ export function joinPath(...parts) {
     return normalizePath(parts.join('/'))
 }
 
+/*************************************************************************************************
+ **
+ **  REGEXP and HTML
+ **
+ */
+
+export function escapeRegExp(str) {
+    /* Escape special characters in `str` for safe inclusion inside a RegExp. */
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
 
 const htmlEscapes = {
     '&': '&amp',
@@ -378,6 +388,7 @@ export function escape_html(string) {
     // reduced version of Lodash's escape(): https://github.com/lodash/lodash/blob/9d11b48ce5758df247607dc837a98cbfe449784a/escape.js
     return string.replace(reUnescapedHtml, (chr) => htmlEscapes[chr]);
 }
+
 
 /*************************************************************************************************
  **
