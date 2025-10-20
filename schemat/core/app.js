@@ -124,17 +124,16 @@ export class Application extends WebObject {
     async _route_file_based(request) {
         /* Find request.path on disk, then return the static file, or render .ejs, or execute .js function. */
         // this._print(`request.path:`, request.path)
-        let not_found = () => {throw new URLNotFound({path: request.path})}
         let url_path = request.path || '/'
         assert(url_path[0] === '/', url_path)
 
         // make sure that no segment in request.path starts with a forbidden prefix (_private_routes)
-        if (this._is_private.test(url_path)) not_found()
+        if (this._is_private.test(url_path)) request.not_found()
 
         // convert HTTP request path to a local file path
         let root = this._app_root
         let path = mod_path.normalize(root + '/' + url_path)
-        if (!path.startsWith(root + '/')) not_found()
+        if (!path.startsWith(root + '/')) request.not_found()
 
         // this._print(`file path:`, path)
         let ext = fileExtension(path).toLowerCase()
@@ -174,7 +173,7 @@ export class Application extends WebObject {
         // }
 
         return false
-        // not_found()
+        // request.not_found()
     }
 
     async _render_ejs(path, request, params = {}) {
@@ -199,10 +198,11 @@ export class Application extends WebObject {
     }
 
     async _render_js(path, request, params = {}) {
-        /* Execute GET/POST/PUT/... function from a .js file pointed to by `path`. */
+        /* Execute GET/POST/PUT/... function from the .js file pointed to by `path`. */
         let module = await import(path)
-        if (typeof module.default === 'function')
-            return module.default(request)
+        let endpoint = module[request.http_method]
+        if (typeof endpoint !== 'function') request.not_found()
+        return endpoint(request)
     }
 
     async route(request) {
