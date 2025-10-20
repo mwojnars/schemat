@@ -1,3 +1,4 @@
+import {URLNotFound} from "../common/errors.js";
 import {print, assert, splitLast} from "../common/utils.js";
 import {RecentObjects} from "../common/structs.js";
 
@@ -19,7 +20,7 @@ export class WebRequest {   // WebConnection (conn)
     target          // target web object (recipient of the request)
     endpoint        // full name of the network endpoint that should handle the request (e.g., "GET.json")
     protocol        // endpoint type: LOCAL, GET, POST, ... (SOCK in the future)
-    // http_verb       // GET, POST, PUT ... alias for `protocol`, should replace the latter ??
+    http_method     // GET, POST, PUT ...
 
     url             // complete URL, with protocol, domain name and ?x=y query string
     path            // URL path with trailing ::endpoint removed
@@ -53,6 +54,7 @@ export class WebRequest {   // WebConnection (conn)
         this.url = `${req.protocol}://${req.get('host')}${req.originalUrl}`  // req.url does NOT contain protocol & domain
         this.path = req.path
         this.query = req.query
+        this.http_method = this.req.method
 
         this.protocol =
             !this.req                   ? "LOCAL" :     // LOCAL = internal call through Application.route_local()
@@ -111,6 +113,9 @@ export class WebRequest {   // WebConnection (conn)
     set_target(target) { this.target = target }
     set_endpoint(endpoint) { this.endpoint = endpoint }
 
+    not_found() {
+        throw new URLNotFound({path: this.path})
+    }
 
     /*  Access methods  */
 
