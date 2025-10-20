@@ -167,8 +167,15 @@ function server_setup({nodes = null, node = NODE, port = PORT, tcp_port = TCP_PO
         //     // console.log(util.inspect(page_error, { showHidden: false, depth: null, colors: true }))
         // })
 
+        // capture detailed console messages including network errors
         page.on('console', msg => { messages.push(msg) })
         page.on('pageerror', error => { messages.push({type: () => 'error', text: () => error}) })
+        page.on('requestfailed', request => {
+            messages.push({
+                type: () => 'error',
+                text: () => `Failed to load ${request.url()}: ${request.failure().errorText}`
+            })
+        })
         await delay(1500)
     })
 
