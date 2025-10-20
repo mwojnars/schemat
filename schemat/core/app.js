@@ -140,7 +140,7 @@ export class Application extends WebObject {
 
         // this._print(`file path:`, path)
         let ext = fileExtension(path).toLowerCase()
-        let type = await check_file_type(path)          // TODO: replace any dynamic filesystem checks with the use of precomputed manifest
+        let type = await check_file_type(path)          // TODO: replace any dynamic filesystem checks with the use of precomputed map of routes
 
         // TODO: detect parameter names and values, as embedded in file path & route path
 
@@ -162,7 +162,7 @@ export class Application extends WebObject {
             }
         }
 
-        // // execute directory-based views: path/+page.svelte  .. . TODO: +layout +page.js
+        // // execute directory-based views: path/+page.svelte  ... TODO: +layout +page.js
         // if (type === 'directory') {
         //     let page_path = mod_path.join(path, '+page.svelte')
         //     if (await check_file_type(page_path) === 'file') {
@@ -182,8 +182,10 @@ export class Application extends WebObject {
         /* Render/execute a template file (ejs) or an executable (js/jsx/svelte). */
         let ext = fileExtension(path).toLowerCase()
         if (ext === 'ejs') {
-            // async=true below allows EJS templates to include async code like `await import(...)` or `await fetch_data()`
-            let opts = {filename: path, views: this._app_root, async: true}
+            // `views` is an array of search paths that would be used as roots for resolving relative include(path) statements,
+            // but *only* if the resolution relative to `filename` fails;
+            // `async`=true allows EJS templates to include async JS code like `await import(...)` or `await fetch_data()`
+            let opts = {filename: path, views: [this._app_root], async: true}
             let template = await readFile(path, 'utf-8')
             return ejs.render(template, {schemat, request, ...params}, opts)
         }
