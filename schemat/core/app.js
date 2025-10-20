@@ -28,7 +28,8 @@ export class Application extends WebObject {
     __global                        // plain object {...} holding all references from `global` (TODO: is not .std enough?)
 
     // properties:
-    get root_folder() { return 'schemat' }     // TODO: move this to DB
+    get root_folder() { return 'schemat' }      // TODO: move this to DB
+    get async_ejs()   { return false }          // when true, .ejs templates may include async instructions, but then, all include() stmts must be awaited!
     root
     global
     cluster
@@ -182,7 +183,7 @@ export class Application extends WebObject {
             // `views` is an array of search paths that would be used as roots for resolving relative include(path) statements,
             // but *only* if the resolution relative to `filename` fails;
             // `async`=true allows EJS templates to include async JS code like `await import(...)` or `await fetch_data()`
-            let opts = {filename: path, views: [this._app_root], async: true}
+            let opts = {filename: path, views: [this._app_root], async: this.async_ejs}
             let template = await readFile(path, 'utf-8')
             let html = await ejs.render(template, {schemat, request, ...params}, opts)
             return request.send(html)
