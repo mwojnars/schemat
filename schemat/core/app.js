@@ -42,7 +42,8 @@ export class Application extends WebObject {
     get _private_routes()   { return this.private_routes.split(/\s+/) || [] }
     get _is_private() {
         let prefixes = this._private_routes.map(route => escapeRegExp(route))
-        return new RegExp(`^/(${prefixes.join('|')})`)
+        let pattern = `/(${prefixes.join('|')})`
+        return new RegExp(pattern)
     }
 
     async __load__() {
@@ -121,6 +122,7 @@ export class Application extends WebObject {
          */
         // this._print(`request.path:`, request.path)
         let not_found = () => {throw new URLNotFound({path: request.path})}
+        assert(request.path[0] === '/')
 
         // make sure that no segment in request.path starts with a forbidden prefix (_private_routes)
         if (this._is_private.test(request.path)) not_found()
