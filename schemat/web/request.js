@@ -154,16 +154,18 @@ export class WebContext {
         let app = schemat.app
         let target = request.target
 
+        // assert(schemat.app.is_loaded(), schemat.app)     // FIXME: these asserts fail when opening http://127.0.0.1:3000/$/id/2 (Application page)
+        // assert(schemat._app.is_loaded(), schemat._app)
+
         let items = new RecentObjects()
-        let queue = [target, app, ...app.global?.values() || [], ...objects].filter(Boolean)
+        let queue = [app, target, ...app.global?.values() || [], ...objects].filter(Boolean)
         
         // extend the `items` set with all objects that are referenced from the `target` and `app` via __category, __extend or __container
         // TODO: deduplicate IDs when repeated by different object instances (e.g., this happens for the root category)
         while (queue.length) {
             let obj = queue.pop()
             if (!obj || items.hasNewer(obj)) continue
-            if (!obj.is_loaded()) continue
-            // obj.assert_loaded()
+            // assert(obj.is_loaded(), obj)
 
             items.add(obj)
             queue.push(...obj.__category$)
