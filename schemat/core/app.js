@@ -122,9 +122,8 @@ export class Application extends WebObject {
          */
         // this._print(`request.path:`, request.path)
         let not_found = () => {throw new URLNotFound({path: request.path})}
-        let url_path = request.path
-        // if (url_path[0] !== '/') url_path = '/' + url_path
-        assert(url_path[0] === '/')
+        let url_path = request.path || '/'
+        assert(url_path[0] === '/', url_path)
 
         // make sure that no segment in request.path starts with a forbidden prefix (_private_routes)
         if (this._is_private.test(url_path)) not_found()
