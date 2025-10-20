@@ -414,6 +414,8 @@ describe('Schemat Tests', function () {
         it('static views', async function () {
             let resp = await page.goto(`${DOMAIN}/test/views/page_02.html`)
             expect(await resp.text()).to.include("designed for testing purposes")
+            resp = await page.goto(`${DOMAIN}/test/views/test-ejs`)
+            expect_include_all(await resp.text(), "EJS Test Page", "Dynamic Content", "content of the second article", "Privacy Policy")
         })
 
         it('private files', async function () {
