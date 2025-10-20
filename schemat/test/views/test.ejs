@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EJS Test Page</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+        .article { margin: 20px 0; padding: 15px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+    <%# Include the header with custom navigation %>
+    <%- include('partials/header', {
+        title: 'EJS Test Page',
+        navLinks: ['Home', 'Articles', 'About']
+    }) %>
+
+    <main>
+        <h2>Dynamic Content Test</h2>
+
+    </main>
+
+    <%# Include the footer with custom links %>
+    <%- include('partials/footer', {
+        footerLinks: [
+            { url: '/privacy', text: 'Privacy Policy' },
+            { url: '/terms', text: 'Terms of Service' }
+        ]
+    }) %>
+</body>
+</html>

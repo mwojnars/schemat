@@ -1,0 +1,14 @@
+<!-- footer.ejs -->
+<footer class="site-footer">
+    <div class="footer-content">
+        <% const year = new Date().getFullYear() %>
+        <p>&copy; <%= year %> Test Application</p>
+        <% if (typeof footerLinks !== 'undefined') { %>
+            <ul class="footer-links">
+                <% footerLinks.forEach(link => { %>
+                    <li><a href="<%= link.url %>"><%= link.text %></a></li>
+                <% }) %>
+            </ul>
+        <% } %>
+    </div>
+</footer>

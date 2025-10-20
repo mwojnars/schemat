@@ -1,0 +1,16 @@
+<!-- header.ejs -->
+<header class="site-header">
+    <nav>
+        <% if (typeof title !== 'undefined') { %>
+            <h1><%= title %></h1>
+        <% } else { %>
+            <h1>Default Header</h1>
+        <% } %>
+        <ul class="nav-links">
+            <% const links = locals.navLinks || ['Home', 'About', 'Contact'] %>
+            <% links.forEach(link => { %>
+                <li><a href="#<%= link.toLowerCase() %>"><%= link %></a></li>
+            <% }) %>
+        </ul>
+    </nav>
+</header>
