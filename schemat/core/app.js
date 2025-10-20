@@ -184,7 +184,8 @@ export class Application extends WebObject {
             // `async`=true allows EJS templates to include async JS code like `await import(...)` or `await fetch_data()`
             let opts = {filename: path, views: [this._app_root], async: true}
             let template = await readFile(path, 'utf-8')
-            return ejs.render(template, {schemat, request, ...params}, opts)
+            let html = await ejs.render(template, {schemat, request, ...params}, opts)
+            request.send(html)
         }
 
         let module = await import(path)

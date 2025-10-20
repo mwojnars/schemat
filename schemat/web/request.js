@@ -126,6 +126,8 @@ export class WebRequest {   // WebConnection (conn)
 
     /* Response generation */
 
+    send(body) { return this.res.send(body) }
+
     async send_file(path) {
         return promisify(this.res.sendFile).call(this.res, path)
     }
