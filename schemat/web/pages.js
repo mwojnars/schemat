@@ -137,9 +137,8 @@ export class RenderedPage extends HtmlPage {
 
         html_body(props) {
             let html = this.render_server(props)
-            let data = this.page_context(props)
-            let code = this.page_script(props, data)
-            return this.component_frame({html, data, code})
+            let code = this.page_script(props)
+            return this.component_frame({html, code})
         }
 
         render_server(props) {
@@ -147,9 +146,8 @@ export class RenderedPage extends HtmlPage {
             return ''
         }
 
-        page_context(props) { return WebContext.from_request(props.request) }
-
-        page_script(props, ctx) {
+        page_script(props) {
+            let ctx = WebContext.from_request(props.request)
             return schemat.init_client(ctx) +
                 `
                     let {target} = schemat, {endpoint} = schemat.config;
@@ -157,9 +155,9 @@ export class RenderedPage extends HtmlPage {
                 `
         }
 
-        component_frame({html, data, code}) {
-            /* The HTML wrapper for the page's main component, `html`, and its `data` and the launch script, `code`.
-               All these elements will be placed together inside <body>...</body>. `data` must be an instance of WebContext.
+        component_frame({html, code}) {
+            /* HTML wrapper for page's main component, `html`, and Schemat launch script, `code`.
+               All these elements will be placed together inside <body>...</body>.
              */
             return `
                 <script async type="module">${code}</script>
