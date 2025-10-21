@@ -14,8 +14,8 @@ export class Client extends Schemat {
     target          // target web object that was addressed by the request, already loaded
     object          // ... alias
 
-    constructor(context_path, ctx_data) {
-        let ctx = ctx_data ? WebContext.decode(ctx_data) : WebContext.from_element(context_path)
+    constructor(ctx_data) {
+        let ctx = WebContext.decode(ctx_data)
         print('request context:', ctx)
         super(ctx)
     }
