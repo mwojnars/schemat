@@ -186,12 +186,6 @@ export class WebContext {
         return ctx
     }
 
-    // static from_element(selector) {
-    //     /* For use on the client. Extract text contents of the DOM element pointed to by a CSS `selector` and decode back into WebContext. */
-    //     let node = document.querySelector(selector)
-    //     return this.decode(node.textContent)
-    // }
-
     encode() {
         /* Encoding into JSON+base64 string. */
         return btoa(encodeURIComponent(JSON.stringify(this)))
