@@ -228,7 +228,7 @@ export class Application extends WebObject {
         request.send(html)
     }
 
-    async _render_svelte(path, request, props = {}) {
+    async _render_svelte(path, request, props = {}, layout_file = '../web/views/layout.html') {
         /* Execute a Svelte 5 component file. See: https://svelte.dev/docs/svelte/svelte-server for docs on render(). */
         let module = await import(path)
         let component = module?.default
@@ -238,7 +238,11 @@ export class Application extends WebObject {
         let {head, body} = svelte.render(component, {props})
         this._print(`_render_svelte() output:`, {head, body})
 
-        request.send(body)
+        // wrap with default html layout
+        let layout_url = new URL(layout_file, import.meta.url)
+        let template = await readFile(layout_url, 'utf-8')
+        let html = template.replace('<!--HEAD-->', head || '').replace('<!--BODY-->', body || '')
+        request.send(html)
     }
 
     async route(request) {

@@ -1,5 +1,5 @@
 /*
-    Simplistic SvelteKit-like routing.
+    DRAFT ... Simplistic SvelteKit-like routing.
     - Filesystem-based routing (routes/...)
     - +page.svelte and +layout.svelte with $props() and {@render children()}
     - Simple data loading via +page.js / load()
