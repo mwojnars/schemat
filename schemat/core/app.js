@@ -206,17 +206,18 @@ export class Application extends WebObject {
     }
 
     async _render_jsx(path, request, params = {}) {
-        /* Execute a JSX component file. The component should export a default function that takes request as argument. */
+        /* Execute a JSX component file. */
         let module = await import(path)
         if (typeof module.default !== 'function') request.not_found()
         return module.default(request)
     }
 
     async _render_svelte(path, request, params = {}) {
-        /* Execute a Svelte component file. The component should export a default function that takes request as argument. */
+        /* Execute a Svelte 5 component file. */
         let module = await import(path)
+        this._print(`_render_svelte() module:`, module)
         if (typeof module.default !== 'function') request.not_found()
-        return module.default(request)
+        return module.default({}) //request.request)
     }
 
     async route(request) {
