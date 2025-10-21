@@ -1,5 +1,4 @@
 <script context="module">
-/*
     export async function load() {
         const data = await Promise.resolve([
             { id: 1, title: 'Hello Rune World' },
@@ -7,7 +6,6 @@
         ])
         return { data }
     }
- */
 </script>
 
 
