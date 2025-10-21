@@ -146,12 +146,13 @@ export class ServerSchemat extends Schemat {
            If used inside an EJS template, the output string must be inserted unescaped (!), typically with <%- tag instead of <%=
                 <%- schemat.client_block(request) %>
          */
-        let ctx = WebContext.from_request(request, ...objects)
-        return this.init_client(ctx)
-        // return `<script async type="module">${this.init_client(ctx)}</script>`
+        return this.init_client(request, '', ...objects)
+        // let ctx = WebContext.from_request(request, ...objects)
+        // return this.init_client(ctx)
     }
 
-    init_client(ctx, extra = '') {
+    init_client(request, extra = '', ...objects) {
+        let ctx = WebContext.from_request(request, ...objects)
         return `
             <script async type="module">
                 import {Client} from "/$/local/schemat/web/client.js";

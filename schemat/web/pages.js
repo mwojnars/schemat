@@ -147,8 +147,7 @@ export class RenderedPage extends HtmlPage {
         }
 
         page_init(props) {
-            let ctx = WebContext.from_request(props.request)
-            return schemat.init_client(ctx,
+            return schemat.init_client(props.request,
                 `
                     let {target} = schemat, {endpoint} = schemat.config;
                     target.__self[endpoint]().render_client(target);
