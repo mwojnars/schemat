@@ -217,7 +217,9 @@ export class Application extends WebObject {
         let module = await import(path)
         this._print(`_render_svelte() module:`, module)
         if (typeof module.default !== 'function') request.not_found()
-        return module.default({}) //request.request)
+        let { render } = await import('svelte/server')
+        let { body } = render(module.default, { props: params })
+        request.send(body)
     }
 
     async route(request) {
