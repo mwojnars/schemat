@@ -141,21 +141,17 @@ export class ServerSchemat extends Schemat {
         // this.registry.erase_records()
     }
 
-    client_block(request, id_context = '--schemat-data', ...objects) {
+    client_block(request, ...objects) {
         /* HTML code to be placed in <body> of an HTML page to load `schemat` (with its context data) on client.
            If used inside an EJS template, the output string must be inserted unescaped (!), typically with <%- tag instead of <%=
                 <%- schemat.client_block(request) %>
-           `id_context` must be an ID of the HTML element of the result page where WebContext for the client-side Schemat is to be written.
          */
-        if (!id_context) throw new Error(`id_context is missing: ID of the HTML element containing request context must be provided`)
-        assert(!id_context.includes('"'))
-        assert(!id_context.includes('#'))
-
         let ctx = WebContext.from_request(request, ...objects)
-        let context = `<p id="${id_context}" style="display:none">${ctx.encode()}</p>`
-        let script = `<script async type="module">${this.init_client(ctx)}</script>`
+        return `<script async type="module">${this.init_client(ctx)}</script>`
 
-        return context + '\n' + script
+        // let context = `<p id="${id_context}" style="display:none">${ctx.encode()}</p>`
+        // let script = `<script async type="module">${this.init_client(ctx)}</script>`
+        // return context + '\n' + script
     }
 
     init_client(ctx) {
