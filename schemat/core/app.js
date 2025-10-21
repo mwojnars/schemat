@@ -205,6 +205,20 @@ export class Application extends WebObject {
         return endpoint(request)
     }
 
+    async _render_jsx(path, request, params = {}) {
+        /* Execute a JSX component file. The component should export a default function that takes request as argument. */
+        let module = await import(path)
+        if (typeof module.default !== 'function') request.not_found()
+        return module.default(request)
+    }
+
+    async _render_svelte(path, request, params = {}) {
+        /* Execute a Svelte component file. The component should export a default function that takes request as argument. */
+        let module = await import(path)
+        if (typeof module.default !== 'function') request.not_found()
+        return module.default(request)
+    }
+
     async route(request) {
         /* Find the object pointed to by the request's URL path and execute its endpoint function through handle(). */
 
