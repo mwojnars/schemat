@@ -233,12 +233,14 @@ export class Application extends WebObject {
         let module = await import(path)
         let component = module?.default
         if (typeof component !== 'function') request.not_found()
+
+        let init = schemat.init_client()
         let {head, body} = svelte.render(component, {props})
 
         // wrap with default html layout
         let layout_url = new URL(layout_file, import.meta.url)
         let template = await readFile(layout_url, 'utf-8')
-        let html = template.replace('<!--HEAD-->', head || '').replace('<!--BODY-->', body || '')
+        let html = template.replace('<!--HEAD-->', head || '').replace('<!--BODY-->', init + (body || ''))
         request.send(html)
     }
 
