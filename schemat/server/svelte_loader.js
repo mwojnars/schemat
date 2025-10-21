@@ -15,7 +15,7 @@ export async function load(url, context, defaultLoad) {
     const {js} = compile(source, {
         filename,
         format: 'esm',
-        css: true,
+        css: 'injected',
         generate: 'dom'
     })
     return {format: 'module', source: js.code}
