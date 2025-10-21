@@ -17,5 +17,9 @@ export async function load(url, context, defaultLoad) {
         css: 'injected',
         generate: 'dom'
     })
-    return {format: 'module', source: js.code}
+    return {
+        format: 'module',
+        source: js.code,
+        shortCircuit: true      // skip further loaders
+    }
 }
