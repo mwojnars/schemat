@@ -146,7 +146,7 @@ export class ServerSchemat extends Schemat {
 
     init_client(extra = '', ...objects) {       // html runtime client init block .. client_runtime
         /* HTML block to be put in <body> of a page to load `schemat` runtime (with its context data) on client.
-           If used inside an EJS template, the output string must be inserted unescaped (!), typically with <%- tag instead of <%=
+           The output string must be inserted unescaped (!), e.g., in EJS with <%- tag instead of <%=
                 <%- schemat.init_client() %>
          */
         if (!schemat.request) throw new Error(`no web request, cannot generate client-side initialization block`)
