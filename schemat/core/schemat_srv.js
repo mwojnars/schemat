@@ -153,13 +153,13 @@ export class ServerSchemat extends Schemat {
 
         let ctx = WebContext.from_request(request, ...objects)
         let context = `<p id="${id_context}" style="display:none">${ctx.encode()}</p>`
-        let script = `<script async type="module">${this.init_client(id_context)}</script>`
+        let script = `<script async type="module">${this.init_client(id_context, ctx)}</script>`
 
         return context + '\n' + script
     }
 
-    init_client(id_context) {
-        return `import {Client} from "/$/local/schemat/web/client.js"; globalThis.schemat = new Client("#${id_context}"); await schemat.boot();`
+    init_client(id_context, ctx) {
+        return `import {Client} from "/$/local/schemat/web/client.js"; globalThis.schemat = new Client("#${id_context}", "${ctx.encode()}"); await schemat.boot();`
     }
 
     set_kernel(kernel) { this.kernel = kernel }
