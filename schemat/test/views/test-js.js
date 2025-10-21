@@ -5,5 +5,6 @@ export async function GET(request) {
 }
 
 export async function POST(request) {
-    return request.send("test POST request successful")
+    const body = await request.json()
+    return request.send(`test POST request successful: ${body.message}`)
 }

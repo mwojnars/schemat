@@ -414,8 +414,23 @@ describe('Schemat Tests', function () {
         it('static views', async function () {
             let resp = await page.goto(`${DOMAIN}/test/views/page_02.html`)
             expect(await resp.text()).to.include("designed for testing purposes")
+
             resp = await page.goto(`${DOMAIN}/test/views/test-ejs`)
             expect_include_all(await resp.text(), "EJS Test Page", "Dynamic Content", "content of the second article", "Privacy Policy")
+
+            resp = await page.goto(`${DOMAIN}/test/views/test-js`)          // GET request
+            expect_include_all(await resp.text(), "GET request")
+
+            let URL = `${DOMAIN}/test/views/test-js`
+            resp = await page.evaluate((url) =>                             // POST request
+                fetch(url, {                     
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({message: 'This is a test message'})
+                })
+                .then(response => response.text())
+            , URL)
+            expect_include_all(resp, "POST request", "This is a test message")
         })
 
         it('private files', async function () {
