@@ -136,9 +136,9 @@ export class RenderedPage extends HtmlPage {
     static View = class extends HtmlPage.View {
 
         html_body(props) {
+            let init = this.page_init(props)
             let html = this.render_server(props)
-            let code = this.page_script(props)
-            return this.component_frame({html, code})
+            return this.component_frame({init, html})
         }
 
         render_server(props) {
@@ -146,7 +146,7 @@ export class RenderedPage extends HtmlPage {
             return ''
         }
 
-        page_script(props) {
+        page_init(props) {
             let ctx = WebContext.from_request(props.request)
             return schemat.init_client(ctx) +
                 `
@@ -155,12 +155,12 @@ export class RenderedPage extends HtmlPage {
                 `
         }
 
-        component_frame({html, code}) {
-            /* HTML wrapper for page's main component, `html`, and Schemat launch script, `code`.
+        component_frame({html, init}) {
+            /* HTML wrapper for page's main component, `html`, and Schemat launch script, `init`.
                All these elements will be placed together inside <body>...</body>.
              */
             return `
-                <script async type="module">${code}</script>
+                <script async type="module">${init}</script>
                 <div id="page-main">${html}</div>
             `
         }
