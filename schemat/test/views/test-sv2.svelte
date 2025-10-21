@@ -11,7 +11,7 @@
 
 <script>
     // let { data } = $props()
-    let title = "My Page"
+    let title = "Svelte Test Page"
     let description = "Default description"
 </script>
 

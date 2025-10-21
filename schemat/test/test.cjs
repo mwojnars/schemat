@@ -418,10 +418,13 @@ describe('Schemat Tests', function () {
             resp = await page.goto(`${DOMAIN}/test/views/test-ejs`)
             expect_include_all(await resp.text(), "EJS Test Page", "Dynamic Content", "content of the second article", "Privacy Policy")
 
-            resp = await page.goto(`${DOMAIN}/test/views/test-js`)          // GET request
+            resp = await page.goto(`${DOMAIN}/test/views/test-sv2`)
+            expect_include_all(await resp.text(), "Svelte Test Page", "Welcome")
+
+            resp = await page.goto(`${DOMAIN}/test/views/test-js`)          // GET request to .js endpoint
             expect_include_all(await resp.text(), "GET request")
 
-            resp = await page.evaluate((url) =>                             // POST request
+            resp = await page.evaluate((url) =>                             // POST request to .js endpoint
                 fetch(url, {method: 'POST', headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({message: 'This is a test message'})
                 }).then(response => response.text())
