@@ -216,9 +216,13 @@ export class Application extends WebObject {
     async _render_svelte(path, request, props = {}) {
         /* Execute a Svelte 5 component file. */
         let module = await import(path)
-        this._print(`_render_svelte() module:`, module)
-        if (typeof module.default !== 'function') request.not_found()
-        let { body } = svelte.render(module.default, {props})
+        let component = module?.default
+        // this._print(`_render_svelte() module:`, module)
+
+        if (typeof component !== 'function') request.not_found()
+        let {head, body} = svelte.render(component, {props})
+        this._print(`_render_svelte() output:`, {head, body})
+
         request.send(body)
     }
 
