@@ -14,7 +14,6 @@ export async function load(url, context, defaultLoad) {
     // use Svelte compiler
     const {js} = compile(source, {
         filename,
-        format: 'esm',
         css: 'injected',
         generate: 'dom'
     })
