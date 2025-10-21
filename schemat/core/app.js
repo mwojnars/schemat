@@ -214,7 +214,7 @@ export class Application extends WebObject {
     }
 
     async _render_svelte(path, request, props = {}) {
-        /* Execute a Svelte 5 component file. */
+        /* Execute a Svelte 5 component file. See: https://svelte.dev/docs/svelte/svelte-server for docs on render(). */
         let module = await import(path)
         let component = module?.default
         // this._print(`_render_svelte() module:`, module)
