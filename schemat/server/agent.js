@@ -213,7 +213,7 @@ export class WebServer extends Agent {
         try {
             // await sleep(3)
             let request = new WebRequest({req, res})
-            let handler = schemat.app.route(request)
+            let handler = schemat.new_request(request, () => schemat.app.route(request))
 
             if (this.request_timeout) {
                 let deadline = timeout(this.request_timeout * 1000, new ServerTimeoutError())

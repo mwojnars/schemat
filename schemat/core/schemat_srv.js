@@ -90,6 +90,7 @@ export class ServerSchemat extends Schemat {
         // assert(fs.existsSync(this.PATH_WORKING + '/schemat/core/schemat.js'), 'working directory does not contain the Schemat installation with ./schemat source tree')
 
         this._generation = 1
+        this._request = new AsyncLocalStorage()
         this._session = new AsyncLocalStorage()
         this._lite_session = new LiteSession()
         // this.loader = new Loader(import.meta.url)
@@ -381,6 +382,7 @@ export class ServerSchemat extends Schemat {
 
     new_request(request, callback) {
         /* Set `request` as the current async context (this._request) for callback() execution. */
+        assert(!this.request, `trying to set schemat._request (async context) twice`)
         return this._request.run(request, callback)
     }
 
