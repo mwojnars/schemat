@@ -1,7 +1,7 @@
 import React from 'react'
 
-// layout component for jsx test pages
-export default function Layout({children, title = 'React Test Component', scripts = []}) {
+// layout component for jsx pages
+export default function Layout({children, title = 'Page', scripts = []}) {
     return (
         <html>
             <head>
@@ -21,7 +21,7 @@ export default function Layout({children, title = 'React Test Component', script
 }
 
 /*
-// client-side hydration for jsx test pages ...
+// client-side hydration for jsx pages ...
 
 import React from 'react'
 import ReactDOM from 'react-dom/client'

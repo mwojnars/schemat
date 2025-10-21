@@ -210,7 +210,7 @@ export class Application extends WebObject {
         return endpoint(request)
     }
 
-    async _render_jsx(path, request, params = {}, layout_file = '../test/views/layout.jsx') {
+    async _render_jsx(path, request, params = {}, layout_file = '../web/views/layout.jsx') {
         /* Execute a JSX component file with React SSR. No client-side hydration as of now. */
         const module = await import(path)
         if (typeof module.default !== 'function') request.not_found()
