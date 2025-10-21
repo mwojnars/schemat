@@ -181,7 +181,7 @@ export class WebContext {
 
         ctx.objects = items.map(obj => obj.__record)
         ctx.app = app.id
-        ctx.target = target.id
+        ctx.target = target?.id
         ctx.endpoint = request.endpoint
         return ctx
     }

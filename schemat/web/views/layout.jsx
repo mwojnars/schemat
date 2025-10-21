@@ -9,6 +9,7 @@ export default function Layout({children, title = 'Page', scripts = []}) {
                 <title>{title}</title>
             </head>
             <body>
+                <div dangerouslySetInnerHTML={{ __html: schemat.init_client() }} />
                 <div id="root">
                     {children}
                 </div>

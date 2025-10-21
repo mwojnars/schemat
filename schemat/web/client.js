@@ -11,7 +11,7 @@ import {WebContext} from "./request.js"
 export class Client extends Schemat {
     /* Client-side global Schemat object. Used in .init_client() of the server-side Schemat. */
 
-    target          // target web object that was addressed by the request, already loaded
+    target          // target web object that was addressed by the request, loaded; can be undefined
     object          // ... alias
 
     constructor(ctx_data) {
@@ -35,9 +35,10 @@ export class Client extends Schemat {
             await this.get_loaded(rec.id)
 
         delete ctx.objects                                      // save memory (`ctx` is remembered in `schemat` as a global)
-        this.object = this.target = this.get_object(ctx.target)
-        this.object.assert_loaded()
-
+        if (ctx.target) {
+            this.object = this.target = this.get_object(ctx.target)
+            this.object.assert_loaded()
+        }
         this.session = new ClientSession()
         // check()
     }
