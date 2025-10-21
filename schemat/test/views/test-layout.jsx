@@ -5,7 +5,7 @@ export default function TestLayout({children, title = 'React Test Component', sc
     return (
         <html>
             <head>
-                <meta charset="utf-8" />
+                <meta charSet="utf-8" />
                 <title>{title}</title>
             </head>
             <body>

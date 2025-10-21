@@ -10,7 +10,11 @@ const ejs = SERVER && await import('ejs')
 const mod_path = SERVER && await import('node:path')
 const {readFile} = SERVER && await import('node:fs/promises') || {}
 const {check_file_type} = SERVER && await import('../common/utils_srv.js') || {}
+
 const svelte = SERVER && await import('svelte/server')
+const React = SERVER && await import('react')
+const ReactDOMServer = SERVER && await import('react-dom/server')
+
 
 /**********************************************************************************************************************/
 
@@ -206,18 +210,15 @@ export class Application extends WebObject {
         return endpoint(request)
     }
 
-    async _render_jsx(path, request, params = {}) {
-        /* Execute a JSX component file with React SSR */
-        const React = await import('react')
-        const ReactDOMServer = await import('react-dom/server')
+    async _render_jsx(path, request, params = {}, layout_file = '../test/views/test-layout.jsx') {
+        /* Execute a JSX component file with React SSR. No client-side hydration as of now. */
         const module = await import(path)
-        const TestLayout = (await import('../test/views/test-layout.jsx')).default
-        
         if (typeof module.default !== 'function') request.not_found()
         
         // render the component inside the layout
+        const Layout = (await import(layout_file)).default
         const element = React.createElement(module.default, params)
-        const page = React.createElement(TestLayout, {
+        const page = React.createElement(Layout, {
             // scripts: [`${request.path}::client`],
             children: element
         })
