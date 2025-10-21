@@ -9,7 +9,7 @@ import {WebContext} from "./request.js"
 /**********************************************************************************************************************/
 
 export class Client extends Schemat {
-    /* Client-side global Schemat object. Used in .init_client() and .client_block() of the server-side Schemat. */
+    /* Client-side global Schemat object. Used in .init_client() of the server-side Schemat. */
 
     target          // target web object that was addressed by the request, already loaded
     object          // ... alias
