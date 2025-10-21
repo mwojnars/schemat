@@ -154,7 +154,7 @@ export class RenderedPage extends HtmlPage {
                 `)
         }
 
-        component_frame({html, init}) {
+        component_frame({init, html}) {
             /* HTML wrapper for page's main component, `html`, and Schemat launch script, `init`.
                All these elements will be placed together inside <body>...</body>.
              */

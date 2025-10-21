@@ -141,14 +141,8 @@ export class ServerSchemat extends Schemat {
         // this.registry.erase_records()
     }
 
-    // client_block(request, ...objects) {
-    //     return this.init_client(request, '', ...objects)
-    //     // let ctx = WebContext.from_request(request, ...objects)
-    //     // return this.init_client(ctx)
-    // }
-
     init_client(request, extra = '', ...objects) {
-        /* HTML code to be placed in <body> of an HTML page to load `schemat` (with its context data) on client.
+        /* HTML code to be placed in <body> of an HTML page to load `schemat` runtime (with its context data) on client.
            If used inside an EJS template, the output string must be inserted unescaped (!), typically with <%- tag instead of <%=
                 <%- schemat.init_client(request) %>
          */
