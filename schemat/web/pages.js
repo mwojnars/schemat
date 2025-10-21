@@ -160,7 +160,7 @@ export class RenderedPage extends HtmlPage {
                All these elements will be placed together inside <body>...</body>.
              */
             return `
-                <script async type="module">${init}</script>
+                ${init}
                 <div id="page-main">${html}</div>
             `
         }

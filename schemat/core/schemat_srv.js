@@ -147,15 +147,18 @@ export class ServerSchemat extends Schemat {
                 <%- schemat.client_block(request) %>
          */
         let ctx = WebContext.from_request(request, ...objects)
-        return `<script async type="module">${this.init_client(ctx)}</script>`
+        return this.init_client(ctx)
+        // return `<script async type="module">${this.init_client(ctx)}</script>`
     }
 
     init_client(ctx, extra = '') {
         return `
-            import {Client} from "/$/local/schemat/web/client.js";
-            globalThis.schemat = new Client("${ctx.encode()}");
-            await schemat.boot();
-            ${extra}
+            <script async type="module">
+                import {Client} from "/$/local/schemat/web/client.js";
+                globalThis.schemat = new Client("${ctx.encode()}");
+                await schemat.boot();
+                ${extra}
+            </script>
         `
     }
 
