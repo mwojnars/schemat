@@ -48,8 +48,7 @@
         let source = fs.readFileSync('MyComponent.svelte', 'utf-8')
         let {js, css} = compile(source, {
           filename: 'MyComponent.svelte',
-          generate: 'dom', // 'ssr' is also an option
-          format: 'esm'
+          generate: 'ssr', // 'dom' is also an option
         })
         console.log(js.code) // The JS code that will run in the browser
 
