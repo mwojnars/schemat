@@ -432,7 +432,7 @@ describe('Schemat Tests', function () {
             expect_include_all(resp, "POST request", "This is a test message")
         })
 
-        it('private files', async function () {
+        it('forbidden files', async function () {
             expect_error('404')             // mark the expected error pattern
             resp = await page.goto(`${DOMAIN}/test/views/_private.html`)
             expect(resp.status()).to.equal(404)

@@ -232,11 +232,8 @@ export class Application extends WebObject {
         /* Execute a Svelte 5 component file. See: https://svelte.dev/docs/svelte/svelte-server for docs on render(). */
         let module = await import(path)
         let component = module?.default
-        // this._print(`_render_svelte() module:`, module)
-
         if (typeof component !== 'function') request.not_found()
         let {head, body} = svelte.render(component, {props})
-        this._print(`_render_svelte() output:`, {head, body})
 
         // wrap with default html layout
         let layout_url = new URL(layout_file, import.meta.url)
