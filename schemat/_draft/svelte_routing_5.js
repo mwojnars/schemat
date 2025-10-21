@@ -129,13 +129,10 @@ function discoverRoutes(dir = routesDir, base = '') {
 
     for (const entry of entries) {
         const full = path.join(dir, entry.name)
-        if (entry.isDirectory()) {
+        if (entry.isDirectory())
             routes.push(...discoverRoutes(full, base + '/' + entry.name))
-            continue
-        }
-        if (entry.name === '+page.svelte') {
+        else if (entry.name === '+page.svelte')
             routes.push({ path: base || '/', dir })
-        }
     }
     return routes
 }
@@ -172,11 +169,9 @@ for (const route of routes) {
     // Optional HTTP endpoint handler
     if (fs.existsSync(serverJsPath)) {
         const handlers = await import(serverJsPath)
-        for (const method of ['get', 'post', 'put', 'delete']) {
-            if (handlers[method.toUpperCase()]) {
+        for (const method of ['get', 'post', 'put', 'delete'])
+            if (handlers[method.toUpperCase()])
                 app[method](route.path, handlers[method.toUpperCase()])
-            }
-        }
     }
 
     // Page rendering route
@@ -202,9 +197,8 @@ for (const route of routes) {
                 children: () => Page.render({ data: pageData }).html,
                 data: pageData
             }).html
-        } else {
+        } else
             html = Page.render({ data: pageData }).html
-        }
 
         res.send(html)
     })
