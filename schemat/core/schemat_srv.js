@@ -31,7 +31,8 @@ export class ServerSchemat extends Schemat {
     _cluster        // Cluster object of the previous generation, remembered here to keep the .cluster() getter operational during complete cache erasure
     _generation     // current generation number: 1,2,3... increased during complete cache erasure
 
-    _session        // AsyncLocalStorage that holds a Session for the currently executing web action or RPC request
+    _request        // AsyncLocalStorage with current WebRequest
+    _session        // AsyncLocalStorage with a Session for the currently executing web action or RPC request
     _lite_session   // LiteSession object, global to this Schemat context, used as a fallback when no request-specific transaction is present
 
     // on_exit = new Set()     // callbacks to be executed when this process is exiting
@@ -40,6 +41,7 @@ export class ServerSchemat extends Schemat {
     get db()        { return this._boot_db || this._db }
     get node()      { return this.kernel?.node }        // host Node (web object) of the current process, initialized and periodically reloaded in Server; has .$state and .$frame attributes
     get cluster()   { return this.get_if_loaded(this._cluster?.id, obj => {this._cluster = obj}) || this._cluster }
+    get request()   { return this._request.getStore() }
     get session()   { return this._session.getStore() || this._lite_session }
 
     kernel_context          // db.id of the kernel database, initialized in the kernel's ServerSchemat and inherited by child contexts
@@ -376,6 +378,11 @@ export class ServerSchemat extends Schemat {
 
 
     /***  Actions / Transactions  ***/
+
+    new_request(request, callback) {
+        /* Set `request` as the current async context (this._request) for callback() execution. */
+        return this._request.run(request, callback)
+    }
 
     async execute_action(obj, action, args, _return_session = true) {
         /* Low-level server-side execution of an action: no network comm, no encoding/decoding of args & result.
