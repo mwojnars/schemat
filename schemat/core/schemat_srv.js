@@ -148,10 +148,6 @@ export class ServerSchemat extends Schemat {
          */
         let ctx = WebContext.from_request(request, ...objects)
         return `<script async type="module">${this.init_client(ctx)}</script>`
-
-        // let context = `<p id="${id_context}" style="display:none">${ctx.encode()}</p>`
-        // let script = `<script async type="module">${this.init_client(ctx)}</script>`
-        // return context + '\n' + script
     }
 
     init_client(ctx) {

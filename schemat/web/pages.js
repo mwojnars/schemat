@@ -162,9 +162,8 @@ export class RenderedPage extends HtmlPage {
                All these elements will be placed together inside <body>...</body>. `data` must be an instance of WebContext.
              */
             return `
-                <div id="page-main">${html}</div>
                 <script async type="module">${code}</script>
-                <p id="page-data" style="display:none">${data.encode()}</p>
+                <div id="page-main">${html}</div>
             `
         }
     }
