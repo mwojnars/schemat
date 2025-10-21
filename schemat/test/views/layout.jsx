@@ -1,7 +1,7 @@
 import React from 'react'
 
 // layout component for jsx test pages
-export default function TestLayout({children, title = 'React Test Component', scripts = []}) {
+export default function Layout({children, title = 'React Test Component', scripts = []}) {
     return (
         <html>
             <head>
@@ -19,3 +19,18 @@ export default function TestLayout({children, title = 'React Test Component', sc
         </html>
     )
 }
+
+/*
+// client-side hydration for jsx test pages ...
+
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+
+export default async function hydrate(request) {
+    const Component = (await import(request.path.replace('::client', ''))).default
+    ReactDOM.hydrateRoot(
+        document.getElementById('root'),
+        React.createElement(Component, request.params || {})
+    )
+}
+ */
