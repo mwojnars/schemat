@@ -10,6 +10,7 @@ const ejs = SERVER && await import('ejs')
 const mod_path = SERVER && await import('node:path')
 const {readFile} = SERVER && await import('node:fs/promises') || {}
 const {check_file_type} = SERVER && await import('../common/utils_srv.js') || {}
+const svelte = SERVER && await import('svelte/server')
 
 /**********************************************************************************************************************/
 
@@ -212,13 +213,12 @@ export class Application extends WebObject {
         return module.default(request)
     }
 
-    async _render_svelte(path, request, params = {}) {
+    async _render_svelte(path, request, props = {}) {
         /* Execute a Svelte 5 component file. */
         let module = await import(path)
         this._print(`_render_svelte() module:`, module)
         if (typeof module.default !== 'function') request.not_found()
-        let { render } = await import('svelte/server')
-        let { body } = render(module.default, { props: params })
+        let { body } = svelte.render(module.default, {props})
         request.send(body)
     }
 
