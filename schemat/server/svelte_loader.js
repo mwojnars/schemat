@@ -12,15 +12,19 @@ export async function load(url, context, defaultLoad) {
     const source = await readFile(filename, 'utf8')
 
     // use Svelte compiler
-    const {js} = compile(source, {
+    const out = compile(source, {
         filename,
         css: 'injected',
-        generate: 'ssr',
-        hydratable: true
+        generate: 'server'
     })
+    if (out.warnings?.length) console.log(`Svelte compilation warnings:`, out.warnings)
+
+    // console.log(`${url} compiled output:`, out)
+    // console.log(`${url} compiled js.map:`, out.js.map)
+
     return {
         format: 'module',
-        source: js.code,
+        source: out.js.code,
         shortCircuit: true      // skip further loaders
     }
 }
