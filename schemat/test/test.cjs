@@ -421,15 +421,11 @@ describe('Schemat Tests', function () {
             resp = await page.goto(`${DOMAIN}/test/views/test-js`)          // GET request
             expect_include_all(await resp.text(), "GET request")
 
-            let URL = `${DOMAIN}/test/views/test-js`
             resp = await page.evaluate((url) =>                             // POST request
-                fetch(url, {                     
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
+                fetch(url, {method: 'POST', headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({message: 'This is a test message'})
-                })
-                .then(response => response.text())
-            , URL)
+                }).then(response => response.text())
+            , `${DOMAIN}/test/views/test-js`)
             expect_include_all(resp, "POST request", "This is a test message")
         })
 
