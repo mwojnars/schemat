@@ -207,10 +207,24 @@ export class Application extends WebObject {
     }
 
     async _render_jsx(path, request, params = {}) {
-        /* Execute a JSX component file. */
-        let module = await import(path)
+        /* Execute a JSX component file with React SSR */
+        const React = await import('react')
+        const ReactDOMServer = await import('react-dom/server')
+        const module = await import(path)
+        const TestLayout = (await import('../test/views/test-layout.jsx')).default
+        
         if (typeof module.default !== 'function') request.not_found()
-        return module.default(request)
+        
+        // render the component inside the layout
+        const element = React.createElement(module.default, params)
+        const page = React.createElement(TestLayout, {
+            // scripts: [`${request.path}::client`],
+            children: element
+        })
+        
+        // render full page to HTML
+        const html = '<!DOCTYPE html>\n' + ReactDOMServer.renderToString(page)
+        request.send(html)
     }
 
     async _render_svelte(path, request, props = {}) {
