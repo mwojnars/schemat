@@ -150,11 +150,12 @@ export class ServerSchemat extends Schemat {
         return `<script async type="module">${this.init_client(ctx)}</script>`
     }
 
-    init_client(ctx) {
+    init_client(ctx, extra = '') {
         return `
             import {Client} from "/$/local/schemat/web/client.js";
             globalThis.schemat = new Client("${ctx.encode()}");
             await schemat.boot();
+            ${extra}
         `
     }
 
