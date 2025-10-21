@@ -15,7 +15,8 @@ export async function load(url, context, defaultLoad) {
     const {js} = compile(source, {
         filename,
         css: 'injected',
-        generate: 'dom'
+        generate: 'ssr',
+        hydratable: true
     })
     return {
         format: 'module',
