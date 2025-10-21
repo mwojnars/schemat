@@ -200,7 +200,7 @@ function server_setup({nodes = null, node = NODE, port = PORT, tcp_port = TCP_PO
                 text: () => `Failed to load ${request.url()}: ${request.failure().errorText}`
             })
         })
-        await delay(1500)
+        await delay(2000)
     })
 
     beforeEach(() => { 
