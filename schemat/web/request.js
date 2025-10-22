@@ -153,6 +153,7 @@ export class WebContext {
     target          // ID of the requested object (target of the web request)
     objects         // client-side bootstrap objects: included in HTML, preloaded before the page rendering begins (no extra communication to load each object separately)
     endpoint        // full name of the target's endpoint that was requested, like "GET.admin"
+    extra           // any request-specific data added by init_client()
 
     static from_request(request, ...objects) {
         /* For use on the server. Optional `objects` are included in the context as seed objects together
