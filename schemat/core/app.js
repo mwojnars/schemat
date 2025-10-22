@@ -229,10 +229,17 @@ export class Application extends WebObject {
     }
 
     async _render_svelte(path, request, props = {}, layout_file = '../web/views/skeleton.html') {
-        /* Execute a Svelte 5 component file. See: https://svelte.dev/docs/svelte/svelte-server for docs on render(). */
+        /* Execute a Svelte 5 component file. See: https://svelte.dev/docs/svelte/svelte-server for docs on render(). 
+           If the component defines a load() function in <script module>, it is called to get the data for the component,
+           which is then included under `data` attribute inside $props(). The load() function can be async.
+         */
         let module = await import(path)
         let component = module?.default
         if (typeof component !== 'function') request.not_found()
+
+        let {load} = module                 // generate data with load(), if present, and append to `props`
+        if (typeof load === 'function')
+            props = {...props, data: await load(request)}
 
         let init = schemat.init_client()
         let {head, body} = svelte.render(component, {props})

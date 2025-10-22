@@ -27,6 +27,8 @@ export class WebRequest {   // WebConnection (conn)
     query           // plain object containing a property for each query string parameter (?x=y) of the original URL
     endpoints = []  // candidate endpoints that should be tried if `endpoint` is not yet decided; the first one that's present in the `target` is used, or 'default' if empty
 
+    params          // object, {name: value}, containing parameters decoded from the URL in Svelte/Next.js style
+
     // TODO add after Svelte's RequestEvent:
     // params: Record<string, string>
     // cookies: {get, set, delete, serialize}

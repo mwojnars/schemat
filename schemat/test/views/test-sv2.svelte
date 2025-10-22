@@ -1,17 +1,17 @@
 <script module>
-    export async function load() {
-        const data = await Promise.resolve([
-            { id: 1, title: 'Hello Rune World' },
-            { id: 2, title: 'Svelte 5 FTW' }
+    export async function load(request) {
+        return await Promise.resolve([
+            {id: 1, title: 'Hello Rune World'},
+            {id: 2, title: 'Svelte 5 FTW'}
         ])
-        return { data }
     }
 </script>
 
 
 <script>
-    // let { data } = $props()
-    let title = $state("Svelte Test Page")
+    let {data} = $props()       // `data` attribute comes from load() function in <script module> section
+    // let title = $state("Svelte Test Page")
+    let title = $state(data[0].title)
     let description = $state("Default description")
     let count = $state(0)
     let title_length = $derived(title.length)
