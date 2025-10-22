@@ -260,17 +260,11 @@ export class Application extends WebObject {
     }
 
     async _send_svelte(path, request) {
-        /* Compile a single .svelte file to JS and send it to the client. */
-        this._print(`_send_svelte()`, {path})
-
+        /* Compile a .svelte file to client-side JS and send it to the client. */
+        this._print(`_send_svelte():`, path)
         let source = await readFile(path, 'utf-8')
-        let out = svelte_compile(source, {
-            filename: path,
-            css: 'injected',
-            generate: 'server'
-        })
+        let out = svelte_compile(source, {filename: path, css: 'injected', generate: 'server'})
         if (out.warnings?.length) this._print('_send_svelte() compilation warnings:', out.warnings)
-
         request.send_mimetype('js')
         request.send(out.js.code)
     }
