@@ -440,6 +440,10 @@ describe('Schemat Tests', function () {
             expect(resp.status()).to.equal(404)
         })
 
+        it('<delay>', async function () {
+            await delay(1000)
+        })
+
         // describe('UI Actions on $/id/1000', function () {
         //     before(async function () {
         //         await page.goto('http://127.0.0.1:3000/$/id/1000')
