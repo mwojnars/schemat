@@ -11,7 +11,9 @@ const mod_path = SERVER && await import('node:path')
 const {readFile} = SERVER && await import('node:fs/promises') || {}
 const {check_file_type} = SERVER && await import('../common/utils_srv.js') || {}
 
-const svelte = SERVER && await import('svelte/server')
+const {render: svelte_render} = SERVER && await import('svelte/server') || {}
+const {compile: svelte_compile} = SERVER && await import('svelte/compiler') || {}
+
 const React = SERVER && await import('react')
 const ReactDOMServer = SERVER && await import('react-dom/server')
 
@@ -152,6 +154,12 @@ export class Application extends WebObject {
             return true
         }
 
+        // if `path` points to a .svelte file, return a client-side compiled version of the file
+        if (ext === 'svelte') {
+            await this._send_svelte(path, request)
+            return true
+        }
+
         // render/execute single files: templates (ejs) or executables (js/jsx/svelte);
         // automatically detect the file extension to be added to `path`; the path should *not* include an extension yet
 
@@ -242,13 +250,29 @@ export class Application extends WebObject {
             props = {...props, data: await load(request)}
 
         let init = schemat.init_client()
-        let {head, body} = svelte.render(component, {props})
+        let {head, body} = svelte_render(component, {props})
 
         // wrap with default html layout
         let layout_url = new URL(layout_file, import.meta.url)
         let template = await readFile(layout_url, 'utf-8')
         let html = template.replace('<!--HEAD-->', head || '').replace('<!--BODY-->', init + (body || ''))
         request.send(html)
+    }
+
+    async _send_svelte(path, request) {
+        /* Compile a single .svelte file to JS and send it to the client. */
+        this._print(`_send_svelte()`, {path})
+
+        let source = await readFile(path, 'utf-8')
+        let out = svelte_compile(source, {
+            filename: path,
+            css: 'injected',
+            generate: 'server'
+        })
+        if (out.warnings?.length) this._print('_send_svelte() compilation warnings:', out.warnings)
+
+        request.send_mimetype('js')
+        request.send(out.js.code)
     }
 
     async route(request) {
