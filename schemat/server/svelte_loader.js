@@ -19,7 +19,7 @@ export async function load(url, context, defaultLoad) {
     })
     if (out.warnings?.length) console.log(`Svelte compilation warnings:`, out.warnings)
 
-    // console.log(`${url} compiled output:`, out)
+    // console.log(`${url} compiled output:\n`, out.js.code)
 
     return {
         format: 'module',
