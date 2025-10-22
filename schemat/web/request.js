@@ -39,7 +39,6 @@ export class WebRequest {   // WebConnection (conn)
     // send()
     // send_status()
     // send_json()
-    // send_mimetype()
     // send_header(), send_redirect(), send_file(), send_download(), send_location(), send_cookie(), send_clear_cookie() ...
     // send_response() --
 
@@ -133,11 +132,13 @@ export class WebRequest {   // WebConnection (conn)
 
     /* Response generation */
 
-    send(body) { return this.res.send(body) }
+    send_mimetype(type) { return this.res.type(type) }      // modifies response header, no sending yet
 
     async send_file(path) {
         return promisify(this.res.sendFile).call(this.res, path)
     }
+
+    send(body) { return this.res.send(body) }
 }
 
 
