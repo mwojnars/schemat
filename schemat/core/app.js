@@ -256,7 +256,7 @@ export class Application extends WebObject {
         let file = path.split('/').pop()        // on-client hydration imports the same file but with .svelte extension kept in URL, which goes back to _send_svelte() below
         let init = schemat.init_client({
             extra: {props},
-            after_schemat: `
+            after: `
                 import {hydrate} from "svelte";
                 import App from "./${file}";
                 const target = document.getElementById("app");

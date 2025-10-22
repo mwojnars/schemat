@@ -144,7 +144,7 @@ export class ServerSchemat extends Schemat {
         // this.registry.erase_records()
     }
 
-    init_client({after_schemat = '', objects = [], extra} = {}) {       //client_runtime
+    init_client({after = '', objects = [], extra} = {}) {       //client_runtime
         /* HTML block to be put in <body> of a page to load `schemat` runtime (with its context data) on client.
            The output string must be inserted unescaped (!), e.g., in EJS with <%- tag instead of <%=
                 <%- schemat.init_client() %>
@@ -152,12 +152,14 @@ export class ServerSchemat extends Schemat {
         if (!schemat.request) throw new Error(`no web request, cannot generate client-side initialization block`)
         let ctx = WebContext.from_request(schemat.request, ...objects)
         if (extra !== undefined) ctx.extra = extra
+        let ctx_encoded = ctx.encode()
+
         return `
             <script async type="module">
                 import {Client} from "/$/local/schemat/web/client.js";
-                globalThis.schemat = new Client("${ctx.encode()}");
+                globalThis.schemat = new Client("${ctx_encoded}");
                 await schemat.boot();
-                ${after_schemat}
+                ${after}
             </script>
         `
     }
