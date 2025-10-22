@@ -7,15 +7,19 @@
 import esbuild from 'esbuild'
 import fs from 'fs'
 import path from 'path'
-import svelte from 'svelte/compiler'
+import * as svelte from 'svelte/compiler'
 
-// Svelte plugin for ESBuild
+// svelte plugin for esbuild
 const svelte_plugin = {
     name: 'svelte',
     setup(build) {
         build.onLoad({ filter: /\.svelte$/ }, async (args) => {
             const source = await fs.promises.readFile(args.path, 'utf8')
-            const { js } = svelte.compile(source, { filename: args.path })
+            const { js } = svelte.compile(source, {
+                filename: args.path,
+                css: 'injected',
+                generate: 'client'
+            })
             return {
                 contents: js.code,
                 loader: 'js'
@@ -26,46 +30,56 @@ const svelte_plugin = {
 
 export async function find_dependencies(entry_file) {
     const files = new Set()
+    const cwd = path.isAbsolute(entry_file) ? path.dirname(entry_file) : process.cwd()
 
-    const result = await esbuild.build({
+    let result = await esbuild.build({
         entryPoints: [entry_file],
+        // absWorkingDir: cwd,
+        // outfile: 'out.js',
         bundle: true,
         write: false,
         format: 'esm',
+        platform: 'browser',
+        // target: ['es2020'],
+        // mainFields: ['browser', 'module', 'main'],
+        // conditions: ['browser', 'import'],
+        // resolveExtensions: ['.svelte', '.js', '.jsx', '.ts', '.tsx', '.mjs'],
         plugins: [svelte_plugin],
         logLevel: 'silent',
-        metafile: true,
-        // platform: 'neutral',  // neutral or node     -- might be needed for ESM output ??
+        metafile: true
     })
 
     // collect all files from metafile
     if (result.metafile)
         for (const file of Object.keys(result.metafile.inputs))
-            files.add(path.resolve(file))
+            files.add(path.resolve(cwd, file))
 
-    // collect import statements
-    for (const [filePath, info] of Object.entries(result.metafile.inputs)) {
-        console.log('Resolved file:', filePath)
-        if (info.imports.length)
-            for (const imp of info.imports) {
-                console.log('  Imported as:', imp.path)
-            }
-        // TODO: unwrap `result.metafile.inputs` and `result.metafile.outputs` for import path -> file path mapping
-    }
+    // // collect import statements
+    // for (const [filePath, info] of Object.entries(result.metafile.inputs)) {
+    //     console.log('Resolved file:', filePath)
+    //     if (info.imports.length)
+    //         for (const imp of info.imports) {
+    //             console.log('  Imported as:', imp.path)
+    //         }
+    //     // TODO: unwrap `result.metafile.inputs` and `result.metafile.outputs` for import path -> file path mapping
+    // }
 
     return {
         files: Array.from(files),
-        bundle: result.outputFiles[0].text
+        bundle: result.outputFiles?.[0]?.text || ''
     }
 }
 
-// Example usage
-;(async () => {
-    const entry = './src/main.js'
-    const { files, bundle } = await find_dependencies(entry)
-    console.log('Dependency files:', files)
-    console.log('Bundled code length:', bundle.length)
-})()
+// example usage (run only when executed directly)
+// if (process.argv[1] && new URL(import.meta.url).pathname === path.resolve(process.argv[1])) {
+//     ;(async () => {
+//         const entry = process.argv[2]
+//         if (!entry) return
+//         const { files, bundle } = await find_dependencies(entry)
+//         console.log('dependency files:', files)
+//         console.log('bundled code length:', bundle.length)
+//     })()
+// }
 
 /*********************/
 
