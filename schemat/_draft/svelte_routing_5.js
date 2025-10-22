@@ -41,7 +41,6 @@
         Async code (await) can be used in all .js files; in .svelte files, it's allowed inside functions, but NOT at top-level in <script>.
 
 
-
     Injection of a component on client [index.html]:
 
         <html>
@@ -57,21 +56,6 @@
             </script>
           </body>
         </html>
-
-    Alternative way of injecting on client:
-
-        // main.js
-        import MyComponent from './MyComponent.svelte'
-        const app = new MyComponent({
-            target: document.getElementById('app'),
-            props: { name: 'World' }
-        })
-
-        // page.html
-        <body>
-          <div id="app"></div>
-          <script type="module" src="/main.js"></script>
-        </body>
 
  */
 
