@@ -1,7 +1,7 @@
 import React from 'react'
 
-// layout component for jsx pages
-export default function Layout({children, title = 'Page', scripts = []}) {
+// HTML framing for jsx pages
+export default function Skeleton({children, title = 'Page', scripts = []}) {
     return (
         <html>
             <head>

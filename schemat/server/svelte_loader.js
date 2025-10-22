@@ -14,8 +14,8 @@ export async function load(url, context, defaultLoad) {
     // use Svelte compiler
     const out = compile(source, {
         filename,
-        css: 'injected',
-        generate: 'server'
+        css: 'injected',        // or 'external'
+        generate: 'server'      // or 'client'
     })
     if (out.warnings?.length) console.log(`Svelte compilation warnings:`, out.warnings)
 

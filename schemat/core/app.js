@@ -210,7 +210,7 @@ export class Application extends WebObject {
         return endpoint(request)
     }
 
-    async _render_jsx(path, request, params = {}, layout_file = '../web/views/layout.jsx') {
+    async _render_jsx(path, request, params = {}, layout_file = '../web/views/skeleton.jsx') {
         /* Execute a JSX component file with React SSR. No client-side hydration as of now. */
         const module = await import(path)
         if (typeof module.default !== 'function') request.not_found()
@@ -228,7 +228,7 @@ export class Application extends WebObject {
         request.send(html)
     }
 
-    async _render_svelte(path, request, props = {}, layout_file = '../web/views/layout.html') {
+    async _render_svelte(path, request, props = {}, layout_file = '../web/views/skeleton.html') {
         /* Execute a Svelte 5 component file. See: https://svelte.dev/docs/svelte/svelte-server for docs on render(). */
         let module = await import(path)
         let component = module?.default
