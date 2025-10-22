@@ -10,6 +10,7 @@ const ejs = SERVER && await import('ejs')
 const mod_path = SERVER && await import('node:path')
 const {readFile} = SERVER && await import('node:fs/promises') || {}
 const {check_file_type} = SERVER && await import('../common/utils_srv.js') || {}
+const {find_dependencies} = SERVER && await import("../_draft/bundler.js") || {}
 
 const {render: svelte_render} = SERVER && await import('svelte/server') || {}
 const {compile: svelte_compile} = SERVER && await import('svelte/compiler') || {}
@@ -246,6 +247,10 @@ export class Application extends WebObject {
         let module = await import(path)
         let component = module?.default
         if (typeof component !== 'function') request.not_found()
+
+        // let deps = await find_dependencies(`${schemat.PATH_PROJECT}/node_modules/svelte/src/index-client.js`)
+        // this._print(`_render_svelte() deps:\n`, deps.files)
+        // this._print(`_render_svelte() bundle:\n`, deps.bundle)
 
         let data, {load} = module               // generate data with load(), if present, and append to `props`
         if (typeof load === 'function') {
