@@ -309,8 +309,8 @@
         trailing slash.
       "@": schemat/types/type.js:PATH
     static_extensions:
-      default: html htm xml css postcss pcss js json jpg jpeg png gif bmp svg pdf ico
-        mp3 mp4 wav webp ttf txt woff woff2
+      default: html htm xml css postcss pcss js mjs json jpg jpeg png gif bmp svg pdf
+        mp3 mp4 wav webp ico ttf txt woff woff2
       info: Space-separated list of extensions (case insensitive) of files that can
         be served as static assets directly from the application folder.
       "@": schemat/types/type.js:STRING
@@ -416,7 +416,7 @@
       "@": schemat/types/type.js:STRING
     extensions_allowed:
       default: html htm xml css postcss pcss js ejs jpg jpeg png gif bmp svg mp3 mp4
-        wav pdf webp ico ttf woff woff2
+        wav pdf webp ico ttf woff woff2 mjs
       info: Space-separated list of extensions (case insensitive) of files that are
         allowed to be returned from inside this local directory. Requests for
         files that have any other extension are treated as invalid and result in
