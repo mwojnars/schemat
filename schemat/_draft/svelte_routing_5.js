@@ -40,23 +40,6 @@
 
         Async code (await) can be used in all .js files; in .svelte files, it's allowed inside functions, but NOT at top-level in <script>.
 
-
-    Injection of a component on client [index.html]:
-
-        <html>
-          <body>
-            <div id="target"></div>
-
-            <script type="module">
-              import MyComponent from './MyComponent.svelte'
-              const component = new MyComponent({
-                target: document.getElementById('target'),
-                props: { name: 'World' }
-              });
-            </script>
-          </body>
-        </html>
-
  */
 
 import fs from 'fs'
