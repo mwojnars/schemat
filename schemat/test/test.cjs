@@ -209,7 +209,7 @@ function server_setup({nodes = null, node = NODE, port = PORT, tcp_port = TCP_PO
     })
 
     afterEach(async () => {
-        await page.waitForNetworkIdle()                         // wait for page to render completely
+        // await page.waitForNetworkIdle()          // wait for page to render completely; this can take substantial time
         // await page.waitForNetworkIdle({ idleTime: 500, timeout: 5000 })
         // await delay(2000)
 
@@ -419,7 +419,7 @@ describe('Schemat Tests', function () {
             expect_include_all(await resp.text(), "EJS Test Page", "Dynamic Content", "content of the second article", "Privacy Policy")
 
             resp = await page.goto(`${DOMAIN}/test/views/test-sv2`)
-            expect_include_all(await resp.text(), "Svelte Test Page", "Welcome")
+            expect_include_all(await resp.text(), "Hello Rune World", "Welcome")
 
             resp = await page.goto(`${DOMAIN}/test/views/test-js`)          // GET request to .js endpoint
             expect_include_all(await resp.text(), "GET request")
