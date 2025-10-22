@@ -237,7 +237,9 @@ export class Application extends WebObject {
     }
 
     async _render_svelte(path, request, props = {}, layout_file = '../web/views/skeleton.html') {
-        /* Execute a Svelte 5 component file. See: https://svelte.dev/docs/svelte/svelte-server for docs on render(). 
+        /* Execute a Svelte 5 component file. See Svelte docs:
+           - https://svelte.dev/docs/svelte/svelte-server -- info on server-side render()
+           - https://svelte.dev/docs/svelte/v5-migration-guide -- info on client-side hydrate() call
            If the component defines a load() function in <script module>, it is called to get the data for the component,
            which is then included under `data` attribute inside $props(). The load() function can be async.
          */
@@ -245,17 +247,23 @@ export class Application extends WebObject {
         let component = module?.default
         if (typeof component !== 'function') request.not_found()
 
-        let {load} = module                 // generate data with load(), if present, and append to `props`
-        if (typeof load === 'function')
-            props = {...props, data: await load(request)}
+        let data, {load} = module               // generate data with load(), if present, and append to `props`
+        if (typeof load === 'function') {
+            data = await load(request)
+            props = {...props, data}
+        }
 
+        let file = path.split('/').pop()        // on-client hydration imports the same file but with .svelte extension kept in URL, which goes back to _send_svelte() below
         let init = schemat.init_client()
         let {head, body} = svelte_render(component, {props})
 
         // wrap with default html layout
         let layout_url = new URL(layout_file, import.meta.url)
         let template = await readFile(layout_url, 'utf-8')
-        let html = template.replace('<!--HEAD-->', head || '').replace('<!--BODY-->', init + (body || ''))
+        let html = template.replace('__FILE__', file)
+                           .replace('<!--INIT-->', init)
+                           .replace('<!--HEAD-->', head || '')
+                           .replace('<!--APP-->', body || '')
         request.send(html)
     }
 
@@ -263,7 +271,7 @@ export class Application extends WebObject {
         /* Compile a .svelte file to client-side JS and send it to the client. */
         this._print(`_send_svelte():`, path)
         let source = await readFile(path, 'utf-8')
-        let out = svelte_compile(source, {filename: path, css: 'injected', generate: 'server'})
+        let out = svelte_compile(source, {filename: path, css: 'injected', generate: 'client'})
         if (out.warnings?.length) this._print('_send_svelte() compilation warnings:', out.warnings)
         request.send_mimetype('js')
         request.send(out.js.code)

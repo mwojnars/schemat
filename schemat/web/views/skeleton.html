@@ -6,7 +6,33 @@
         <!--HEAD-->
     </head>
     <body>
-        <!--BODY-->
+        <script type="importmap"> {
+            "imports": {
+                "svelte": "/$/local/node_modules/svelte/src/index-client.js",
+                "svelte/internal/client": "/$/local/node_modules/svelte/src/internal/client/index.js",
+                "svelte/internal/disclose-version": "/$/local/node_modules/svelte/src/internal/disclose-version.js",
+                "svelte/internal/flags/legacy": "/$/local/node_modules/svelte/src/internal/flags/legacy.js",
+                "svelte/internal/": "/$/local/node_modules/svelte/src/internal/",
+                "#client/": "/$/local/node_modules/svelte/src/internal/client/",
+                "#client/constants": "/$/local/node_modules/svelte/src/internal/client/constants.js",
+                "esm-env": "/$/local/node_modules/esm-env/index.js",
+                "esm-env/browser": "/$/local/node_modules/esm-env/browser-fallback.js",
+                "esm-env/development": "/$/local/node_modules/esm-env/dev-fallback.js",
+                "esm-env/node": "/$/local/node_modules/esm-env/false.js",
+                "clsx": "/$/local/node_modules/clsx/dist/clsx.mjs"
+            }
+        } </script>
+
+        <!--INIT-->
+
+        <script type="module">
+            import {hydrate} from "svelte";
+            import App from "./__FILE__";
+            const target = document.getElementById("app");
+            hydrate(App, {target});
+        </script>
+
+        <div id="app"><!--APP--></div>
     </body>
 </html>
 
