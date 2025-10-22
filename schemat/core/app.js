@@ -254,14 +254,21 @@ export class Application extends WebObject {
         }
 
         let file = path.split('/').pop()        // on-client hydration imports the same file but with .svelte extension kept in URL, which goes back to _send_svelte() below
-        let init = schemat.init_client()
+        let init = schemat.init_client({
+            extra: {props},
+            after_schemat: `
+                import {hydrate} from "svelte";
+                import App from "./${file}";
+                const target = document.getElementById("app");
+                hydrate(App, {target, props: schemat.config.extra.props});
+            `
+        })
         let {head, body} = svelte_render(component, {props})
 
         // wrap with default html layout
         let layout_url = new URL(layout_file, import.meta.url)
         let template = await readFile(layout_url, 'utf-8')
-        let html = template.replace('__FILE__', file)
-                           .replace('<!--INIT-->', init)
+        let html = template.replace('<!--INIT-->', init)
                            .replace('<!--HEAD-->', head || '')
                            .replace('<!--APP-->', body || '')
         request.send(html)

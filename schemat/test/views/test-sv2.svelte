@@ -9,9 +9,9 @@
 
 
 <script>
-    // let {data} = $props()       // `data` attribute comes from load() function in <script module> section
-    // let title = $state(data[0].title)
-    let title = $state("Hello Rune World")  //("Svelte Test Page")
+    let {data} = $props()       // `data` attribute comes from load() function in <script module> section
+    let title = $state(data[0].title)
+    // let title = $state("Svelte Test Page")
     let description = $state("Default description")
     let count = $state(0)
     let title_length = $derived(title.length)
