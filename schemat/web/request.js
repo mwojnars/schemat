@@ -196,7 +196,8 @@ export class WebContext {
     }
 
     static decode(text) {
-        let state = JSON.parse(decodeURIComponent(atob(text)))
+        /* `text` may contain whitespace characters, they will be removed before decoding. */
+        let state = JSON.parse(decodeURIComponent(atob(text.replace(/\s+/g, ''))))
         return Object.assign(new WebContext(), state)
     }
 }
