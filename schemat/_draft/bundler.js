@@ -10,7 +10,7 @@ import path from 'path'
 import svelte from 'svelte/compiler'
 
 // Svelte plugin for ESBuild
-const sveltePlugin = {
+const svelte_plugin = {
     name: 'svelte',
     setup(build) {
         build.onLoad({ filter: /\.svelte$/ }, async (args) => {
@@ -24,21 +24,21 @@ const sveltePlugin = {
     }
 }
 
-async function buildDependencyGraph(entryFile) {
+export async function find_dependencies(entry_file) {
     const files = new Set()
 
     const result = await esbuild.build({
-        entryPoints: [entryFile],
+        entryPoints: [entry_file],
         bundle: true,
         write: false,
         format: 'esm',
-        plugins: [sveltePlugin],
+        plugins: [svelte_plugin],
         logLevel: 'silent',
         metafile: true,
         // platform: 'neutral',  // neutral or node     -- might be needed for ESM output ??
     })
 
-    // Collect all files from metafile
+    // collect all files from metafile
     if (result.metafile)
         for (const file of Object.keys(result.metafile.inputs))
             files.add(path.resolve(file))
@@ -55,16 +55,16 @@ async function buildDependencyGraph(entryFile) {
 
     return {
         files: Array.from(files),
-        bundledCode: result.outputFiles[0].text
+        bundle: result.outputFiles[0].text
     }
 }
 
 // Example usage
 ;(async () => {
     const entry = './src/main.js'
-    const { files, bundledCode } = await buildDependencyGraph(entry)
+    const { files, bundle } = await find_dependencies(entry)
     console.log('Dependency files:', files)
-    console.log('Bundled code length:', bundledCode.length)
+    console.log('Bundled code length:', bundle.length)
 })()
 
 /*********************/
