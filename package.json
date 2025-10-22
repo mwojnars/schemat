@@ -27,6 +27,7 @@
     "csso": "^5.0.2",
     "csstree-validator": "^3.0.0",
     "ejs": "^3.1.10",
+    "esbuild": "^0.25.11",
     "esm-module-alias": "^2.2.1",
     "express": "^4.17.1",
     "kafkajs": "^2.2.4",
