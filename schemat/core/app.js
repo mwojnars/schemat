@@ -282,12 +282,13 @@ export class Application extends WebObject {
         if (out.warnings?.length) this._print('_send_svelte() compilation warnings:', out.warnings)
 
         // rewrite Svelte runtime imports to a single bundled runtime URL (no import map needed)
+        let bundle = `"/$/bundle/svelte"`
         let code = out.js.code
-        code = code.replace(/from ['"]svelte\/internal\/client['"]/g, 'from "/$/bundle/svelte"')
-        code = code.replace(/from ['"]svelte\/internal\/disclose-version['"]/g, 'from "/$/bundle/svelte"')
-        code = code.replace(/from ['"]svelte\/internal\/flags\/legacy['"]/g, 'from "/$/bundle/svelte"')
-        code = code.replace(/import ['"]svelte\/internal\/disclose-version['"]/g, 'import "/$/bundle/svelte"')
-        code = code.replace(/import ['"]svelte\/internal\/flags\/legacy['"]/g, 'import "/$/bundle/svelte"')
+        code = code.replace(/from ['"]svelte\/internal\/client['"]/g, `from ${bundle}`)
+        code = code.replace(/from ['"]svelte\/internal\/disclose-version['"]/g, `from ${bundle}`)
+        code = code.replace(/from ['"]svelte\/internal\/flags\/legacy['"]/g, `from ${bundle}`)
+        code = code.replace(/import ['"]svelte\/internal\/disclose-version['"]/g, `import ${bundle}`)
+        code = code.replace(/import ['"]svelte\/internal\/flags\/legacy['"]/g, `import ${bundle}`)
 
         request.send_mimetype('js')
         request.send(code)
