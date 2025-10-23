@@ -848,7 +848,7 @@
       info: Port number of this node for incoming TCP connections.
       "@": schemat/types/type.js:INTEGER
     tcp_retry_interval:
-      default: 5
+      default: 1
       info: Minimum delay [in seconds] before a TCP message is resent if no
         acknowledgement or response has been received.
       "@": schemat/types/type.js:NUMBER
