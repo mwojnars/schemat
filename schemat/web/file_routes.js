@@ -3,7 +3,7 @@ import {readdir} from 'node:fs/promises'
 import {escapeRegExp, fileExtension, dropExtension} from '../common/utils.js'
 
 
-export class FileRoutes {
+export class URL_Routes {
     /* Pre-scans the application's root folder and builds an in-memory URL routing table.
        Supports next.js-like dynamic segments using [param] in file and folder names.
      */
@@ -22,10 +22,10 @@ export class FileRoutes {
     }
 
     async scan() {
-        // this.app._print(`FileRoutes.scan() ...`)
+        // this.app._print(`URL_Routes.scan() ...`)
         await this._walk(this.app_root)
         
-        // this.app._print(`FileRoutes.scan() done`)
+        // this.app._print(`URL_Routes.scan() done`)
         // this.app._print(` `, {files_by_url: this.files_by_url})
         // this.app._print(` `, {exact_routes: this.exact_routes})
         // this.app._print(` `, {dynamic_routes: this.dynamic_routes})
@@ -121,7 +121,7 @@ export class FileRoutes {
 
         // exact match first (no parameters)
         let exact = this.exact_routes.get(route_path)
-        if (exact) return {...exact, params: {}}
+        if (exact) return exact
 
         // dynamic matches
         for (let route of this.dynamic_routes) {
