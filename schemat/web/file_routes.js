@@ -69,6 +69,15 @@ export class FileRoutes {
 
     _add_dynamic(route_path, file, ext) {
         // compile pattern from [...]/[param]/...
+        let [param_names, pattern] = this._make_regex(route_path)
+        let regex = new RegExp('^' + pattern + '$')
+        this.dynamic_routes.push({regex, param_names, file, ext, route_path})
+    }
+
+    _make_regex(route_path) {
+        /* Convert a route path, possibly containing [NAME] parameters, to a regex matching actual URLs that fill these params.
+           Return a pair, [param_names, regex_pattern].
+         */
         let param_names = []
         let pattern = route_path
             .split('/')
@@ -78,8 +87,7 @@ export class FileRoutes {
                 return escapeRegExp(seg)
             })
             .join('/')
-        let regex = new RegExp('^' + pattern + '$')
-        this.dynamic_routes.push({regex, param_names, file, ext, route_path})
+        return [param_names, pattern]
     }
 
     _sort_dynamic() {
