@@ -32,7 +32,7 @@ export class FileRoutes {
         // this.app._print(` `, {dynamic_routes: this.dynamic_routes})
     }
 
-    async _walk(dir) {
+    async _walk(dir, params = [], pattern = '') {
         let entries = await readdir(dir, {withFileTypes: true})
         
         // sort entries by replacing '[' with a high-code char to push dynamic segments last
@@ -44,25 +44,35 @@ export class FileRoutes {
         })
         
         for (let ent of entries) {
-            if (this.app._is_private_name.test(ent.name)) continue
+            let name = ent.name
+            let path = mod_path.join(dir, name)
+
+            if (this.app._is_private_name.test(name)) continue
+            
             if (ent.isDirectory()) {
-                if (ent.name === 'node_modules') continue
-                await this._walk(mod_path.join(dir, ent.name))
+                if (name === 'node_modules') continue
+                let [_params, _pattern] = this._make_step(name, params, pattern)    // update accumulators with this directory segment
+                await this._walk(path, _params, _pattern)
                 continue
             }
             if (!ent.isFile()) continue
 
-            let file_path = mod_path.join(dir, ent.name)
-            let url_path = this._to_url(file_path)
-            this.files_by_url.set(url_path, file_path)
+            let url_path = this._to_url(path)
+            this.files_by_url.set(url_path, path)
 
-            let ext = fileExtension(file_path).toLowerCase()
+            let ext = fileExtension(path).toLowerCase()
 
             // renderable files become routes without extension
             if (['js', 'jsx', 'svelte', 'ejs'].includes(ext)) {
                 let route_path = url_path.slice(0, -(ext.length + 1))       // drop ".ext"
-                if (this._has_params(route_path)) this._add_dynamic(route_path, file_path, ext)
-                else this.exact_routes.set(route_path, {file: file_path, ext})
+                let base = name.slice(0, -(ext.length + 1))
+                let [_params, _pattern] = this._make_step(base, params, pattern)    // update accumulators with file segment (without extension)
+
+                if (_params.length) {
+                    let regex = new RegExp('^' + _pattern + '$')
+                    this.dynamic_routes.push({regex, param_names: _params, file: path, ext, route_path})
+                }
+                else this.exact_routes.set(route_path, {file: path, ext})
             }
         }
     }
@@ -73,13 +83,13 @@ export class FileRoutes {
         return '/' + rel
     }
 
-    _has_params(route_path) { return /\[[^\]/]+\]/.test(route_path) }
+    // _has_params(route_path) { return /\[[^\]/]+\]/.test(route_path) }
 
-    _add_dynamic(route_path, file, ext) {
-        // compile pattern from [...]/[param]/...
-        let [param_names, pattern] = this._make_regex(route_path)
-        let regex = new RegExp('^' + pattern + '$')
-        this.dynamic_routes.push({regex, param_names, file, ext, route_path})
+    _make_step(segment, params, pattern) {
+        let [_params, _pattern] = this._make_regex(segment)
+        params = [...params, ..._params]
+        pattern += '/' + _pattern
+        return [params, pattern]
     }
 
     _make_regex(route_path) {
