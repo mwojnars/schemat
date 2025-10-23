@@ -177,11 +177,14 @@ export class TCP_Sender {
             if (now - timestamp < this.retry_interval) continue     // "break" would do instead, as entries should be ordered by timestamp (?)
 
             entry.retries++
-            schemat._print(`retry no. ${entry.retries} at sending TCP message id=${id} ${message} to ${address}`)
+            schemat._print(`retry no. ${entry.retries} at sending TCP message #${id} to ${address}: ${message}`)
 
             let socket = this.sockets.get(address)
-            assert(socket && !(socket instanceof Promise))
-            socket.write(message)
+            // assert(socket && !(socket instanceof Promise))
+            if (socket && !(socket instanceof Promise))
+                socket.write(message)
+            else
+                schemat._print(`socket not ready (${socket}) for resending TCP message #${id} to ${address}: ${message}`)
         }
     }
 
