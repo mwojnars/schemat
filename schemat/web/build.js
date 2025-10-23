@@ -28,12 +28,17 @@ const svelte_plugin = {
 }
 
 
-export async function find_dependencies(entry_file) {
+export async function bundle_dependencies(entry_files = [], {minify = false} = {}) {
+    /* Find all dependencies of entry_files and bundle them into a single file.
+       Return an object with two properties:
+       - files: an array of all files that were bundled
+       - bundle: the bundled code
+     */
     const files = new Set()
-    const cwd = path.isAbsolute(entry_file) ? path.dirname(entry_file) : process.cwd()
+    // const cwd = process.cwd()
 
     let result = await esbuild.build({
-        entryPoints: [entry_file],
+        entryPoints: entry_files,
         bundle: true,
         write: false,
         format: 'esm',
@@ -41,7 +46,7 @@ export async function find_dependencies(entry_file) {
         plugins: [svelte_plugin],
         logLevel: 'silent',
         metafile: true,
-        // minify: true,
+        minify: minify,
 
         // mainFields: ['browser', 'module', 'main'],   // controls which fields in a package’s package.json are checked — and in what order — to determine which entry file to use when resolving a bare import
         // conditions: ['browser', 'import'],           // controls conditional exports resolution when a package uses the "exports" field in its package.json
@@ -54,7 +59,8 @@ export async function find_dependencies(entry_file) {
     // collect all files from metafile
     if (result.metafile)
         for (const file of Object.keys(result.metafile.inputs))
-            files.add(path.resolve(cwd, file))
+            files.add(file)
+            // files.add(path.resolve(cwd, file))
 
     // // collect import statements
     // for (const [filePath, info] of Object.entries(result.metafile.inputs)) {
