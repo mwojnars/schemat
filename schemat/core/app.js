@@ -113,21 +113,6 @@ export class Application extends WebObject {
 
     /***  Request resolution  ***/
 
-    // async find_object(path) {
-    //     /* URL-call that requests and returns an item pointed to by `path`. The item is fully loaded. */
-    //     // return this.route(new WebRequest({path}))
-    //     assert(path[0] === '/')
-    //     return this.route_local(path)
-    // }
-
-    async route_local(path) {
-        /* URL-call to a LOCAL/* endpoint of an object identified by a URL `path`.
-           The path should contain an endpoint name, otherwise the default endpoint is used.
-         */
-        return this.route(new WebRequest({path}))
-        // return WebRequest.run_with({path}, () => this.route(request))
-    }
-
     async _route_file_based(request) {
         /* Find request.path on disk, then return the static file, or render .ejs, or execute .js function. */
         // this._print(`request.path:`, request.path)
@@ -310,6 +295,24 @@ export class Application extends WebObject {
 
         request.send_mimetype('js')
         request.send(code)
+    }
+
+
+    /*** Legacy routing ***/
+
+    // async find_object(path) {
+    //     /* URL-call that requests and returns an item pointed to by `path`. The item is fully loaded. */
+    //     // return this.route(new WebRequest({path}))
+    //     assert(path[0] === '/')
+    //     return this.route_local(path)
+    // }
+
+    async route_local(path) {
+        /* URL-call to a LOCAL/* endpoint of an object identified by a URL `path`.
+           The path should contain an endpoint name, otherwise the default endpoint is used.
+         */
+        return this.route(new WebRequest({path}))
+        // return WebRequest.run_with({path}, () => this.route(request))
     }
 
     async route(request) {
