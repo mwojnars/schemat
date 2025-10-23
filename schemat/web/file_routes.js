@@ -25,8 +25,7 @@ export class FileRoutes {
     async scan() {
         // this.app._print(`FileRoutes.scan() ...`)
         await this._walk(this.app_root)
-        this._sort_dynamic()
-
+        
         // this.app._print(`FileRoutes.scan() done`)
         // this.app._print(` `, {files_by_url: this.files_by_url})
         // this.app._print(` `, {exact_routes: this.exact_routes})
@@ -35,6 +34,15 @@ export class FileRoutes {
 
     async _walk(dir) {
         let entries = await readdir(dir, {withFileTypes: true})
+        
+        // sort entries by replacing '[' with a high-code char to push dynamic segments last
+        const HIGH_CHAR = '\uffff'
+        entries.sort((a, b) => {
+            let a_sort = a.name.replaceAll('[', HIGH_CHAR)
+            let b_sort = b.name.replaceAll('[', HIGH_CHAR)
+            return a_sort.localeCompare(b_sort)
+        })
+        
         for (let ent of entries) {
             if (this.app._is_private_name.test(ent.name)) continue
             if (ent.isDirectory()) {
@@ -85,14 +93,6 @@ export class FileRoutes {
             return '([^/]+)'
         })
         return [param_names, pattern]
-    }
-
-    _sort_dynamic() {
-        // prioritize more specific routes: fewer params first, longer path next
-        this.dynamic_routes.sort((a, b) => {
-            if (a.param_names.length !== b.param_names.length) return a.param_names.length - b.param_names.length
-            return b.route_path.length - a.route_path.length
-        })
     }
 
     match(url_path) {
