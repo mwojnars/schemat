@@ -45,7 +45,7 @@ export class Application extends WebObject {
     static_extensions
     transpiled_extensions
     private_routes
-    dots_for_slashes
+    flat_routes
     purge_objects_interval
     evict_records_interval
     eval_allowed
@@ -132,7 +132,7 @@ export class Application extends WebObject {
 
     _norm_segment(seg) {
         /* Convert a file segment/path to a chunk of URL path. File extension must have been removed beforehand. */
-        return this.dots_for_slashes ? seg.replaceAll('.', '/') : seg
+        return this.flat_routes ? seg.replaceAll('.', '/') : seg
     }
 
     async _route_file_based(request) {
