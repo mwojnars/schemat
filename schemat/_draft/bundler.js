@@ -34,19 +34,21 @@ export async function find_dependencies(entry_file) {
 
     let result = await esbuild.build({
         entryPoints: [entry_file],
-        // absWorkingDir: cwd,
-        // outfile: 'out.js',
         bundle: true,
         write: false,
         format: 'esm',
         platform: 'browser',
-        // target: ['es2020'],
-        // mainFields: ['browser', 'module', 'main'],
-        // conditions: ['browser', 'import'],
-        // resolveExtensions: ['.svelte', '.js', '.jsx', '.ts', '.tsx', '.mjs'],
         plugins: [svelte_plugin],
         logLevel: 'silent',
-        metafile: true
+        metafile: true,
+        // minify: true,
+
+        // mainFields: ['browser', 'module', 'main'],   // controls which fields in a package’s package.json are checked — and in what order — to determine which entry file to use when resolving a bare import
+        // conditions: ['browser', 'import'],           // controls conditional exports resolution when a package uses the "exports" field in its package.json
+        // resolveExtensions: ['.svelte', '.js', '.jsx', '.ts', '.tsx', '.mjs'],
+        // target: ['es2020'],
+        // absWorkingDir: cwd,
+        // outfile: 'out.js',
     })
 
     // collect all files from metafile
