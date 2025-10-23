@@ -257,7 +257,7 @@ export class Application extends WebObject {
         let init = schemat.init_client({
             extra: {props},
             after: `
-                import {hydrate} from "svelte";
+                import {hydrate} from "/$/bundle/svelte";
                 import App from "./${file}";
                 const target = document.getElementById("app");
                 hydrate(App, {target, props: schemat.config.extra.props});
@@ -280,8 +280,17 @@ export class Application extends WebObject {
         let source = await readFile(path, 'utf-8')
         let out = svelte_compile(source, {filename: path, css: 'injected', generate: 'client'})
         if (out.warnings?.length) this._print('_send_svelte() compilation warnings:', out.warnings)
+
+        // rewrite Svelte runtime imports to a single bundled runtime URL (no import map needed)
+        let code = out.js.code
+        code = code.replace(/from ['"]svelte\/internal\/client['"]/g, 'from "/$/bundle/svelte"')
+        code = code.replace(/from ['"]svelte\/internal\/disclose-version['"]/g, 'from "/$/bundle/svelte"')
+        code = code.replace(/from ['"]svelte\/internal\/flags\/legacy['"]/g, 'from "/$/bundle/svelte"')
+        code = code.replace(/import ['"]svelte\/internal\/disclose-version['"]/g, 'import "/$/bundle/svelte"')
+        code = code.replace(/import ['"]svelte\/internal\/flags\/legacy['"]/g, 'import "/$/bundle/svelte"')
+
         request.send_mimetype('js')
-        request.send(out.js.code)
+        request.send(code)
     }
 
     async route(request) {
