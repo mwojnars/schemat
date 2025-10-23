@@ -418,9 +418,6 @@ describe('Schemat Tests', function () {
             resp = await page.goto(`${DOMAIN}/test/views/test-ejs`)
             expect_include_all(await resp.text(), "EJS Test Page", "Dynamic Content", "content of the second article", "Privacy Policy")
 
-            resp = await page.goto(`${DOMAIN}/test/views/test-sv2`)
-            expect_include_all(await resp.text(), "Hello Rune World", "Welcome")
-
             resp = await page.goto(`${DOMAIN}/test/views/test-js`)          // GET request to .js endpoint
             expect_include_all(await resp.text(), "GET request")
 
@@ -430,6 +427,31 @@ describe('Schemat Tests', function () {
                 }).then(response => response.text())
             , `${DOMAIN}/test/views/test-js`)
             expect_include_all(resp, "POST request", "This is a test message")
+        })
+
+        it('svelte bundle', async function () {
+            let resp = await page.goto(`${DOMAIN}/$/bundle/svelte`)
+            expect(resp.status()).to.equal(200)
+            expect(resp.headers()['content-type']).to.include('javascript')
+            let js = await resp.text()
+            expect(js).to.include('hydrate')  // verify bundle contains hydrate function
+        })
+
+        it('test-sv2', async function () {
+            await page.goto(`${DOMAIN}/test/views/test-sv2`)
+            await page.waitForSelector('.counter button', {visible: true})
+            await delay(500)   // wait a bit for hydration to complete
+
+            expect_include_all(await extract_content(page), "Hello Rune World", "Welcome")
+
+            let count_text = await page.$eval('.counter span', el => el.textContent)
+            expect(count_text).to.include('count: 0')
+
+            await page.click('.counter button')
+            await page.click('.counter button')
+
+            count_text = await page.$eval('.counter span', el => el.textContent)
+            expect(count_text).to.include('count: 2')
         })
 
         it('forbidden files', async function () {
