@@ -1,16 +1,16 @@
 import {print, assert, T, sleep, splitLast, normalizePath, escapeRegExp, fileExtension} from '../common/utils.js'
-import {FileRoutes} from './file_routes.js'
 import {URLNotFound} from "../common/errors.js"
 import {WebRequest} from '../web/request.js'
 import {WebObject} from './object.js'
 import {JsonPOST} from "../web/services.js";
 import {mActionResult, mString} from "../web/messages.js";
 
-const fs  = SERVER && await import('fs')
+// const fs  = SERVER && await import('fs')
 const ejs = SERVER && await import('ejs')
 const mod_path = SERVER && await import('node:path')
 const {readFile} = SERVER && await import('node:fs/promises') || {}
-const {check_file_type} = SERVER && await import('../common/utils_srv.js') || {}
+const {FileRoutes} = SERVER && await import('./file_routes.js') || {}
+// const {check_file_type} = SERVER && await import('../common/utils_srv.js') || {}
 
 const {render: svelte_render} = SERVER && await import('svelte/server') || {}
 const {compile: svelte_compile} = SERVER && await import('svelte/compiler') || {}
@@ -53,6 +53,7 @@ export class Application extends WebObject {
     get _app_root()         { return mod_path.normalize(schemat.PATH_PROJECT + '/' + this.root_folder) }
     get _static_exts()      { return this.static_extensions.toLowerCase().split(/[ ,;:]+/) }
     get _private_routes()   { return this.private_routes.split(/\s+/) || [] }
+    get file_routes()       { if (FileRoutes) return new FileRoutes(this) }
 
     get _is_private_path() {
         /* Regex that checks if a URL path (starting with /...) contains a private segment anywhere. */
@@ -66,7 +67,6 @@ export class Application extends WebObject {
         let pattern = `^(${prefixes.join('|')})`
         return new RegExp(pattern)
     }
-    get file_routes() { return new FileRoutes(this) }
 
     async __load__() {
         if (SERVER) {
