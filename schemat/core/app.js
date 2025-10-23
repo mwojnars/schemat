@@ -43,6 +43,7 @@ export class Application extends WebObject {
     webserver
     default_path
     static_extensions
+    transpiled_extensions
     private_routes
     purge_objects_interval
     evict_records_interval
@@ -52,6 +53,7 @@ export class Application extends WebObject {
 
     get _app_root()         { return mod_path.normalize(schemat.PATH_PROJECT + '/' + this.root_folder) }
     get _static_exts()      { return this.static_extensions.toLowerCase().split(/[ ,;:]+/) }
+    get _transpiled_exts()  { return this.transpiled_extensions.toLowerCase().split(/[ ,;:]+/) }
     get _private_routes()   { return this.private_routes.split(/\s+/) || [] }
     get file_routes()       { if (FileRoutes) return new FileRoutes(this) }
 

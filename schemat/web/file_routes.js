@@ -15,7 +15,6 @@ export class FileRoutes {
     constructor(app) {
         this.app = app
         this.app_root = app._app_root
-        this.static_exts = app._static_exts
 
         this.files_by_url = new Map()
         this.exact_routes = new Map()
@@ -110,8 +109,8 @@ export class FileRoutes {
         let ext = fileExtension(url_path).toLowerCase()
         let file = this.files_by_url.get(url_path)
         if (file) {
-            if (this.static_exts.includes(ext)) return {type: 'static', file}
-            if (ext === 'svelte') return {type: 'transpiled', file}
+            if (this.app._static_exts.includes(ext)) return {type: 'static', file}
+            if (this.app._transpiled_exts.includes(ext)) return {type: 'transpiled', file}
         }
 
         // renderable route without extension
