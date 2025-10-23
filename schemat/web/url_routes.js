@@ -56,10 +56,8 @@ export class URL_Routes {
             let url_path = this._to_url(path)
             let route_path = url_path.slice(0, -(ext.length + 1))       // drop ".ext"
 
-            if (this.app.dots_for_slashes) {
-                route_path = route_path.replaceAll('.', '/')
-                if (ext) url_path = route_path + '.' + ext
-            }
+            route_path = this.app._norm_segment(route_path)             // replace dots with slashes
+            if (ext) url_path = route_path + '.' + ext
 
             // determine route type based on extension
             let type = null
@@ -71,8 +69,8 @@ export class URL_Routes {
             // renderable files become routes without extension
             if (['js', 'jsx', 'svelte', 'ejs'].includes(ext)) {
                 type = 'render'
-                let base = name.slice(0, -(ext.length + 1))
-                let [_params, _pattern] = this._make_step(base, params, pattern)    // update accumulators with file segment (without extension)
+                let seg = this.app._norm_segment(name.slice(0, -(ext.length + 1)))
+                let [_params, _pattern] = this._make_step(seg, params, pattern)     // update accumulators with file segment (without extension)
 
                 if (_params.length) {
                     let regex = new RegExp('^' + _pattern + '$')

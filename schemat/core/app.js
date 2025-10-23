@@ -130,6 +130,11 @@ export class Application extends WebObject {
 
     /***  Request resolution  ***/
 
+    _norm_segment(seg) {
+        /* Convert a file segment/path to a chunk of URL path. File extension must have been removed beforehand. */
+        return this.dots_for_slashes ? seg.replaceAll('.', '/') : seg
+    }
+
     async _route_file_based(request) {
         /* Find request.path on disk, then return the static file, or render .ejs, or execute .js function. */
         // this._print(`request.path:`, request.path)
