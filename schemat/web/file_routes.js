@@ -7,10 +7,6 @@ export class FileRoutes {
     /* Pre-scans the application's root folder and builds an in-memory routing table.
        Supports next.js-like dynamic segments using [param] in file and folder names. */
 
-    app
-    app_root
-    static_exts
-
     // indices
     files_by_url      // Map(url_path_with_ext -> file_path)
     exact_routes      // Map(route_path_without_ext -> {file, ext}) for renderable files
@@ -115,12 +111,13 @@ export class FileRoutes {
         if (exact) return {type: 'render', file: exact.file, ext: exact.ext, params: {}}
 
         // dynamic matches
-        for (let r of this.dynamic_routes) {
-            let m = r.regex.exec(route_path)
-            if (!m) continue
-            let params = {}
-            r.param_names.forEach((name, i) => params[name] = m[i + 1])
-            return {type: 'render', file: r.file, ext: r.ext, params}
+        for (let route of this.dynamic_routes) {
+            let match = route.regex.exec(route_path)
+            if (match) {
+                let params = {}
+                route.param_names.forEach((name, i) => params[name] = match[i + 1])
+                return {type: 'render', file: route.file, ext: route.ext, params}
+            }
         }
 
         return null
