@@ -1,6 +1,6 @@
 import mod_path from 'node:path'
 import {readdir} from 'node:fs/promises'
-import {escapeRegExp, fileExtension} from '../common/utils.js'
+import {escapeRegExp, fileExtension, dropExtension} from '../common/utils.js'
 
 
 export class FileRoutes {
@@ -112,17 +112,15 @@ export class FileRoutes {
     match(url_path) {
         // this.app._print(`match()`, {url_path})
 
-        // exact static file request (with extension)
+        // request for a static or transpiled file (with extension)
         let entry = this.files_by_url.get(url_path)
         if (entry) return entry
 
-        // renderable route without extension
-        let ext = fileExtension(url_path).toLowerCase()
-        let route_path = url_path
-        if (ext) route_path = url_path.slice(0, -(ext.length + 1))
+        // renderable route (without extension)
+        let route_path = dropExtension(url_path)
         // this.app._print(`match()`, {route_path})
 
-        // exact match first
+        // exact match first (no parameters)
         let exact = this.exact_routes.get(route_path)
         if (exact) return {...exact, params: {}}
 
