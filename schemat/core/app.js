@@ -1,4 +1,5 @@
 import {print, assert, T, sleep, splitLast, normalizePath, escapeRegExp, fileExtension} from '../common/utils.js'
+import {FileRoutes} from './file_routes.js'
 import {URLNotFound} from "../common/errors.js"
 import {WebRequest} from '../web/request.js'
 import {WebObject} from './object.js'
@@ -52,16 +53,27 @@ export class Application extends WebObject {
     get _app_root()         { return mod_path.normalize(schemat.PATH_PROJECT + '/' + this.root_folder) }
     get _static_exts()      { return this.static_extensions.toLowerCase().split(/[ ,;:]+/) }
     get _private_routes()   { return this.private_routes.split(/\s+/) || [] }
-    get _is_private() {
+
+    get _is_private_path() {
+        /* Regex that checks if a URL path (starting with /...) contains a private segment anywhere. */
         let prefixes = this._private_routes.map(route => escapeRegExp(route))
         let pattern = `/(${prefixes.join('|')})`
         return new RegExp(pattern)
     }
+    get _is_private_name() {
+        /* Regex that checks if a file/folder name is private. */
+        let prefixes = this._private_routes.map(route => escapeRegExp(route))
+        let pattern = `^(${prefixes.join('|')})`
+        return new RegExp(pattern)
+    }
+    get file_routes() { return new FileRoutes(this) }
 
     async __load__() {
         if (SERVER) {
             // this._vm = await import('node:vm')
             if (this.default_path) this._check_default_container()      // no await to avoid blocking the app's startup
+            // pre-scan file-based routes once at startup
+            await this.file_routes.scan()
         }
         await schemat.after_boot(() => this.load_globals())
     }
@@ -120,42 +132,26 @@ export class Application extends WebObject {
         assert(url_path[0] === '/', url_path)
 
         // make sure that no segment in request.path starts with a forbidden prefix (_private_routes)
-        if (this._is_private.test(url_path)) request.not_found()
+        if (this._is_private_path.test(url_path)) request.not_found()
 
-        // convert HTTP request path to a local file path
-        let root = this._app_root
-        let path = mod_path.normalize(root + '/' + url_path)
-        if (!path.startsWith(root + '/')) request.not_found()
+        // use precomputed file routes
+        let match = this.file_routes?.match(url_path)
+        if (!match) return false
 
-        // this._print(`file path:`, path)
-        let ext = fileExtension(path).toLowerCase()
-        let type = await check_file_type(path)          // TODO: replace any dynamic filesystem checks with the use of precomputed map of routes
-
-        // TODO: detect parameter names and values, as embedded in file path & route path
-
-        // if `path` points to a static file, return the file as is
-        if (type === 'file' && this._static_exts.includes(ext)) {
-            await request.send_file(path)
+        if (match.type === 'static') {
+            await request.send_file(match.file)
             return true
         }
 
-        // if `path` points to a .svelte file, return a client-side compiled version of the file
-        if (ext === 'svelte') {
-            await this._send_svelte(path, request)
+        if (match.type === 'svelte_client') {
+            await this._send_svelte(match.file, request)
             return true
         }
 
-        // render/execute single files: templates (ejs) or executables (js/jsx/svelte);
-        // automatically detect the file extension to be added to `path`; the path should *not* include an extension yet
-
-        // try to find a matching file with supported extension
-        for (let _ext of ['js', 'jsx', 'svelte', 'ejs']) {
-            let _path = path + '.' + _ext
-            if (fs.existsSync(_path)) {
-                let method = `_render_${_ext}`
-                await this[method](_path, request)
-                return true
-            }
+        if (match.type === 'render') {
+            let method = `_render_${match.ext}`
+            await this[method](match.file, request, match.params || {})
+            return true
         }
 
         // // execute directory-based views: path/+page.svelte  ... TODO: +layout +page.js
@@ -200,6 +196,8 @@ export class Application extends WebObject {
         let module = await import(path)
         let endpoint = module[request.http_method]
         if (typeof endpoint !== 'function') request.not_found()
+        // expose route params on the request object for handlers
+        request.params = params
         return endpoint(request)
     }
 
