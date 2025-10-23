@@ -4,13 +4,13 @@ import {escapeRegExp, fileExtension, dropExtension} from '../common/utils.js'
 
 
 export class FileRoutes {
-    /* Pre-scans the application's root folder and builds an in-memory routing table.
-       Supports next.js-like dynamic segments using [param] in file and folder names. */
+    /* Pre-scans the application's root folder and builds an in-memory URL routing table.
+       Supports next.js-like dynamic segments using [param] in file and folder names.
+     */
 
-    // indices
-    files_by_url      // Map(url_path_with_ext -> file_path)
-    exact_routes      // Map(route_path_without_ext -> {file, ext}) for renderable files
-    dynamic_routes    // Array<{file, ext, param_names, regex, route_path}>
+    files_by_url      // Map(url_path_with_ext -> {type, file})
+    exact_routes      // Map(route_path_without_ext -> {type, file, ext}) for renderable files
+    dynamic_routes    // Array<{type, file, ext, param_names, regex, route_path}>
 
     constructor(app) {
         this.app = app
@@ -64,21 +64,20 @@ export class FileRoutes {
             if (this.app._static_exts.includes(ext)) type = 'static'
             else if (this.app._transpiled_exts.includes(ext)) type = 'transpiled'
             
-            if (type) {
-                this.files_by_url.set(url_path, {file: path, type})
-            }
-            
+            if (type) this.files_by_url.set(url_path, {file: path, type})
+
             // renderable files become routes without extension
             if (['js', 'jsx', 'svelte', 'ejs'].includes(ext)) {
+                type = 'render'
                 let route_path = url_path.slice(0, -(ext.length + 1))       // drop ".ext"
                 let base = name.slice(0, -(ext.length + 1))
                 let [_params, _pattern] = this._make_step(base, params, pattern)    // update accumulators with file segment (without extension)
 
                 if (_params.length) {
                     let regex = new RegExp('^' + _pattern + '$')
-                    this.dynamic_routes.push({regex, param_names: _params, file: path, ext, route_path, type: 'render'})
+                    this.dynamic_routes.push({type, file: path, ext, regex, param_names: _params, route_path})
                 }
-                else this.exact_routes.set(route_path, {file: path, ext, type: 'render'})
+                else this.exact_routes.set(route_path, {type, file: path, ext})
             }
         }
     }
