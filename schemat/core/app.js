@@ -9,7 +9,7 @@ import {mActionResult, mString} from "../web/messages.js";
 const ejs = SERVER && await import('ejs')
 const mod_path = SERVER && await import('node:path')
 const {readFile} = SERVER && await import('node:fs/promises') || {}
-const {FileRoutes} = SERVER && await import('./file_routes.js') || {}
+const {FileRoutes} = SERVER && await import('../web/file_routes.js') || {}
 // const {check_file_type} = SERVER && await import('../common/utils_srv.js') || {}
 
 const {render: svelte_render} = SERVER && await import('svelte/server') || {}
