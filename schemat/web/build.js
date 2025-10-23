@@ -47,6 +47,7 @@ export async function bundle_dependencies(entry_files = [], {minify = false, fla
         logLevel: 'silent',
         metafile: true,
         minify: minify,
+        outfile: 'out.js',      // keeps output in memory because write=false, but satisfies esbuild naming
     }
 
     // mainFields: ['browser', 'module', 'main'],   // controls which fields in a package’s package.json are checked — and in what order — to determine which entry file to use when resolving a bare import
@@ -54,14 +55,12 @@ export async function bundle_dependencies(entry_files = [], {minify = false, fla
     // resolveExtensions: ['.svelte', '.js', '.jsx', '.ts', '.tsx', '.mjs'],
     // target: ['es2020'],
     // absWorkingDir: cwd,
-    // outfile: 'out.js',
 
     let result
     if (entry_files.length <= 1) {
         result = await esbuild.build({
             ...build_opts,
             entryPoints: entry_files,
-            outfile: 'out.js',   // keeps output in memory, but satisfies esbuild naming
         })
     }
     else {
@@ -70,15 +69,13 @@ export async function bundle_dependencies(entry_files = [], {minify = false, fla
         let contents = flat_exports
             ? entry_files.map(p => `export * from ${JSON.stringify(p)}`).join('\n')
             : entry_files.map((p, i) => `export * as m_${i} from ${JSON.stringify(p)}`).join('\n')
-        result = await esbuild.build({
-            ...build_opts,
+        result = await esbuild.build({...build_opts,
             stdin: {
                 contents,
                 resolveDir: process.cwd(),
                 sourcefile: 'virtual-entry.js',
                 loader: 'js'
             },
-            outfile: 'out.js'
         })
     }
 
