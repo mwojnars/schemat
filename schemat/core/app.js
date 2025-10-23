@@ -9,7 +9,7 @@ import {mActionResult, mString} from "../web/messages.js";
 const ejs = SERVER && await import('ejs')
 const mod_path = SERVER && await import('node:path')
 const {readFile} = SERVER && await import('node:fs/promises') || {}
-const {URL_Routes} = SERVER && await import('../web/file_routes.js') || {}
+const {URL_Routes} = SERVER && await import('../web/url_routes.js') || {}
 // const {check_file_type} = SERVER && await import('../common/utils_srv.js') || {}
 
 const {render: svelte_render} = SERVER && await import('svelte/server') || {}
@@ -55,7 +55,8 @@ export class Application extends WebObject {
     get _static_exts()      { return this.static_extensions.toLowerCase().split(/[ ,;:]+/) }
     get _transpiled_exts()  { return this.transpiled_extensions.toLowerCase().split(/[ ,;:]+/) }
     get _private_routes()   { return this.private_routes.split(/\s+/) || [] }
-    get file_routes()       { if (URL_Routes) return new URL_Routes(this) }
+
+    get routes()            { if (URL_Routes) return new URL_Routes(this) }
 
     get _is_private_path() {
         /* Regex that checks if a URL path (starting with /...) contains a private segment anywhere. */
@@ -70,12 +71,13 @@ export class Application extends WebObject {
         return new RegExp(pattern)
     }
 
+
     async __load__() {
         if (SERVER) {
             // this._vm = await import('node:vm')
             if (this.default_path) this._check_default_container()      // no await to avoid blocking the app's startup
             // pre-scan file-based routes once at startup
-            await this.file_routes.scan()
+            await this.routes.scan()
         }
         await schemat.after_boot(() => this.load_globals())
     }
@@ -137,7 +139,7 @@ export class Application extends WebObject {
         if (this._is_private_path.test(url_path)) request.not_found()
 
         // use precomputed file routes
-        let match = this.file_routes?.match(url_path)
+        let match = this.routes.match(url_path)
         if (!match) return false
 
         if (match.type === 'static') {                      // send a static file as is
