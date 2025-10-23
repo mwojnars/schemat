@@ -373,8 +373,9 @@ export function joinPath(...parts) {
 export function fileExtension(filepath) {
     /* Extract the file extension from the file path, that is, the substring after the last dot. No case conversion. 
        Unlike mod_path.extname(), this function does *not* include the dot in the returned extension.
+       Returns empty string if there is no extension.
      */
-    return filepath.split('.').pop()
+    return filepath.match(/[^/\\]\.([^./\\]+)$/)?.[1] || ''
 }
 
 /*************************************************************************************************
