@@ -57,10 +57,17 @@ export class FileRoutes {
             if (!ent.isFile()) continue
 
             let url_path = this._to_url(path)
-            this.files_by_url.set(url_path, path)
-
             let ext = fileExtension(path).toLowerCase()
-
+            
+            // determine route type based on extension
+            let type = null
+            if (this.app._static_exts.includes(ext)) type = 'static'
+            else if (this.app._transpiled_exts.includes(ext)) type = 'transpiled'
+            
+            if (type) {
+                this.files_by_url.set(url_path, {file: path, type})
+            }
+            
             // renderable files become routes without extension
             if (['js', 'jsx', 'svelte', 'ejs'].includes(ext)) {
                 let route_path = url_path.slice(0, -(ext.length + 1))       // drop ".ext"
@@ -69,9 +76,9 @@ export class FileRoutes {
 
                 if (_params.length) {
                     let regex = new RegExp('^' + _pattern + '$')
-                    this.dynamic_routes.push({regex, param_names: _params, file: path, ext, route_path})
+                    this.dynamic_routes.push({regex, param_names: _params, file: path, ext, route_path, type: 'render'})
                 }
-                else this.exact_routes.set(route_path, {file: path, ext})
+                else this.exact_routes.set(route_path, {file: path, ext, type: 'render'})
             }
         }
     }
@@ -106,21 +113,18 @@ export class FileRoutes {
         // this.app._print(`match()`, {url_path})
 
         // exact static file request (with extension)
-        let ext = fileExtension(url_path).toLowerCase()
-        let file = this.files_by_url.get(url_path)
-        if (file) {
-            if (this.app._static_exts.includes(ext)) return {type: 'static', file}
-            if (this.app._transpiled_exts.includes(ext)) return {type: 'transpiled', file}
-        }
+        let entry = this.files_by_url.get(url_path)
+        if (entry) return entry
 
         // renderable route without extension
+        let ext = fileExtension(url_path).toLowerCase()
         let route_path = url_path
         if (ext) route_path = url_path.slice(0, -(ext.length + 1))
         // this.app._print(`match()`, {route_path})
 
         // exact match first
         let exact = this.exact_routes.get(route_path)
-        if (exact) return {type: 'render', ...exact, params: {}}
+        if (exact) return {...exact, params: {}}
 
         // dynamic matches
         for (let route of this.dynamic_routes) {
@@ -128,7 +132,7 @@ export class FileRoutes {
             if (match) {
                 let params = {}
                 route.param_names.forEach((name, i) => params[name] = match[i + 1])
-                return {type: 'render', ...route, params}
+                return {...route, params}
             }
         }
 
