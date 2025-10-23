@@ -10,7 +10,7 @@ export class FileRoutes {
     // indices
     files_by_url      // Map(url_path_with_ext -> file_path)
     exact_routes      // Map(route_path_without_ext -> {file, ext}) for renderable files
-    dynamic_routes    // Array<{regex, param_names, file, ext, route_path}>
+    dynamic_routes    // Array<{file, ext, param_names, regex, route_path}>
 
     constructor(app) {
         this.app = app
@@ -83,8 +83,6 @@ export class FileRoutes {
         return '/' + rel
     }
 
-    // _has_params(route_path) { return /\[[^\]/]+\]/.test(route_path) }
-
     _make_step(segment, params, pattern) {
         let [_params, _pattern] = this._make_regex(segment)
         params = [...params, ..._params]
@@ -123,7 +121,7 @@ export class FileRoutes {
 
         // exact match first
         let exact = this.exact_routes.get(route_path)
-        if (exact) return {type: 'render', file: exact.file, ext: exact.ext, params: {}}
+        if (exact) return {type: 'render', ...exact, params: {}}
 
         // dynamic matches
         for (let route of this.dynamic_routes) {
@@ -131,7 +129,7 @@ export class FileRoutes {
             if (match) {
                 let params = {}
                 route.param_names.forEach((name, i) => params[name] = match[i + 1])
-                return {type: 'render', file: route.file, ext: route.ext, params}
+                return {type: 'render', ...route, params}
             }
         }
 
