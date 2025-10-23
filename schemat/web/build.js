@@ -37,8 +37,8 @@ export async function bundle_dependencies(entry_files = [], {minify = false} = {
     const files = new Set()
     // const cwd = process.cwd()
 
-    let result = await esbuild.build({
-        entryPoints: entry_files,
+    // build in-memory; for multiple entry files make a single virtual entry to avoid the "outdir required" error
+    let build_opts = {
         bundle: true,
         write: false,
         format: 'esm',
@@ -47,19 +47,43 @@ export async function bundle_dependencies(entry_files = [], {minify = false} = {
         logLevel: 'silent',
         metafile: true,
         minify: minify,
+    }
 
-        // mainFields: ['browser', 'module', 'main'],   // controls which fields in a package’s package.json are checked — and in what order — to determine which entry file to use when resolving a bare import
-        // conditions: ['browser', 'import'],           // controls conditional exports resolution when a package uses the "exports" field in its package.json
-        // resolveExtensions: ['.svelte', '.js', '.jsx', '.ts', '.tsx', '.mjs'],
-        // target: ['es2020'],
-        // absWorkingDir: cwd,
-        // outfile: 'out.js',
-    })
+    // mainFields: ['browser', 'module', 'main'],   // controls which fields in a package’s package.json are checked — and in what order — to determine which entry file to use when resolving a bare import
+    // conditions: ['browser', 'import'],           // controls conditional exports resolution when a package uses the "exports" field in its package.json
+    // resolveExtensions: ['.svelte', '.js', '.jsx', '.ts', '.tsx', '.mjs'],
+    // target: ['es2020'],
+    // absWorkingDir: cwd,
+    // outfile: 'out.js',
+
+    let result
+    if (entry_files.length <= 1) {
+        result = await esbuild.build({
+            ...build_opts,
+            entryPoints: entry_files,
+            outfile: 'out.js',   // keeps output in memory, but satisfies esbuild naming
+        })
+    }
+    else {
+        // create a single virtual entry that namespaces each module to prevent tree-shaking and name conflicts
+        let contents = entry_files.map((p, i) => `import * as m_${i} from ${JSON.stringify(p)}\nexport { m_${i} }`).join('\n')
+        result = await esbuild.build({
+            ...build_opts,
+            stdin: {
+                contents,
+                resolveDir: process.cwd(),
+                sourcefile: 'virtual-entry.js',
+                loader: 'js'
+            },
+            outfile: 'out.js'
+        })
+    }
 
     // collect all files from metafile
     if (result.metafile)
         for (const file of Object.keys(result.metafile.inputs))
-            files.add(file)
+            if (!file.includes('virtual-entry.js') && !file.includes('<stdin>'))
+                files.add(file)
             // files.add(path.resolve(cwd, file))
 
     // // collect import statements
