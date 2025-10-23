@@ -280,7 +280,6 @@ export class Application extends WebObject {
              svelte/internal/disclose-version
              svelte/internal/flags/legacy
          */
-
         // minimal Svelte 5 component sufficient to trigger runtime imports
         let source = `<script>export let x</script>\n<div>{x}</div>`
         let out = svelte_compile(source, {filename: 'sample.svelte', css: 'injected', generate: 'client'})
@@ -290,8 +289,6 @@ export class Application extends WebObject {
         let set = new Set()
         code.replace(/from ['"]([^'"]+)['"]/g, (m, spec) => { if (spec.startsWith('svelte/')) set.add(spec); return '' })
         code.replace(/import ['"]([^'"]+)['"]/g, (m, spec) => { if (spec.startsWith('svelte/')) set.add(spec); return '' })
-
-        this._print(`_svelte_imports():`, [...set])
         return [...set]
     }
 

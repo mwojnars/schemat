@@ -73,7 +73,7 @@ export async function bundle_dependencies(entry_files = [], {minify = false, fla
             stdin: {
                 contents,
                 resolveDir: process.cwd(),
-                sourcefile: 'virtual-entry.js',
+                sourcefile: '--virtual-entry.js',
                 loader: 'js'
             },
         })
@@ -82,7 +82,7 @@ export async function bundle_dependencies(entry_files = [], {minify = false, fla
     // collect all files from metafile
     if (result.metafile)
         for (const file of Object.keys(result.metafile.inputs))
-            if (!file.includes('virtual-entry.js') && !file.includes('<stdin>'))
+            if (!file.includes('--virtual-entry.js') && !file.includes('<stdin>'))
                 files.add(file)
             // files.add(path.resolve(cwd, file))
 
