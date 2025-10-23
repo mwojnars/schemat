@@ -45,6 +45,7 @@ export class Application extends WebObject {
     static_extensions
     transpiled_extensions
     private_routes
+    dots_for_slashes
     purge_objects_interval
     evict_records_interval
     eval_allowed

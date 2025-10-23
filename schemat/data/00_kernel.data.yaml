@@ -326,6 +326,11 @@
         private and not accessible for routing procedure. If any of these prefixes is
         found in a URL path segment, the request is rejected with "not found" error.
       "@": schemat/types/type.js:STRING
+    dots_for_slashes:
+      default: true
+      info: If true, every dot in the file path of a servable file is converted to a
+        slash in the corresponding URL.
+      "@": schemat/types/type.js:STRING
     global:
       value_type:
         "@": schemat/types/type.js:REF
