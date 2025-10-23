@@ -378,6 +378,12 @@ export function fileExtension(filepath) {
     return filepath.match(/[^/\\]\.([^./\\]+)$/)?.[1] || ''
 }
 
+export function dropExtension(filepath) {
+    /* Drop the file extension from the file path. */
+    let ext = fileExtension(filepath)
+    return filepath.slice(0, -(ext.length + 1))
+}
+
 /*************************************************************************************************
  **
  **  REGEXP and HTML
