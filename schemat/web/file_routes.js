@@ -65,7 +65,7 @@ export class FileRoutes {
         return '/' + rel
     }
 
-    _has_params(route_path) { return /\[[^/]+\]/.test(route_path) }
+    _has_params(route_path) { return /\[[^\]/]+\]/.test(route_path) }
 
     _add_dynamic(route_path, file, ext) {
         // compile pattern from [...]/[param]/...
@@ -76,17 +76,14 @@ export class FileRoutes {
 
     _make_regex(route_path) {
         /* Convert a route path, possibly containing [NAME] parameters, to a regex matching actual URLs that fill these params.
+           Parameters can be embedded within segments, e.g. "prefix[param]suffix" or "a[p1]b[p2]c".
            Return a pair, [param_names, regex_pattern].
          */
         let param_names = []
-        let pattern = route_path
-            .split('/')
-            .map(seg => {
-                let m = seg.match(/^\[(.+)\]$/)
-                if (m) { param_names.push(m[1]); return '([^/]+)' }
-                return escapeRegExp(seg)
-            })
-            .join('/')
+        let pattern = escapeRegExp(route_path).replace(/\\\[([^\]]+)\\\]/g, (_, name) => {
+            param_names.push(name)
+            return '([^/]+)'
+        })
         return [param_names, pattern]
     }
 
