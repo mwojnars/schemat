@@ -381,7 +381,7 @@ export function fileExtension(filepath) {
 export function dropExtension(filepath) {
     /* Drop the file extension from the file path. */
     let ext = fileExtension(filepath)
-    return filepath.slice(0, -(ext.length + 1))
+    return ext ? filepath.slice(0, -(ext.length + 1)) : filepath
 }
 
 /*************************************************************************************************
