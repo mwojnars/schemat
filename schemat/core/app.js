@@ -203,7 +203,7 @@ export class Application extends WebObject {
         if (typeof endpoint !== 'function') request.not_found()
         // expose route params on the request object for handlers
         request.params = params
-        return endpoint(request)
+        return endpoint(request, params)
     }
 
     async _render_jsx(path, request, params = {}, layout_file = '../web/views/skeleton.jsx') {
