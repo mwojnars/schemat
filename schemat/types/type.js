@@ -10,9 +10,6 @@ import {Component} from "../web/component.js";
 let CatalogTable = import('./catalog_type.js').then(mod => {CatalogTable = mod.CatalogTable})
 
 
-// import { Temporal } from './libs/js-temporal/polyfill.js'
-// print('Temporal:', Temporal)  -- improved data struct for date/time handling
-
 
 export function is_valid_field_name(name) {
     /* Check if a string is a valid field name. Dash "-" is allowed except for the 1st character. */
