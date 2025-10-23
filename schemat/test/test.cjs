@@ -175,10 +175,11 @@ function server_setup({nodes = null, node = NODE, port = PORT, tcp_port = TCP_PO
             // pipe through the filters
             srv.stdout.pipe(stdout_filter).pipe(process.stdout)
             srv.stderr.pipe(stderr_filter).pipe(process.stderr)
+            await delay(500)
         }
         server = servers[0]
 
-        await delay(3000)                                       // wait for server to start
+        await delay(2000)                                       // wait for servers to start
         browser = await puppeteer.launch({headless: "new"})
         page = await browser.newPage()
 
