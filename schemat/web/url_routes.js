@@ -8,7 +8,6 @@ export class URL_Routes {
        Supports next.js-like dynamic segments using [param] in file and folder names.
      */
 
-    files_by_url      // Map(url_path_with_ext -> {type, file})
     exact_routes      // Map(route_path_without_ext -> {type, file, ext}) for renderable files
     dynamic_routes    // Array<{type, file, ext, param_names, regex, route_path}>
 
@@ -16,7 +15,6 @@ export class URL_Routes {
         this.app = app
         this.app_root = app._app_root
 
-        this.files_by_url = new Map()
         this.exact_routes = new Map()
         this.dynamic_routes = []
     }
@@ -26,7 +24,6 @@ export class URL_Routes {
         await this._walk(this.app_root)
         
         // this.app._print(`URL_Routes.scan() done`)
-        // this.app._print(` `, {files_by_url: this.files_by_url})
         // this.app._print(` `, {exact_routes: this.exact_routes})
         // this.app._print(` `, {dynamic_routes: this.dynamic_routes})
     }
@@ -64,7 +61,7 @@ export class URL_Routes {
             if (this.app._static_exts.includes(ext)) type = 'static'
             else if (this.app._transpiled_exts.includes(ext)) type = 'transpiled'
             
-            if (type) this.files_by_url.set(url_path, {file: path, type})
+            if (type) this.exact_routes.set(url_path, {file: path, type})
 
             // renderable files become routes without extension
             if (['js', 'jsx', 'svelte', 'ejs'].includes(ext)) {
@@ -112,14 +109,12 @@ export class URL_Routes {
         // this.app._print(`match()`, {url_path})
 
         // request for a static or transpiled file (with extension)
-        let entry = this.files_by_url.get(url_path)
+        let entry = this.exact_routes.get(url_path)
         if (entry) return entry
 
-        // renderable route (without extension)
+        // renderable route (without extension), exact match first (no parameters)
         let route_path = dropExtension(url_path)
         // this.app._print(`match()`, {route_path})
-
-        // exact match first (no parameters)
         let exact = this.exact_routes.get(route_path)
         if (exact) return exact
 
