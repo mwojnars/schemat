@@ -28,7 +28,7 @@ const svelte_plugin = {
 }
 
 
-export async function bundle_dependencies(entry_files = [], {minify = false} = {}) {
+export async function bundle_dependencies(entry_files = [], {minify = false, flat_exports = true} = {}) {
     /* Find all dependencies of entry_files and bundle them into a single file.
        Return an object with two properties:
        - files: an array of all files that were bundled
@@ -66,7 +66,10 @@ export async function bundle_dependencies(entry_files = [], {minify = false} = {
     }
     else {
         // create a single virtual entry that namespaces each module to prevent tree-shaking and name conflicts
-        let contents = entry_files.map((p, i) => `import * as m_${i} from ${JSON.stringify(p)}\nexport { m_${i} }`).join('\n')
+        // or flattens exports at the top level (may error on name collisions)
+        let contents = flat_exports
+            ? entry_files.map(p => `export * from ${JSON.stringify(p)}`).join('\n')
+            : entry_files.map((p, i) => `export * as m_${i} from ${JSON.stringify(p)}`).join('\n')
         result = await esbuild.build({
             ...build_opts,
             stdin: {
