@@ -138,12 +138,12 @@ export class Application extends WebObject {
         let match = this.file_routes?.match(url_path)
         if (!match) return false
 
-        if (match.type === 'static') {
+        if (match.type === 'static') {                      // send a static file as is
             await request.send_file(match.file)
             return true
         }
 
-        if (match.type === 'svelte_client') {
+        if (match.type === 'transpiled') {                  // send a transpiled file via a corresponding _send_*() method
             await this._send_svelte(match.file, request)
             return true
         }

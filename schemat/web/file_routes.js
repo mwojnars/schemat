@@ -111,7 +111,7 @@ export class FileRoutes {
         let file = this.files_by_url.get(url_path)
         if (file) {
             if (this.static_exts.includes(ext)) return {type: 'static', file}
-            if (ext === 'svelte') return {type: 'svelte_client', file}
+            if (ext === 'svelte') return {type: 'transpiled', file}
         }
 
         // renderable route without extension
