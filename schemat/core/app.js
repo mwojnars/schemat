@@ -288,8 +288,8 @@ export class Application extends WebObject {
 
         // extract all import specifiers and keep only Svelte internals
         let set = new Set()
-        code.replace(/from ['"]([^'\"]+)['"]/g, (m, spec) => { if (spec.startsWith('svelte/')) set.add(spec); return '' })
-        code.replace(/import ['"]([^'\"]+)['"]/g, (m, spec) => { if (spec.startsWith('svelte/')) set.add(spec); return '' })
+        code.replace(/from ['"]([^'"]+)['"]/g, (m, spec) => { if (spec.startsWith('svelte/')) set.add(spec); return '' })
+        code.replace(/import ['"]([^'"]+)['"]/g, (m, spec) => { if (spec.startsWith('svelte/')) set.add(spec); return '' })
 
         this._print(`_svelte_imports():`, [...set])
         return [...set]
