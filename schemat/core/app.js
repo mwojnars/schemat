@@ -274,6 +274,27 @@ export class Application extends WebObject {
         request.send(html)
     }
 
+    get _svelte_imports() {
+        /* Discover Svelte client runtime imports by compiling a tiny sample component on the fly. Should include paths like:
+             svelte/internal/client
+             svelte/internal/disclose-version
+             svelte/internal/flags/legacy
+         */
+
+        // minimal Svelte 5 component sufficient to trigger runtime imports
+        let source = `<script>export let x</script>\n<div>{x}</div>`
+        let out = svelte_compile(source, {filename: 'sample.svelte', css: 'injected', generate: 'client'})
+        let code = out?.js?.code || ''
+
+        // extract all import specifiers and keep only Svelte internals
+        let set = new Set()
+        code.replace(/from ['"]([^'\"]+)['"]/g, (m, spec) => { if (spec.startsWith('svelte/')) set.add(spec); return '' })
+        code.replace(/import ['"]([^'\"]+)['"]/g, (m, spec) => { if (spec.startsWith('svelte/')) set.add(spec); return '' })
+
+        this._print(`_svelte_imports():`, [...set])
+        return [...set]
+    }
+
     async _send_svelte(path, request) {
         /* Compile a .svelte file to client-side JS and send it to the client. */
         this._print(`_send_svelte():`, path)
@@ -281,14 +302,14 @@ export class Application extends WebObject {
         let out = svelte_compile(source, {filename: path, css: 'injected', generate: 'client'})
         if (out.warnings?.length) this._print('_send_svelte() compilation warnings:', out.warnings)
 
-        // rewrite Svelte runtime imports to a single bundled runtime URL (no import map needed)
         let bundle = `"/$/bundle/svelte"`
         let code = out.js.code
-        code = code.replace(/from ['"]svelte\/internal\/client['"]/g, `from ${bundle}`)
-        code = code.replace(/from ['"]svelte\/internal\/disclose-version['"]/g, `from ${bundle}`)
-        code = code.replace(/from ['"]svelte\/internal\/flags\/legacy['"]/g, `from ${bundle}`)
-        code = code.replace(/import ['"]svelte\/internal\/disclose-version['"]/g, `import ${bundle}`)
-        code = code.replace(/import ['"]svelte\/internal\/flags\/legacy['"]/g, `import ${bundle}`)
+
+        // rewrite Svelte runtime imports to a single bundled runtime URL
+        this._svelte_imports.forEach(dep => {
+            code = code.replaceAll(new RegExp(`from ['"]${dep}['"]`, 'g'), `from ${bundle}`)
+            code = code.replaceAll(new RegExp(`import ['"]${dep}['"]`, 'g'), `import ${bundle}`)
+        })
 
         request.send_mimetype('js')
         request.send(code)
