@@ -10,7 +10,7 @@
 */
 
 
-import {html_page} from "../../../schemat/web/adapters.js"
+import {html_page} from "#root/schemat/web/adapters.js"
 // import {html_page} from "schemat/web/adapters.js"
 
 

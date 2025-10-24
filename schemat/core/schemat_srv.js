@@ -158,6 +158,12 @@ export class ServerSchemat extends Schemat {
         ctx_encoded = "`\n" + ctx_encoded + "`"
 
         return `
+            <script type="importmap"> {
+                "imports": {
+                    "#root/": "/$/local/"
+                }
+            } </script>
+
             <script async type="module">
                 import {Client} from "/$/local/schemat/web/client.js";
                 globalThis.schemat = new Client(${ctx_encoded});
