@@ -36,6 +36,7 @@ export async function boot_schemat(opts, callback) {
     config = {...config, ...opts}
     // print('config:', config)
 
+    if (globalThis.schemat) throw new Error(`Schemat is already running`)
     ServerSchemat.global_init()
 
     await globalThis._schemat.run(new ServerSchemat(config), async () => {
