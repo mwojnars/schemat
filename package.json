@@ -85,6 +85,8 @@
   },
   "scripts": {
     "test": "mocha --exit 'schemat/test/**/*.cjs'",
-    "test:watch": "mocha --watch 'schemat/test/**/*.cjs'"
+    "test:watch": "mocha --watch 'schemat/test/**/*.cjs'",
+    "node-1024": "node --expose-gc --trace-uncaught --trace-warnings schemat/server/run.js --node sample/node.1024",
+    "node-1036": "node --expose-gc --trace-uncaught --trace-warnings schemat/server/run.js --node sample/node.1036 --port 3002"
   }
 }
