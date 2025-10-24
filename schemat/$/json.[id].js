@@ -1,5 +1,5 @@
-export async function GET({res}, {id}) {
+export async function GET(request, {id}) {
     // schemat._print(`/$/json/[id]:`, {id})
     let obj = await schemat.load(id)
-    return res.json(obj.__record)
+    return request.send_json(obj.__record)
 }

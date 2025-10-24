@@ -50,7 +50,6 @@ export class WebRequest {   // WebConnection (conn)
     // TODO response generation:
     // send()
     // send_status()
-    // send_json()
     // send_header(), send_redirect(), send_file(), send_download(), send_location(), send_cookie(), send_clear_cookie() ...
     // send_response() --
 
