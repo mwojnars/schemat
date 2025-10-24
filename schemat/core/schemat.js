@@ -286,7 +286,17 @@ export class Schemat {
            If a stub is created anew, it is saved in cache for reuse by other callers. Every stub has immediate expiry date, that is,
            it expires on the next cache purge unless its data is loaded and TLS updated; this prevents keeping a large number of unused stubs indefinitely.
          */
-        assert(typeof id === 'number')
+        if (typeof id !== 'number')
+            if (typeof id === 'string') {
+                let num = Number(id)
+                if (isNaN(num)) throw new Error(`object ID must be a number, got string: ${id}`)
+                id = num
+            }
+            else throw new Error(`object ID must be a number, got ${id}`)
+
+        if (id <= 0 || isNaN(id))
+            throw new Error(`object ID must be a positive number, got ${id}`)
+
         // this.session?.countRequested(id)
         let obj = this.registry.get_object(id)
         if (obj && SERVER) {
