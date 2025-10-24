@@ -1,4 +1,3 @@
-import {A} from '../web/react-utils.js'
 import {assert, print, T} from '../common/utils.js'
 import {ValidationError, NotImplemented, ValueError} from '../common/errors.js'
 import {ObjectsMap, Shard} from "../common/structs.js";
@@ -473,7 +472,7 @@ export class URL extends STRING {
     static Widget = class extends widgets.TextualWidget {
         view(v) {
             let href = v.includes('://') ? v : 'https://' + v
-            return A({href}, v)
+            return React.createElement('a', {href}, v)       //A({href}, v)
         }
     }
 }
