@@ -210,6 +210,8 @@ export class WebContext {
     target          // ID of the requested object (target of the web request)
     objects         // client-side bootstrap objects: included in HTML, preloaded before the page rendering begins (no extra communication to load each object separately)
     endpoint        // full name of the target's endpoint that was requested, like "GET.admin"
+    params          // endpoint's dynamic parameters that were requested by client
+
     extra           // any request-specific data added by init_client()
 
     encode(line_length = 1000) {

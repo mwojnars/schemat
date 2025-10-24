@@ -230,7 +230,7 @@ export class Application extends WebObject {
         request.send(html)
     }
 
-    async _render_svelte(path, request, props = {}, layout_file = '../web/views/skeleton.html') {
+    async _render_svelte(path, request, params = {}, layout_file = '../web/views/skeleton.html') {
         /* Execute a Svelte 5 component file. See Svelte docs:
            - https://svelte.dev/docs/svelte/svelte-server -- info on server-side render()
            - https://svelte.dev/docs/svelte/v5-migration-guide -- info on client-side hydrate() call
@@ -241,23 +241,23 @@ export class Application extends WebObject {
         let component = module?.default
         if (typeof component !== 'function') request.not_found()
 
-        let data, {load} = module               // generate data with load(), if present, and append to `props`
+        let data, {load} = module               // generate data with load(), if present, and append to `params`
         if (typeof load === 'function') {
             data = await load(request)
-            props = {...props, data}
+            params = {...params, data}
         }
 
         let file = path.split('/').pop()        // on-client hydration imports the same file but with .svelte extension kept in URL, which goes back to _send_svelte() below
         let init = schemat.init_client({
-            extra: {props},
+            extra: {params},
             after: `
                 import {hydrate} from "/$/bundle/svelte";
                 import App from "./${file}";
                 const target = document.getElementById("app");
-                hydrate(App, {target, props: schemat.config.extra.props});
+                hydrate(App, {target, props: schemat.config.extra.params});
             `
         })
-        let {head, body} = svelte_render(component, {props})
+        let {head, body} = svelte_render(component, {props: params})
 
         // wrap with default html layout
         let layout_url = new URL(layout_file, import.meta.url)
