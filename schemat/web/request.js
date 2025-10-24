@@ -50,7 +50,7 @@ export class WebRequest {   // WebConnection (conn)
     // TODO response generation:
     // send()
     // send_status()
-    // send_header(), send_redirect(), send_file(), send_download(), send_location(), send_cookie(), send_clear_cookie() ...
+    // send_header(), send_redirect(), send_download(), send_location(), send_cookie(), send_clear_cookie() ...
     // send_response() --
 
     constructor({path, req, res}) {
@@ -129,6 +129,7 @@ export class WebRequest {   // WebConnection (conn)
         throw new URLNotFound({path: this.path})
     }
 
+
     /***  Access methods  ***/
 
     async text() {
@@ -140,6 +141,7 @@ export class WebRequest {   // WebConnection (conn)
         /* Like Request.json() API. */
         return this.text().then(text => JSON.parse(text))
     }
+
 
     /***  Response generation  ***/
 
@@ -161,8 +163,8 @@ export class WebRequest {   // WebConnection (conn)
 /**********************************************************************************************************************/
 
 export class WebContext {
-    /* Context information and seed web objects related to a particular web request; embedded in HTML response
-       and sent back implicitly to the client to enable boot up of a client-side Schemat.
+    /* Metadata and seed web objects related to a particular web request and sent back to the client inside HTML
+       to enable boot up of client-side Schemat and re-rendering/re-hydration (CSR) in particular.
        The objects are flattened (state-encoded), but not yet stringified.
      */
     app             // ID of the application object

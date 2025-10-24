@@ -150,6 +150,7 @@ export class ServerSchemat extends Schemat {
                 <%- schemat.init_client() %>
          */
         if (!schemat.request) throw new Error(`no web request, cannot generate client-side initialization block`)
+        // let ctx = schemat.request.create_context({extra, objects})
         let ctx = WebContext.from_request(schemat.request, ...objects)
         if (extra !== undefined) ctx.extra = extra
 
