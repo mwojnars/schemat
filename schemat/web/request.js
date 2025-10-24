@@ -157,36 +157,24 @@ export class WebRequest {   // WebConnection (conn)
     }
 
     send(body) { return this.res.send(body) }
-}
 
 
-/**********************************************************************************************************************/
+    /***  Advanced response generation  ***/
 
-export class WebContext {
-    /* Metadata and seed web objects related to a particular web request and sent back to the client inside HTML
-       to enable boot up of client-side Schemat and re-rendering/re-hydration (CSR) in particular.
-       The objects are flattened (state-encoded), but not yet stringified.
-     */
-    app             // ID of the application object
-    target          // ID of the requested object (target of the web request)
-    objects         // client-side bootstrap objects: included in HTML, preloaded before the page rendering begins (no extra communication to load each object separately)
-    endpoint        // full name of the target's endpoint that was requested, like "GET.admin"
-    extra           // any request-specific data added by init_client()
-
-    static from_request(request, ...objects) {
+    generate_context({objects = [], extra} = {}) {
         /* For use on the server. Optional `objects` are included in the context as seed objects together
            with `target`, `app` and `app.global` objects.
          */
         let ctx = new WebContext()
         let app = schemat.app
-        let target = request.target
+        let target = this.target
 
         // assert(schemat.app.is_loaded(), schemat.app)     // FIXME: these asserts fail when opening http://127.0.0.1:3000/$/id/2 (Application page)
         // assert(schemat._app.is_loaded(), schemat._app)
 
         let items = new RecentObjects()
         let queue = [app, target, ...app.global?.values() || [], ...objects].filter(Boolean)
-        
+
         // extend the `items` set with all objects that are referenced from the `target` and `app` via __category, __extend or __container
         // TODO: deduplicate IDs when repeated by different object instances (e.g., this happens for the root category)
         while (queue.length) {
@@ -204,9 +192,25 @@ export class WebContext {
         ctx.objects = items.map(obj => obj.__record)
         ctx.app = app.id
         ctx.target = target?.id
-        ctx.endpoint = request.endpoint
+        ctx.endpoint = this.endpoint
+        ctx.extra = extra
         return ctx
     }
+}
+
+
+/**********************************************************************************************************************/
+
+export class WebContext {
+    /* Metadata and seed web objects related to a particular web request and sent back to the client inside HTML
+       to enable boot up of client-side Schemat and re-rendering/re-hydration (CSR) in particular.
+       The objects are flattened (state-encoded), but not yet stringified.
+     */
+    app             // ID of the application object
+    target          // ID of the requested object (target of the web request)
+    objects         // client-side bootstrap objects: included in HTML, preloaded before the page rendering begins (no extra communication to load each object separately)
+    endpoint        // full name of the target's endpoint that was requested, like "GET.admin"
+    extra           // any request-specific data added by init_client()
 
     encode() {
         /* Encoding into JSON+base64 string. */
