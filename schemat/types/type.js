@@ -459,9 +459,8 @@ export class IDENTIFIER extends STRING {
 export class URL extends STRING {
     /* URL type that allows URLs with or without protocol. The Widget automatically appends the protocol if needed. */
 
-    // basic URL validation using a regular expression that allows URLs without protocol
+    // basic URL validation using a regular expression that allows URLs with or without protocol
     static pattern = /^([a-z]{3,6}:\/\/)?[a-z\d.-]+\.[a-z]{2,}(?:\/[^\s]*)?$/i
-    // static pattern = /^([a-z]{3,6}:\/\/)?((([a-z\d]([a-z\d-]*[a-z\d])*)\.)+[a-z]{2,}|((\d{1,3}\.){3}\d{1,3}))(\:\d+)?(\/[-a-z\d%_.~+]*)*(\?[;&a-z\d%_.~+=-]*)?(\#[-a-z\d_]*)?$/i
 
     validate(url) {
         url = super.validate(url)
