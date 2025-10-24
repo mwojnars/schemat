@@ -212,9 +212,14 @@ export class WebContext {
     endpoint        // full name of the target's endpoint that was requested, like "GET.admin"
     extra           // any request-specific data added by init_client()
 
-    encode() {
-        /* Encoding into JSON+base64 string. */
-        return btoa(encodeURIComponent(JSON.stringify(this)))
+    encode(line_length = 1000) {
+        /* Encodes this object into a JSON+base64 string, possibly with line breaks after every `line_length` chars. */
+        let encoded = btoa(encodeURIComponent(JSON.stringify(this)))
+        if (line_length) {
+            let re = new RegExp(`(.{${line_length}})`, 'g')
+            encoded = encoded.replace(re, '$1\n')               // insert a new line every `line_length` chars
+        }
+        return encoded
     }
 
     static decode(text) {

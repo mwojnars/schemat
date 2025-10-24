@@ -151,12 +151,7 @@ export class ServerSchemat extends Schemat {
          */
         if (!schemat.request) throw new Error(`no web request, cannot generate client-side initialization block`)
         let ctx = schemat.request.generate_context({extra, objects})
-        // let ctx = WebContext.from_request(schemat.request, ...objects)
-        // if (extra !== undefined) ctx.extra = extra
-
-        let ctx_encoded = ctx.encode()
-        ctx_encoded = ctx_encoded.replace(/(.{1000})/g, '$1\n')     // insert newlines every 1000 chars
-        ctx_encoded = "`\n" + ctx_encoded + "`"
+        let ctx_encoded = "`\n" + ctx.encode() + "`"
 
         return `
             <script type="importmap"> {
