@@ -9,7 +9,7 @@
     "#root/*": "./*"
   },
   "aliases": {
-    "@root": ".",
+    "#root/*": "./*",
     "schemat": "schemat"
   },
   "dependencies": {

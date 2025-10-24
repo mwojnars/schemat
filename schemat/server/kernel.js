@@ -3,7 +3,8 @@ import cluster from 'node:cluster'
 import yaml from 'yaml'
 // import why from 'why-is-node-running'
 
-import "../common/globals.js"           // global flags: CLIENT, SERVER
+import "#root/schemat/common/globals.js"           // global flags: CLIENT, SERVER
+// import "../common/globals.js"           // global flags: CLIENT, SERVER
 import {AgentRole} from "../common/globals.js";
 
 import {print, assert, T} from "../common/utils.js";
