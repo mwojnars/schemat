@@ -5,6 +5,18 @@ import {RecentObjects} from "../common/structs.js";
 const stream = SERVER && await import('node:stream')
 const {promisify} = SERVER && await import('node:util') || {}
 
+function _sending_done(res) {
+    /* Promise that resolves when an Express's response object, `res`, is closed or finished.
+       For some send calls on `res`, res.*(), this is the only way to await the actual completion.
+     */
+    return new Promise(resolve => {
+        let done = () => resolve()
+        res.once('finish', done)
+        res.once('close', done)
+    })
+}
+
+
 /**********************************************************************************************************************/
 
 export class WebRequest {   // WebConnection (conn)
@@ -118,7 +130,7 @@ export class WebRequest {   // WebConnection (conn)
         throw new URLNotFound({path: this.path})
     }
 
-    /*  Access methods  */
+    /***  Access methods  ***/
 
     async text() {
         /* Like Request.text() API. */
@@ -130,12 +142,17 @@ export class WebRequest {   // WebConnection (conn)
         return this.text().then(text => JSON.parse(text))
     }
 
-    /* Response generation */
+    /***  Response generation  ***/
 
     send_mimetype(type) { return this.res.type(type) }      // modifies response header, no sending yet
 
     async send_file(path) {
         return promisify(this.res.sendFile).call(this.res, path)
+    }
+
+    async send_json(data) {
+        this.res.json(data)
+        return _sending_done(this.res)
     }
 
     send(body) { return this.res.send(body) }
