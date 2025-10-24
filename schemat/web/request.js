@@ -201,9 +201,9 @@ export class WebRequest {   // WebConnection (conn)
 
 /**********************************************************************************************************************/
 
-export class WebContext {
-    /* Metadata and seed web objects related to a particular web request and sent back to the client inside HTML
-       to enable boot up of client-side Schemat and re-rendering/re-hydration (CSR) in particular.
+export class WebContext {       // ShadowRequest
+    /* Metadata and seed web objects related to a particular web request, sent back from server to client
+       to enable boot up of client-side Schemat and re-rendering/re-hydration (CSR) of the page.
        The objects are flattened (state-encoded), but not yet stringified.
      */
     app             // ID of the application object

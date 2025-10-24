@@ -160,8 +160,9 @@ export class Application extends WebObject {
         }
 
         if (match.type === 'render') {
+            request.params = match.params || {}
             let method = `_render_${match.ext}`
-            await this[method](match.file, request, match.params || {})
+            await this[method](match.file, request)
             return true
         }
 
@@ -181,7 +182,7 @@ export class Application extends WebObject {
         // request.not_found()
     }
 
-    async _render_ejs(path, request, params = {}) {
+    async _render_ejs(path, request) {
         /* Render an EJS template file. It may include() other templates and async import_() other JS modules. */
 
         // `views` is an array of search paths that would be used as roots for resolving relative include(path) statements,
@@ -198,28 +199,26 @@ export class Application extends WebObject {
 
         // here, trying to override the standard `import` symbol with `import_` does NOT work, so import_ is passed separately;
         // this modified function must be used for all relative imports inside .ejs instead of the standard one - the latter resolves against node_modules/ejs/lib
-        let html = await ejs.render(template, {schemat, request, ...params, import_}, opts)
+        let html = await ejs.render(template, {schemat, request, ...request.params, import_}, opts)
         request.send(html)
     }
 
-    async _render_js(path, request, params = {}) {
+    async _render_js(path, request) {
         /* Execute GET/POST/PUT/... function from the .js file pointed to by `path`. */
         let module = await import(path)
         let endpoint = module[request.http_method]
         if (typeof endpoint !== 'function') request.not_found()
-        // expose route params on the request object for handlers
-        request.params = params
-        return endpoint(request, params)
+        return endpoint(request, request.params)
     }
 
-    async _render_jsx(path, request, params = {}, layout_file = '../web/views/skeleton.jsx') {
+    async _render_jsx(path, request, layout_file = '../web/views/skeleton.jsx') {
         /* Execute a JSX component file with React SSR. No client-side hydration as of now. */
         const module = await import(path)
         if (typeof module.default !== 'function') request.not_found()
         
         // render the component inside the layout
         const Layout = (await import(layout_file)).default
-        const element = React.createElement(module.default, params)
+        const element = React.createElement(module.default, request.params)
         const page = React.createElement(Layout, {
             // scripts: [`${request.path}::client`],
             children: element
@@ -230,7 +229,7 @@ export class Application extends WebObject {
         request.send(html)
     }
 
-    async _render_svelte(path, request, params = {}, layout_file = '../web/views/skeleton.html') {
+    async _render_svelte(path, request, layout_file = '../web/views/skeleton.html') {
         /* Execute a Svelte 5 component file. See Svelte docs:
            - https://svelte.dev/docs/svelte/svelte-server -- info on server-side render()
            - https://svelte.dev/docs/svelte/v5-migration-guide -- info on client-side hydrate() call
@@ -241,23 +240,24 @@ export class Application extends WebObject {
         let component = module?.default
         if (typeof component !== 'function') request.not_found()
 
-        let data, {load} = module               // generate data with load(), if present, and append to `params`
+        let props = request.params
+        let data, {load} = module               // generate data with load(), if present, and append to `props`
         if (typeof load === 'function') {
             data = await load(request)
-            params = {...params, data}
+            props = {...props, data}
         }
 
         let file = path.split('/').pop()        // on-client hydration imports the same file but with .svelte extension kept in URL, which goes back to _send_svelte() below
         let init = schemat.init_client({
-            extra: {params},
+            extra: {props},
             after: `
                 import {hydrate} from "/$/bundle/svelte";
                 import App from "./${file}";
                 const target = document.getElementById("app");
-                hydrate(App, {target, props: schemat.config.extra.params});
+                hydrate(App, {target, props: schemat.config.extra.props});
             `
         })
-        let {head, body} = svelte_render(component, {props: params})
+        let {head, body} = svelte_render(component, {props})
 
         // wrap with default html layout
         let layout_url = new URL(layout_file, import.meta.url)
