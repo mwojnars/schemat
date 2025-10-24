@@ -159,11 +159,11 @@ export class WebRequest {   // WebConnection (conn)
     send(body) { return this.res.send(body) }
 
 
-    /***  Advanced response generation  ***/
+    /***  Internal  ***/
 
     generate_context({objects = [], extra} = {}) {
-        /* For use on the server. Optional `objects` are included in the context as seed objects together
-           with `target`, `app` and `app.global` objects.
+        /* Creates a WebContext with initialization data for client-side Schemat.
+           Optional `objects` are included as seed objects together with this.target, `app`, `app.global`.
          */
         let ctx = new WebContext()
         let app = schemat.app
