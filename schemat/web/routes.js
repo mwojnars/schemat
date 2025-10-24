@@ -3,7 +3,7 @@ import {readdir} from 'node:fs/promises'
 import {escapeRegExp, fileExtension, dropExtension} from '../common/utils.js'
 
 
-export class URL_Routes {
+export class Routes {
     /* Pre-scans the application's root folder and builds an in-memory URL routing table.
        Supports next.js-like dynamic segments using [param] in file and folder names.
      */

@@ -9,7 +9,7 @@ import {mActionResult, mString} from "../web/messages.js";
 const ejs = SERVER && await import('ejs')
 const mod_path = SERVER && await import('node:path')
 const {readFile} = SERVER && await import('node:fs/promises') || {}
-const {URL_Routes} = SERVER && await import('../web/url_routes.js') || {}
+const {Routes} = SERVER && await import('../web/routes.js') || {}
 // const {check_file_type} = SERVER && await import('../common/utils_srv.js') || {}
 
 const {render: svelte_render} = SERVER && await import('svelte/server') || {}
@@ -58,7 +58,7 @@ export class Application extends WebObject {
     get _transpiled_exts()  { return this.transpiled_extensions.toLowerCase().split(/[ ,;:]+/) }
     get _private_routes()   { return this.private_routes.split(/\s+/) || [] }
 
-    get routes()            { if (URL_Routes) return new URL_Routes(this) }
+    get routes()            { if (Routes) return new Routes(this) }
 
     get _is_private_path() {
         /* Regex that checks if a URL path (starting with /...) contains a private segment anywhere. */
