@@ -326,6 +326,10 @@
         private and not accessible for routing procedure. If any of these prefixes is
         found in a URL path segment, the request is rejected with "not found" error.
       "@": schemat/types/type.js:STRING
+    system_route:
+      default: /$
+      info: Prefix of the URL path used for system purposes.
+      "@": schemat/types/type.js:PATH
     flat_routes:
       default: true
       info: If true, every dot in the file path of a servable file (extension excluded)
