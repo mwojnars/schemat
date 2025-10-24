@@ -5,6 +5,9 @@
   "private": true,
   "author": "Marcin Wojnarski",
   "homepage": "https://github.com/mwojnars/schemat",
+  "imports": {
+    "#root/*": "./*"
+  },
   "aliases": {
     "@root": ".",
     "schemat": "schemat"
