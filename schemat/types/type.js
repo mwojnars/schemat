@@ -25,8 +25,6 @@ export class Type extends Struct {
 
     is_compound()    { return false }   // compound types implement custom merge_inherited(), which prevents some optimizations
     is_dictionary()  { return false }
-    is_CATALOG()     { return false }
-
     is_editable()    { return this.options.editable }
 
     // configuration options: some of them are used internally by the type itself, some others serve as annotations
