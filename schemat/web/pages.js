@@ -1,12 +1,11 @@
 import {NotImplemented} from "../common/errors.js";
 import {T, print, assert, dedentFull, escape_html} from "../common/utils.js";
 import {Resources, ReactDOM} from './resources.js'
-import {e, useState, useRef, NBSP, DIV, A, P, H1, H2, H3, SPAN, FORM, INPUT, FIELDSET,
-        TABLE, TH, TR, TD, TBODY, BUTTON, FRAGMENT, HTML, printReactTree} from './react-utils.js'
+import {e, useState, useRef, NBSP, DIV, A, P, H1, H2, H3, SPAN, FORM, INPUT,
+        TABLE, TR, TD, TBODY, BUTTON, FRAGMENT, HTML, printReactTree} from './react-utils.js'
 import {HttpService} from "./services.js";
 import {Styled} from "./component.js";
 import {CatalogTable} from "../types/catalog_type.js";
-import {WebContext} from "./request.js";
 
 
 /**********************************************************************************************************************/

@@ -1,11 +1,9 @@
-import {A, cl, DIV, st} from '../web/react-utils.js'
+import {A} from '../web/react-utils.js'
 import {assert, print, T} from '../common/utils.js'
 import {ValidationError, NotImplemented, ValueError} from '../common/errors.js'
-import {encode_uint, decode_uint, encode_int, decode_int} from "../common/binary.js";
 import {ObjectsMap, Shard} from "../common/structs.js";
 import {Catalog, Struct} from "../common/catalog.js";
 import * as widgets from './widgets.js'
-import {Component} from "../web/component.js";
 
 let CatalogTable = import('./catalog_type.js').then(mod => {CatalogTable = mod.CatalogTable})
 
