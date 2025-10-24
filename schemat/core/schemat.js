@@ -156,7 +156,7 @@ export class Schemat {
          */
         this.booting = new Promise(resolve => this._booting_resolve = resolve)
         this.config = config
-        this.app_id = config.app || undefined
+        this.app_id = config.app?.id || config.app || undefined
         this.WebObject = WebObject          // schemat.WebObject is globally available for application code
         this.Category = Category            // schemat.Category is globally available for application code
         this.registry = new Registry(this, this._on_evict.bind(this))
