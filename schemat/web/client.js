@@ -47,8 +47,8 @@ export class Client extends Schemat {
     db = {
         async select(id, opts) {
             /* Load an object from the server via AJAX call. */
-            let root = schemat.app.system_route     // typically /$
-            let url = `${root}/json/${id}`    //schemat.app.default_path_of(id) + '::json'
+            let base = schemat.app.system_route     // typically /$
+            let url = `${base}/json/${id}`    //schemat.app.default_path_of(id) + '::json'
             let {data} = await fetch(url).then(response => response.json())     // {id, data} encoded
             return JSON.stringify(data)
         },
