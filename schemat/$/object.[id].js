@@ -13,11 +13,7 @@ export async function init(request, {id}) {
 // export async function GET(request, {page, target}) {
 export async function GET(request, {id}) {
 
-    // let {page, target} = await init(id)
-
-    let target = await schemat.load(id)
-    let View = target.is_category() ? CategoryInspectView : InspectView
-    let page = new ReactPage(View)
+    let {page, target} = await init(request, {id})
 
     request.target = target
     request.endpoint = "GET.inspect"    // FIXME
