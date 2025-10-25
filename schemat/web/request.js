@@ -181,8 +181,8 @@ export class WebRequest extends _Request {   // WebConnection (conn)
     // rich response ...
 
     send_objects(...objs)   { this._objects.push(...objs) }         // these web objects will be sent as bootstrap objects
-    send_init(code)         { this._client_init.add(code) }         // this JS code will be executed on client after Schemat boot up
-    send_function(func)     { this.send_init(`\n(${func.toString()})();`) }     // this no-arg function will be sent to client and executed during bootstrap
+    send_init(code)         { this._client_init.add(code) }         // this JS code snippet will be executed on client after Schemat boot up
+    send_function(func)     { this.send_init(`(${func.toString()})();`) }       // this no-arg function will be sent to client and executed during bootstrap
 
 
     /***  Response finalization  ***/

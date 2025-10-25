@@ -148,9 +148,12 @@ export class ServerSchemat extends Schemat {
            The output string must be inserted unescaped (!), e.g., in EJS with <%- tag instead of <%=
                 <%- schemat.init_client() %>
          */
-        if (!schemat.request) throw new Error(`no web request, cannot generate client-side initialization block`)
-        let shadow = schemat.request._generate_shadow()
+        let request = schemat.request
+        if (!request) throw new Error(`no web request, cannot generate client-side initialization block`)
+
+        let shadow = request._generate_shadow()
         let dump = "`\n" + shadow.encode() + "`"
+        after = [after, ...request._client_init].join('\n')
 
         return `
             <script type="importmap"> {
