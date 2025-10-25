@@ -141,6 +141,7 @@ export class WebRequest extends _Request {   // WebConnection (conn)
     set_target(target)      { this.target = target }
     set_endpoint(endpoint)  { this.endpoint = endpoint }
     set_params(params)      { this.params = params || {} }
+    set_extra(extra)        { this.extra = extra || {} }
 
     not_found() {
         throw new URLNotFound({path: this.path})
@@ -211,7 +212,7 @@ export class WebRequest extends _Request {   // WebConnection (conn)
         ctx.target_id = target?.id
         ctx.endpoint = this.endpoint
         ctx.params = this.params
-        ctx.extra = extra
+        ctx.extra = this.extra
 
         return ctx
     }
@@ -224,11 +225,7 @@ export class ShadowRequest extends _Request {    // WebContext AfterRequest Mirr
     /* Metadata and seed objects related to a particular web request, sent back from server to client (embedded in HTML)
        to enable boot up of client-side Schemat and re-rendering/re-hydration (CSR) of the page.
        After client-side finalize(), some attributes reflect the values from original server-side WebRequest
-       and become accessible via schemat.request.* on server and client alike:
-       - target,
-       - endpoint,
-       - params,
-       - props.
+       and become accessible via schemat.request.* on server and client alike: target, endpoint, params, props.
      */
     app_id          // ID of application object
     target_id       // ID of requested (target) web object, can be missing
