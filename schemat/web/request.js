@@ -1,6 +1,7 @@
 import {URLNotFound} from "../common/errors.js";
 import {print, assert, splitLast} from "../common/utils.js";
 import {RecentObjects} from "../common/structs.js";
+import {JSONx} from "../common/jsonx.js";
 
 const stream = SERVER && await import('node:stream')
 const {promisify} = SERVER && await import('node:util') || {}
@@ -42,7 +43,6 @@ export class WebRequest {   // WebConnection (conn)
     params          // object, {name: value}, containing parameters decoded from the URL in Svelte/Next.js style
 
     // TODO add after Svelte's RequestEvent:
-    // params: Record<string, string>
     // cookies: {get, set, delete, serialize}
     // locals: App.Locals   (auth/session info)
     // fetch    (function to fetch other endpoints (respects hooks, credentials)
@@ -201,13 +201,13 @@ export class WebRequest {   // WebConnection (conn)
 
 /**********************************************************************************************************************/
 
-export class WebContext {       // ShadowRequest
-    /* Metadata and seed web objects related to a particular web request, sent back from server to client
+export class WebContext {       // ShadowRequest AfterRequest MirrorRequest RequestEcho PseudoRequest
+    /* Metadata and seed objects related to a particular web request, sent back from server to client (embedded in HTML)
        to enable boot up of client-side Schemat and re-rendering/re-hydration (CSR) of the page.
        The objects are flattened (state-encoded), but not yet stringified.
      */
-    app             // ID of the application object
-    target          // ID of the requested object (target of the web request)
+    app             // application object (on client); or its ID (during serialization)
+    target          // requested web object (on client), loaded; or its ID (during serialization)
     objects         // client-side bootstrap objects: included in HTML, preloaded before the page rendering begins (no extra communication to load each object separately)
     endpoint        // full name of the target's endpoint that was requested, like "GET.admin"
     params          // endpoint's dynamic parameters that were requested by client
@@ -216,7 +216,7 @@ export class WebContext {       // ShadowRequest
 
     encode(line_length = 1000) {
         /* Encodes this object into a JSON+base64 string, possibly with line breaks after every `line_length` chars. */
-        let encoded = btoa(encodeURIComponent(JSON.stringify(this)))
+        let encoded = btoa(encodeURIComponent(JSONx.stringify({...this})))
         if (line_length) {
             let re = new RegExp(`(.{${line_length}})`, 'g')
             encoded = encoded.replace(re, '$1\n')               // insert a new line every `line_length` chars
@@ -226,8 +226,14 @@ export class WebContext {       // ShadowRequest
 
     static decode(text) {
         /* `text` may contain whitespace characters, they will be removed before decoding. */
-        let state = JSON.parse(decodeURIComponent(atob(text.replace(/\s+/g, ''))))
+        let state = JSONx.parse(decodeURIComponent(atob(text.replace(/\s+/g, ''))))
         return Object.assign(new WebContext(), state)
+    }
+
+    finalize() {
+        /* After decode() on client, convert `app` and `target` from IDs to objects. */
+        if (this.app) this.app = schemat.app
+        if (this.target) this.target = schemat.get_object(this.target)
     }
 }
 
