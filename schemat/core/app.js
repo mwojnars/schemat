@@ -240,18 +240,12 @@ export class Application extends WebObject {
         let component = module?.default
         if (typeof component !== 'function') request.not_found()
 
-        // let props = request.params
-        let data, {load} = module               // generate data with load(), if present, and append to `props`
-        if (typeof load === 'function') {
-            data = await load(request)
-            request.set_extra({data})
-            // props = {...props, data}
-        }
+        let {load} = module                     // generate data with load(), if present, and append to `props` via request.extra
+        if (typeof load === 'function')
+            request.set_extra({data: await load(request)})
 
         let file = path.split('/').pop()        // on-client hydration imports the same file but with .svelte extension kept in URL, which goes back to _send_svelte() below
         let init = schemat.init_client({
-            // extra: {props},
-            extra: {data},
             after: `
                 import {hydrate} from "/$/bundle/svelte";
                 import App from "./${file}";
