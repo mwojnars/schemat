@@ -254,7 +254,7 @@ export class Application extends WebObject {
                 import {hydrate} from "/$/bundle/svelte";
                 import App from "./${file}";
                 const target = document.getElementById("app");
-                hydrate(App, {target, props: schemat.config.extra.props});
+                hydrate(App, {target, props: schemat.request.extra.props});
             `
         })
         let {head, body} = svelte_render(component, {props})

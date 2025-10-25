@@ -39,7 +39,10 @@ export class WebRequest {   // WebConnection (conn)
     query           // plain object containing a property for each query string parameter (?x=y) of the original URL
     endpoints = []  // candidate endpoints that should be tried if `endpoint` is not yet decided; the first one that's present in the `target` is used, or 'default' if empty
 
-    params          // object, {name: value}, containing parameters decoded from the URL in Svelte/Next.js style
+    params = {}     // object, {name: value}, containing parameters decoded from the URL in Svelte/Next.js style
+    extra = {}      // any extra information beyond `params` to be passed together as `props` to component rendering function
+
+    get props() { return {...this.params, ...this.extra} }
 
     // TODO add after Svelte's RequestEvent:
     // cookies: {get, set, delete, serialize}
@@ -196,7 +199,9 @@ export class WebRequest {   // WebConnection (conn)
         ctx.app_id = app.id
         ctx.target_id = target?.id
         ctx.endpoint = this.endpoint
+        ctx.params = this.params
         ctx.extra = extra
+
         return ctx
     }
 }
