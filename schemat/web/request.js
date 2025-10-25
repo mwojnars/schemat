@@ -237,12 +237,18 @@ export class WebContext {       // ShadowRequest AfterRequest MirrorRequest Requ
         return Object.assign(new WebContext(), state)
     }
 
-    finalize() {
-        /* After decode() on client, initialize `target` object from `target_id`. */
+    async finalize() {
+        /* After decode() on client, preload bootstrap objects and initialize `target` from `target_id`. */
+        for (let rec of this.objects)
+            await schemat.get_loaded(rec.id)
+
+        delete this.objects         // save memory: `this` is remembered in `schemat` as a global
+
         if (this.target_id) {
             this.target = schemat.get_object(this.target_id)
             assert(this.target.is_loaded())
         }
+        return this.target
     }
 }
 

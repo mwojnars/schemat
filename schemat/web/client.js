@@ -30,18 +30,7 @@ export class Client extends Schemat {
         // setInterval(() => this._report_memory(), 10000)
 
         await this._boot_done()
-
-        for (let rec of ctx.objects)                            // preload bootstrap objects
-            await this.get_loaded(rec.id)
-
-        delete ctx.objects                                      // save memory (`ctx` is remembered in `schemat` as a global)
-
-        ctx.finalize()
-
-        if (ctx.target_id) {
-            this.object = this.target = this.get_object(ctx.target_id)
-            this.object.assert_loaded()
-        }
+        this.object = this.target = await ctx.finalize()
         this.session = new ClientSession()
         // check()
     }
