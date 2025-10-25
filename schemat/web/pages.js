@@ -308,11 +308,11 @@ export class CategoryInspectView extends InspectView {
 
     _ItemEntry({item, remove}) {
         /* A single row in the list of items. */
-        let name = item.name || item.get_stamp({html:false})
-        let url  = item.system_url
+        let name = item.name || item.get_stamp({html: false})
+        let href = item.url_admin
         return TR(
             TD(`${item.id} ${NBSP}`),
-            TD(url !== null ? A({href: url + '::inspect'}, name) : `${name} (no URL)`, ' ', NBSP),
+            TD(href !== null ? A({href}, name) : `${name} (no URL)`, ' ', NBSP),
             TD(BUTTON({onClick: () => remove(item)}, 'Delete')),
         )
     }

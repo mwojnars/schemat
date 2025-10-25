@@ -864,6 +864,7 @@ export class WebObject {
     get url() { return this.get_url() }
 
     get url_admin() {
+        /* URL of this object's administrative page. */
         assert(this.id)
         return `/$/object/${this.id}`
     }
