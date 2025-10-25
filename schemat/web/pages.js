@@ -146,11 +146,11 @@ export class RenderedPage extends HtmlPage {
         }
 
         page_init(props) {
-            return schemat.init_client({after:
-                `
+            schemat.request.send_init(`
                     let {target} = schemat, {endpoint} = schemat.config;
                     target.__self[endpoint]().render_client(target);
-                `})
+                `)
+            return schemat.init_client()
         }
 
         component_frame({init, html}) {
