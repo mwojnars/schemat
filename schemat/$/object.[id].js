@@ -15,16 +15,16 @@ export async function init(request, {id}) {
 
 export async function GET(request, {page, target}) {
 
-    request.target = target
-    request.endpoint = "GET.inspect"    // FIXME
+    // request.target = target
+    // request.endpoint = "GET.inspect"    // FIXME
 
     let html = await page.server(target, request)
     return request.send(html)
 }
 
 
-// export async function client({page, target}) {
-//     /* Client-side initialization after schemat was booted. */
-//     console.log(`object.[id]/client() called`)
-//     await page.render_client(target)
-// }
+export async function client({page, target}) {
+    /* Client-side initialization after schemat was booted. */
+    console.log(`object.[id]/client() called`)
+    await page.render_client(target)
+}
