@@ -14,10 +14,6 @@ export async function init(request, {id}) {
 
 
 export async function GET(request, {page, target}) {
-
-    // request.target = target
-    // request.endpoint = "GET.inspect"    // FIXME
-
     let html = await page.server(target, request)
     return request.send(html)
 }

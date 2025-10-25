@@ -91,7 +91,7 @@ export class Schemat {
        loading and caching of web objects, dynamic module import, classpath management, session management etc.
      */
 
-    config          // boot configuration (on server) or WebContext (on client)
+    config          // boot configuration (on server) or ShadowRequest (on client)
     debug           // if true, some elements of Schemat and environment are tuned towards debugging
     debug_mem
     app_id          // ID of the active Application object
@@ -152,7 +152,7 @@ export class Schemat {
 
     constructor(config) {
         /* Create a new Schemat instance. `config` is either the contents of a config file (on server),
-           or a WebContext (on client) -- both should contain the `app` attribute.
+           or a ShadowRequest (on client) -- both should contain the `app` attribute.
          */
         this.booting = new Promise(resolve => this._booting_resolve = resolve)
         this.config = config

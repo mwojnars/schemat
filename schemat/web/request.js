@@ -185,10 +185,10 @@ export class WebRequest extends _Request {   // WebConnection (conn)
     send_function(func)     { this.send_init(`(${func.toString()})();`) }       // this no-arg function will be sent to client and executed during bootstrap
 
 
-    /***  Response finalization  ***/
+    /***  Response finalization (rich response)  ***/
 
     _generate_shadow() {
-        /* Creates a WebContext with initialization data for client-side Schemat.
+        /* Creates a ShadowRequest with initialization data for client-side Schemat.
            Optional `objects` are included as seed objects together with this.target, `app`, `app.global`.
          */
         let ctx = new ShadowRequest()
@@ -229,7 +229,7 @@ export class WebRequest extends _Request {   // WebConnection (conn)
 
 /**********************************************************************************************************************/
 
-export class ShadowRequest extends _Request {    // WebContext AfterRequest MirrorRequest PseudoRequest
+export class ShadowRequest extends _Request {    // WebContext BackRequest AfterRequest MirrorRequest PseudoRequest
     /* Metadata and seed objects related to a particular web request, sent back from server to client (embedded in HTML)
        to enable boot up of client-side Schemat and re-rendering/re-hydration (CSR) of the page.
        After client-side finalize(), some attributes reflect the values from original server-side WebRequest
