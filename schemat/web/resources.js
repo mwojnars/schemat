@@ -103,7 +103,8 @@ if (CLIENT) {
     }
     
     check_unloaded("React")
-    await import("/$/local/node_modules/react/umd/react.development.js")
+    await import("/$/bundle/react.js")
+    // await import("/$/local/node_modules/react/umd/react.development.js")
     React = globalThis.React
     // console.log('React:', React)
 

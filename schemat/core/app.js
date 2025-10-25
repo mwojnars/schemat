@@ -148,6 +148,7 @@ export class Application extends WebObject {
         // use precomputed file routes
         let match = this.routes.match(url_path)
         if (!match) return false
+        // this._print(`app._route_file_based() match:`, match)
 
         if (match.type === 'static') {                      // send a static file as is
             await request.send_file(match.file)

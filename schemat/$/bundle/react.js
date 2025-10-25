@@ -1,0 +1,1 @@
+/home/marcin/Documents/Catalog/schemat/src/node_modules/react/umd/react.development.js
