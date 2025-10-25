@@ -858,10 +858,12 @@ export class WebObject {
 
     get __url() {
         /* Calculation of __url if missing: same as __path but with blank routes (*ROUTE) removed. */
-        return this.__path?.replace(/\/\*[^/]*/g, '') || this.system_url    // no-category objects may have no __path because of lack of schema and imputation
+        return this.__path?.replace(/\/\*[^/]*/g, '') || this.system_url     // no-category objects may have no __path because of lack of schema and imputation
     }
 
-    get url() { return this.get_url() }
+    get url() {
+        return this.url_admin
+    }
 
     get url_admin() {
         /* URL of this object's administrative page. */
