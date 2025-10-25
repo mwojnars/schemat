@@ -210,9 +210,10 @@ export class Application extends WebObject {
         if (typeof handler !== 'function') request.not_found()
 
         let {init} = module
-        let data = (typeof init === 'function') ? await init(request) : {}
+        let {props} = request
+        let data = (typeof init === 'function') ? await init(request, props) : {}
 
-        return handler(request, {...request.props, ...data})
+        return handler(request, {...props, ...data})
     }
 
     async _render_jsx(path, request, layout_file = '../web/views/skeleton.jsx') {
