@@ -401,9 +401,9 @@ describe('Schemat Tests', function () {
             await test_page(page, `${DOMAIN}/$/object/2104`, '#page-main', ['title', 'ąłęÓŁŻŹŚ', 'Add new entry'])
         })
 
-        it('static html page', async function () {
-            await test_page(page, `${DOMAIN}/$/id/2102::test_html`, null, ['Test Page', 'Headings', 'First item'])
-        })
+        // it('static html page', async function () {
+        //     await test_page(page, `${DOMAIN}/$/id/2102::test_html`, null, ['Test Page', 'Headings', 'First item'])
+        // })
 
         it('robots.txt', async function () {
             let resp = await page.goto(`${DOMAIN}/robots.txt`)

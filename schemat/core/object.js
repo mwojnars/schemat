@@ -1394,16 +1394,12 @@ export class WebObject {
     'GET.test_txt'()        { return "TEST txt ..." }                   // works
     'GET.test_fun'()        { return () => "TEST function ..." }        // works
     'GET.test_res'({res})   { res.send("TEST res.send() ...") }         // works
-    'GET.test_html'()       { return html_page(import.meta.resolve('../test/views/page_02.html')) }
+    // 'GET.test_html'()       { return html_page(import.meta.resolve('../test/views/page_02.html')) }
 
     'GET.json'({res})       { res.json(this.__record) }
     'GET.inspect'()         { return new ReactPage(InspectView) }
 
     'LOCAL.self'()          { return this }     // TODO: apparently not needed, tests pass without this method
-
-    // inspect()         { return react_page(InspectView) }
-    // inspect()         { return InspectView.page(this) }
-    // inspect()         { return InspectView.page }
 
 
     /***  Dynamic loading of source code  ***/
