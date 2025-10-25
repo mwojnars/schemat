@@ -160,7 +160,7 @@ export class Application extends WebObject {
         }
 
         if (match.type === 'render') {
-            request.params = match.params || {}
+            request.set_params(match.params)
             let method = `_render_${match.ext}`
             await this[method](match.file, request)
             return true

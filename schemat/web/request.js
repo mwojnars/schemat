@@ -21,7 +21,7 @@ function _sending_done(res) {
 
 export class WebRequest {   // WebConnection (conn)
     /* Schemat's own representation of a web request (or internal request), plus context information
-       that may evolve during the routing procedure.
+       that may evolve during the routing procedure, plus response generation methods.
      */
     static SEP_ENDPOINT = '::'          // separator of endpoint name within a URL path
 
@@ -30,7 +30,7 @@ export class WebRequest {   // WebConnection (conn)
     res             // Express's response (res) object
 
     target          // target web object (recipient of the request)
-    endpoint        // full name of the network endpoint that should handle the request (e.g., "GET.json")
+    endpoint        // target's network endpoint that should handle the request, as a full name, e.g., "GET.json"
     protocol        // endpoint type: LOCAL, GET, POST, ... (SOCK in the future)
     http_method     // GET, POST, PUT ...
 
@@ -121,8 +121,12 @@ export class WebRequest {   // WebConnection (conn)
         return endpoint.slice(sep.length)
     }
 
-    set_target(target) { this.target = target }
-    set_endpoint(endpoint) { this.endpoint = endpoint }
+
+    /***  Route discovery. Internal use.  ***/
+
+    set_target(target)      { this.target = target }
+    set_endpoint(endpoint)  { this.endpoint = endpoint }
+    set_params(params)      { this.params = params || {} }
 
     not_found() {
         throw new URLNotFound({path: this.path})
@@ -158,7 +162,7 @@ export class WebRequest {   // WebConnection (conn)
     send(body) { return this.res.send(body) }
 
 
-    /***  Internal  ***/
+    /***  Response finalization  ***/
 
     _generate_shadow({objects = [], extra} = {}) {
         /* Creates a WebContext with initialization data for client-side Schemat.
@@ -203,8 +207,8 @@ export class WebRequest {   // WebConnection (conn)
 export class ShadowRequest {       // WebContext AfterRequest MirrorRequest RequestEcho PseudoRequest
     /* Metadata and seed objects related to a particular web request, sent back from server to client (embedded in HTML)
        to enable boot up of client-side Schemat and re-rendering/re-hydration (CSR) of the page.
-       After client-side finalize(), some attributes reflect the values from original server-side WebRequest.
-       The following attributes are accessible via schemat.request.* on server and client alike:
+       After client-side finalize(), some attributes reflect the values from original server-side WebRequest
+       and become accessible via schemat.request.* on server and client alike:
        - target,
        - endpoint,
        - params,
