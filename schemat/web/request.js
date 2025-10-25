@@ -54,8 +54,8 @@ export class WebRequest extends _Request {   // WebConnection (conn)
     params = {}     // object, {name: value}, containing parameters decoded from the URL in Svelte/Next.js style
     extra = {}      // any extra data beyond `params` to be passed together as `props` to component rendering functions, here and on client
 
-    _objects = []   // any web objects (loaded), other than `target` and `app`, that should be included as bootstrap objects in rich response
-    _client_init    // any client-side initialization code (JS string) to be executed after Schemat boot up
+    _objects = []               // any web objects (loaded), other than `target` and `app`, that should be included as bootstrap objects in rich response
+    _client_init = new Set()    // any client-side initialization code (JS string) to be executed after Schemat boot up
 
     // TODO add after Svelte's RequestEvent:
     // cookies: {get, set, delete, serialize}
@@ -181,7 +181,8 @@ export class WebRequest extends _Request {   // WebConnection (conn)
     // rich response ...
 
     send_objects(...objs)   { this._objects.push(...objs) }         // these web objects will be sent as bootstrap objects
-    send_init(code)         { this._client_init += ' ' + code }     // this JS code will be executed on client after Schemat boot up
+    send_init(code)         { this._client_init.add(code) }         // this JS code will be executed on client after Schemat boot up
+    send_function(func)     { this.send_init(`\n(${func.toString()})();`) }     // this no-arg function will be sent to client and executed during bootstrap
 
 
     /***  Response finalization  ***/
