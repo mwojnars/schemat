@@ -122,7 +122,7 @@ export class WebRequest {   // WebConnection (conn)
     }
 
 
-    /***  Route discovery. Internal use.  ***/
+    /***  Internal use during route discovery  ***/
 
     set_target(target)      { this.target = target }
     set_endpoint(endpoint)  { this.endpoint = endpoint }

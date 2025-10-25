@@ -6,13 +6,14 @@ export async function init(request, {id}) {
     let target = await schemat.load(id)
     let View = target.is_category() ? CategoryInspectView : InspectView
     let page = new ReactPage(View)
-    return [page, target]
+    return {page, target}
 }
+
 
 // export async function GET(request, {page, target}) {
 export async function GET(request, {id}) {
 
-    // let [page, target] = await init(id)
+    // let {page, target} = await init(id)
 
     let target = await schemat.load(id)
     let View = target.is_category() ? CategoryInspectView : InspectView
@@ -23,12 +24,13 @@ export async function GET(request, {id}) {
 
     // request.send_init(`
     //     let init = ${init.toString()};
-    //     let [page, target] = await init(${id});
+    //     let {page, target} = await init(${id});
     //     await page.render_client(target);
     // `)
 
     return page.handle(target, request)
 }
+
 
 export async function client(request, {page, target}) {
     /* Client-side initialization after schemat was booted. */
