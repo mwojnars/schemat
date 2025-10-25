@@ -1,7 +1,6 @@
 import {URLNotFound} from "../common/errors.js";
 import {print, assert, splitLast} from "../common/utils.js";
 import {RecentObjects} from "../common/structs.js";
-import {JSONx} from "../common/jsonx.js";
 
 const stream = SERVER && await import('node:stream')
 const {promisify} = SERVER && await import('node:util') || {}
@@ -223,7 +222,7 @@ export class WebContext {       // ShadowRequest AfterRequest MirrorRequest Requ
 
     encode(line_length = 1000) {
         /* Encodes this object into a JSON+base64 string, possibly with line breaks after every `line_length` chars. */
-        let encoded = btoa(encodeURIComponent(JSONx.stringify({...this})))
+        let encoded = btoa(encodeURIComponent(JSON.stringify(this)))    // no JSONx because `schemat` is not yet ready while decoding, so REFs couldn't be properly decoded anyway
         if (line_length) {
             let re = new RegExp(`(.{${line_length}})`, 'g')
             encoded = encoded.replace(re, '$1\n')               // insert a new line every `line_length` chars
@@ -233,7 +232,7 @@ export class WebContext {       // ShadowRequest AfterRequest MirrorRequest Requ
 
     static decode(text) {
         /* `text` may contain whitespace characters, they will be removed before decoding. */
-        let state = JSONx.parse(decodeURIComponent(atob(text.replace(/\s+/g, ''))))
+        let state = JSON.parse(decodeURIComponent(atob(text.replace(/\s+/g, ''))))
         return Object.assign(new WebContext(), state)
     }
 
