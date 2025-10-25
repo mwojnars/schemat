@@ -20,8 +20,6 @@ export async function GET(request, {page, target}) {
 
     let html = await page.server(target, request)
     return request.send(html)
-
-    // return page.handle(target, request)
 }
 
 

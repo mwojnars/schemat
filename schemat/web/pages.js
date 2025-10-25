@@ -94,7 +94,7 @@ export class HtmlPage extends HttpService {
 
         generate(props = {}) {
             /* Generate a complete HTML page server-side. Can be async.
-               By default, this function calls target_html_*() functions to build separate parts of the page.
+               By default, this function calls target.html_*() functions to build separate parts of the page.
              */
             let title = this.html_title(props)
             let assets = this.html_head(props)
@@ -137,7 +137,7 @@ export class RenderedPage extends HtmlPage {
         html_body(props) {
             schemat.request.send_init(`
                     let {target} = schemat, {endpoint} = schemat.config;
-                    target.__self[endpoint]().render_client(target);
+                    if (target && endpoint) target.__self[endpoint]().render_client(target);
                 `)
             return `
                     ${schemat.init_client()}
