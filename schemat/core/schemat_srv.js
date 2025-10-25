@@ -143,33 +143,7 @@ export class ServerSchemat extends Schemat {
         // this.registry.erase_records()
     }
 
-    init_client() {       //client_runtime
-        /* HTML block to be put in <body> of a page to load `schemat` runtime (with its context data) on client.
-           The output string must be inserted unescaped (!), e.g., in EJS with <%- tag instead of <%=
-                <%- schemat.init_client() %>
-         */
-        let request = schemat.request
-        if (!request) throw new Error(`no web request, cannot generate client-side initialization block`)
-
-        let shadow = request._generate_shadow()
-        let dump = "`\n" + shadow.encode() + "`"
-        let after = [...request._client_init].join('\n')
-
-        return `
-            <script type="importmap"> {
-                "imports": {
-                    "#root/": "/$/local/"
-                }
-            } </script>
-
-            <script async type="module">
-                import {Client} from "/$/local/schemat/web/client.js";
-                globalThis.schemat = new Client(${dump});
-                await schemat.boot();
-                ${after}
-            </script>
-        `
-    }
+    init_client() { return schemat.request._embed_shadow() }
 
     set_kernel(kernel) { this.kernel = kernel }
 

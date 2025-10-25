@@ -224,6 +224,33 @@ export class WebRequest extends _Request {   // WebConnection (conn)
 
         return ctx
     }
+
+    _embed_shadow() {       //client_runtime
+        /* HTML block to be put in <body> of a page to load `schemat` runtime and its shadow request on client.
+           The output string must be inserted unescaped (!), e.g., in EJS with <%- %> tag instead of <%= %>.
+         */
+        let request = schemat.request
+        if (!request) throw new Error(`no web request, cannot generate client-side initialization block`)
+
+        let shadow = this._generate_shadow()
+        let dump = "`\n" + shadow.encode() + "`"
+        let after = [...this._client_init].join('\n')
+
+        return `
+            <script type="importmap"> {
+                "imports": {
+                    "#root/": "/$/local/"
+                }
+            } </script>
+
+            <script async type="module">
+                import {Client} from "/$/local/schemat/web/client.js";
+                globalThis.schemat = new Client(${dump});
+                await schemat.boot();
+                ${after}
+            </script>
+        `
+    }
 }
 
 
