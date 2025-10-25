@@ -5,7 +5,6 @@ import {AsyncLocalStorage} from 'node:async_hooks'
 import {AgentRole} from "../common/globals.js";
 import {assert, print, copy, fluctuate} from '../common/utils.js'
 import {Schemat} from './schemat.js'
-import {ShadowRequest} from "../web/request.js";
 import {LiteSession, ServerSession} from "./session.js";
 import {Struct} from "../common/catalog.js";
 
@@ -150,8 +149,8 @@ export class ServerSchemat extends Schemat {
                 <%- schemat.init_client() %>
          */
         if (!schemat.request) throw new Error(`no web request, cannot generate client-side initialization block`)
-        let ctx = schemat.request.generate_context({extra, objects})
-        let ctx_encoded = "`\n" + ctx.encode() + "`"
+        let shadow = schemat.request.generate_shadow({extra, objects})
+        let dump = "`\n" + shadow.encode() + "`"
 
         return `
             <script type="importmap"> {
@@ -162,7 +161,7 @@ export class ServerSchemat extends Schemat {
 
             <script async type="module">
                 import {Client} from "/$/local/schemat/web/client.js";
-                globalThis.schemat = new Client(${ctx_encoded});
+                globalThis.schemat = new Client(${dump});
                 await schemat.boot();
                 ${after}
             </script>

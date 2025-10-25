@@ -160,7 +160,7 @@ export class WebRequest {   // WebConnection (conn)
 
     /***  Internal  ***/
 
-    generate_context({objects = [], extra} = {}) {
+    generate_shadow({objects = [], extra} = {}) {
         /* Creates a WebContext with initialization data for client-side Schemat.
            Optional `objects` are included as seed objects together with this.target, `app`, `app.global`.
          */

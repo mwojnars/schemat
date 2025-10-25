@@ -14,23 +14,23 @@ export class Client extends Schemat {
     target          // target web object that was addressed by the request, loaded; can be undefined
     object          // ... alias
 
-    constructor(ctx_data) {
-        let ctx = ShadowRequest.decode(ctx_data)
-        print('request context:', ctx)
-        super(ctx)
+    constructor(dump) {
+        let shadow = ShadowRequest.decode(dump)
+        print('shadow request:', shadow)
+        super(shadow)
+        this.request = shadow
     }
 
     async boot() {
-        let ctx = this.config
-
-        ctx.objects.map(rec => schemat.register_record(rec))    // register {id,data} records of bootstrap objects
+        let shadow = this.request
+        shadow.objects.map(rec => schemat.register_record(rec))    // register {id,data} records of bootstrap objects
 
         await this._init_classpath()
         await super._load_app()
+        await this._boot_done()
         // setInterval(() => this._report_memory(), 10000)
 
-        await this._boot_done()
-        this.object = this.target = await ctx.finalize()
+        this.object = this.target = await shadow.finalize()
         this.session = new ClientSession()
         // check()
     }
