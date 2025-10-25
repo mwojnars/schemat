@@ -1,4 +1,4 @@
-import {bundle_dependencies} from "../../web/build.js"
+import {bundle_dependencies} from "#root/schemat/web/build.js"
 
 export async function GET({res}) {
     // let deps = await bundle_dependencies([
