@@ -1,8 +1,9 @@
 
 export async function init(request, {id}) {
-    /* Should return a plain object, data={...}, that will be merged into the second parameter of GET/POST/.../client() invocation.
-       The returned object is NOT sent to client, but recomputed client-side once again.
-       This function must be isomorphic, i.e., executable in this literal form on server and client alike.
+    /* Isomorphic initialization function.
+       Returns a plain object, data={...}, that will be merged into the second parameter of GET/POST/.../client() invocation.
+       The returned object is NOT sent to client, but recomputed there once again, so its content can be non-serializable.
+       This function must be isomorphic, i.e., executable in its literal form on server and client alike.
      */
     let {CategoryInspectView, InspectView, ReactPage} = await import("#root/schemat/web/pages.js")
     let target = await schemat.load(id)
@@ -12,11 +13,7 @@ export async function init(request, {id}) {
 }
 
 
-// export async function GET(request, {page, target}) {
-export async function GET(request, {id}) {
-
-    let {page, target} = await init(request, {id})
-
+export async function GET(request, {page, target}) {
     request.target = target
     request.endpoint = "GET.inspect"    // FIXME
 
