@@ -198,7 +198,7 @@ export class WebRequest extends _Request {   // WebConnection (conn)
         // assert(schemat.app.is_loaded(), schemat.app)     // FIXME: these asserts fail when opening http://127.0.0.1:3000/$/id/2 (Application page)
         // assert(schemat._app.is_loaded(), schemat._app)
 
-        let items = new RecentObjects()
+        let items = new RecentObjects()     // TODO: `target` must be preserved in its exact form for hydration, even if a newer version was found
         let queue = [app, target, ...app.global?.values() || [], ...this._objects].filter(Boolean)
 
         // extend the `items` set with all objects that are referenced from the `target` and `app` via __category, __extend or __container

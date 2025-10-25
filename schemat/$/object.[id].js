@@ -22,6 +22,5 @@ export async function GET(request, {page, target}) {
 
 export async function client({page, target}) {
     /* Client-side initialization after schemat was booted. */
-    console.log(`object.[id]/client() called`)
     await page.render_client(target)
 }
