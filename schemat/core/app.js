@@ -206,9 +206,13 @@ export class Application extends WebObject {
     async _render_js(path, request) {
         /* Execute GET/POST/PUT/... function from the .js file pointed to by `path`. */
         let module = await import(path)
-        let endpoint = module[request.http_method]
-        if (typeof endpoint !== 'function') request.not_found()
-        return endpoint(request, request.params)
+        let handler = module[request.http_method]       // GET(), POST(), ...
+        if (typeof handler !== 'function') request.not_found()
+
+        let {init} = module
+        let data = (typeof init === 'function') ? await init(request) : {}
+
+        return handler(request, {...request.props, ...data})
     }
 
     async _render_jsx(path, request, layout_file = '../web/views/skeleton.jsx') {

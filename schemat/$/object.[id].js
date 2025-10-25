@@ -1,7 +1,9 @@
-import {CategoryInspectView, InspectView, ReactPage} from "#root/schemat/web/pages.js";
 
 export async function init(request, {id}) {
-    /* This function must be isomorphic, i.e., executable in this literal form on server and client alike. */
+    /* Should return a plain object, data={...}, that will be merged into the second parameter of GET/POST/.../client() invocation.
+       The returned object is NOT sent to client, but recomputed client-side once again.
+       This function must be isomorphic, i.e., executable in this literal form on server and client alike.
+     */
     let {CategoryInspectView, InspectView, ReactPage} = await import("#root/schemat/web/pages.js")
     let target = await schemat.load(id)
     let View = target.is_category() ? CategoryInspectView : InspectView
