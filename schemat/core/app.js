@@ -216,7 +216,7 @@ export class Application extends WebObject {
         if (client)             // generate client-side code for custom initialization: init() + client()
             if (init) request.send_init(`
                 let __props = schemat.request.props;
-                let __data = (${init})(schemat.request, __props);
+                let __data = await (${init})(schemat.request, __props);
                 await (${client})({...__props, ...__data});
             `)
             else request.send_init(`
