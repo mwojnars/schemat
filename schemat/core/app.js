@@ -53,11 +53,11 @@ export class Application extends WebObject {
     logger
     async_ejs
 
-    get _app_root()         { return mod_path.normalize(schemat.PATH_PROJECT + '/' + this.root_folder) }
     get _static_exts()      { return this.static_extensions.toLowerCase().split(/[ ,;:]+/) }
     get _transpiled_exts()  { return this.transpiled_extensions.toLowerCase().split(/[ ,;:]+/) }
     get _private_routes()   { return this.private_routes.split(/\s+/) || [] }
 
+    get app_root()          { return mod_path.normalize(schemat.PATH_PROJECT + '/' + this.root_folder) }
     get routes()            { if (Routes) return new Routes(this) }
 
     get _is_private_path() {
@@ -189,7 +189,7 @@ export class Application extends WebObject {
         // `views` is an array of search paths that would be used as roots for resolving relative include(path) statements,
         // but *only* if the resolution relative to `filename` fails;
         // `async`=true allows EJS templates to include async JS code like `await import(...)` or `await fetch_data()`
-        let opts = {filename: path, views: [this._app_root], async: !!this.async_ejs}
+        let opts = {filename: path, views: [this.app_root], async: !!this.async_ejs}
         let root = mod_path.dirname(path)
         let import_ = async (_path) => _path.startsWith('$') || _path.startsWith('node:') ?
                             import(_path) :

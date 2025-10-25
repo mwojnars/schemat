@@ -21,7 +21,7 @@ export class Routes {
 
     constructor(app) {
         this.app = app
-        this.app_root = app._app_root
+        this.app_root = app.app_root
         this.exact_routes = new Map()
         this.dynamic_routes = []
     }
