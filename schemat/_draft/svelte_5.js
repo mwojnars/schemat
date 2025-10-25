@@ -35,6 +35,7 @@
         2. It hydrates the SSR’d markup into interactive components.
         3. Client-side navigation begins:
            - Only runs +layout.js and +page.js (not the server versions)
+           - May fetch server-side data (.server.js) via special .../__data.json endpoint
            - Reuses persisted layouts
            - Updates {@render children()} accordingly
 
