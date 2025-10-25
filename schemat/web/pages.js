@@ -248,21 +248,15 @@ export class InspectView extends ReactPage.View {
         let catg = this.__category?.name
         if (!catg) return H1(label)
 
-        let catg_label = SPAN({style: {fontSize:'40%', fontWeight:"normal"}}, '<', A({href: this.__category.url}, catg), '>')
+        let href = this.__category.url_admin
+        let catg_label = SPAN({style: {fontSize:'40%', fontWeight:"normal"}}, '<', A({href}, catg), '>')
         return H1(label, ' ', catg_label)
-
-        // let name = this.name
-        // let stamp = this.get_stamp()
-        // if (name)
-        //     return H1(name, ' ', SPAN({style: {fontSize:'40%', fontWeight:"normal"}, ...HTML(stamp)}))
-        // else
-        //     return H1(HTML(stamp))
     }
 
     Breadcrumb() {
         /* A list of links to the parent containers of the object. */
         let steps = this.get_breadcrumb()
-        let links = steps.map(([name, obj]) => A({href: obj.url}, name || 'home'))
+        let links = steps.map(([name, obj]) => A({href: obj.url_admin}, name || 'home'))
         let elems = links.map((link, i) => [link, i < links.length-1 ? ' » ' : ''])
         return P(...elems)
     }

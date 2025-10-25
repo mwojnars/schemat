@@ -91,7 +91,7 @@ export class WebObject {
     __ttl_ms                same as __ttl, but in milliseconds
 
     __slug                  last part of a URL path of this object, "web identifier" of the object within its category
-    __path                  (virtual) URL path of this object; similar to __url, but contains blanks segments; imputed via _impute_path()
+    __path                  (virtual) URL path of this object; similar to __url, but contains blank segments; imputed via _impute_path()
     __url                   (virtual) absolute URL path of this object, calculated via __url() getter
 
     __content               JSONx-encoded representation of {id, ...__data, __meta} for display during debugging
@@ -245,7 +245,7 @@ export class WebObject {
     /***  Object status  ***/
 
     is_newborn()    { return !this.id }         // object is "newborn" ("infant") when it hasn't been saved to DB, yet, and has no ID assigned, but is intended for insertion
-    is_loaded()     { return this.__data && !this.__meta.loading }  // false if still loading, even if data has already been created but object's not fully initialized (except __url & __path which are allowed to be delayed)
+    is_loaded()     { return this.__data && !this.__meta.loading }  // false if still loading, even if __data was created but object is not fully initialized
     is_deleted()    { return this.__status === WebObject.Status.DELETED }
     is_category()   { return false }
     is_mutable()    { return this.__meta.mutable }
@@ -856,7 +856,17 @@ export class WebObject {
 
     /***  URLs and URL paths  ***/
 
+    get __url() {
+        /* Calculation of __url if missing: same as __path but with blank routes (*ROUTE) removed. */
+        return this.__path?.replace(/\/\*[^/]*/g, '') || this.system_url    // no-category objects may have no __path because of lack of schema and imputation
+    }
+
     get url() { return this.get_url() }
+
+    get url_admin() {
+        assert(this.id)
+        return `/$/object/${this.id}`
+    }
 
     get system_url() {
         /* The internal URL of this object, typically /$/id/<ID> */
@@ -866,11 +876,6 @@ export class WebObject {
     _impute_path() {
         /* Imputation function for __path. Root container must have its path='/' configured in DB, and so this method cannot be a getter. */
         return this.__container?.get_access_path(this) || this.system_url
-    }
-
-    get __url() {
-        /* Calculation of __url if missing: same as __path but with blank routes (*ROUTE) removed. */
-        return this.__path?.replace(/\/\*[^/]*/g, '') || this.system_url    // no-category objects may have no __path because of lack of schema and imputation
     }
 
     system_slug() {
@@ -901,6 +906,53 @@ export class WebObject {
             return isNaN(id) ? null : await schemat.get_loaded(id)
         }
         catch (ex) { return null }
+    }
+
+    get_url(endpoint, args) {
+        /* Canonical URL of this object, possibly with ::endpoint and ?args strings added. The ::endpoint directs to
+           PROTO.endpoint() on server, and `args` are appended as a URL query string.
+         */
+        let url = `${this.__url}`
+        if (endpoint) url += WebRequest.SEP_ENDPOINT + endpoint        // append ::endpoint and ?args if present...
+        if (args) url += '?' + new URLSearchParams(args).toString()
+        return url
+    }
+
+    get_stamp({html = true, brackets = true, max_len = null, ellipsis = '...'} = {}) {
+        /* [CATEGORY:ID] string (stamp) if the category of `this` has a name; or [ID] otherwise.
+           If html=true, the category name is hyperlinked to the category's profile page (unless URL failed to generate)
+           and is HTML-escaped. If max_len is provided, category's suffix may be replaced with '...' to make its length <= max_len.
+         */
+        let cat = this.__category?.name || ""
+        if (max_len && cat.length > max_len) cat = cat.slice(max_len-3) + ellipsis
+        if (html) {
+            cat = escape_html(cat)
+            let url = this.__category?.url
+            if (url) cat = `<a href="${url}">${cat}</a>`          // TODO SEC: {url} should be URL-encoded or injected in a different way
+        }
+        let stamp = cat ? `${cat}:${this.id}` : `${this.id}`
+        return brackets ? `[${stamp}]` : stamp
+    }
+
+    get_breadcrumb(max_len = 10) {
+        /* Return an array of containers that lead from the app's root to this object.
+           The array contains pairs [segment, container] where `segment` is a string that identifies `container`
+           inside its parent; the last pair is [segment, this] (the object itself).
+           If containers are correctly configured, the first pair is [undefined, site_object] (the root).
+         */
+        let steps = []
+        let object = this
+
+        while (object) {
+            let parent = object.__container
+            let segment = parent?.identify(object)
+
+            steps.push([segment, object])
+
+            if (steps.length > max_len) break                // avoid infinite loops
+            object = parent
+        }
+        return steps.reverse()
     }
 
 
@@ -963,52 +1015,6 @@ export class WebObject {
         throw new URLNotFound(`endpoint not specified (protocol ${protocol})`, {path: request.path})
     }
 
-    get_url(endpoint, args) {
-        /* Canonical URL of this object, possibly with ::endpoint and ?args strings added. The ::endpoint directs to
-           PROTO.endpoint() on server, and `args` are appended as a URL query string.
-         */
-        let url = `${this.__url}`
-        if (endpoint) url += WebRequest.SEP_ENDPOINT + endpoint        // append ::endpoint and ?args if present...
-        if (args) url += '?' + new URLSearchParams(args).toString()
-        return url
-    }
-
-    get_stamp({html = true, brackets = true, max_len = null, ellipsis = '...'} = {}) {
-        /* [CATEGORY:ID] string (stamp) if the category of `this` has a name; or [ID] otherwise.
-           If html=true, the category name is hyperlinked to the category's profile page (unless URL failed to generate)
-           and is HTML-escaped. If max_len is provided, category's suffix may be replaced with '...' to make its length <= max_len.
-         */
-        let cat = this.__category?.name || ""
-        if (max_len && cat.length > max_len) cat = cat.slice(max_len-3) + ellipsis
-        if (html) {
-            cat = escape_html(cat)
-            let url = this.__category?.url
-            if (url) cat = `<a href="${url}">${cat}</a>`          // TODO SEC: {url} should be URL-encoded or injected in a different way
-        }
-        let stamp = cat ? `${cat}:${this.id}` : `${this.id}`
-        return brackets ? `[${stamp}]` : stamp
-    }
-
-    get_breadcrumb(max_len = 10) {
-        /* Return an array of containers that lead from the app's root to this object.
-           The array contains pairs [segment, container] where `segment` is a string that identifies `container`
-           inside its parent; the last pair is [segment, this] (the object itself).
-           If containers are correctly configured, the first pair is [undefined, site_object] (the root).
-         */
-        let steps = []
-        let object = this
-
-        while (object) {
-            let parent = object.__container
-            let segment = parent?.identify(object)
-
-            steps.push([segment, object])
-
-            if (steps.length > max_len) break                // avoid infinite loops
-            object = parent
-        }
-        return steps.reverse()
-    }
 
     /***  Web Triggers  ***/
 
