@@ -139,25 +139,15 @@ export class RenderedPage extends HtmlPage {
                     let {target} = schemat, {endpoint} = schemat.config;
                     target.__self[endpoint]().render_client(target);
                 `)
-
-            let html = this.render_server(props)
-
-            return this.component_frame(html)
+            return `
+                    ${schemat.init_client()}
+                    <div id="page-main">${this.render_server(props)}</div>
+                `
         }
 
         render_server(props) {
             /* Server-side rendering (SSR) of the main component of the page to an HTML string. */
             return ''
-        }
-
-        component_frame(html) {
-            /* HTML wrapper for page's main component, `html`, and Schemat launch script, `init`.
-               All these elements will be placed together inside <body>...</body>.
-             */
-            return `
-                ${schemat.init_client()}
-                <div id="page-main">${html}</div>
-            `
         }
     }
 }
