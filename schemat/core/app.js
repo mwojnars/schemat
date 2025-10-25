@@ -251,16 +251,8 @@ export class Application extends WebObject {
                 const target = document.getElementById("app");
                 hydrate(App, {target, props: schemat.request.props});
             `)
-        let init = schemat.init_client()
 
-        // let init = schemat.init_client({
-        //     after: `
-        //         import {hydrate} from "/$/bundle/svelte";
-        //         import App from "./${file}";
-        //         const target = document.getElementById("app");
-        //         hydrate(App, {target, props: schemat.request.props});
-        //     `
-        // })
+        let init = schemat.init_client()
         let {head, body} = svelte_render(component, {props: request.props})
 
         // wrap with default html layout

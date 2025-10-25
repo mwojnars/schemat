@@ -143,7 +143,7 @@ export class ServerSchemat extends Schemat {
         // this.registry.erase_records()
     }
 
-    init_client({after = ''} = {}) {       //client_runtime
+    init_client() {       //client_runtime
         /* HTML block to be put in <body> of a page to load `schemat` runtime (with its context data) on client.
            The output string must be inserted unescaped (!), e.g., in EJS with <%- tag instead of <%=
                 <%- schemat.init_client() %>
@@ -153,7 +153,7 @@ export class ServerSchemat extends Schemat {
 
         let shadow = request._generate_shadow()
         let dump = "`\n" + shadow.encode() + "`"
-        after = [after, ...request._client_init].join('\n')
+        let after = [...request._client_init].join('\n')
 
         return `
             <script type="importmap"> {
