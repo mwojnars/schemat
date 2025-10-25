@@ -52,8 +52,10 @@ export class WebRequest extends _Request {   // WebConnection (conn)
     endpoints = []  // candidate endpoints that should be tried if `endpoint` is not yet decided; the first one that's present in the `target` is used, or 'default' if empty
 
     params = {}     // object, {name: value}, containing parameters decoded from the URL in Svelte/Next.js style
-    extra = {}      // any extra information beyond `params` to be passed together as `props` to component rendering functions
-    objects = []    // any extra objects other than `target` and `app` that should be included as bootstrap objects for client
+    extra = {}      // any extra data beyond `params` to be passed together as `props` to component rendering functions, here and on client
+
+    _objects = []   // any web objects (loaded), other than `target` and `app`, that should be included as bootstrap objects in rich response
+    _client_init    // any client-side initialization code (JS string) to be executed after Schemat boot up
 
     // TODO add after Svelte's RequestEvent:
     // cookies: {get, set, delete, serialize}
@@ -142,8 +144,7 @@ export class WebRequest extends _Request {   // WebConnection (conn)
     set_target(target)      { this.target = target }
     set_endpoint(endpoint)  { this.endpoint = endpoint }
     set_params(params)      { this.params = params || {} }
-    set_extra(extra)        { this.extra = extra || {} }
-    add_objects(...objects) { this.objects.push(...objects) }
+    set_props(extra = {})   { this.extra = {...this.extra, ...extra} }
 
     not_found() {
         throw new URLNotFound({path: this.path})
@@ -165,18 +166,22 @@ export class WebRequest extends _Request {   // WebConnection (conn)
 
     /***  Response generation  ***/
 
+    send(body) { return this.res.send(body) }
+
     send_mimetype(type) { return this.res.type(type) }      // modifies response header, no sending yet
 
-    async send_file(path) {
-        return promisify(this.res.sendFile).call(this.res, path)
-    }
+    async send_file(path) { return promisify(this.res.sendFile).call(this.res, path) }
 
     async send_json(data) {
         this.res.json(data)
         return _sending_done(this.res)
     }
 
-    send(body) { return this.res.send(body) }
+
+    // rich response ...
+
+    send_objects(...objs)   { this._objects.push(...objs) }         // these web objects will be sent as bootstrap objects
+    send_init(code)         { this._client_init += ' ' + code }     // this JS code will be executed on client after Schemat boot up
 
 
     /***  Response finalization  ***/
@@ -193,7 +198,7 @@ export class WebRequest extends _Request {   // WebConnection (conn)
         // assert(schemat._app.is_loaded(), schemat._app)
 
         let items = new RecentObjects()
-        let queue = [app, target, ...app.global?.values() || [], ...this.objects].filter(Boolean)
+        let queue = [app, target, ...app.global?.values() || [], ...this._objects].filter(Boolean)
 
         // extend the `items` set with all objects that are referenced from the `target` and `app` via __category, __extend or __container
         // TODO: deduplicate IDs when repeated by different object instances (e.g., this happens for the root category)
