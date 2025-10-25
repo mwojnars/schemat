@@ -160,7 +160,7 @@ export class WebRequest {   // WebConnection (conn)
 
     /***  Internal  ***/
 
-    generate_shadow({objects = [], extra} = {}) {
+    _generate_shadow({objects = [], extra} = {}) {
         /* Creates a WebContext with initialization data for client-side Schemat.
            Optional `objects` are included as seed objects together with this.target, `app`, `app.global`.
          */
@@ -203,21 +203,19 @@ export class WebRequest {   // WebConnection (conn)
 export class ShadowRequest {       // WebContext AfterRequest MirrorRequest RequestEcho PseudoRequest
     /* Metadata and seed objects related to a particular web request, sent back from server to client (embedded in HTML)
        to enable boot up of client-side Schemat and re-rendering/re-hydration (CSR) of the page.
-       After client-side finalize(), some attributes reflect the values from original server-side WebRequest:
+       After client-side finalize(), some attributes reflect the values from original server-side WebRequest.
+       The following attributes are accessible via schemat.request.* on server and client alike:
        - target,
        - endpoint,
        - params,
        - props.
-       The objects are flattened (state-encoded), but not yet stringified.
      */
     app_id          // ID of application object
     target_id       // ID of requested (target) web object, can be missing
     target          // requested web object, loaded
     endpoint        // full name of the target's endpoint that was requested, like "GET.admin"
-
-    objects         // bootstrap objects to be recreated on client; their inclusion reduces network communication
+    objects         // bootstrap objects to be recreated on client; their inclusion in response reduces network communication
     params          // endpoint's dynamic parameters that were requested by client
-
     extra           // any request-specific data added by init_client()
 
     encode(line_length = 1000) {

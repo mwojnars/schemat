@@ -149,7 +149,7 @@ export class ServerSchemat extends Schemat {
                 <%- schemat.init_client() %>
          */
         if (!schemat.request) throw new Error(`no web request, cannot generate client-side initialization block`)
-        let shadow = schemat.request.generate_shadow({extra, objects})
+        let shadow = schemat.request._generate_shadow({extra, objects})
         let dump = "`\n" + shadow.encode() + "`"
 
         return `
