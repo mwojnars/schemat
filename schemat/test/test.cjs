@@ -292,18 +292,18 @@ describe('Schemat Tests', function () {
         // it('/$/sys', async function () {
         //     /* Test of React rendering around system-level bootstrap objects. Must be run first, otherwise the error doesn't show up. */
         //     await delay(500)
-        //     await test_page(page, `${DOMAIN}/$/id/1009`, '#page-main',
+        //     await test_page(page, `${DOMAIN}/$/object/1009`, '#page-main',
         //         ['/$/sys', 'system objects', 'Directory'])
         // })
 
         it('Category', async function () {
-            await test_page(page, `${DOMAIN}/$/id/1`, '#page-main',
+            await test_page(page, `${DOMAIN}/$/object/1`, '#page-main',
                 ['Category of objects', 'name', '__ttl', 'defaults', 'schema', 'Ring', 'Varia', 'schemat:Category'])
         })
 
         it('Varia: load/insert/delete (UI)', async function () {
             // navigate to the Varia category page
-            await test_page(page, `${DOMAIN}/$/id/2101`, '#page-main',
+            await test_page(page, `${DOMAIN}/$/object/2101`, '#page-main',
                 ['Varia', 'Category', 'name', '__category', 'schema', 'Varia:2102', 'Create'])
 
             // these strings are only available after client-side rendering, not in HTML source:
@@ -381,7 +381,7 @@ describe('Schemat Tests', function () {
 
         it('rebuild_indexes', async function () {
             // await delay(200)
-            await test_page(page, `${DOMAIN}/$/id/2101`, '#page-main')
+            await test_page(page, `${DOMAIN}/$/object/2101`, '#page-main')
             await delay(200)
             let done = await page.evaluate(() => schemat.server('schemat.db.rebuild_indexes()'))
             expect(done).to.be.true
@@ -394,11 +394,11 @@ describe('Schemat Tests', function () {
         // })
 
         it('Varia object', async function () {
-            await test_page(page, `${DOMAIN}/$/id/2102`, '#page-main', ['Varia', 'title', '__category', 'Ala ma kota', 'Add new entry'])
+            await test_page(page, `${DOMAIN}/$/object/2102`, '#page-main', ['Varia', 'title', '__category', 'Ala ma kota', 'Add new entry'])
         })
 
         it('uncategorized object', async function () {
-            await test_page(page, `${DOMAIN}/$/id/2104`, '#page-main', ['title', 'ąłęÓŁŻŹŚ', 'Add new entry'])
+            await test_page(page, `${DOMAIN}/$/object/2104`, '#page-main', ['title', 'ąłęÓŁŻŹŚ', 'Add new entry'])
         })
 
         it('static html page', async function () {
@@ -467,9 +467,9 @@ describe('Schemat Tests', function () {
             await delay(1000)
         })
 
-        // describe('UI Actions on $/id/1000', function () {
+        // describe('UI Actions on $/object/1000', function () {
         //     before(async function () {
-        //         await page.goto('http://127.0.0.1:3000/$/id/1000')
+        //         await page.goto('http://127.0.0.1:3000/$/object/1000')
         //     })
         //
         //     it('should add an item and verify it appears in the list', async function () {
