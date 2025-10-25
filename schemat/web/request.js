@@ -190,7 +190,7 @@ export class WebRequest {   // WebConnection (conn)
         items = [...items]
 
         ctx.objects = items.map(obj => obj.__record)
-        ctx.app = app.id
+        ctx.app_id = app.id
         ctx.target = target?.id
         ctx.endpoint = this.endpoint
         ctx.extra = extra
@@ -206,7 +206,7 @@ export class WebContext {       // ShadowRequest AfterRequest MirrorRequest Requ
        to enable boot up of client-side Schemat and re-rendering/re-hydration (CSR) of the page.
        The objects are flattened (state-encoded), but not yet stringified.
      */
-    app             // application object (on client); or its ID (during serialization)
+    app_id          // ID of application object
     target          // requested web object (on client), loaded; or its ID (during serialization)
     objects         // client-side bootstrap objects: included in HTML, preloaded before the page rendering begins (no extra communication to load each object separately)
     endpoint        // full name of the target's endpoint that was requested, like "GET.admin"
@@ -231,8 +231,7 @@ export class WebContext {       // ShadowRequest AfterRequest MirrorRequest Requ
     }
 
     finalize() {
-        /* After decode() on client, convert `app` and `target` from IDs to objects. */
-        if (this.app) this.app = schemat.app
+        /* After decode() on client, convert `target` from ID to object. */
         if (this.target) this.target = schemat.get_object(this.target)
     }
 }
