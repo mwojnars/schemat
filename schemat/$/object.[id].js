@@ -18,13 +18,10 @@ export async function GET(request, {page, target}) {
     request.target = target
     request.endpoint = "GET.inspect"    // FIXME
 
-    // request.send_init(`
-    //     let init = ${init.toString()};
-    //     let {page, target} = await init(${id});
-    //     await page.render_client(target);
-    // `)
+    let html = await page.server(target, request)
+    return request.send(html)
 
-    return page.handle(target, request)
+    // return page.handle(target, request)
 }
 
 
