@@ -135,9 +135,14 @@ export class RenderedPage extends HtmlPage {
     static View = class extends HtmlPage.View {
 
         html_body(props) {
-            let init = this.page_init(props)
+            schemat.request.send_init(`
+                    let {target} = schemat, {endpoint} = schemat.config;
+                    target.__self[endpoint]().render_client(target);
+                `)
+
             let html = this.render_server(props)
-            return this.component_frame({init, html})
+
+            return this.component_frame(html)
         }
 
         render_server(props) {
@@ -145,20 +150,12 @@ export class RenderedPage extends HtmlPage {
             return ''
         }
 
-        page_init(props) {
-            schemat.request.send_init(`
-                    let {target} = schemat, {endpoint} = schemat.config;
-                    target.__self[endpoint]().render_client(target);
-                `)
-            return schemat.init_client()
-        }
-
-        component_frame({init, html}) {
+        component_frame(html) {
             /* HTML wrapper for page's main component, `html`, and Schemat launch script, `init`.
                All these elements will be placed together inside <body>...</body>.
              */
             return `
-                ${init}
+                ${schemat.init_client()}
                 <div id="page-main">${html}</div>
             `
         }
