@@ -191,7 +191,7 @@ export class WebRequest {   // WebConnection (conn)
 
         ctx.objects = items.map(obj => obj.__record)
         ctx.app_id = app.id
-        ctx.target = target?.id
+        ctx.target_id = target?.id
         ctx.endpoint = this.endpoint
         ctx.extra = extra
         return ctx
@@ -205,11 +205,18 @@ export class WebContext {       // ShadowRequest AfterRequest MirrorRequest Requ
     /* Metadata and seed objects related to a particular web request, sent back from server to client (embedded in HTML)
        to enable boot up of client-side Schemat and re-rendering/re-hydration (CSR) of the page.
        The objects are flattened (state-encoded), but not yet stringified.
+       After client-side finalize(), some attributes reflect the values from original server-side WebRequest:
+       - target,
+       - endpoint,
+       - params,
+       - props.
      */
     app_id          // ID of application object
-    target          // requested web object (on client), loaded; or its ID (during serialization)
-    objects         // client-side bootstrap objects: included in HTML, preloaded before the page rendering begins (no extra communication to load each object separately)
+    target_id       // ID of requested (target) web object, can be missing
+    target          // requested web object, loaded
     endpoint        // full name of the target's endpoint that was requested, like "GET.admin"
+
+    objects         // client-side bootstrap objects: included in HTML, preloaded before the page rendering begins (no extra communication to load each object separately)
     params          // endpoint's dynamic parameters that were requested by client
 
     extra           // any request-specific data added by init_client()
@@ -231,8 +238,11 @@ export class WebContext {       // ShadowRequest AfterRequest MirrorRequest Requ
     }
 
     finalize() {
-        /* After decode() on client, convert `target` from ID to object. */
-        if (this.target) this.target = schemat.get_object(this.target)
+        /* After decode() on client, initialize `target` object from `target_id`. */
+        if (this.target_id) {
+            this.target = schemat.get_object(this.target_id)
+            assert(this.target.is_loaded())
+        }
     }
 }
 
