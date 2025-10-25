@@ -1,7 +1,15 @@
 import mod_path from 'node:path'
-import {readdir} from 'node:fs/promises'
+import {readdir, lstat, readlink} from 'node:fs/promises'
 import {escapeRegExp, fileExtension, dropExtension} from '../common/utils.js'
 
+async function stat_symlink(path) {
+    let target = await readlink(path)
+    if (!mod_path.isAbsolute(target))
+        target = mod_path.resolve(mod_path.dirname(path), target)
+    return await lstat(target)
+}
+
+/**********************************************************************************************************************/
 
 export class Routes {
     /* Pre-scans the application's root folder and builds an in-memory URL routing table.
@@ -50,6 +58,18 @@ export class Routes {
                 await this._walk(path, _params, _pattern)
                 continue
             }
+
+            if (ent.isSymbolicLink()) {
+                let stat = await stat_symlink(path)
+                if (stat.isFile()) ent = {isFile: () => true}           // treat symlinked file same as regular file
+                // else if (stat.isDirectory()) {
+                //     let [_params, _pattern] = this._make_step(name, params, pattern)
+                //     await this._walk(path, _params, _pattern)
+                //     continue
+                // }
+                else continue
+            }
+            
             if (!ent.isFile()) continue
 
             let ext = fileExtension(path).toLowerCase()

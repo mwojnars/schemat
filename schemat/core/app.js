@@ -341,7 +341,7 @@ export class Application extends WebObject {
         let handled = await this._route_file_based(request)
         if (handled) return
 
-        this._print(`app.route() LEGACY ROUTE:`, request.path)
+        // this._print(`app.route() LEGACY ROUTE:`, request.path)
         let path = request.path.slice(1)                // drop the leading slash
         let object = await this.resolve(path)
         if (!object) throw new URLNotFound({path})
