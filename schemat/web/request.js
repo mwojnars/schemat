@@ -19,7 +19,19 @@ function _sending_done(res) {
 
 /**********************************************************************************************************************/
 
-export class WebRequest {   // WebConnection (conn)
+class _Request {
+    /* Shared attributes and methods of a request (WebRequest or ShadowRequest), accessible on server and client alike. */
+
+    target
+    endpoint
+    params
+    extra
+
+    get props() { return {...this.params, ...this.extra} }
+}
+
+
+export class WebRequest extends _Request {   // WebConnection (conn)
     /* Schemat's own representation of a web request (or internal request), plus context information
        that may evolve during the routing procedure, plus response generation methods.
      */
@@ -40,9 +52,7 @@ export class WebRequest {   // WebConnection (conn)
     endpoints = []  // candidate endpoints that should be tried if `endpoint` is not yet decided; the first one that's present in the `target` is used, or 'default' if empty
 
     params = {}     // object, {name: value}, containing parameters decoded from the URL in Svelte/Next.js style
-    extra = {}      // any extra information beyond `params` to be passed together as `props` to component rendering function
-
-    get props() { return {...this.params, ...this.extra} }
+    extra = {}      // any extra information beyond `params` to be passed together as `props` to component rendering functions
 
     // TODO add after Svelte's RequestEvent:
     // cookies: {get, set, delete, serialize}
@@ -56,6 +66,7 @@ export class WebRequest {   // WebConnection (conn)
     // send_response() --
 
     constructor({path, req, res}) {
+        super()
         if (req) this._from_express(req, res)
         if (path) this.path = path      // this is used by LOCAL calls (import_global(), app.route_local())
         this._set_path(this.path)
@@ -209,7 +220,7 @@ export class WebRequest {   // WebConnection (conn)
 
 /**********************************************************************************************************************/
 
-export class ShadowRequest {       // WebContext AfterRequest MirrorRequest RequestEcho PseudoRequest
+export class ShadowRequest extends _Request {    // WebContext AfterRequest MirrorRequest PseudoRequest
     /* Metadata and seed objects related to a particular web request, sent back from server to client (embedded in HTML)
        to enable boot up of client-side Schemat and re-rendering/re-hydration (CSR) of the page.
        After client-side finalize(), some attributes reflect the values from original server-side WebRequest
