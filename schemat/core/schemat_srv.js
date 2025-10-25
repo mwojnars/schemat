@@ -5,7 +5,7 @@ import {AsyncLocalStorage} from 'node:async_hooks'
 import {AgentRole} from "../common/globals.js";
 import {assert, print, copy, fluctuate} from '../common/utils.js'
 import {Schemat} from './schemat.js'
-import {WebContext} from "../web/request.js";
+import {ShadowRequest} from "../web/request.js";
 import {LiteSession, ServerSession} from "./session.js";
 import {Struct} from "../common/catalog.js";
 

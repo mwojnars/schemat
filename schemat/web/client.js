@@ -3,7 +3,7 @@ import "../common/globals.js"           // global flags: CLIENT, SERVER
 import {assert, print} from "../common/utils.js";
 import {Schemat} from "../core/schemat.js";
 import {ClientSession} from "../core/session.js"
-import {WebContext} from "./request.js"
+import {ShadowRequest} from "./request.js"
 
 
 /**********************************************************************************************************************/
@@ -15,7 +15,7 @@ export class Client extends Schemat {
     object          // ... alias
 
     constructor(ctx_data) {
-        let ctx = WebContext.decode(ctx_data)
+        let ctx = ShadowRequest.decode(ctx_data)
         print('request context:', ctx)
         super(ctx)
     }

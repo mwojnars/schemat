@@ -164,7 +164,7 @@ export class WebRequest {   // WebConnection (conn)
         /* Creates a WebContext with initialization data for client-side Schemat.
            Optional `objects` are included as seed objects together with this.target, `app`, `app.global`.
          */
-        let ctx = new WebContext()
+        let ctx = new ShadowRequest()
         let app = schemat.app
         let target = this.target
 
@@ -200,22 +200,22 @@ export class WebRequest {   // WebConnection (conn)
 
 /**********************************************************************************************************************/
 
-export class WebContext {       // ShadowRequest AfterRequest MirrorRequest RequestEcho PseudoRequest
+export class ShadowRequest {       // WebContext AfterRequest MirrorRequest RequestEcho PseudoRequest
     /* Metadata and seed objects related to a particular web request, sent back from server to client (embedded in HTML)
        to enable boot up of client-side Schemat and re-rendering/re-hydration (CSR) of the page.
-       The objects are flattened (state-encoded), but not yet stringified.
        After client-side finalize(), some attributes reflect the values from original server-side WebRequest:
        - target,
        - endpoint,
        - params,
        - props.
+       The objects are flattened (state-encoded), but not yet stringified.
      */
     app_id          // ID of application object
     target_id       // ID of requested (target) web object, can be missing
     target          // requested web object, loaded
     endpoint        // full name of the target's endpoint that was requested, like "GET.admin"
 
-    objects         // client-side bootstrap objects: included in HTML, preloaded before the page rendering begins (no extra communication to load each object separately)
+    objects         // bootstrap objects to be recreated on client; their inclusion reduces network communication
     params          // endpoint's dynamic parameters that were requested by client
 
     extra           // any request-specific data added by init_client()
@@ -233,7 +233,7 @@ export class WebContext {       // ShadowRequest AfterRequest MirrorRequest Requ
     static decode(text) {
         /* `text` may contain whitespace characters, they will be removed before decoding. */
         let state = JSON.parse(decodeURIComponent(atob(text.replace(/\s+/g, ''))))
-        return Object.assign(new WebContext(), state)
+        return Object.assign(new ShadowRequest(), state)
     }
 
     async finalize() {
