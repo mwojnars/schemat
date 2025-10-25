@@ -209,9 +209,19 @@ export class Application extends WebObject {
         let handler = module[request.http_method]       // GET(), POST(), ...
         if (typeof handler !== 'function') request.not_found()
 
-        let {init} = module
         let {props} = request
-        let data = (typeof init === 'function') ? await init(request, props) : {}
+        let {init, client} = module
+        let data = init ? await init(request, props) : {}
+
+        if (client)             // execute custom initialization on client: init() + client()
+            if (init) request.send_init(`
+                let __props = schemat.request.props;
+                let __data = (${init})(schemat.request, __props);
+                await (${client})({...__props, ...__data});
+            `)
+            else request.send_init(`
+                await (${client})(schemat.request.props);
+            `)
 
         return handler(request, {...props, ...data})
     }
