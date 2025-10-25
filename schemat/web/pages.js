@@ -183,8 +183,6 @@ export class ReactPage extends RenderedPage {
 
         render_server({request, ...props}) {
             this.assert_loaded()
-            this._print(`SSR endpoint '${request.endpoint}'`)
-
             // print('React tree:\n', ReactDOM.renderToStaticMarkup(e(this.Page, props)))
             // printReactTree(this.Page())
 

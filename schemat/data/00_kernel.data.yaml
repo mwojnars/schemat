@@ -193,9 +193,6 @@
           by removing blank segments. If __container is missing, the default URL
           path is used for the object (/$/id/<id>).
         "@": schemat/types/type.js:REF
-      __ident:
-        virtual: true
-        "@": schemat/types/type.js:STRING
       __path:
         impute: _impute_path
         "@": schemat/types/type.js:STRING

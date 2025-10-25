@@ -91,7 +91,6 @@ export class WebObject {
     __ttl_ms                same as __ttl, but in milliseconds
 
     __slug                  last part of a URL path of this object, "web identifier" of the object within its category
-    //__ident                 (virtual) string identifier of this object inside its __container
     __path                  (virtual) URL path of this object; similar to __url, but contains blanks segments; imputed via _impute_path()
     __url                   (virtual) absolute URL path of this object, calculated via __url() getter
 
@@ -874,13 +873,6 @@ export class WebObject {
         return this.__path?.replace(/\/\*[^/]*/g, '') || this.system_url    // no-category objects may have no __path because of lack of schema and imputation
     }
 
-    // get __ident() { return this.__container?.identify(this) }
-
-
-    // get __url() {
-    //     return this.__category?.member_url(this) || this.system_url
-    // }
-
     system_slug() {
         /* This object's URL slug for administrative purposes. */
         assert(this.id)
@@ -1367,6 +1359,7 @@ export class WebObject {
         else if (typeof directory === 'string') directory = await schemat.import(directory)
         assert(directory.instanceof(schemat.std.Directory))
 
+        // FIXME: __ident is no longer with us
         let ident = this.__ident || this.name || `${this.id}`
         let src = this.__container
         let dst = directory
