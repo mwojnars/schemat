@@ -109,12 +109,14 @@ if (CLIENT) {
     // console.log('React:', React)
 
     check_unloaded("ReactDOM")
-    await import("/$/local/node_modules/react-dom/umd/react-dom.development.js")
+    await import("/$/bundle/react-dom.js")
+    // await import("/$/local/node_modules/react-dom/umd/react-dom.development.js")
     ReactDOM = globalThis.ReactDOM
     // console.log('ReactDOM:', ReactDOM)
 
     check_unloaded("MaterialUI")
-    await import("/$/local/node_modules/@mui/material/umd/material-ui.development.js")
+    await import("/$/bundle/material-ui.js")
+    // await import("/$/local/node_modules/@mui/material/umd/material-ui.development.js")
     MaterialUI = globalThis.MaterialUI
     // console.log('MaterialUI:', MaterialUI)
 
