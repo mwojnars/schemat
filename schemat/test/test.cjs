@@ -387,12 +387,6 @@ describe('Schemat Tests', function () {
             expect(done).to.be.true
         })
 
-        // it('Directory', async function () {
-        //     await test_page(page, `${DOMAIN}/$/sys/Directory`, '#page-main',
-        //         ['Directory', 'nested containers', 'file system', 'containers.js:Directory'])
-        //     await delay(1000)
-        // })
-
         it('Varia object', async function () {
             await test_page(page, `${DOMAIN}/$/object/2102`, '#page-main', ['Varia', 'title', '__category', 'Ala ma kota', 'Add new entry'])
         })
@@ -504,10 +498,6 @@ describe('Schemat Tests', function () {
 
         before(async function () {({server, browser, page, messages} = setup())})
 
-        // it('demo01/Home::inspect', async function () {
-        //     await delay(500)
-        //     await test_page(page, `${DOMAIN}/::inspect`, '#page-main', ['home', 'Properties'])
-        // })
         it('demo01/<app>', async function () {
             await delay(500)
             await test_page(page, `${DOMAIN}/$/object/2001`, '#page-main', ['Bookstore (demo app)', 'Application'])
