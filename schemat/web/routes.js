@@ -63,6 +63,7 @@ export class Routes {
                 let stat = await stat_symlink(path)
                 if (stat.isFile()) ent = {isFile: () => true}           // treat symlinked file same as regular file
                 // else if (stat.isDirectory()) {
+                //     if (name === 'node_modules') continue
                 //     let [_params, _pattern] = this._make_step(name, params, pattern)
                 //     await this._walk(path, _params, _pattern)
                 //     continue

@@ -300,7 +300,7 @@ export class Application extends WebObject {
 
     async _send_svelte(path, request) {
         /* Compile a .svelte file to client-side JS and send it to the client. */
-        this._print(`_send_svelte():`, path)
+        // this._print(`_send_svelte():`, path)
         let source = await readFile(path, 'utf-8')
         let out = svelte_compile(source, {filename: path, css: 'injected', generate: 'client'})
         if (out.warnings?.length) this._print('_send_svelte() compilation warnings:', out.warnings)
@@ -342,7 +342,7 @@ export class Application extends WebObject {
         let handled = await this._route_file_based(request)
         if (handled) return
 
-        // this._print(`app.route() LEGACY ROUTE:`, request.path)
+        // this._print(`app.route() LEGACY ROUTE:`, request.req.url)
         let path = request.path.slice(1)                // drop the leading slash
         let object = await this.resolve(path)
         if (!object) throw new URLNotFound({path})
