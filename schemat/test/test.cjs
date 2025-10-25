@@ -345,7 +345,7 @@ describe('Schemat Tests', function () {
         })
 
         it('Varia: multiple insert (console)', async function () {
-            await test_page(page, `${DOMAIN}/$/id/2101`, '#page-main')
+            await test_page(page, `${DOMAIN}/$/object/2101`, '#page-main')
             await delay(200)
 
             let inserted = await page.evaluate(async () => {
