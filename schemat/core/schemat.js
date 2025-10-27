@@ -51,8 +51,6 @@ class Classpath {
             if (accept && !accept(name, obj)) continue
             let path = `${normal_path}:${name}`
             this.set(path, obj)
-            // if (path.startsWith('schemat'))
-            //     this.set('#' + path, obj)
         }
     }
 
@@ -200,8 +198,6 @@ export class Schemat {
                 "../server/node.js",
                 "../server/cluster.js",
             )
-
-        // this._print(`_init_classpath():\n`, builtin.cache)
 
         // await builtin.fetch("../index.js", {path: 'schemat'})       // Schemat core classes, e.g., "schemat:WebObject"
         // await builtin.fetch("../common/structs.js")
