@@ -71,7 +71,7 @@ export class Routes {
             if (!ent.isFile()) continue
 
             let ext = fileExtension(path).toLowerCase()
-            let url_path = this._to_url(path)
+            let url_path = '/' + mod_path.relative(this.app_root, path) // truncate the leading `app_root` path
             let route_path = url_path.slice(0, -(ext.length + 1))       // drop ".ext"
 
             // schemat._print(`_walk():`, {path, url_path})
@@ -99,13 +99,6 @@ export class Routes {
                 else this.exact_routes.set(route_path, {type, path, ext})
             }
         }
-    }
-
-    _to_url(file_path) {
-        return '/' + mod_path.relative(this.app_root, file_path)        // truncate the leading `app_root` path
-        // let rel = mod_path.relative(this.app_root, file_path)
-        // rel = rel.split(mod_path.sep).join('/')
-        // return '/' + rel
     }
 
     _parse(segment, params, url) {
