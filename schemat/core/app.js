@@ -4,14 +4,13 @@ import {WebRequest} from '../web/request.js'
 import {WebObject} from './object.js'
 import {JsonPOST} from "../web/services.js";
 import {mActionResult, mString} from "../web/messages.js";
-import {transform_postcss} from "#schemat/std/transforms.js";
 
 // const fs  = SERVER && await import('fs')
 const ejs = SERVER && await import('ejs')
 const mod_path = SERVER && await import('node:path')
 const {readFile} = SERVER && await import('node:fs/promises') || {}
 const {Routes} = SERVER && await import('../web/routes.js') || {}
-// const {check_file_type} = SERVER && await import('../common/utils_srv.js') || {}
+const {transform_postcss} = SERVER && await import('../std/transforms.js') || {}
 
 const {render: svelte_render} = SERVER && await import('svelte/server') || {}
 const {compile: svelte_compile} = SERVER && await import('svelte/compiler') || {}
@@ -225,7 +224,7 @@ export class Application extends WebObject {
     }
 
     async _transpile_pcss(path, request) {
-        let content = fs.readFileSync(path, {encoding: 'utf8'})
+        let content = await readFile(path, 'utf8')
         let output = await transform_postcss(content, path)
         request.send_mimetype('css')
         request.send(output)

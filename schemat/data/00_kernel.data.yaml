@@ -306,13 +306,13 @@
         trailing slash.
       "@": schemat/types/type.js:PATH
     static_extensions:
-      default: html htm xml css postcss pcss js mjs json jpg jpeg png gif bmp svg pdf
-        mp3 mp4 wav webp ico ttf txt woff woff2
+      default: html htm xml css js mjs json jpg jpeg png gif bmp svg pdf mp3 mp4 wav
+        webp ico ttf txt woff woff2
       info: Space-separated list of extensions (case insensitive) of files that can
         be served as static assets directly from the application folder.
       "@": schemat/types/type.js:STRING
     transpiled_extensions:
-      default: pcss svelte
+      default: postcss pcss svelte
       info: Space-separated list of extensions (case insensitive) of files that can
         be served from application folder after being transpiled, the extension is
         included in the URL then.
