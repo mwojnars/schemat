@@ -559,25 +559,20 @@ export class Schemat {
     }
 
     import_local(path) {
-        /* Import from a local `path` of the form ".../file.js" or ".../file.js:ClassName", pointing to a module or symbol
+        /* Import a local path (.../file.js) or descriptor (.../file.js:ClassName), pointing to a module or symbol
            inside the project's root folder which should include both Schemat and application's source code.
            This method can be called both on the server and on the client (!). In the latter case, the import path
            is converted to a URL of the form "/$/local/.../file.js::import". May return a Promise.
          */
-        // if (path.startsWith('schemat/')) path = '#' + path
-
         // print(`Application.import():  ${path}`)
-        let [file_path, symbol] = splitLast(path || '', ':')
-        // let import_path = CLIENT ? this.app.get_module_url(file_path) : this.PATH_PROJECT + '/' + file_path
-        // let import_path = path[0] === '#' ? file_path : CLIENT ? this.app.get_module_url(file_path) : this.PATH_PROJECT + '/' + file_path
-        let import_path = file_path
+        let [file, symbol] = splitLast(path || '', ':')
 
-        // print(`...importing:  ${import_path}`)
-        let module = this._modules_cache.get(import_path)       // first, try taking the module from the cache - returns immediately
+        // print(`...importing: ${file}`)
+        let module = this._modules_cache.get(file)       // first, try taking the module from the cache - returns immediately
         if (module) return symbol ? module[symbol] : module
 
-        return import(import_path).then(mod => {                // otherwise, import the module and cache it - this returns a Promise
-            this._modules_cache.set(import_path, mod)
+        return import(file).then(mod => {                // otherwise, import the module and cache it - this returns a Promise
+            this._modules_cache.set(file, mod)
             return symbol ? mod[symbol] : mod
         })
     }
