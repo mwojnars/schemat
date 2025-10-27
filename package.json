@@ -6,11 +6,8 @@
   "author": "Marcin Wojnarski",
   "homepage": "https://github.com/mwojnars/schemat",
   "imports": {
-    "#root/*": "./*"
-  },
-  "aliases": {
     "#root/*": "./*",
-    "schemat": "schemat"
+    "#schemat/*": "./schemat/*"
   },
   "dependencies": {
     "@babel/core": "^7.25.8",
