@@ -172,7 +172,13 @@ export class WebRequest extends _Request {   // WebConnection (conn)
         /* Modifies response header, no sending yet. */
         if (!type) return
         type = type.toLowerCase()
-        if (type === 'pcss' || type === 'postcss') type = 'css'
+
+        const substitutions = {
+            'pcss': 'css',          // PostCSS
+            'postcss': 'css',       // PostCSS
+        }
+        if (type in substitutions) type = substitutions[type]
+
         return this.res.type(type)
     }
 

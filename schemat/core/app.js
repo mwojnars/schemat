@@ -223,8 +223,8 @@ export class Application extends WebObject {
         request.send(code)
     }
 
-    // async _transpile_pcss(path, request) {
-    // }
+    async _transpile_pcss(path, request) {
+    }
 
     async _render_ejs(path, request) {
         /* Render an EJS template file. It may include() other templates and async import_() other JS modules. */
