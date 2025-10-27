@@ -35,11 +35,12 @@ class Classpath {
         }))
     }
 
-    async fetch(module_url, {path: target_path, symbols, accept, exclude_variables = true} = {}) {
+    async fetch(module_path, {path: target_path, symbols, accept, exclude_variables = true} = {}) {
         /* Import symbols from a module and add them to the cache. */
-        let module = await import(module_url)
-        let prefixed_url = `schemat/core/${module_url}`
-        let normalized_url = target_path || normalizePath(prefixed_url)
+        let module = await import(module_path)
+
+        if (module_path[0] === '.') module_path = normalizePath(`schemat/core/${module_path}`)
+        let normal_path = target_path || module_path
 
         if (typeof symbols === "string")    symbols = symbols.split(' ')
         else if (!symbols)                  symbols = Object.keys(module)
@@ -48,7 +49,7 @@ class Classpath {
         for (let name of symbols) {
             let obj = module[name]
             if (accept && !accept(name, obj)) continue
-            let path = `${normalized_url}:${name}`
+            let path = `${normal_path}:${name}`
             this.set(path, obj)
             if (path.startsWith('schemat'))
                 this.set('#' + path, obj)
@@ -175,8 +176,8 @@ export class Schemat {
 
         // WARN: concurrent fetching with fetch_all() may NOT be faster than sequential .fetch() -- this should be tested and compared in browsers!
         await builtin.fetch_all(
-            ["../index.js", {path: 'schemat'}],         // Schemat core classes, e.g., "schemat:WebObject"
-            // "#schemat",                             // Schemat core classes, e.g., "#schemat:WebObject"
+            // ["../index.js", {path: 'schemat'}],         // Schemat core classes, e.g., "schemat:WebObject"
+            "#schemat",                             // Schemat core classes, e.g., "#schemat:WebObject"
             "../common/structs.js",
             "../common/errors.js",                  // for serialization of errors in RPC responses
             "../types/type.js",
@@ -200,6 +201,8 @@ export class Schemat {
                 "../server/node.js",
                 "../server/cluster.js",
             )
+
+        // this._print(`_init_classpath():\n`, builtin.cache)
 
         // await builtin.fetch("../index.js", {path: 'schemat'})       // Schemat core classes, e.g., "schemat:WebObject"
         // await builtin.fetch("../common/structs.js")
