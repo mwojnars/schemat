@@ -570,6 +570,7 @@ export class Schemat {
         // let import_path = CLIENT ? this.app.get_module_url(file_path) : this.PATH_PROJECT + '/' + file_path
 
         let import_path = path[0] === '#' ? file_path : CLIENT ? this.app.get_module_url(file_path) : this.PATH_PROJECT + '/' + file_path
+        // let import_path = file_path
 
         // print(`...importing:  ${import_path}`)
         let module = this._modules_cache.get(import_path)       // first, try taking the module from the cache - returns immediately

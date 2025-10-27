@@ -110,7 +110,7 @@
 
 - id: 2101
   name: Book
-  class: demo/01_books/books/books.js:Book
+  class: "#root/demo/01_books/books/books.js:Book"
   schema:
     title:
       "@": schemat/types/type.js:STRING
@@ -142,7 +142,7 @@
     "@": 1
 - id: 2102
   name: Author
-  class: demo/01_books/authors/author.js:Author
+  class: "#root/demo/01_books/authors/author.js:Author"
   schema:
     birth_year:
       "@": schemat/types/type.js:INTEGER

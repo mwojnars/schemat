@@ -13,7 +13,6 @@ import {Catalog, Struct} from '../common/catalog.js'
 import {generic_type, REF, SCHEMA_GENERIC} from "../types/type.js"
 import {Intercept} from "./inter.js";
 
-import {html_page} from "../web/adapters.js"
 import {Assets} from "../web/component.js"
 import {WebRequest} from "../web/request.js"
 import {ReactPage, InspectView} from "../web/pages.js"
