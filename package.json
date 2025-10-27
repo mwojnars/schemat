@@ -11,7 +11,8 @@
   "imports": {
     "#root/*": "./*",
     "#app/*": "./app/*",
-    "#schemat/*": "./schemat/*"
+    "#schemat/*": "./schemat/*",
+    "#schemat": "./schemat/index.js"
   },
   "dependencies": {
     "@babel/core": "^7.25.8",
