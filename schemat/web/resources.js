@@ -61,8 +61,8 @@ export class Resources {
         <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>    
         <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet"/>    
     
-        <link href="/$/local/schemat/assets/favicon.ico" rel="icon" type="image/x-icon" />
-        <link href="/$/local/schemat/assets/styles.css" rel="stylesheet" />
+        <link href="/$/schemat/assets/favicon.ico" rel="icon" type="image/x-icon" />
+        <link href="/$/schemat/assets/styles.css" rel="stylesheet" />
     `
     // inlined favicon:  <link href="data:image/x-icon;base64,AAABAAEAEBAQAAEABAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAmYh3AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQEQEBAQEBAQEAEBAQEBAQEBEBAQEBAQEBABAQEBAQEBARAQEBAQEBAQAQEBAQEBAQEQEBAQEBAQEAEBAQEBAQEBEBAQEBAQEBABAQEBAQEBARAQEBAQEBAQAQEBAQEBAQEQEBAQEBAQEAEBAQEBAQEBEBAQEBAQEBCqqgAAVVUAAKqqAABVVQAAqqoAAFVVAACqqgAAVVUAAKqqAABVVQAAqqoAAFVVAACqqgAAVVUAAKqqAABVVQAA" rel="icon" type="image/x-icon" />
 }
