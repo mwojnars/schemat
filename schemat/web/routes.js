@@ -82,7 +82,7 @@ export class Routes {
             if (this.app._static_exts.includes(ext)) type = 'static'
             else if (this.app._transpiled_exts.includes(ext)) type = 'transpiled'
             
-            if (type) this.exact_routes.set(url_path, {file: path, type})
+            if (type) this.exact_routes.set(url_path, {file: path, type, ext})
 
             // renderable files become routes without extension
             if (['js', 'jsx', 'svelte', 'ejs'].includes(ext)) {

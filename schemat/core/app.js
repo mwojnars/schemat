@@ -151,6 +151,7 @@ export class Application extends WebObject {
         // this._print(`app._route_file_based() match:`, match)
 
         if (match.type === 'static') {                      // send a static file as is
+            request.send_mimetype(match.ext)
             await request.send_file(match.file)
             return true
         }
@@ -260,7 +261,7 @@ export class Application extends WebObject {
         if (typeof load === 'function')
             request.set_props({data: await load(request)})
 
-        let file = path.split('/').pop()        // on-client hydration imports the same file but with .svelte extension kept in URL, which goes back to _send_svelte() below
+        let file = path.split('/').pop()        // on-client hydration imports the same file but with .svelte ext in URL, which goes back to _send_svelte() below
         request.send_init(`
                 import {hydrate} from "/$/bundle/svelte";
                 import App from "./${file}";

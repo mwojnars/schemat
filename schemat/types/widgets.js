@@ -136,7 +136,7 @@ export class TEXT_Widget extends TextualWidget {
     shadow_dom = false
 
     static css_class = "TEXT"
-    static css_file  = import.meta.resolve('./widgets.css')
+    static css_file  = import.meta.resolve('./widgets.pcss')
 
     viewer() { return DIV({onDoubleClick: e => this.open(e)}, this.display(this.props.value)) }
     editor() {
