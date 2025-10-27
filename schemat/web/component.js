@@ -1,5 +1,4 @@
-import {T, assert, print} from '../common/utils.js'
-import {compact_css} from './css.js'
+import {T, assert, print, compact_css} from '../common/utils.js'
 import {e, cl, SPAN, TEMPLATE, STYLE, FRAGMENT, LINK} from './react-utils.js'
 import {React} from './resources.js'
 

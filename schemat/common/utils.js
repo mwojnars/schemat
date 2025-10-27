@@ -386,7 +386,7 @@ export function dropExtension(filepath) {
 
 /*************************************************************************************************
  **
- **  REGEXP and HTML
+ **  REGEXP / HTML / CSS
  **
  */
 
@@ -407,6 +407,20 @@ const reUnescapedHtml = /[&<]/g
 export function escape_html(string) {
     // reduced version of Lodash's escape(): https://github.com/lodash/lodash/blob/9d11b48ce5758df247607dc837a98cbfe449784a/escape.js
     return string.replace(reUnescapedHtml, (chr) => htmlEscapes[chr]);
+}
+
+export function compact_css(css) {
+    /* Remove comments and merge whitespace (including newlines) inside CSS code. */
+
+    let compacted = css.replace(/\/\*[\s\S]*?\*\//g, '')                        // remove comments
+
+    compacted = compacted.split(/(['"])(?:(?=(\\?))\2.)*?\1/)                           // avoid compacting whitespace inside quotes
+        .map((chunk, index) => index % 2 === 0 ? chunk.replace(/\s+/g, ' ') : chunk     // compact only outside quotes
+    ).join('')
+
+    compacted = compacted.replace(/\{\s+/g, '{').replace(/\s+\}/g, '}')         // remove spaces after "{" and before "}"
+
+    return compacted.trim()
 }
 
 
