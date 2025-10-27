@@ -74,6 +74,8 @@ export class Routes {
             let url_path = this._to_url(path)
             let route_path = url_path.slice(0, -(ext.length + 1))       // drop ".ext"
 
+            // schemat._print(`_walk():`, {path, url_path})
+
             route_path = this.app._norm_segment(route_path)             // replace dots with slashes
             if (ext) url_path = route_path + '.' + ext
 
@@ -100,9 +102,10 @@ export class Routes {
     }
 
     _to_url(file_path) {
-        let rel = mod_path.relative(this.app_root, file_path)
-        rel = rel.split(mod_path.sep).join('/')
-        return '/' + rel
+        return '/' + mod_path.relative(this.app_root, file_path)        // truncate the leading `app_root` path
+        // let rel = mod_path.relative(this.app_root, file_path)
+        // rel = rel.split(mod_path.sep).join('/')
+        // return '/' + rel
     }
 
     _parse(segment, params, url) {
