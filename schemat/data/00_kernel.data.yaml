@@ -318,10 +318,11 @@
         included in the URL then.
       "@": "#schemat/types/type.js:STRING"
     private_routes:
-      default: "_ . + #"
+      default: "_ . + # _$"
       info: Space-separated list of prefixes that indicate the file or directory is
         private and not accessible for routing procedure. If any of these prefixes is
         found in a URL path segment, the request is rejected with "not found" error.
+        You should NEVER remove the '_$' prefix from this list!
       "@": "#schemat/types/type.js:STRING"
     system_route:
       default: /$

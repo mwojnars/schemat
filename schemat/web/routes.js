@@ -1,19 +1,7 @@
 import mod_path from 'node:path'
-import {readdir, lstat, readlink, realpath} from 'node:fs/promises'
+import {readdir, lstat, realpath} from 'node:fs/promises'
 import {escapeRegExp, fileExtension, dropExtension} from '../common/utils.js'
 
-async function stat_symlink(path) {
-    /* Follow a chain of symbolic links, starting from `path`. Return the final file status. */
-    while (true) {
-        let target = await readlink(path)
-        if (!mod_path.isAbsolute(target))
-            target = mod_path.resolve(mod_path.dirname(path), target)
-
-        let stat = await lstat(target)
-        if (stat.isSymbolicLink()) path = target
-        else return stat
-    }
-}
 
 /**********************************************************************************************************************/
 
@@ -60,10 +48,9 @@ export class Routes {
 
             if (ent.isSymbolicLink())
                 ent = await lstat(await realpath(path))
-                // ent = await stat_symlink(path)
 
             if (ent.isDirectory()) {
-                if (name === 'node_modules') continue                   // protection against accidental scanning of a huge source tree
+                if (name === 'node_modules') continue                   // protection against accidental scanning of a big source tree
                 let [_params, _url] = this._parse(name, params, url)    // update accumulators with this directory segment
                 await this._walk(path, _params, _url)
                 continue
