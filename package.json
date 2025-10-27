@@ -5,6 +5,9 @@
   "private": true,
   "author": "Marcin Wojnarski",
   "homepage": "https://github.com/mwojnars/schemat",
+  "engines": {
+    "node": ">=16"
+  },
   "imports": {
     "#root/*": "./*",
     "#app/*": "./app/*",
