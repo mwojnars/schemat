@@ -156,8 +156,9 @@ export class Application extends WebObject {
             return true
         }
 
-        if (match.type === 'transpiled') {                  // send a transpiled file via a corresponding _send_*() method
-            await this._send_svelte(match.path, request)
+        if (match.type === 'transpiled') {                  // send a transpiled file via a corresponding _transpile_*() method
+            let method = `_transpile_${match.ext}`
+            await this[method](match.path, request)
             return true
         }
 
@@ -261,7 +262,7 @@ export class Application extends WebObject {
         if (typeof load === 'function')
             request.set_props({data: await load(request)})
 
-        let file = path.split('/').pop()        // on-client hydration imports the same file but with .svelte ext in URL, which goes back to _send_svelte() below
+        let file = path.split('/').pop()        // on-client hydration imports the same file but with .svelte ext in URL, which goes back to _transpile_svelte() below
         request.send_init(`
                 import {hydrate} from "/$/bundle/svelte";
                 import App from "./${file}";
@@ -299,12 +300,12 @@ export class Application extends WebObject {
         return [...set]
     }
 
-    async _send_svelte(path, request) {
+    async _transpile_svelte(path, request) {
         /* Compile a .svelte file to client-side JS and send it to the client. */
-        // this._print(`_send_svelte():`, path)
+        // this._print(`_transpile_svelte():`, path)
         let source = await readFile(path, 'utf-8')
         let out = svelte_compile(source, {filename: path, css: 'injected', generate: 'client'})
-        if (out.warnings?.length) this._print('_send_svelte() compilation warnings:', out.warnings)
+        if (out.warnings?.length) this._print('_transpile_svelte() compilation warnings:', out.warnings)
 
         let bundle = `"/$/bundle/svelte"`
         let code = out.js.code
