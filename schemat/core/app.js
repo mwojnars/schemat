@@ -4,6 +4,7 @@ import {WebRequest} from '../web/request.js'
 import {WebObject} from './object.js'
 import {JsonPOST} from "../web/services.js";
 import {mActionResult, mString} from "../web/messages.js";
+import {transform_postcss} from "#schemat/std/transforms.js";
 
 // const fs  = SERVER && await import('fs')
 const ejs = SERVER && await import('ejs')
@@ -224,6 +225,10 @@ export class Application extends WebObject {
     }
 
     async _transpile_pcss(path, request) {
+        let content = fs.readFileSync(path, {encoding: 'utf8'})
+        let output = await transform_postcss(content, path)
+        request.send_mimetype('css')
+        request.send(output)
     }
 
     async _render_ejs(path, request) {
