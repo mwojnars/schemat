@@ -32,11 +32,12 @@ export class Routes {
     async _walk(parent, params = [], url = '') {
         let entries = await readdir(parent, {withFileTypes: true})
         
-        // sort entries by replacing '[' with a high-code char to push dynamic segments last
+        // sort entries by replacing '(' and '[' with high-code chars to control segment order
         const HIGH_CHAR = '\uffff'
+        const HIGH_CHAR_2 = '\ufffe'  // one less than HIGH_CHAR
         entries.sort((a, b) => {
-            let a_sort = a.name.replaceAll('[', HIGH_CHAR)
-            let b_sort = b.name.replaceAll('[', HIGH_CHAR)
+            let a_sort = a.name.replaceAll('(', HIGH_CHAR_2).replaceAll('[', HIGH_CHAR)
+            let b_sort = b.name.replaceAll('(', HIGH_CHAR_2).replaceAll('[', HIGH_CHAR)
             return a_sort.localeCompare(b_sort)
         })
         
