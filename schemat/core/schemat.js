@@ -50,6 +50,8 @@ class Classpath {
             if (accept && !accept(name, obj)) continue
             let path = `${normalized_url}:${name}`
             this.set(path, obj)
+            if (path.startsWith('schemat/'))
+                this.set('#' + path, obj)
         }
     }
 
@@ -58,7 +60,7 @@ class Classpath {
         this.cache.set(path, obj)
 
         if (typeof obj === "function") {
-            if (this.inverse.has(obj)) throw new Error(`a path for the object already exists (${this.inverse.get(obj)}), cannot add another one (${path})`)
+            // if (this.inverse.has(obj)) throw new Error(`a path for the object already exists (${this.inverse.get(obj)}), cannot add another one (${path})`)
             this.inverse.set(obj, path)
         }
     }
@@ -568,7 +570,6 @@ export class Schemat {
         // print(`Application.import():  ${path}`)
         let [file_path, symbol] = splitLast(path || '', ':')
         // let import_path = CLIENT ? this.app.get_module_url(file_path) : this.PATH_PROJECT + '/' + file_path
-
         // let import_path = path[0] === '#' ? file_path : CLIENT ? this.app.get_module_url(file_path) : this.PATH_PROJECT + '/' + file_path
         let import_path = file_path
 

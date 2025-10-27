@@ -122,11 +122,11 @@ export class Application extends WebObject {
         return path.replace(root, Application.URL_LOCAL)
     }
 
-    get_module_url(path) {
-        /* Convert a local import path, like "schemat/.../file.js" to a URL-path that can be used with import() on the client. */
-        if (path[0] === '/') throw new Error(`cannot make an import URL-path for an absolute local path: ${path}`)
-        return `${Application.URL_LOCAL}/${path}::import`          // ::import is sometimes needed to get the proper MIME header, esp. if target is a web object not a local file
-    }
+    // get_module_url(path) {
+    //     /* Convert a local import path, like "schemat/.../file.js" to a URL-path that can be used with import() on the client. */
+    //     if (path[0] === '/') throw new Error(`cannot make an import URL-path for an absolute local path: ${path}`)
+    //     return `${Application.URL_LOCAL}/${path}::import`          // ::import is sometimes needed to get the proper MIME header, esp. if target is a web object not a local file
+    // }
 
 
     /***  Request resolution  ***/
