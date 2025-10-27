@@ -10,7 +10,7 @@ const ejs = SERVER && await import('ejs')
 const mod_path = SERVER && await import('node:path')
 const {readFile} = SERVER && await import('node:fs/promises') || {}
 const {Routes} = SERVER && await import('../web/routes.js') || {}
-const {transform_postcss} = SERVER && await import('../std/transforms.js') || {}
+const {transform_postcss} = SERVER && await import('../web/transforms.js') || {}
 
 const {render: svelte_render} = SERVER && await import('svelte/server') || {}
 const {compile: svelte_compile} = SERVER && await import('svelte/compiler') || {}
