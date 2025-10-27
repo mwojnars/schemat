@@ -58,18 +58,6 @@ export class Routes {
 
             if (this.app._is_private_name.test(name)) continue
 
-            // if (ent.isSymbolicLink()) {
-            //     let stat = await stat_symlink(path)
-            //     if (stat.isFile()) ent = {isFile: () => true}           // treat symlinked file same as regular file
-            //     else if (stat.isDirectory()) {
-            //         if (name === 'node_modules') continue
-            //         let [_params, _url] = this._parse(name, params, url)
-            //         await this._walk(path, _params, _url)
-            //         continue
-            //     }
-            //     else continue
-            // }
-
             if (ent.isSymbolicLink())
                 ent = await stat_symlink(path)
             
