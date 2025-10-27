@@ -39,7 +39,7 @@ class Classpath {
         /* Import symbols from a module and add them to the cache. */
         let module = await import(module_path)
 
-        if (module_path[0] === '.') module_path = normalizePath(`schemat/core/${module_path}`)
+        if (module_path[0] === '.') module_path = normalizePath(`#schemat/core/${module_path}`)
         let normal_path = target_path || module_path
 
         if (typeof symbols === "string")    symbols = symbols.split(' ')
@@ -51,8 +51,8 @@ class Classpath {
             if (accept && !accept(name, obj)) continue
             let path = `${normal_path}:${name}`
             this.set(path, obj)
-            if (path.startsWith('schemat'))
-                this.set('#' + path, obj)
+            // if (path.startsWith('schemat'))
+            //     this.set('#' + path, obj)
         }
     }
 
@@ -61,7 +61,7 @@ class Classpath {
         this.cache.set(path, obj)
 
         if (typeof obj === "function") {
-            // if (this.inverse.has(obj)) throw new Error(`a path for the object already exists (${this.inverse.get(obj)}), cannot add another one (${path})`)
+            if (this.inverse.has(obj)) throw new Error(`a path for the object already exists (${this.inverse.get(obj)}), cannot add another one (${path})`)
             this.inverse.set(obj, path)
         }
     }
@@ -176,7 +176,6 @@ export class Schemat {
 
         // WARN: concurrent fetching with fetch_all() may NOT be faster than sequential .fetch() -- this should be tested and compared in browsers!
         await builtin.fetch_all(
-            // ["../index.js", {path: 'schemat'}],         // Schemat core classes, e.g., "schemat:WebObject"
             "#schemat",                             // Schemat core classes, e.g., "#schemat:WebObject"
             "../common/structs.js",
             "../common/errors.js",                  // for serialization of errors in RPC responses
