@@ -168,7 +168,13 @@ export class WebRequest extends _Request {   // WebConnection (conn)
 
     send(body) { return this.res.send(body) }
 
-    send_mimetype(type) { return this.res.type(type) }      // modifies response header, no sending yet
+    send_mimetype(type) {
+        /* Modifies response header, no sending yet. */
+        if (!type) return
+        type = type.toLowerCase()
+        if (type === 'pcss' || type === 'postcss') type = 'css'
+        return this.res.type(type)
+    }
 
     async send_file(path) { return promisify(this.res.sendFile).call(this.res, path) }
 
