@@ -109,7 +109,8 @@ export class CatalogTable extends Component {
     /* React component that displays a Catalog/Map/POJO object in tabular form. */
 
     static css_class = "CATALOG"
-    static css_file  = import.meta.resolve('./catalog.pcss')
+    static css_url  = '/$/schemat/types/catalog.pcss'
+    // static css_file  = import.meta.resolve('./catalog.pcss')
 
     move(up, down) {
         let hide = st({visibility: 'hidden'})

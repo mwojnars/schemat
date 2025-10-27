@@ -26,10 +26,15 @@ export class Assets {
     assets = new Set()
     styles = new Set()
 
-    add_style_path(path) {
-        /* `path` is the full local path to a file, typically retrieved with import.meta.resolve(RELATIVE_FILE_PATH). */
-        if (!path) return
-        let url = schemat.app.get_file_url(path)
+    // add_style_path(path) {
+    //     /* `path` is the full local path to a file, typically retrieved with import.meta.resolve(RELATIVE_FILE_PATH). */
+    //     if (!path) return
+    //     let url = schemat.app.get_file_url(path)
+    //     this.add_asset(`<link href="${encodeURI(url)}" rel="stylesheet" />`)
+    // }
+
+    add_style_url(url) {
+        if (!url) return
         this.add_asset(`<link href="${encodeURI(url)}" rel="stylesheet" />`)
     }
 
@@ -125,7 +130,8 @@ export class Assets {
 export const Styled = (baseclass) => class extends baseclass {
     /* A mixin for a View and Component classes that defines static `style` and `assets` properties and a method for collecting them. */
 
-    static css_file     // path to a CSS file that contains the styles for this component
+    // static css_file     // path to a CSS file that contains the styles for this component
+    static css_url      // URL path of a CSS file that contains the styles for this component
     static css_style    // plain inline CSS code to be inserted in HTML whenever this component is rendered
     static assets       // list of assets this widget depends on; each asset should be an object with .assets property,
                         // or a Component, or a plain html string to be pasted into the <head> section of a page
@@ -134,7 +140,8 @@ export const Styled = (baseclass) => class extends baseclass {
         /* Walk through a prototype chain of `this` class to collect all styles and .assets into an Assets object. */
         for (let cls of T.getPrototypes(this)) {
             assets.add_asset(cls.assets)
-            assets.add_style_path(cls.css_file)
+            // assets.add_style_path(cls.css_file)
+            assets.add_style_url(cls.css_url)
             assets.add_style(cls.css_style)
         }
     }
@@ -217,10 +224,13 @@ export class Component extends Styled(React.Component) {
     }
 
     _shadow_links() {
-        return T.getInherited(this.constructor, 'css_file') .filter(Boolean) .map(path => {
-            let href = SERVER ? schemat.app.get_file_url(path) : path       // translation is only needed on server; on client, `path` is already a URL
+        return T.getInherited(this.constructor, 'css_url') .filter(Boolean) .map(href => {
             return LINK({href, rel: 'stylesheet'})
         })
+        // return T.getInherited(this.constructor, 'css_file') .filter(Boolean) .map(path => {
+        //     let href = SERVER ? schemat.app.get_file_url(path) : path       // translation is only needed on server; on client, `path` is already a URL
+        //     return LINK({href, rel: 'stylesheet'})
+        // })
     }
 
     _shadow_content() {

@@ -42,8 +42,6 @@ export class Resources {
             <script src="https://cdn.jsdelivr.net/npm/react-dom@17.0.2/umd/react-dom.production.min.js" integrity="sha256-nbMykgB6tsOFJ7OdVmPpdqMFVk4ZsqWocT6issAPUF0=" crossorigin="anonymous"></script>-->
         <!--<script src="https://unpkg.com/react@17/umd/react.development.js" crossorigin></script>
             <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js" crossorigin></script>-->
-        <!--<script src="/$/local/node_modules/react/umd/react.development.js" crossorigin="anonymous"></script>
-            <script src="/$/local/node_modules/react-dom/umd/react-dom.development.js" crossorigin="anonymous"></script>-->
 
         <!-- Bootstrap - only use for widgets and in-block layout, not for page layout
         <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet"> <!--Bootstrap Icons-->

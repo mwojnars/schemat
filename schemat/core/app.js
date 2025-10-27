@@ -30,8 +30,8 @@ export class Application extends WebObject {
     // static DOMAIN_LOCAL   = 'local:'        // for import paths that address physical files of the local Schemat installation
     // static DOMAIN_SCHEMAT = 'schemat:'      // internal server-side domain name prepended to DB import paths for debugging
     // static URL_SCHEMAT = '/$/schemat'       // url-path of the root of Schemat source code
-
-    static URL_LOCAL = '/$/local'   // url-path of the application's local filesystem root folder
+    //
+    // static URL_LOCAL = '/$/local'   // url-path of the application's local filesystem root folder
 
     __global                        // plain object {...} holding all references from `global` (TODO: is not .std enough?)
 
@@ -114,14 +114,14 @@ export class Application extends WebObject {
         return this.default_path + `/${id}`
     }
 
-    get_file_url(path) {
-        /* Convert a local file path to its corresponding URL-path (href=...). Typically used for loading assets on the client. */
-        if (path.startsWith('file://')) path = path.slice(7)                // trim leading 'file://' if present
-        let root = schemat.PATH_PROJECT
-        if (!path.startsWith(root + '/')) throw new Error(`path is not accessible via URL: ${path}`)
-        return path.replace(root, Application.URL_LOCAL)
-    }
-
+    // get_file_url(path) {
+    //     /* Convert a local file path to its corresponding URL-path (href=...). Typically used for loading assets on the client. */
+    //     if (path.startsWith('file://')) path = path.slice(7)                // trim leading 'file://' if present
+    //     let root = schemat.PATH_PROJECT
+    //     if (!path.startsWith(root + '/')) throw new Error(`path is not accessible via URL: ${path}`)
+    //     return path.replace(root, Application.URL_LOCAL)
+    // }
+    //
     // get_module_url(path) {
     //     /* Convert a local import path, like "schemat/.../file.js" to a URL-path that can be used with import() on the client. */
     //     if (path[0] === '/') throw new Error(`cannot make an import URL-path for an absolute local path: ${path}`)
