@@ -407,20 +407,20 @@ describe('Schemat Tests', function () {
         })
 
         it('static views', async function () {
-            let resp = await page.goto(`${DOMAIN}/test/views/page_02.html`)
+            let resp = await page.goto(`${DOMAIN}/$/test/views/page_02.html`)
             expect(await resp.text()).to.include("designed for testing purposes")
 
-            resp = await page.goto(`${DOMAIN}/test/views/test-ejs`)
+            resp = await page.goto(`${DOMAIN}/$/test/views/test-ejs`)
             expect_include_all(await resp.text(), "EJS Test Page", "Dynamic Content", "content of the second article", "Privacy Policy")
 
-            resp = await page.goto(`${DOMAIN}/test/views/test-js`)          // GET request to .js endpoint
+            resp = await page.goto(`${DOMAIN}/$/test/views/test-js`)          // GET request to .js endpoint
             expect_include_all(await resp.text(), "GET request")
 
             resp = await page.evaluate((url) =>                             // POST request to .js endpoint
                 fetch(url, {method: 'POST', headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({message: 'This is a test message'})
                 }).then(response => response.text())
-            , `${DOMAIN}/test/views/test-js`)
+            , `${DOMAIN}/$/test/views/test-js`)
             expect_include_all(resp, "POST request", "This is a test message")
         })
 
@@ -433,7 +433,7 @@ describe('Schemat Tests', function () {
         })
 
         it('test-sv2', async function () {
-            await page.goto(`${DOMAIN}/test/views/test-sv2`)
+            await page.goto(`${DOMAIN}/$/test/views/test-sv2`)
             await page.waitForSelector('.counter button', {visible: true})
             await delay(500)   // wait a bit for hydration to complete
 
@@ -451,9 +451,9 @@ describe('Schemat Tests', function () {
 
         it('forbidden files', async function () {
             expect_error('404')             // mark the expected error pattern
-            resp = await page.goto(`${DOMAIN}/test/views/_private.html`)
+            resp = await page.goto(`${DOMAIN}/$/test/views/_private.html`)
             expect(resp.status()).to.equal(404)
-            resp = await page.goto(`${DOMAIN}/test/views/.private/test.html`)
+            resp = await page.goto(`${DOMAIN}/$/test/views/.private/test.html`)
             expect(resp.status()).to.equal(404)
         })
 

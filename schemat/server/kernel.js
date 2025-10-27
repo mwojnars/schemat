@@ -103,10 +103,6 @@ export class Kernel {
         process.on('SIGTERM', () => this.stop())        // listen for TERM signal, e.g. kill
         process.on('SIGINT', () => this.stop())         // listen for INT signal, e.g. Ctrl+C
 
-        // let m = await schemat.import('/$/local/schemat/test/temp1.js')
-        // print('loaded:', m)
-        // let {WebServer} = await schemat.import('/$/local/schemat/server/agent.js')
-
         schemat.set_kernel(this)
         this.node_id = Number(opts['node'].split('.').pop())
         return await schemat.load(this.node_id)
