@@ -5,7 +5,7 @@
    This function must be executable in its literal form on server and client alike.
  */
 export async function init(request, {id}) {     // _init_object/_load_object/_load_react_page()
-    let {CategoryInspectView, InspectView, ReactPage} = await import("#root/schemat/web/pages.js")
+    let {CategoryInspectView, InspectView, ReactPage} = await import("#schemat/web/pages.js")
     let target = await schemat.load(id)
     let View = target.is_category() ? CategoryInspectView : InspectView
     let page = new ReactPage(View)
