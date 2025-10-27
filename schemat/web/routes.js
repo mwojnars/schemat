@@ -82,7 +82,7 @@ export class Routes {
             if (this.app._static_exts.includes(ext)) type = 'static'
             else if (this.app._transpiled_exts.includes(ext)) type = 'transpiled'
             
-            if (type) this.exact_routes.set(url_path, {file: path, type, ext})
+            if (type) this.exact_routes.set(url_path, {type, path, ext})
 
             // renderable files become routes without extension
             if (['js', 'jsx', 'svelte', 'ejs'].includes(ext)) {
@@ -92,9 +92,9 @@ export class Routes {
 
                 if (_params.length) {
                     let regex = new RegExp('^' + _url + '$')
-                    this.dynamic_routes.push({type, file: path, ext, regex, param_names: _params, route_path})
+                    this.dynamic_routes.push({type, path, ext, regex, param_names: _params, route_path})
                 }
-                else this.exact_routes.set(route_path, {type, file: path, ext})
+                else this.exact_routes.set(route_path, {type, path, ext})
             }
         }
     }

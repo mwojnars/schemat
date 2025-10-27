@@ -152,19 +152,19 @@ export class Application extends WebObject {
 
         if (match.type === 'static') {                      // send a static file as is
             request.send_mimetype(match.ext)
-            await request.send_file(match.file)
+            await request.send_file(match.path)
             return true
         }
 
         if (match.type === 'transpiled') {                  // send a transpiled file via a corresponding _send_*() method
-            await this._send_svelte(match.file, request)
+            await this._send_svelte(match.path, request)
             return true
         }
 
         if (match.type === 'render') {
             request.set_params(match.params)
             let method = `_render_${match.ext}`
-            await this[method](match.file, request)
+            await this[method](match.path, request)
             return true
         }
 
