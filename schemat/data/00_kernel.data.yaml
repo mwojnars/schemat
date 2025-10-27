@@ -298,7 +298,7 @@
     root_folder:
       info: Local directory that is the root of URL routing. An an absolute path, or
         relative to the project root.
-      default: schemat
+      default: app
       "@": schemat/types/type.js:PATH
     default_path:
       info: URL path of a default container that can be used to access any object via
