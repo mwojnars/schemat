@@ -50,7 +50,7 @@ class Classpath {
             if (accept && !accept(name, obj)) continue
             let path = `${normalized_url}:${name}`
             this.set(path, obj)
-            if (path.startsWith('schemat/'))
+            if (path.startsWith('schemat'))
                 this.set('#' + path, obj)
         }
     }
@@ -176,8 +176,9 @@ export class Schemat {
         // WARN: concurrent fetching with fetch_all() may NOT be faster than sequential .fetch() -- this should be tested and compared in browsers!
         await builtin.fetch_all(
             ["../index.js", {path: 'schemat'}],         // Schemat core classes, e.g., "schemat:WebObject"
+            // "#schemat",                             // Schemat core classes, e.g., "#schemat:WebObject"
             "../common/structs.js",
-            "../common/errors.js",                      // for serialization of errors in RPC responses
+            "../common/errors.js",                  // for serialization of errors in RPC responses
             "../types/type.js",
             "../types/catalog_type.js",
             "../std/files.js",
