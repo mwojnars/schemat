@@ -564,7 +564,7 @@ export class Schemat {
            This method can be called both on the server and on the client (!). In the latter case, the import path
            is converted to a URL of the form "/$/local/.../file.js::import". May return a Promise.
          */
-        if (path.startsWith('schemat/')) path = '#' + path
+        // if (path.startsWith('schemat/')) path = '#' + path
 
         // print(`Application.import():  ${path}`)
         let [file_path, symbol] = splitLast(path || '', ':')
