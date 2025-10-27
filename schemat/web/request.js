@@ -252,12 +252,12 @@ export class WebRequest extends _Request {   // WebConnection (conn)
             <script type="importmap"> {
                 "imports": {
                     "#app/": "/$/local/",
-                    "#schemat/": "/$/local/schemat/"
+                    "#schemat/": "/$/schemat/"
                 }
             } </script>
 
             <script async type="module">
-                import {Client} from "/$/local/schemat/web/client.js";
+                import {Client} from "#schemat/web/client.js";
                 globalThis.schemat = new Client(${dump});
                 await schemat.boot();
                 ${after}

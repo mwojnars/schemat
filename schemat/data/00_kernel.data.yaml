@@ -943,7 +943,7 @@
 
 
     Pages that are related to a particular object or category are better implemented as view methods (instance-level or static) of the category's Javascript class.
-  class: schemat/web/page.js:Page
+  class: "#schemat/web/page.js:Page"
   schema:
     view_endpoint:
       info: Import path of the page rendering function, `view(request)`, that should
