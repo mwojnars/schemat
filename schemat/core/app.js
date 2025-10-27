@@ -224,8 +224,8 @@ export class Application extends WebObject {
     }
 
     async _transpile_pcss(path, request) {
-        let content = await readFile(path, 'utf8')
-        let output = await transform_postcss(content, path)
+        let input = await readFile(path, 'utf8')
+        let output = await transform_postcss(input, path)
         request.send_mimetype('css')
         request.send(output)
     }
