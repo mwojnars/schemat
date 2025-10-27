@@ -11,10 +11,10 @@
         defined in this class are treated as endpoints of the category object,
         not instances.'
       default: schemat:WebObject
-      "@": schemat/types/type.js:IMPORT
+      "@": "#schemat/types/type.js:IMPORT"
     std:
       value_type:
-        "@": schemat/types/type.js:REF
+        "@": "#schemat/types/type.js:REF"
       info: Collection of standard related objects (categories) to be loaded
         automatically when this category object is initialized during load().
         Typically, these objects are other categories that are necessary for
@@ -22,48 +22,48 @@
         listing them here removes the need for async schemat.import() from a web
         path later on. The loading is only invoked when on server, not on
         clients.
-      "@": schemat/types/type.js:OBJECT
+      "@": "#schemat/types/type.js:OBJECT"
     defaults:
       value_type:
-        "@": schemat/types/type.js:GENERIC
+        "@": "#schemat/types/type.js:GENERIC"
       info: Default values for properties of objects in this category. The key cannot
         be empty.
-      "@": schemat/types/type.js:OBJECT
+      "@": "#schemat/types/type.js:OBJECT"
     class_name:
       info: Custom internal name for the Class of this category, for debugging. Also
         used as an alias when exporting the Class from the category's module.
-      "@": schemat/types/type.js:STRING
+      "@": "#schemat/types/type.js:STRING"
     class_init:
       multiple: true
       info: Module-level initialization for this category's Javascript class.
         Typically contains import statements and global variables. Precedes the
         Class definition (`class_body`, `views`) in the category's module code.
-      "@": schemat/types/type.js:CODE
+      "@": "#schemat/types/type.js:CODE"
     class_body:
       multiple: true
       info: Source code of the class (a body without heading) that will be created for
         this category. The class inherits from the `class`, or the class of the
         first base category, or the top-level WebObject.
-      "@": schemat/types/type.js:CODE
+      "@": "#schemat/types/type.js:CODE"
     pages:
       value_type:
-        "@": schemat/types/type.js:CODE
+        "@": "#schemat/types/type.js:CODE"
       info: Source code of functions that generate static HTML response for particular
         access methods of this category's items.
-      "@": schemat/types/catalog_type.js:CATALOG
+      "@": "#schemat/types/catalog_type.js:CATALOG"
     views:
       value_type:
-        "@": schemat/types/type.js:CODE
+        "@": "#schemat/types/type.js:CODE"
       info: "Body of React functional components (no function header) to be added
         dynamically to the category's Class body as VIEW_name(props) methods for
         rendering item views. Inside the function body, `this` refers the item
         to be rendered. Alternatively, the code of each view may consist of a
         method header, view() {...}, and be accompanied by supporting methods:
         title(), assets() - like in a class body."
-      "@": schemat/types/catalog_type.js:CATALOG
+      "@": "#schemat/types/catalog_type.js:CATALOG"
     default_endpoints:
       value_type:
-        "@": schemat/types/type.js:STRING
+        "@": "#schemat/types/type.js:STRING"
       info: List of [PROTOCOL, endpoint] pairs that define default endpoint(s) for
         objects of this category when requested via a URL with no explicit
         endpoint.
@@ -73,31 +73,31 @@
         GET/3: inspect
         LOCAL: self
         "@": schemat:Catalog
-      "@": schemat/types/catalog_type.js:CATALOG
+      "@": "#schemat/types/catalog_type.js:CATALOG"
     schema:
       value_type:
-        "@": schemat/types/type.js:TYPE
+        "@": "#schemat/types/type.js:TYPE"
       info: Names and data types of properties of objects in this category.
       default: {}
-      "@": schemat/types/type.js:OBJECT
+      "@": "#schemat/types/type.js:OBJECT"
     allow_custom_fields:
       default: false
       info: If true, it is allowed to set undeclared (out-of-schema) fields in objects
         - their schema is GENERIC()
-      "@": schemat/types/type.js:BOOLEAN
+      "@": "#schemat/types/type.js:BOOLEAN"
     set_version:
       default: false
       info: If true, updated or newly created objects of this category receive the
         __ver property that holds this object's version number (1,2,3,...) and
         is automatically incremented on every update.
-      "@": schemat/types/type.js:BOOLEAN
+      "@": "#schemat/types/type.js:BOOLEAN"
     save_revisions:
       default: false
       info: If true, old versions of objects in this category are preserved on every
         update by creating an immutable Revision that stores the object's
         previous content. The most recently created revision is available in the
         __prev property of the target object.
-      "@": schemat/types/type.js:BOOLEAN
+      "@": "#schemat/types/type.js:BOOLEAN"
     seal_dependencies:
       default: false
       info: If true, __seal is stored and recomputed on every update of an object to
@@ -111,11 +111,11 @@
         its dependencies have a __seal. When the object has no dependencies, its
         seal is '.', otherwise it's a dot-concatenated string of version numbers
         of the dependencies.
-      "@": schemat/types/type.js:BOOLEAN
+      "@": "#schemat/types/type.js:BOOLEAN"
     immutable:
       default: false
       info: If true, objects of this category cannot be modified after creation.
-      "@": schemat/types/type.js:BOOLEAN
+      "@": "#schemat/types/type.js:BOOLEAN"
     ttl:
       default: 10
       info: Time To Live (TTL) of objects in this category, in seconds. Can be
@@ -127,7 +127,7 @@
         that drives server-side object cache eviction and setting a high TTL for
         multiple objects may fill out the cache, even if these objects are no
         longer used.
-      "@": schemat/types/type.js:NUMBER
+      "@": "#schemat/types/type.js:NUMBER"
     garbage_collect:
       default: false
       info: If true, objects of this category are automatically removed (TODO) if not
@@ -136,7 +136,7 @@
         caution, only for supporting objects like Revision etc., whose permanent
         deletion is desirable after the removal of the main object, NOT for core
         data objects.
-      "@": schemat/types/type.js:BOOLEAN
+      "@": "#schemat/types/type.js:BOOLEAN"
   defaults:
     schema:
       name:
@@ -144,35 +144,35 @@
           characters.
         multiple: true
         default: ""
-        "@": schemat/types/type.js:STRING
+        "@": "#schemat/types/type.js:STRING"
       info:
         info: Description or summary of the object.
         multiple: true
-        "@": schemat/types/type.js:TEXT
+        "@": "#schemat/types/type.js:TEXT"
       id:
         virtual: true
         info: Type definition for the special property `obj.id` (database record ID) of
           every web object. In the database, this property is stored as a record
           key, separately from regular properties which are stored in a record
           value.
-        "@": schemat/types/type.js:OBJECT_ID
+        "@": "#schemat/types/type.js:OBJECT_ID"
       __cid:
         virtual: true
         multiple: true
         info: Type definition for the special property, `obj.__cid`, which is a getter
           returning ID of the object's __category (if present), or undefined.
-        "@": schemat/types/type.js:OBJECT_ID
+        "@": "#schemat/types/type.js:OBJECT_ID"
       __category:
         info: Category of this object. Determines its behavior and the schema of its
           properties. Each category itself is an object of the Root Category
           (ID=1).
         multiple: true
-        "@": schemat/types/type.js:REF
+        "@": "#schemat/types/type.js:REF"
       __class:
         info: Import path of the JS class ("path/file.js:ClassName") that will be linked
           to this object during loading. This property overrides the
           category-wise setting (__category.class).
-        "@": schemat/types/type.js:IMPORT
+        "@": "#schemat/types/type.js:IMPORT"
       __prototype:
         info: An object that serves as a prototype for this one, that is, provides
           default values for missing properties. Multiple prototypes are
@@ -185,26 +185,26 @@
           and may add their own fields to the existing ones.
         multiple: true
         inherited: false
-        "@": schemat/types/type.js:REF
+        "@": "#schemat/types/type.js:REF"
       __container:
         info: Parent URL container of this object. The chain of containers leading from
           the root container to a given object defines the access path of this
           object, which can be converted to a canonical URL path of the object
           by removing blank segments. If __container is missing, the default URL
           path is used for the object (/$/id/<id>).
-        "@": schemat/types/type.js:REF
+        "@": "#schemat/types/type.js:REF"
       __path:
         impute: _impute_path
-        "@": schemat/types/type.js:STRING
+        "@": "#schemat/types/type.js:STRING"
       __url:
         virtual: true
-        "@": schemat/types/type.js:STRING
+        "@": "#schemat/types/type.js:STRING"
       __status:
         info: Contains "DELETED" if the corresponding record was deleted from the
           database (a "tombstone" record; not saved in the data block, but used
           elsewhere to propagate the information about the object removal).
         inherited: false
-        "@": schemat/types/type.js:STRING
+        "@": "#schemat/types/type.js:STRING"
       __ttl:
         info: Time To Live (TTL) of the object, in seconds. Determines for how long the
           object is kept in a server-side cache and reused after being loaded
@@ -215,18 +215,18 @@
           objects may fill out the cache, even if these objects are no longer
           used.
         impute: _impute__ttl
-        "@": schemat/types/type.js:NUMBER
+        "@": "#schemat/types/type.js:NUMBER"
       __ver:
         info: Version number of the object's content, automatically incremented on every
           update.
         min: 1
         inherited: false
-        "@": schemat/types/type.js:UNSIGNED
+        "@": "#schemat/types/type.js:UNSIGNED"
       __prev:
         info: The most recent Revision created for the object. Contains the previous
           state of this object (from before the last update).
         inherited: false
-        "@": schemat/types/type.js:REF
+        "@": "#schemat/types/type.js:REF"
   set_version: false
   save_revisions: false
   seal_dependencies: false
@@ -276,17 +276,17 @@
 - id: 2
   name: Application
   info: Top-level URL routing + global configuration of the application.
-  class: schemat/core/app.js:Application
+  class: "#schemat/core/app.js:Application"
   schema:
     webserver:
       info: A WebServer that handles all web requests.
-      "@": schemat/types/type.js:REF
+      "@": "#schemat/types/type.js:REF"
     logger:
       info: Logger object that collects all log messages produced in the cluster.
       autoload: server
       category:
         "@": 33
-      "@": schemat/types/type.js:REF
+      "@": "#schemat/types/type.js:REF"
     root:
       info: "Root of the object hierarchy and the starting point for URL routing: each
         URL path is mapped to an object placed somewhere below the `root`
@@ -294,65 +294,65 @@
       autoload: server
       category:
         "@": 3
-      "@": schemat/types/type.js:REF
+      "@": "#schemat/types/type.js:REF"
     root_folder:
       info: Local directory that is the root of URL routing. An an absolute path, or
         relative to the project root.
       default: app
-      "@": schemat/types/type.js:PATH
+      "@": "#schemat/types/type.js:PATH"
     default_path:
       info: URL path of a default container that can be used to access any object via
         its ID. For internal purposes. Should contain a leading slash and no
         trailing slash.
-      "@": schemat/types/type.js:PATH
+      "@": "#schemat/types/type.js:PATH"
     static_extensions:
       default: html htm xml css js mjs json jpg jpeg png gif bmp svg pdf mp3 mp4 wav
         webp ico ttf txt woff woff2
       info: Space-separated list of extensions (case insensitive) of files that can
         be served as static assets directly from the application folder.
-      "@": schemat/types/type.js:STRING
+      "@": "#schemat/types/type.js:STRING"
     transpiled_extensions:
       default: postcss pcss svelte
       info: Space-separated list of extensions (case insensitive) of files that can
         be served from application folder after being transpiled, the extension is
         included in the URL then.
-      "@": schemat/types/type.js:STRING
+      "@": "#schemat/types/type.js:STRING"
     private_routes:
       default: "_ . + #"
       info: Space-separated list of prefixes that indicate the file or directory is
         private and not accessible for routing procedure. If any of these prefixes is
         found in a URL path segment, the request is rejected with "not found" error.
-      "@": schemat/types/type.js:STRING
+      "@": "#schemat/types/type.js:STRING"
     system_route:
       default: /$
       info: Prefix of the URL path used for system purposes.
-      "@": schemat/types/type.js:PATH
+      "@": "#schemat/types/type.js:PATH"
     flat_routes:
       default: true
       info: If true, every dot in the file path of a servable file (extension excluded)
         is converted to a slash in the corresponding URL.
-      "@": schemat/types/type.js:STRING
+      "@": "#schemat/types/type.js:STRING"
     global:
       value_type:
-        "@": schemat/types/type.js:REF
+        "@": "#schemat/types/type.js:REF"
       info: Essential application objects - typically categories - that will be loaded
         and made globally available to the application code via
         `schemat.global.XXX` right after initialization of the application.
-      "@": schemat/types/catalog_type.js:CATALOG
+      "@": "#schemat/types/catalog_type.js:CATALOG"
     purge_objects_interval:
       default: 10
       info: Interval [sec] at which the server-side cache of objects (in Registry) is
         purged from expired objects. A real number.
-      "@": schemat/types/type.js:NUMBER
+      "@": "#schemat/types/type.js:NUMBER"
     evict_records_interval:
       default: 1
       info: Interval [sec] at which the server-side cache of raw records (in Registry)
         is completely erased. A real number.
-      "@": schemat/types/type.js:NUMBER
+      "@": "#schemat/types/type.js:NUMBER"
     eval_allowed:
       default: false
       info: If true, schemat.app.POST.server() and schemat.server() calls are allowed.
-      "@": schemat/types/type.js:BOOLEAN
+      "@": "#schemat/types/type.js:BOOLEAN"
     async_ejs:
       default: auto
       info: If true, EJS templates may include async instructions, but then, all
@@ -360,7 +360,7 @@
         only when 'await' keyword is found inside the template. In async mode, a
         special function, async import_(), can be used in place of import() for
         importing paths relative to the template file.
-      "@": schemat/types/type.js:GENERIC
+      "@": "#schemat/types/type.js:GENERIC"
   __prototype:
     "@": 5
   __category:
@@ -372,22 +372,22 @@
   schema:
     _is_container:
       default: true
-      "@": schemat/types/type.js:BOOLEAN
+      "@": "#schemat/types/type.js:BOOLEAN"
 - id: 4
   name: File
   info: File with a text content.
   schema:
     content:
-      "@": schemat/types/type.js:CODE
+      "@": "#schemat/types/type.js:CODE"
     mimetype:
       info: MIME type string (must include '/') to be set as Content-Type when serving
         file download; or an extension ('js', 'jpg', ...) to be converted to an
         appropriate type. If missing, response mimetype is inferred from the URL
         path extension, if present.
-      "@": schemat/types/type.js:STRING
+      "@": "#schemat/types/type.js:STRING"
     format:
-      "@": schemat/types/type.js:STRING
-  class: schemat/std/files.js:File
+      "@": "#schemat/types/type.js:STRING"
+  class: "#schemat/std/files.js:File"
   __category:
     "@": 1
 - id: 5
@@ -402,9 +402,9 @@
   schema:
     entries:
       value_type:
-        "@": schemat/types/type.js:REF
-      "@": schemat/types/catalog_type.js:CATALOG
-  class: schemat/std/containers.js:Directory
+        "@": "#schemat/types/type.js:REF"
+      "@": "#schemat/types/catalog_type.js:CATALOG"
+  class: "#schemat/std/containers.js:Directory"
   __prototype:
     "@": 3
   __category:
@@ -418,14 +418,14 @@
     `extensions_allowed` (case insensitive) are returned.
   schema:
     local_path:
-      "@": schemat/types/type.js:STRING
+      "@": "#schemat/types/type.js:STRING"
     paths_allowed:
       info: Space-separated list of subpaths in this local directory that are allowed
         as a path prefix of the requested file. NO leading slash. If the request
         contains a different prefix (none of those), 'URL not found' error is
         returned. If this property is missing (default), every subpath is
         allowed unless excluded by other rules.
-      "@": schemat/types/type.js:STRING
+      "@": "#schemat/types/type.js:STRING"
     extensions_allowed:
       default: html htm xml css postcss pcss js ejs jpg jpeg png gif bmp svg mp3 mp4
         wav pdf webp ico ttf woff woff2 mjs
@@ -433,21 +433,21 @@
         allowed to be returned from inside this local directory. Requests for
         files that have any other extension are treated as invalid and result in
         'URL not found' error.
-      "@": schemat/types/type.js:STRING
+      "@": "#schemat/types/type.js:STRING"
     words_forbidden:
       default: /_ /.git /.svn/
       info: Space-separated list of substrings that must NOT occur in the target file
         path after its translation from the URL. If any of these substrings is
         present, 'URL not found' error is returned regardless of the target file
         extension.
-      "@": schemat/types/type.js:STRING
+      "@": "#schemat/types/type.js:STRING"
     files_allowed:
       default: robots.txt ads.txt security.txt humans.txt manifest.json
       info: Explicit list of file paths, space-separated, that are allowed to be
         served even if excluded by other rules (e.g., due to missing or
         disallowed extension). NO leading slash.
-      "@": schemat/types/type.js:STRING
-  class: schemat/std/files.js:LocalDirectory
+      "@": "#schemat/types/type.js:STRING"
+  class: "#schemat/std/files.js:LocalDirectory"
   __prototype:
     "@": 5
   __category:
@@ -459,7 +459,7 @@
     identifier, typically built from the object's ID. Typically, a namespace is
     placed as a leaf node on a URL route and does not contain nested
     containers."
-  class: schemat/std/containers.js:Namespace
+  class: "#schemat/std/containers.js:Namespace"
   __prototype:
     "@": 3
   __category:
@@ -475,8 +475,8 @@
       info: Optional category(ies) of objects to be included in this namespace. Every
         object that is not an instance of at least one of these categories is
         excluded.
-      "@": schemat/types/type.js:REF
-  class: schemat/std/containers.js:ObjectSpace
+      "@": "#schemat/types/type.js:REF"
+  class: "#schemat/std/containers.js:ObjectSpace"
   __prototype:
     "@": 7
   __category:
@@ -491,9 +491,9 @@
       value_type:
         category:
           "@": 1
-        "@": schemat/types/type.js:REF
-      "@": schemat/types/catalog_type.js:CATALOG
-  class: schemat/std/containers.js:Category_IID_Namespace
+        "@": "#schemat/types/type.js:REF"
+      "@": "#schemat/types/catalog_type.js:CATALOG"
+  class: "#schemat/std/containers.js:Category_IID_Namespace"
   __prototype:
     "@": 7
   __category:
@@ -503,16 +503,16 @@
   schema:
     database:
       info: Database instance to be used by the kernel (master/worker processes).
-      "@": schemat/types/type.js:REF
+      "@": "#schemat/types/type.js:REF"
     nodes:
       info: Array of Node objects representing nodes of this cluster.
       default: []
       type:
         category:
           "@": 21
-        "@": schemat/types/type.js:REF
-      "@": schemat/types/type.js:ARRAY
-  class: schemat/server/cluster.js:Cluster
+        "@": "#schemat/types/type.js:REF"
+      "@": "#schemat/types/type.js:ARRAY"
+  class: "#schemat/server/cluster.js:Cluster"
   __prototype:
     "@": 29
   __category:
@@ -528,11 +528,11 @@
       autoload: server
       category:
         "@": 12
-      "@": schemat/types/type.js:REF
+      "@": "#schemat/types/type.js:REF"
     top_ring_writable:
       default: true
       info: If true, write access to the database is allowed, otherwise it is not.
-      "@": schemat/types/type.js:BOOLEAN
+      "@": "#schemat/types/type.js:BOOLEAN"
     application:
       info: "Reference to the Application object this database belongs to, or
         undefined for a cluster-level database (kernel space). This link is
@@ -543,8 +543,8 @@
         from the kernel space if the database were not opened beforehand)."
       category:
         "@": 2
-      "@": schemat/types/type.js:REF
-  class: schemat/db/db.js:Database
+      "@": "#schemat/types/type.js:REF"
+  class: "#schemat/db/db.js:Database"
   __category:
     "@": 1
 - id: 12
@@ -558,27 +558,27 @@
       strong: true
       category:
         "@": 14
-      "@": schemat/types/type.js:REF
+      "@": "#schemat/types/type.js:REF"
     base_ring:
       info: Reference to the lower ring. If an object is not found in this ring, it is
         searched for in the base_ring.
       autoload: server
       category:
         "@": 12
-      "@": schemat/types/type.js:REF
+      "@": "#schemat/types/type.js:REF"
     base_ring_readonly:
       default: false
       info: If true, read-write requests that originate in this ring and need to be
         forwarded down to the base_ring (and deeper) for the 'read' part, cannot
         write their updates there but must be forwarded back up to this ring for
         the 'write` part of the operation.
-      "@": schemat/types/type.js:BOOLEAN
+      "@": "#schemat/types/type.js:BOOLEAN"
     readonly:
-      "@": schemat/types/type.js:BOOLEAN
+      "@": "#schemat/types/type.js:BOOLEAN"
     file_tag:
       info: Optional prefix to be prepended (with a separating dot '.') to names of
         new data files created by sequences in this ring.
-      "@": schemat/types/type.js:STRING
+      "@": "#schemat/types/type.js:STRING"
     min_id_exclusive:
       info: "Lower bound of the exclusive ID insert zone that extends up to
         `min_id_forbidden` (if present) or `min_id_sharded`. During inserts, any
@@ -589,20 +589,20 @@
         any ID from a lower ring (even if disallowed for inserts) can be saved
         here in this ring as an override of a lower-ring version of the record."
       min: 1,
-      "@": schemat/types/type.js:UNSIGNED
+      "@": "#schemat/types/type.js:UNSIGNED"
     min_id_forbidden:
       info: "The end of the exclusive ID insert zone. No ID value in the range from
         min_id_forbidden to min_id_sharded-1 can be used for new records
         inserted in this ring. IMPORTANT: updates are not affected by this
         setting."
       min: 1
-      "@": schemat/types/type.js:UNSIGNED
+      "@": "#schemat/types/type.js:UNSIGNED"
     min_id_sharded:
       info: Lower bound of the (right-unbounded) range where ID sharding is applied to
         inserts. In this range, inserts can only assign an ID that hashes to
         this ring's `shard3.offset` under modulo `shard3.base`.
       min: 1,
-      "@": schemat/types/type.js:UNSIGNED
+      "@": "#schemat/types/type.js:UNSIGNED"
     shard3:
       info: Base-3 (3**k) shard that defines the valid set of IDs for objects inserted
         into this ring in the 'sharded' zone. The shard's base should be a power
@@ -610,54 +610,54 @@
         2. The shard should *not* overlap with the shard of a lower ring; and
         its specification should never be modified after the ring has been
         created.
-      "@": schemat/types/type.js:SHARD
+      "@": "#schemat/types/type.js:SHARD"
     insert_mode:
       info: If 'compact', data blocks in this ring try to find free ID slots _below_
         autoincrement when inserting objects; using this mode has performance
         implications, so it should only be used with small rings.
-      "@": schemat/types/type.js:STRING
-  class: schemat/db/db.js:Ring
+      "@": "#schemat/types/type.js:STRING"
+  class: "#schemat/db/db.js:Ring"
   __category:
     "@": 1
 - id: 13
   name: Sequence
   info: Sequences of key-value records, either data objects or derived.
-  class: schemat/db/sequence.js:Sequence
+  class: "#schemat/db/sequence.js:Sequence"
   schema:
     ring:
       info: parent Ring of this sequence
       category:
         "@": 12
-      "@": schemat/types/type.js:REF
+      "@": "#schemat/types/type.js:REF"
     operator:
       info: The Operator that defines data generation logic for this sequence.
       category:
         "@": 24
-      "@": schemat/types/type.js:REF
+      "@": "#schemat/types/type.js:REF"
     source:
       info: Source sequence that feeds data to this one.
       category:
         "@": 13
-      "@": schemat/types/type.js:REF
+      "@": "#schemat/types/type.js:REF"
     blocks:
       info: array of Blocks containing records of this sequence
       type:
         category:
           "@": 18
         strong: true
-        "@": schemat/types/type.js:REF
+        "@": "#schemat/types/type.js:REF"
       default: []
-      "@": schemat/types/type.js:ARRAY
+      "@": "#schemat/types/type.js:ARRAY"
     splits:
       info: Array of (n-1) split points between `blocks`.
       type:
-        "@": schemat/types/type.js:BINARY
-      "@": schemat/types/type.js:ARRAY
+        "@": "#schemat/types/type.js:BINARY"
+      "@": "#schemat/types/type.js:ARRAY"
     filled:
       info: Indicates whether the backfill procedure for this (derived) sequence has
         been completed. Only when filled=true, the sequence is fully initialized
         and can be used for read access.
-      "@": schemat/types/type.js:BOOLEAN
+      "@": "#schemat/types/type.js:BOOLEAN"
     filled_ranges:
       info: Array of [left,right] pairs of binary keys that define ranges in the
         source sequence that have already been fed to this (derived) sequence in
@@ -667,7 +667,7 @@
         array are arranged in increasing order and do not overlap. The array
         should only be modified via edit.commit_backfill().
       default: []
-      "@": schemat/types/type.js:ARRAY
+      "@": "#schemat/types/type.js:ARRAY"
     derived:
       info: "Array of derived sequences: their content is a transformation of this
         sequence, so they receive notifications on every data change."
@@ -676,22 +676,22 @@
         category:
           "@": 13
         strong: true
-        "@": schemat/types/type.js:REF
-      "@": schemat/types/type.js:ARRAY
+        "@": "#schemat/types/type.js:REF"
+      "@": "#schemat/types/type.js:ARRAY"
     flush_delay:
       info: for how long [sec] the local-file data flush can be delayed waiting for
         more writes to arrive that can be grouped together
-      "@": schemat/types/type.js:NUMBER
+      "@": "#schemat/types/type.js:NUMBER"
     file_tag:
       info: Prefix (infix) to be inserted in file names of all new blocks created in
         this sequence.
-      "@": schemat/types/type.js:STRING
+      "@": "#schemat/types/type.js:STRING"
     num_replicas:
       info: Desired number of $replica deployments to be created for each block of
         this sequence; -1 for "as many as nodes in the cluster minus 1".
       default: 0
       min: -1
-      "@": schemat/types/type.js:INTEGER
+      "@": "#schemat/types/type.js:INTEGER"
   defaults:
     flush_delay: 0.01
   __category:
@@ -702,7 +702,7 @@
   std:
     DataBlock:
       "@": 19
-  class: schemat/db/sequence.js:DataSequence
+  class: "#schemat/db/sequence.js:DataSequence"
   defaults:
     filled: true
   __prototype:
@@ -712,7 +712,7 @@
 - id: 15
   name: IndexOperator
   info: Derived operator defining an index sequence.
-  class: schemat/db/operator.js:IndexOperator
+  class: "#schemat/db/operator.js:IndexOperator"
   __prototype:
     "@": 16
   __category:
@@ -727,21 +727,21 @@
         belonging to this category are included in the output sequence. Category
         membership is checked by __cid comparison, so the object must belong
         exactly to `category`, not a subcategory.
-      "@": schemat/types/type.js:REF
-  class: schemat/db/operator.js:DerivedOperator
+      "@": "#schemat/types/type.js:REF"
+  class: "#schemat/db/operator.js:DerivedOperator"
   __prototype:
     "@": 24
   __category:
     "@": 1
 - id: 17
   name: DataOperator
-  class: schemat/db/operator.js:DataOperator
+  class: "#schemat/db/operator.js:DataOperator"
   defaults:
     key:
       - id
     fields:
       id:
-        "@": schemat/types/type.js:OBJECT_ID
+        "@": "#schemat/types/type.js:OBJECT_ID"
   __prototype:
     "@": 24
   __category:
@@ -754,11 +754,11 @@
     sequence:
       info: parent Sequence this block is a part of
       autoload: server
-      "@": schemat/types/type.js:REF
+      "@": "#schemat/types/type.js:REF"
     storage:
       info: "storage type: yaml, json, rocksdb (in the future), ..."
       multiple: true
-      "@": schemat/types/type.js:STRING
+      "@": "#schemat/types/type.js:STRING"
     keys_start:
       info: The first key of the key range of this block, as a binary vector. Should
         be compatible with split points (seq.splits) defined in the parent
@@ -767,18 +767,18 @@
       default:
         =: ""
         "@": "%bin"
-      "@": schemat/types/type.js:BINARY
+      "@": "#schemat/types/type.js:BINARY"
     keys_stop:
       info: The first key *above* the key range of this block, as a binary vector; or
         null if no upper bound. Should be compatible with split points
         (seq.splits) defined in the parent sequence and not overlap with
         neighboring blocks.
       default: null
-      "@": schemat/types/type.js:BINARY
+      "@": "#schemat/types/type.js:BINARY"
   defaults:
     concurrent: true
     controller: BLOCKS
-  class: schemat/db/block.js:Block
+  class: "#schemat/db/block.js:Block"
   __prototype:
     "@": 29
   __category:
@@ -798,11 +798,11 @@
         =:
           - 0
           - 1
-        "@": schemat/common/structs.js:Shard
-      "@": schemat/types/type.js:SHARD
+        "@": "#schemat/common/structs.js:Shard"
+      "@": "#schemat/types/type.js:SHARD"
   defaults:
     switch_context: true
-  class: schemat/db/block.js:DataBlock
+  class: "#schemat/db/block.js:DataBlock"
   __prototype:
     "@": 18
   __category:
@@ -814,7 +814,7 @@
     "@": 17
 - id: 21
   name: Node
-  class: schemat/server/node.js:Node
+  class: "#schemat/server/node.js:Node"
   info: Node of a Schemat cluster. Technically, each node is a local (master)
     process launched independently on a particular machine, together with its
     all child (worker) processes. Nodes communicate with each other using Kafka,
@@ -824,7 +824,7 @@
       default: 1
       info: Number of worker processes to launch when this node (its master process)
         is restarted.
-      "@": schemat/types/type.js:INTEGER
+      "@": "#schemat/types/type.js:INTEGER"
     agents:
       info: Array of agent status objects {worker, id (of agent), role, options, ...}
         describing agents running on different processes of this node. `worker`
@@ -832,53 +832,53 @@
         processes.
       default: []
       type:
-        "@": schemat/types/type.js:GENERIC
+        "@": "#schemat/types/type.js:GENERIC"
       inline: false
-      "@": schemat/types/type.js:ARRAY
+      "@": "#schemat/types/type.js:ARRAY"
     data_directory:
       default: ./schemat/data
       info: Local directory where data blocks should be kept.
-      "@": schemat/types/type.js:STRING
+      "@": "#schemat/types/type.js:STRING"
     http_host:
       default: localhost
       info: Host name to be used by HTTP(S) servers running on this node.
-      "@": schemat/types/type.js:STRING
+      "@": "#schemat/types/type.js:STRING"
     http_port:
       default: 80
       info: HTTP port to be used by HTTP servers running on this node.
-      "@": schemat/types/type.js:INTEGER
+      "@": "#schemat/types/type.js:INTEGER"
     https_port:
       default: 443
       info: HTTPS port to be used by HTTPS servers running on this node.
-      "@": schemat/types/type.js:INTEGER
+      "@": "#schemat/types/type.js:INTEGER"
     tcp_host:
       default: localhost
       info: Host name of this node for incoming TCP connections.
-      "@": schemat/types/type.js:STRING
+      "@": "#schemat/types/type.js:STRING"
     tcp_port:
       default: 5828
       info: Port number of this node for incoming TCP connections.
-      "@": schemat/types/type.js:INTEGER
+      "@": "#schemat/types/type.js:INTEGER"
     tcp_retry_interval:
       default: 1
       info: Minimum delay [in seconds] before a TCP message is resent if no
         acknowledgement or response has been received.
-      "@": schemat/types/type.js:NUMBER
+      "@": "#schemat/types/type.js:NUMBER"
   __prototype:
     "@": 29
   __category:
     "@": 1
 - id: 22
   name: AggregationOperator
-  class: schemat/db/operator.js:AggregationOperator
+  class: "#schemat/db/operator.js:AggregationOperator"
   schema:
     sum:
       info: Names of object fields to be counted and summed up during aggregation. An
         average of each of these fields can be retrieved at the end, as well.
       type:
-        "@": schemat/types/type.js:STRING
+        "@": "#schemat/types/type.js:STRING"
       default: []
-      "@": schemat/types/type.js:ARRAY
+      "@": "#schemat/types/type.js:ARRAY"
   __prototype:
     "@": 16
   __category:
@@ -893,9 +893,9 @@
   fields:
     __cid:
       multiple: true
-      "@": schemat/types/type.js:OBJECT_ID
+      "@": "#schemat/types/type.js:OBJECT_ID"
     id:
-      "@": schemat/types/type.js:OBJECT_ID
+      "@": "#schemat/types/type.js:OBJECT_ID"
   __category:
     "@": 15
 - id: 24
@@ -906,32 +906,32 @@
         sequence cannot be accessed. For this reason, name is a required
         property.
       required: true
-      "@": schemat/types/type.js:STRING
+      "@": "#schemat/types/type.js:STRING"
     fields:
       info: Names and data types of fields comprising the key and payload of this
         operator's output records.
       key_type:
-        "@": schemat/types/type.js:STRING
+        "@": "#schemat/types/type.js:STRING"
       value_type:
-        "@": schemat/types/type.js:TYPE
-      "@": schemat/types/type.js:OBJECT
+        "@": "#schemat/types/type.js:TYPE"
+      "@": "#schemat/types/type.js:OBJECT"
     key:
       info: Names of fields in the key of this operator's output records.
       type:
-        "@": schemat/types/type.js:STRING
+        "@": "#schemat/types/type.js:STRING"
       default: []
-      "@": schemat/types/type.js:ARRAY
+      "@": "#schemat/types/type.js:ARRAY"
     payload:
       info: Names of fields comprising the payload (value) of this operator's output
         records.
       type:
-        "@": schemat/types/type.js:STRING
+        "@": "#schemat/types/type.js:STRING"
       default: []
-      "@": schemat/types/type.js:ARRAY
+      "@": "#schemat/types/type.js:ARRAY"
     file_tag:
       info: Prefix (infix) inserted in file names of all new blocks created in data
         sequences of this operator.
-      "@": schemat/types/type.js:STRING
+      "@": "#schemat/types/type.js:STRING"
   __category:
     "@": 1
 - id: 25
@@ -949,29 +949,29 @@
       info: Import path of the page rendering function, `view(request)`, that should
         be used to handle requests at the `::view` endpoint of the URL where
         this Page is deployed.
-      "@": schemat/types/type.js:STRING
+      "@": "#schemat/types/type.js:STRING"
     admin_endpoint:
       info: Import path of the page rendering function, `view(request)`, that should
         be used to handle requests at the `::admin` endpoint of the URL where
         this Page is deployed.
-      "@": schemat/types/type.js:STRING
+      "@": "#schemat/types/type.js:STRING"
   __category:
     "@": 1
 - id: 26
   name: Revision
   info: Immutable snapshot of past content of the `target` object at a particular
     version number.
-  class: schemat/core/revision.js:Revision
+  class: "#schemat/core/revision.js:Revision"
   schema:
     target:
       info: The object whose older version is stored in this revision.
-      "@": schemat/types/type.js:REF
+      "@": "#schemat/types/type.js:REF"
     ver:
       info: Version number of the `target` that is stored in this revision.
-      "@": schemat/types/type.js:UNSIGNED
+      "@": "#schemat/types/type.js:UNSIGNED"
     data:
       info: JSON-stringified `__data` of the target object at version `ver`.
-      "@": schemat/types/type.js:STRING
+      "@": "#schemat/types/type.js:STRING"
   immutable: true
   __category:
     "@": 1
@@ -982,8 +982,8 @@
     "@": 4
   schema:
     local_path:
-      "@": schemat/types/type.js:STRING
-  class: schemat/std/files.js:LocalFile
+      "@": "#schemat/types/type.js:STRING"
+  class: "#schemat/std/files.js:LocalFile"
   __category:
     "@": 1
 - id: 29
@@ -1000,30 +1000,30 @@
         executes in the context of the cluster database ('kernel mode').
       category:
         "@": 11
-      "@": schemat/types/type.js:REF
+      "@": "#schemat/types/type.js:REF"
     controller:
       info: Global name (like in [cluster].controllers) of the controller that manages
         this agent's replication and deployments.
-      "@": schemat/types/type.js:STRING
+      "@": "#schemat/types/type.js:STRING"
     concurrent:
       info: If true, multiple calls to an agent instance may execute concurrently.
         Disabled by default, so every agent method runs in exclusive lock.
-      "@": schemat/types/type.js:BOOLEAN
+      "@": "#schemat/types/type.js:BOOLEAN"
     switch_context:
       info: If true, commands are executed in the caller's context (application & DB),
         not the agent's own context.
-      "@": schemat/types/type.js:BOOLEAN
+      "@": "#schemat/types/type.js:BOOLEAN"
     file_tag:
       info: A string to be included in names of local files/directories related to
         this agent. Should not contain any slashes (it is not a path), nor an
         extension.
-      "@": schemat/types/type.js:STRING
+      "@": "#schemat/types/type.js:STRING"
     file_name:
       info: Name of the local file/directory of this agent, or a path relative to this
         agent owner's file_path. Fixed during agent initialization, should not
         be changed later on. Same value on every node, unlike `file_path` getter
         which may partly depend on the local node's settings.
-      "@": schemat/types/type.js:STRING
+      "@": "#schemat/types/type.js:STRING"
   ttl: 30
   __category:
     "@": 1
@@ -1032,18 +1032,18 @@
   info: "An agent that implements a web server: a perpetual event loop
     (microservice) that receives web requests from external clients, processes
     them and returns responses over the web."
-  class: schemat/server/agent.js:WebServer
+  class: "#schemat/server/agent.js:WebServer"
   schema:
     host:
       info: Host name of the local network interface where the server should be
         deployed to accept incoming web requests. Overriden by CLI option
         --http-host. If both missing, node.http_host is used.
-      "@": schemat/types/type.js:STRING
+      "@": "#schemat/types/type.js:STRING"
     port:
       info: Port number for incoming HTTP connections where the server should be
         deployed. Overriden by CLI option --http-port. If both missing,
         node.http_port is used.
-      "@": schemat/types/type.js:INTEGER
+      "@": "#schemat/types/type.js:INTEGER"
     request_timeout:
       default: 60
       info: Maximum duration of web request processing, in seconds. After this time,
@@ -1051,14 +1051,14 @@
         CONTINUES (!) in the background and may consume resources, simply
         because there is no way in Node.js to terminate an async thread by
         force!
-      "@": schemat/types/type.js:NUMBER
+      "@": "#schemat/types/type.js:NUMBER"
   __prototype:
     "@": 29
   __category:
     "@": 1
 - id: 33
   name: Logger
-  class: schemat/server/logger.js:Logger
+  class: "#schemat/server/logger.js:Logger"
   __prototype:
     "@": 29
   __category:
