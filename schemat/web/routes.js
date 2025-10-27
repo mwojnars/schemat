@@ -60,7 +60,7 @@ export class Routes {
             
             if (ent.isDirectory()) {
                 if (name === 'node_modules') continue
-                let [_params, _pattern] = this._make_step(name, params, pattern)    // update accumulators with this directory segment
+                let [_params, _pattern] = this._parse(name, params, pattern)    // update accumulators with this directory segment
                 await this._walk(path, _params, _pattern)
                 continue
             }
@@ -68,12 +68,12 @@ export class Routes {
             if (ent.isSymbolicLink()) {
                 let stat = await stat_symlink(path)
                 if (stat.isFile()) ent = {isFile: () => true}           // treat symlinked file same as regular file
-                // else if (stat.isDirectory()) {
-                //     if (name === 'node_modules') continue
-                //     let [_params, _pattern] = this._make_step(name, params, pattern)
-                //     await this._walk(path, _params, _pattern)
-                //     continue
-                // }
+                else if (stat.isDirectory()) {
+                    if (name === 'node_modules') continue               // protection against accidental scanning of a huge source tree
+                    let [_params, _pattern] = this._parse(name, params, pattern)
+                    await this._walk(path, _params, _pattern)
+                    continue
+                }
                 else continue
             }
             
@@ -97,7 +97,7 @@ export class Routes {
             if (['js', 'jsx', 'svelte', 'ejs'].includes(ext)) {
                 type = 'render'
                 let seg = this.app._norm_segment(name.slice(0, -(ext.length + 1)))
-                let [_params, _pattern] = this._make_step(seg, params, pattern)     // update accumulators with file segment (without extension)
+                let [_params, _pattern] = this._parse(seg, params, pattern)     // update accumulators with file segment (without extension)
 
                 if (_params.length) {
                     let regex = new RegExp('^' + _pattern + '$')
@@ -114,20 +114,24 @@ export class Routes {
         return '/' + rel
     }
 
-    _make_step(segment, params, pattern) {
-        let [_params, _pattern] = this._make_regex(segment)
+    _parse(segment, params, url) {
+        /* Parse another `segment` (dir/file name) of a route file path, and convert it into a list of
+           parameter names (_params) and URL regex pattern (_url), to be appended to the corresponding
+           `params` and `url` parsed so far for the parent of `segment`.
+         */
+        let [_params, _url] = this._make_regex(segment)
         params = [...params, ..._params]
-        pattern += '/' + _pattern
-        return [params, pattern]
+        url += '/' + _url
+        return [params, url]
     }
 
-    _make_regex(route_path) {
-        /* Convert a route path, possibly containing [NAME] parameters, to a regex matching actual URLs that fill these params.
+    _make_regex(route) {
+        /* Convert a route path (segment), possibly containing [NAME] parameters, to a regex matching actual URLs that fill these params.
            Parameters can be embedded within segments, e.g. "prefix[param]suffix" or "a[p1]b[p2]c".
-           Return a pair, [param_names, regex_pattern].
+           Returns a pair, [param_names, url_regex_pattern].
          */
         let param_names = []
-        let pattern = escapeRegExp(route_path).replace(/\\\[([^\]]+)\\\]/g, (_, name) => {
+        let pattern = escapeRegExp(route).replace(/\\\[([^\]]+)\\\]/g, (_, name) => {
             param_names.push(name)
             return '([^/]+)'
         })
