@@ -312,7 +312,7 @@
         be served as static assets directly from the application folder.
       "@": schemat/types/type.js:STRING
     transpiled_extensions:
-      default: svelte
+      default: pcss svelte
       info: Space-separated list of extensions (case insensitive) of files that can
         be served from application folder after being transpiled, the extension is
         included in the URL then.

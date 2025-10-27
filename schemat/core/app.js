@@ -185,6 +185,47 @@ export class Application extends WebObject {
         // request.not_found()
     }
 
+    get _svelte_imports() {
+        /* Discover Svelte client runtime imports by compiling a tiny sample component on the fly. Should include paths like:
+             svelte/internal/client
+             svelte/internal/disclose-version
+             svelte/internal/flags/legacy
+         */
+        // minimal Svelte 5 component sufficient to trigger runtime imports
+        let source = `<script>export let x</script>\n<div>{x}</div>`
+        let out = svelte_compile(source, {filename: 'sample.svelte', css: 'injected', generate: 'client'})
+        let code = out?.js?.code || ''
+
+        // extract all import specifiers and keep only Svelte internals
+        let set = new Set()
+        code.replace(/from ['"]([^'"]+)['"]/g, (m, spec) => { if (spec.startsWith('svelte/')) set.add(spec); return '' })
+        code.replace(/import ['"]([^'"]+)['"]/g, (m, spec) => { if (spec.startsWith('svelte/')) set.add(spec); return '' })
+        return [...set]
+    }
+
+    async _transpile_svelte(path, request) {
+        /* Compile a .svelte file to client-side JS and send it to the client. */
+        // this._print(`_transpile_svelte():`, path)
+        let source = await readFile(path, 'utf-8')
+        let out = svelte_compile(source, {filename: path, css: 'injected', generate: 'client'})
+        if (out.warnings?.length) this._print('_transpile_svelte() compilation warnings:', out.warnings)
+
+        let bundle = `"/$/bundle/svelte"`
+        let code = out.js.code
+
+        // rewrite Svelte runtime imports to a single bundled runtime URL
+        this._svelte_imports.forEach(dep => {
+            code = code.replaceAll(new RegExp(`from ['"]${dep}['"]`, 'g'), `from ${bundle}`)
+            code = code.replaceAll(new RegExp(`import ['"]${dep}['"]`, 'g'), `import ${bundle}`)
+        })
+
+        request.send_mimetype('js')
+        request.send(code)
+    }
+
+    // async _transpile_pcss(path, request) {
+    // }
+
     async _render_ejs(path, request) {
         /* Render an EJS template file. It may include() other templates and async import_() other JS modules. */
 
@@ -280,44 +321,6 @@ export class Application extends WebObject {
                            .replace('<!--HEAD-->', head || '')
                            .replace('<!--APP-->', body || '')
         request.send(html)
-    }
-
-    get _svelte_imports() {
-        /* Discover Svelte client runtime imports by compiling a tiny sample component on the fly. Should include paths like:
-             svelte/internal/client
-             svelte/internal/disclose-version
-             svelte/internal/flags/legacy
-         */
-        // minimal Svelte 5 component sufficient to trigger runtime imports
-        let source = `<script>export let x</script>\n<div>{x}</div>`
-        let out = svelte_compile(source, {filename: 'sample.svelte', css: 'injected', generate: 'client'})
-        let code = out?.js?.code || ''
-
-        // extract all import specifiers and keep only Svelte internals
-        let set = new Set()
-        code.replace(/from ['"]([^'"]+)['"]/g, (m, spec) => { if (spec.startsWith('svelte/')) set.add(spec); return '' })
-        code.replace(/import ['"]([^'"]+)['"]/g, (m, spec) => { if (spec.startsWith('svelte/')) set.add(spec); return '' })
-        return [...set]
-    }
-
-    async _transpile_svelte(path, request) {
-        /* Compile a .svelte file to client-side JS and send it to the client. */
-        // this._print(`_transpile_svelte():`, path)
-        let source = await readFile(path, 'utf-8')
-        let out = svelte_compile(source, {filename: path, css: 'injected', generate: 'client'})
-        if (out.warnings?.length) this._print('_transpile_svelte() compilation warnings:', out.warnings)
-
-        let bundle = `"/$/bundle/svelte"`
-        let code = out.js.code
-
-        // rewrite Svelte runtime imports to a single bundled runtime URL
-        this._svelte_imports.forEach(dep => {
-            code = code.replaceAll(new RegExp(`from ['"]${dep}['"]`, 'g'), `from ${bundle}`)
-            code = code.replaceAll(new RegExp(`import ['"]${dep}['"]`, 'g'), `import ${bundle}`)
-        })
-
-        request.send_mimetype('js')
-        request.send(code)
     }
 
 
