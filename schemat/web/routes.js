@@ -1,5 +1,5 @@
 import mod_path from 'node:path'
-import {readdir, lstat, readlink} from 'node:fs/promises'
+import {readdir, lstat, readlink, realpath} from 'node:fs/promises'
 import {escapeRegExp, fileExtension, dropExtension} from '../common/utils.js'
 
 async function stat_symlink(path) {
@@ -41,8 +41,8 @@ export class Routes {
         // this.app._print(` `, {dynamic_routes: this.dynamic_routes})
     }
 
-    async _walk(dir, params = [], url = '') {
-        let entries = await readdir(dir, {withFileTypes: true})
+    async _walk(parent, params = [], url = '') {
+        let entries = await readdir(parent, {withFileTypes: true})
         
         // sort entries by replacing '[' with a high-code char to push dynamic segments last
         const HIGH_CHAR = '\uffff'
@@ -54,13 +54,14 @@ export class Routes {
         
         for (let ent of entries) {
             let name = ent.name
-            let path = mod_path.join(dir, name)
+            let path = mod_path.join(parent, name)
 
             if (this.app._is_private_name.test(name)) continue
 
             if (ent.isSymbolicLink())
-                ent = await stat_symlink(path)
-            
+                ent = await lstat(await realpath(path))
+                // ent = await stat_symlink(path)
+
             if (ent.isDirectory()) {
                 if (name === 'node_modules') continue                   // protection against accidental scanning of a huge source tree
                 let [_params, _url] = this._parse(name, params, url)    // update accumulators with this directory segment
@@ -74,7 +75,7 @@ export class Routes {
             let url_path = '/' + mod_path.relative(this.app_root, path) // truncate the leading `app_root` path
             let route_path = url_path.slice(0, -(ext.length + 1))       // drop ".ext"
 
-            // schemat._print(`_walk():`, {path, url_path})
+            // schemat._print(`_walk():`, {path, url_path, route_path})
 
             route_path = this.app._norm_segment(route_path)             // replace dots with slashes
             if (ext) url_path = route_path + '.' + ext
