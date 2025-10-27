@@ -3,10 +3,16 @@ import {readdir, lstat, readlink} from 'node:fs/promises'
 import {escapeRegExp, fileExtension, dropExtension} from '../common/utils.js'
 
 async function stat_symlink(path) {
-    let target = await readlink(path)
-    if (!mod_path.isAbsolute(target))
-        target = mod_path.resolve(mod_path.dirname(path), target)
-    return await lstat(target)
+    /* Follow a chain of symbolic links, starting from `path`. Return the final file status. */
+    while (true) {
+        let target = await readlink(path)
+        if (!mod_path.isAbsolute(target))
+            target = mod_path.resolve(mod_path.dirname(path), target)
+
+        let stat = await lstat(target)
+        if (stat.isSymbolicLink()) path = target
+        else return stat
+    }
 }
 
 /**********************************************************************************************************************/
