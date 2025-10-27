@@ -10,7 +10,7 @@
         Importantly, `class` impacts the category itself: all *static* endpoints
         defined in this class are treated as endpoints of the category object,
         not instances.'
-      default: schemat:WebObject
+      default: "#schemat:WebObject"
       "@": "#schemat/types/type.js:IMPORT"
     std:
       value_type:
@@ -72,7 +72,7 @@
         GET/2: admin
         GET/3: inspect
         LOCAL: self
-        "@": schemat:Catalog
+        "@": "#schemat:Catalog"
       "@": "#schemat/types/catalog_type.js:CATALOG"
     schema:
       value_type:
@@ -231,7 +231,7 @@
   save_revisions: false
   seal_dependencies: false
   ttl: 60
-  class: schemat:Category
+  class: "#schemat:Category"
   std:
     Category:
       "@": 1

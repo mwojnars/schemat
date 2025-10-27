@@ -101,29 +101,29 @@
   name: Varia
   info: Sample category.
   class_body: >-
-    static check() { import('/$/local/schemat/common/utils.js').then(mod =>
+    static check() { import('#schemat/common/utils.js').then(mod =>
     console.log("Varia.code: imported ", mod)) }
 
     static error() { throw new Error('Varia/code/error()') }
   schema:
     title:
       multiple: true
-      "@": schemat/types/type.js:STRING
+      "@": "#schemat/types/type.js:STRING"
     ref:
-      "@": schemat/types/type.js:REF
+      "@": "#schemat/types/type.js:REF"
     strong_ref:
       strong: true
-      "@": schemat/types/type.js:REF
+      "@": "#schemat/types/type.js:REF"
     value_x:
       multiple: true
-      "@": schemat/types/type.js:NUMBER
+      "@": "#schemat/types/type.js:NUMBER"
     value_y:
       multiple: true
-      "@": schemat/types/type.js:NUMBER
+      "@": "#schemat/types/type.js:NUMBER"
     value_date:
-      "@": schemat/types/type.js:DATE
+      "@": "#schemat/types/type.js:DATE"
     value_set:
-      "@": schemat/types/type.js:SET
+      "@": "#schemat/types/type.js:SET"
   __category:
     "@": 1
 - id: 2102
