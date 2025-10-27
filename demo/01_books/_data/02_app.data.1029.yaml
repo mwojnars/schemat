@@ -9,7 +9,7 @@
       "@": 2102
     BookCategory:
       "@": 2101
-    "@": schemat:Catalog
+    "@": "#schemat:Catalog"
   default_path: /$/id
   logger:
     "@": 1037
@@ -34,7 +34,7 @@
       "@": 2005
     "*app_objects":
       "@": 2006
-    "@": schemat:Catalog
+    "@": "#schemat:Catalog"
   __path: /
   __category:
     "@": 5
@@ -60,7 +60,7 @@
       "@": 2008
     sys:
       "@": 2007
-    "@": schemat:Catalog
+    "@": "#schemat:Catalog"
   __container:
     "@": 2002
   __category:
@@ -78,7 +78,7 @@
 - id: 2006
   name: app_objects
   entries:
-    "@": schemat:Catalog
+    "@": "#schemat:Catalog"
   __container:
     "@": 2002
   __category:
@@ -113,31 +113,31 @@
   class: "#root/demo/01_books/books/books.js:Book"
   schema:
     title:
-      "@": schemat/types/type.js:STRING
+      "@": "#schemat/types/type.js:STRING"
     author:
       info: Repeat this field to enter multiple authors.
       multiple: true
       category:
         "@": 2102
-      "@": schemat/types/type.js:REF
+      "@": "#schemat/types/type.js:REF"
     genre:
-      "@": schemat/types/type.js:STRING
+      "@": "#schemat/types/type.js:STRING"
     published_year:
-      "@": schemat/types/type.js:INTEGER
+      "@": "#schemat/types/type.js:INTEGER"
     isbn:
-      "@": schemat/types/type.js:STRING
+      "@": "#schemat/types/type.js:STRING"
     page_count:
-      "@": schemat/types/type.js:INTEGER
+      "@": "#schemat/types/type.js:INTEGER"
     language:
-      "@": schemat/types/type.js:STRING
+      "@": "#schemat/types/type.js:STRING"
     publisher:
-      "@": schemat/types/type.js:STRING
+      "@": "#schemat/types/type.js:STRING"
     description:
-      "@": schemat/types/type.js:TEXT
+      "@": "#schemat/types/type.js:TEXT"
     average_rating:
-      "@": schemat/types/type.js:NUMBER
+      "@": "#schemat/types/type.js:NUMBER"
     cover_image:
-      "@": schemat/types/type.js:URL
+      "@": "#schemat/types/type.js:URL"
   __category:
     "@": 1
 - id: 2102
@@ -145,25 +145,25 @@
   class: "#root/demo/01_books/authors/author.js:Author"
   schema:
     birth_year:
-      "@": schemat/types/type.js:INTEGER
+      "@": "#schemat/types/type.js:INTEGER"
     death_year:
-      "@": schemat/types/type.js:INTEGER
+      "@": "#schemat/types/type.js:INTEGER"
     nationality:
-      "@": schemat/types/type.js:STRING
+      "@": "#schemat/types/type.js:STRING"
     notable_work:
       multiple: true
-      "@": schemat/types/type.js:STRING
+      "@": "#schemat/types/type.js:STRING"
     literary_movement:
-      "@": schemat/types/type.js:STRING
+      "@": "#schemat/types/type.js:STRING"
     alma_mater:
-      "@": schemat/types/type.js:STRING
+      "@": "#schemat/types/type.js:STRING"
     award:
       multiple: true
-      "@": schemat/types/type.js:STRING
+      "@": "#schemat/types/type.js:STRING"
     spouse:
-      "@": schemat/types/type.js:STRING
+      "@": "#schemat/types/type.js:STRING"
     bio:
-      "@": schemat/types/type.js:TEXT
+      "@": "#schemat/types/type.js:TEXT"
   __category:
     "@": 1
 - id: 2103
