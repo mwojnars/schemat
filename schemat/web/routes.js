@@ -41,7 +41,7 @@ export class Routes {
         // this.app._print(` `, {dynamic_routes: this.dynamic_routes})
     }
 
-    async _walk(dir, params = [], pattern = '') {
+    async _walk(dir, params = [], url = '') {
         let entries = await readdir(dir, {withFileTypes: true})
         
         // sort entries by replacing '[' with a high-code char to push dynamic segments last
@@ -57,26 +57,29 @@ export class Routes {
             let path = mod_path.join(dir, name)
 
             if (this.app._is_private_name.test(name)) continue
+
+            // if (ent.isSymbolicLink()) {
+            //     let stat = await stat_symlink(path)
+            //     if (stat.isFile()) ent = {isFile: () => true}           // treat symlinked file same as regular file
+            //     else if (stat.isDirectory()) {
+            //         if (name === 'node_modules') continue
+            //         let [_params, _url] = this._parse(name, params, url)
+            //         await this._walk(path, _params, _url)
+            //         continue
+            //     }
+            //     else continue
+            // }
+
+            if (ent.isSymbolicLink())
+                ent = await stat_symlink(path)
             
             if (ent.isDirectory()) {
-                if (name === 'node_modules') continue
-                let [_params, _pattern] = this._parse(name, params, pattern)    // update accumulators with this directory segment
-                await this._walk(path, _params, _pattern)
+                if (name === 'node_modules') continue                   // protection against accidental scanning of a huge source tree
+                let [_params, _url] = this._parse(name, params, url)    // update accumulators with this directory segment
+                await this._walk(path, _params, _url)
                 continue
             }
 
-            if (ent.isSymbolicLink()) {
-                let stat = await stat_symlink(path)
-                if (stat.isFile()) ent = {isFile: () => true}           // treat symlinked file same as regular file
-                else if (stat.isDirectory()) {
-                    if (name === 'node_modules') continue               // protection against accidental scanning of a huge source tree
-                    let [_params, _pattern] = this._parse(name, params, pattern)
-                    await this._walk(path, _params, _pattern)
-                    continue
-                }
-                else continue
-            }
-            
             if (!ent.isFile()) continue
 
             let ext = fileExtension(path).toLowerCase()
@@ -97,10 +100,10 @@ export class Routes {
             if (['js', 'jsx', 'svelte', 'ejs'].includes(ext)) {
                 type = 'render'
                 let seg = this.app._norm_segment(name.slice(0, -(ext.length + 1)))
-                let [_params, _pattern] = this._parse(seg, params, pattern)     // update accumulators with file segment (without extension)
+                let [_params, _url] = this._parse(seg, params, url)     // update accumulators with file segment (without extension)
 
                 if (_params.length) {
-                    let regex = new RegExp('^' + _pattern + '$')
+                    let regex = new RegExp('^' + _url + '$')
                     this.dynamic_routes.push({type, file: path, ext, regex, param_names: _params, route_path})
                 }
                 else this.exact_routes.set(route_path, {type, file: path, ext})
