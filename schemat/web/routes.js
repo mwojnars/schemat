@@ -71,18 +71,16 @@ export class Routes {
             // renderable files become routes without extension
             if (this.app._rendered_exts.includes(ext)) {
                 type = 'render'
-
-                // if (ext) name = name.slice(0, -(ext.length + 1))            // from now on, `name` has no extension
                 name = dropExtension(name)
-                route = this._extend_route(base_route, name)
-                // route = route.slice(0, -(ext.length + 1))               // drop ".ext"
+                let segm = ''
 
-                if (name === this.app.default_route) {                  // drop default route name (ex. "index") + leading / from the URL
-                    route = route.slice(0, -(name.length + 1))
-                    name = ""
+                if (name === this.app.default_route)                        // drop segment when default name (ex. "index")
+                    route = base_route
+                else {
+                    segm = this._make_segment(name)
+                    route = base_route + '/' + segm
                 }
 
-                let segm = this._make_segment(name)
                 let [_params, _regex] = this._parse(segm, params, regex)    // update accumulators with file segment (without extension)
 
                 if (_params.length) {
@@ -110,8 +108,10 @@ export class Routes {
     }
 
     _make_segment(segm) {
+        /* Convert a given file name to a URL segment(s). The result can be empty if segment needs to be dropped. */
         // if (name[0] === '(' && name.endsWith(')'))       // drop virtual directories, like "(root)", from the URL
-        if (this.app.flat_routes) segm = segm.replaceAll('.', '/')
+        // if (this.app.default_route === segm) segm = ""                  // drop segment when default name (ex. "index")
+        if (this.app.flat_routes) segm = segm.replaceAll('.', '/')      // convert flat routes to multi-segment routes
         return segm
     }
 
