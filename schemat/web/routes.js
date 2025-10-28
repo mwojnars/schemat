@@ -59,7 +59,9 @@ export class Routes {
 
             if (!ent.isFile()) continue
 
-            let ext = fileExtension(path).toLowerCase()
+            let ext = fileExtension(name).toLowerCase()
+            if (ext) name = name.slice(0, -(ext.length + 1))            // from now on, `name` includes no extension
+
             let url_path = '/' + mod_path.relative(this.app_root, path) // truncate the leading `app_root` path
             let route_path = url_path.slice(0, -(ext.length + 1))       // drop ".ext"
 
@@ -78,12 +80,18 @@ export class Routes {
             // renderable files become routes without extension
             if (this.app._rendered_exts.includes(ext)) {
                 type = 'render'
-                let seg = this.app._norm_segment(name.slice(0, -(ext.length + 1)))
-                let [_params, _url] = this._parse(seg, params, url)     // update accumulators with file segment (without extension)
+
+                // if (name === this.app.default_route) {                  // if default route name (ex. "index"), drop it from the route
+                //     route_path = route_path.slice(0, -(name.length + 1))
+                //     name = ""
+                // }
+
+                let segm = this.app._norm_segment(name)
+                let [_params, _url] = this._parse(segm, params, url)    // update accumulators with file segment (without extension)
 
                 if (_params.length) {
                     let regex = new RegExp('^' + _url + '$')
-                    this.dynamic_routes.push({type, path, ext, regex, param_names: _params, route_path})
+                    this.dynamic_routes.push({route_path, type, path, ext, regex, param_names: _params})
                 }
                 else this.exact_routes.set(route_path, {type, path, ext})
             }
@@ -97,7 +105,7 @@ export class Routes {
          */
         let [_params, _url] = this._make_regex(segment)
         params = [...params, ..._params]
-        url += '/' + _url
+        if (_url) url += '/' + _url
         return [params, url]
     }
 
