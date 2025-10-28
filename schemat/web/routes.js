@@ -11,7 +11,7 @@ export class Routes {
      */
 
     exact_routes      // Map(route_path_without_ext -> {type, file, ext}) for renderable files
-    dynamic_routes    // Array<{type, file, ext, param_names, regex, route_path}>
+    dynamic_routes    // Array<{type, file, ext, param_names, regex}>
 
     constructor(app) {
         this.app = app
@@ -64,12 +64,11 @@ export class Routes {
             if (ext) name = name.slice(0, -(ext.length + 1))            // from now on, `name` includes no extension
 
             let url_path = '/' + mod_path.relative(this.app_root, path) // truncate the leading `app_root` path
-            let route_path = url_path.slice(0, -(ext.length + 1))       // drop ".ext"
-
             // schemat._print(`_walk():`, {path, url_path, route_path})
 
-            route_path = this._normalize(route_path)                    // replace dots with slashes
-            if (ext) url_path = route_path + '.' + ext
+            url_path = this._normalize(url_path)
+            // route_path = this._normalize(route_path)                    // replace dots with slashes
+            // if (ext) url_path = route_path + '.' + ext
 
             // determine route type based on extension
             let type = null
@@ -77,6 +76,8 @@ export class Routes {
             else if (this.app._transpiled_exts.includes(ext)) type = 'transpiled'
             
             if (type) this.exact_routes.set(url_path, {type, path, ext})
+
+            let route_path = url_path.slice(0, -(ext.length + 1))       // drop ".ext"
 
             // renderable files become routes without extension
             if (this.app._rendered_exts.includes(ext)) {
@@ -87,12 +88,12 @@ export class Routes {
                     name = ""
                 }
 
-                let segm = this._normalize(name)
+                let segm = this._norm_segment(name)
                 let [_params, _regex] = this._parse(segm, params, regex)    // update accumulators with file segment (without extension)
 
                 if (_params.length) {
                     let full_regex = new RegExp('^' + _regex + '$')
-                    this.dynamic_routes.push({route_path, type, path, ext, regex: full_regex, param_names: _params})
+                    this.dynamic_routes.push({type, path, ext, regex: full_regex, param_names: _params})
                 }
                 else this.exact_routes.set(route_path, {type, path, ext})
             }
@@ -101,11 +102,21 @@ export class Routes {
 
     _normalize(path) {
         /* Convert a file path or segment to a URL path, by replacing or removing special characters/substrings.
-           Any file extension must have been removed beforehand.
+           //Any file extension must have been removed beforehand.//
          */
-        // if (name[0] === '(' && name.endsWith(')'))       // drop virtual directories, like "(root)", from the URL
-        if (this.app.flat_routes) path = path.replaceAll('.', '/')
+        let ext = fileExtension(path)
+        if (ext) path = path.slice(0, -(ext.length + 1))
+
+        path = this._norm_segment(path)
+
+        if (ext) path += '.' + ext
         return path
+    }
+
+    _norm_segment(segm) {
+        // if (name[0] === '(' && name.endsWith(')'))       // drop virtual directories, like "(root)", from the URL
+        if (this.app.flat_routes) segm = segm.replaceAll('.', '/')
+        return segm
     }
 
     _parse(segment, params, regex) {
