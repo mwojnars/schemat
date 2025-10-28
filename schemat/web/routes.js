@@ -67,9 +67,9 @@ export class Routes {
             route = this._normalize(route)
 
             // determine route type based on extension
-            let type = null
-            if (this.app._static_exts.includes(ext)) type = 'static'
-            else if (this.app._transpiled_exts.includes(ext)) type = 'transpiled'
+            let type =
+                this.app._static_exts.includes(ext) ? 'static' :
+                this.app._transpiled_exts.includes(ext) ? 'transpiled' : null
             
             if (type) this.exact_routes.set(route, {type, path, ext})
 
@@ -78,7 +78,7 @@ export class Routes {
                 type = 'render'
                 route = route.slice(0, -(ext.length + 1))               // drop ".ext"
 
-                if (name === this.app.default_route) {                  // drop default route name (ex. "index") from the URL
+                if (name === this.app.default_route) {                  // drop default route name (ex. "index") + leading / from the URL
                     route = route.slice(0, -(name.length + 1))
                     name = ""
                 }
