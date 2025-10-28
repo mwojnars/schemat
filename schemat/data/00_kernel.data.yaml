@@ -295,9 +295,10 @@
       category:
         "@": 3
       "@": "#schemat/types/type.js:REF"
-    root_folder:
-      info: Local directory that is the root of URL routing. An an absolute path, or
-        relative to the project root.
+    app_root:
+      info: Local directory that is the root of URL routing and the base for import 
+        descriptors starting with $app/... As an absolute path, or relative to the 
+        project root.
       default: app
       "@": "#schemat/types/type.js:PATH"
     default_path:

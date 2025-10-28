@@ -35,7 +35,7 @@ export class Application extends WebObject {
     __global                        // plain object {...} holding all references from `global` (TODO: is not .std enough?)
 
     // properties:
-    root_folder
+    app_root
     root
     global
     cluster
@@ -56,7 +56,7 @@ export class Application extends WebObject {
     get _transpiled_exts()  { return this.transpiled_extensions.toLowerCase().split(/[ ,;:]+/) }
     get _private_routes()   { return this.private_routes.split(/\s+/) || [] }
 
-    get app_root()          { return mod_path.normalize(schemat.PATH_PROJECT + '/' + this.root_folder) }
+    get _app_root()         { return mod_path.normalize(schemat.PATH_PROJECT + '/' + this.app_root) }
     get routes()            { if (Routes) return new Routes(this) }
 
     get _is_private_path() {
