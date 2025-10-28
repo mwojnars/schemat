@@ -555,6 +555,10 @@ export class Schemat {
         if (path.startsWith('schemat:') || !this.app?.is_loaded())
             return this.get_builtin(path)
         if (path[0] === '/') return this.import_global(path)    // NOT USED currently
+
+        if (SERVER && (path.startsWith('$app/') || path.startsWith('$app:')))
+            path = this.app._app_root + '/' + path.slice(4)
+
         return this.import_local(path)
     }
 
