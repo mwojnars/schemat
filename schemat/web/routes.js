@@ -53,8 +53,12 @@ export class Routes {
 
             if (ent.isDirectory()) {
                 if (name === 'node_modules') continue                       // protection against accidental scanning of a big source tree
-                let [_params, _regex] = this._parse(name, params, regex)    // update accumulators with this directory segment
-                await this._walk(path, route, _params, _regex)
+                if (name[0] === '(' && name.endsWith(')'))                  // drop virtual directories, like "(root)", from the URL
+                    await this._walk(path, base_route, params, regex)
+                else {
+                    let [_params, _regex] = this._parse(name, params, regex)    // update accumulators with this directory segment
+                    await this._walk(path, route, _params, _regex)
+                }
                 continue
             }
 
@@ -80,7 +84,6 @@ export class Routes {
                     segm = this._make_segment(name)
                     route = base_route + '/' + segm
                 }
-
                 let [_params, _regex] = this._parse(segm, params, regex)    // update accumulators with file segment (without extension)
 
                 if (_params.length) {
@@ -109,8 +112,6 @@ export class Routes {
 
     _make_segment(segm) {
         /* Convert a given file name to a URL segment(s). The result can be empty if segment needs to be dropped. */
-        // if (name[0] === '(' && name.endsWith(')'))       // drop virtual directories, like "(root)", from the URL
-        // if (this.app.default_route === segm) segm = ""                  // drop segment when default name (ex. "index")
         if (this.app.flat_routes) segm = segm.replaceAll('.', '/')      // convert flat routes to multi-segment routes
         return segm
     }
