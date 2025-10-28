@@ -41,7 +41,7 @@
     "@": 5
 - id: 2003
   name: home
-  view_endpoint: "#root/demo/01_books/home/home.js:homepage"
+  view_endpoint: "$app/home/home.js:homepage"
   __container:
     "@": 2002
   __category:
