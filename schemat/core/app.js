@@ -144,8 +144,12 @@ export class Application extends WebObject {
     async _route_file_based(request) {
         /* Find request.path on disk, then return the static file, or render .ejs, or execute .js function. */
         // this._print(`request.path:`, request.path)
-        let url_path = request.path || '/'
-        assert(url_path[0] === '/', url_path)
+
+        // let url_path = request.path || '/'
+        // assert(url_path[0] === '/', url_path)
+
+        let url_path = request.path
+        assert(!url_path || url_path[0] === '/', url_path)
 
         // make sure that no segment in request.path starts with a forbidden prefix (_private_routes)
         if (this._is_private_path.test(url_path)) request.not_found()
