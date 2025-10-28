@@ -111,7 +111,6 @@
 
 - id: 2101
   name: Book
-  class: "$app/books/books.js:Book"
   schema:
     title:
       "@": "#schemat/types/type.js:STRING"
@@ -143,7 +142,6 @@
     "@": 1
 - id: 2102
   name: Author
-  class: "$app/authors/author.js:Author"
   schema:
     birth_year:
       "@": "#schemat/types/type.js:INTEGER"
