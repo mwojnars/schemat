@@ -61,30 +61,25 @@ export class Routes {
             if (!ent.isFile()) continue
 
             let ext = fileExtension(name).toLowerCase()
-            if (ext) name = name.slice(0, -(ext.length + 1))            // from now on, `name` includes no extension
+            if (ext) name = name.slice(0, -(ext.length + 1))            // from now on, `name` has no extension
 
-            let url_path = '/' + mod_path.relative(this.app_root, path) // truncate the leading `app_root` path
-            // schemat._print(`_walk():`, {path, url_path, route_path})
-
-            url_path = this._normalize(url_path)
-            // route_path = this._normalize(route_path)                    // replace dots with slashes
-            // if (ext) url_path = route_path + '.' + ext
+            let route = '/' + mod_path.relative(this.app_root, path)    // truncate the leading `app_root` path; the route still includes extension
+            route = this._normalize(route)
 
             // determine route type based on extension
             let type = null
             if (this.app._static_exts.includes(ext)) type = 'static'
             else if (this.app._transpiled_exts.includes(ext)) type = 'transpiled'
             
-            if (type) this.exact_routes.set(url_path, {type, path, ext})
-
-            let route_path = url_path.slice(0, -(ext.length + 1))       // drop ".ext"
+            if (type) this.exact_routes.set(route, {type, path, ext})
 
             // renderable files become routes without extension
             if (this.app._rendered_exts.includes(ext)) {
                 type = 'render'
+                route = route.slice(0, -(ext.length + 1))               // drop ".ext"
 
                 if (name === this.app.default_route) {                  // drop default route name (ex. "index") from the URL
-                    route_path = route_path.slice(0, -(name.length + 1))
+                    route = route.slice(0, -(name.length + 1))
                     name = ""
                 }
 
@@ -95,7 +90,7 @@ export class Routes {
                     let full_regex = new RegExp('^' + _regex + '$')
                     this.dynamic_routes.push({type, path, ext, regex: full_regex, param_names: _params})
                 }
-                else this.exact_routes.set(route_path, {type, path, ext})
+                else this.exact_routes.set(route, {type, path, ext})
             }
         }
     }
