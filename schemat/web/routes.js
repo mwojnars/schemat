@@ -52,7 +52,9 @@ export class Routes {
 
             if (ent.isDirectory()) {
                 if (name === 'node_modules') continue                   // protection against accidental scanning of a big source tree
-                if (name[0] === '(' && name.endsWith(')')) name = ""    // drop virtual directories, like "(root)", from the URL
+                // if (name[0] === '(' && name.endsWith(')')) {            // drop virtual directories, like "(root)", from the URL
+                //     await this._walk(path, _params, _url)
+                // }
                 let [_params, _url] = this._parse(name, params, url)    // update accumulators with this directory segment
                 await this._walk(path, _params, _url)
                 continue
@@ -68,7 +70,7 @@ export class Routes {
 
             // schemat._print(`_walk():`, {path, url_path, route_path})
 
-            route_path = this.app._norm_segment(route_path)             // replace dots with slashes
+            route_path = this._norm_segment(route_path)                 // replace dots with slashes
             if (ext) url_path = route_path + '.' + ext
 
             // determine route type based on extension
@@ -87,7 +89,7 @@ export class Routes {
                     name = ""
                 }
 
-                let segm = this.app._norm_segment(name)
+                let segm = this._norm_segment(name)
                 let [_params, _url] = this._parse(segm, params, url)    // update accumulators with file segment (without extension)
 
                 if (_params.length) {
@@ -97,6 +99,14 @@ export class Routes {
                 else this.exact_routes.set(route_path, {type, path, ext})
             }
         }
+    }
+
+    _norm_segment(path) {
+        /* Convert a file path or segment to a URL path, by replacing or removing special characters/substrings.
+           Any file extension must have been removed beforehand.
+         */
+        if (this.app.flat_routes) path = path.replaceAll('.', '/')
+        return path
     }
 
     _parse(segment, params, url) {
