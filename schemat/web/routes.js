@@ -29,8 +29,8 @@ export class Routes {
         // this.app._print(` `, {dynamic_routes: this.dynamic_routes})
     }
 
-    async _walk(parent, params = [], url = '') {
-        let entries = await readdir(parent, {withFileTypes: true})
+    async _walk(folder, params = [], regex = '') {
+        let entries = await readdir(folder, {withFileTypes: true})
         
         // sort entries by replacing '(' and '[' with high-code chars to control segment order
         const HIGH_CHAR = '\uffff'
@@ -43,7 +43,7 @@ export class Routes {
         
         for (let ent of entries) {
             let name = ent.name
-            let path = mod_path.join(parent, name)
+            let path = mod_path.join(folder, name)
 
             if (this.app._is_private_name.test(name)) continue
 
@@ -51,12 +51,9 @@ export class Routes {
                 ent = await lstat(await realpath(path))
 
             if (ent.isDirectory()) {
-                if (name === 'node_modules') continue                   // protection against accidental scanning of a big source tree
-                // if (name[0] === '(' && name.endsWith(')')) {            // drop virtual directories, like "(root)", from the URL
-                //     await this._walk(path, _params, _url)
-                // }
-                let [_params, _url] = this._parse(name, params, url)    // update accumulators with this directory segment
-                await this._walk(path, _params, _url)
+                if (name === 'node_modules') continue                       // protection against accidental scanning of a big source tree
+                let [_params, _regex] = this._parse(name, params, regex)    // update accumulators with this directory segment
+                await this._walk(path, _params, _regex)
                 continue
             }
 
@@ -70,7 +67,7 @@ export class Routes {
 
             // schemat._print(`_walk():`, {path, url_path, route_path})
 
-            route_path = this._norm_segment(route_path)                 // replace dots with slashes
+            route_path = this._normalize(route_path)                    // replace dots with slashes
             if (ext) url_path = route_path + '.' + ext
 
             // determine route type based on extension
@@ -89,35 +86,36 @@ export class Routes {
                     name = ""
                 }
 
-                let segm = this._norm_segment(name)
-                let [_params, _url] = this._parse(segm, params, url)    // update accumulators with file segment (without extension)
+                let segm = this._normalize(name)
+                let [_params, _regex] = this._parse(segm, params, regex)    // update accumulators with file segment (without extension)
 
                 if (_params.length) {
-                    let regex = new RegExp('^' + _url + '$')
-                    this.dynamic_routes.push({route_path, type, path, ext, regex, param_names: _params})
+                    let full_regex = new RegExp('^' + _regex + '$')
+                    this.dynamic_routes.push({route_path, type, path, ext, regex: full_regex, param_names: _params})
                 }
                 else this.exact_routes.set(route_path, {type, path, ext})
             }
         }
     }
 
-    _norm_segment(path) {
+    _normalize(path) {
         /* Convert a file path or segment to a URL path, by replacing or removing special characters/substrings.
            Any file extension must have been removed beforehand.
          */
+        // if (name[0] === '(' && name.endsWith(')'))       // drop virtual directories, like "(root)", from the URL
         if (this.app.flat_routes) path = path.replaceAll('.', '/')
         return path
     }
 
-    _parse(segment, params, url) {
+    _parse(segment, params, regex) {
         /* Parse another `segment` (dir/file name) of a route file path, and convert it into a list of
-           parameter names (_params) and URL regex pattern (_url), to be appended to the corresponding
-           `params` and `url` parsed so far for the parent of `segment`.
+           parameter names (_params) and URL regex pattern (_regex), to be appended to the corresponding
+           `params` and `regex` parsed so far for the parent of `segment`.
          */
-        let [_params, _url] = this._make_regex(segment)
+        let [_params, _regex] = this._make_regex(segment)
         params = [...params, ..._params]
-        if (_url) url += '/' + _url
-        return [params, url]
+        if (_regex) regex += '/' + _regex
+        return [params, regex]
     }
 
     _make_regex(route) {
