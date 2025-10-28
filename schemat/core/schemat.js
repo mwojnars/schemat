@@ -550,15 +550,17 @@ export class Schemat {
     import(path) {
         /* Isomorphic import that works on client and server alike; `path` is a module path or descriptor (path:symbol).
            Manages aliases: $app (already now), and maybe $schemat, $lib, in the future. May return a Promise.
-           Aliases must also be configured on client via <importmap>, see:
+           Some aliases might also be configured on client via <importmap>:
            https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/script/type/importmap
+           or on server via package.js#imports.
          */
         if (path.startsWith('schemat:') || !this.app?.is_loaded())
             return this.get_builtin(path)
         if (path[0] === '/') return this.import_global(path)    // NOT USED currently
 
-        if (SERVER && (path.startsWith('$app/') || path.startsWith('$app:')))
-            path = this.app._app_root + '/' + path.slice(4)
+        if (path.startsWith('$app/'))
+            if (SERVER) path = this.app._app_root + path.slice(4)
+            else path = path.slice(4)
 
         return this.import_local(path)
     }
