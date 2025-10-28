@@ -81,10 +81,10 @@ export class Routes {
             if (this.app._rendered_exts.includes(ext)) {
                 type = 'render'
 
-                // if (name === this.app.default_route) {                  // if default route name (ex. "index"), drop it from the route
-                //     route_path = route_path.slice(0, -(name.length + 1))
-                //     name = ""
-                // }
+                if (name === this.app.default_route) {                  // if default route name (ex. "index"), drop it from the route
+                    route_path = route_path.slice(0, -(name.length + 1))
+                    name = ""
+                }
 
                 let segm = this.app._norm_segment(name)
                 let [_params, _url] = this._parse(segm, params, url)    // update accumulators with file segment (without extension)
