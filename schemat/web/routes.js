@@ -92,25 +92,32 @@ export class Routes {
         }
     }
 
-    _extend_route(route, name) {
-        /* Convert a given `name` of file or folder to a URL route segment(s) and append to `route`.
-           The name may contain an extension.
+    _extend_route(route, file) {
+        /* Convert a given name of file/folder to a URL route segment(s) by replacing or removing
+           special characters/substrings, and append it to `route`. The name may contain a file extension.
          */
-        return route + '/' + this._normalize(name)
+        let ext = fileExtension(file)
+        if (ext) file = file.slice(0, -(ext.length + 1))
+
+        file = this._norm_segment(file)
+
+        if (ext) file += '.' + ext
+
+        return route + '/' + file
     }
 
-    _normalize(path) {
-        /* Convert a file path or segment to a URL path, by replacing or removing special characters/substrings.
-           //Any file extension must have been removed beforehand.//
-         */
-        let ext = fileExtension(path)
-        if (ext) path = path.slice(0, -(ext.length + 1))
-
-        path = this._norm_segment(path)
-
-        if (ext) path += '.' + ext
-        return path
-    }
+    // _normalize(file) {
+    //     /* Convert a file path or segment to a URL path, by replacing or removing special characters/substrings.
+    //        //Any file extension must have been removed beforehand.//
+    //      */
+    //     let ext = fileExtension(file)
+    //     if (ext) file = file.slice(0, -(ext.length + 1))
+    //
+    //     file = this._norm_segment(file)
+    //
+    //     if (ext) file += '.' + ext
+    //     return file
+    // }
 
     _norm_segment(segm) {
         // if (name[0] === '(' && name.endsWith(')'))       // drop virtual directories, like "(root)", from the URL
