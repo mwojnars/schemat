@@ -41,11 +41,14 @@ export class Application extends WebObject {
     cluster
     webserver
     default_path
+
     static_extensions
     transpiled_extensions
     private_routes
     system_route
     flat_routes
+    default_route
+
     purge_objects_interval
     evict_records_interval
     eval_allowed

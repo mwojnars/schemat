@@ -329,11 +329,15 @@
       default: /$
       info: Prefix of the URL path used for system purposes.
       "@": "#schemat/types/type.js:PATH"
+    default_route:
+      default: index
+      info: Name of the default file to be rendered when the URL points to a folder.
+      "@": "#schemat/types/type.js:STRING"
     flat_routes:
       default: true
       info: If true, every dot in the file path of a servable file (extension excluded)
         is converted to a slash in the corresponding URL.
-      "@": "#schemat/types/type.js:STRING"
+      "@": "#schemat/types/type.js:BOOLEAN"
     global:
       value_type:
         "@": "#schemat/types/type.js:REF"
