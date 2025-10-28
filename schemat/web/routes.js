@@ -60,10 +60,8 @@ export class Routes {
 
             if (!ent.isFile()) continue
 
-            let ext = fileExtension(name).toLowerCase()
-            if (ext) name = name.slice(0, -(ext.length + 1))            // from now on, `name` has no extension
-
             // determine route type based on extension
+            let ext = fileExtension(name).toLowerCase()
             let type =
                 this.app._static_exts.includes(ext) ? 'static' :
                 this.app._transpiled_exts.includes(ext) ? 'transpiled' : null
@@ -73,7 +71,11 @@ export class Routes {
             // renderable files become routes without extension
             if (this.app._rendered_exts.includes(ext)) {
                 type = 'render'
-                route = route.slice(0, -(ext.length + 1))               // drop ".ext"
+
+                // if (ext) name = name.slice(0, -(ext.length + 1))            // from now on, `name` has no extension
+                name = dropExtension(name)
+                route = this._extend_route(base_route, name)
+                // route = route.slice(0, -(ext.length + 1))               // drop ".ext"
 
                 if (name === this.app.default_route) {                  // drop default route name (ex. "index") + leading / from the URL
                     route = route.slice(0, -(name.length + 1))
