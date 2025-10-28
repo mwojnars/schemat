@@ -8,6 +8,7 @@ import {register} from 'node:module'
 import {pathToFileURL} from 'node:url'
 
 // register loaders for Svelte and JSX
+register('./schemat/server/loaders/alias_resolver.js', pathToFileURL('./'))
 register('./schemat/server/loaders/svelte_loader.js', pathToFileURL('./'))
 register('./schemat/server/loaders/jsx_loader.js', pathToFileURL('./'))
 
