@@ -10,7 +10,6 @@
   },
   "imports": {
     "#root/*": "./*",
-    "#app/*": "./app/*",
     "#schemat/*": "./schemat/*",
     "#schemat": "./schemat/index.js"
   },
