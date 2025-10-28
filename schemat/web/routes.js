@@ -46,7 +46,7 @@ export class Routes {
             if (this.app._is_private_name.test(name)) continue
 
             let path = mod_path.join(base_path, name)
-            let route = base_route + '/' + this._normalize(name)
+            let route = this._extend_route(base_route, name)
 
             if (ent.isSymbolicLink())
                 ent = await lstat(await realpath(path))
@@ -62,9 +62,6 @@ export class Routes {
 
             let ext = fileExtension(name).toLowerCase()
             if (ext) name = name.slice(0, -(ext.length + 1))            // from now on, `name` has no extension
-
-            // let route = '/' + mod_path.relative(this.app_root, path)    // truncate the leading `app_root` path; the route still includes extension
-            // route = this._normalize(route)
 
             // determine route type based on extension
             let type =
@@ -93,6 +90,13 @@ export class Routes {
                 else this.exact_routes.set(route, {type, path, ext})
             }
         }
+    }
+
+    _extend_route(route, name) {
+        /* Convert a given `name` of file or folder to a URL route segment(s) and append to `route`.
+           The name may contain an extension.
+         */
+        return route + '/' + this._normalize(name)
     }
 
     _normalize(path) {
