@@ -7,7 +7,26 @@
     <link rel="stylesheet" href="/common/styles.css">
 </head>
 <body>
-    <%- schemat.init_client() %>
+    <%
+        function select_random(array, count) {
+            /* Randomly select `count` elements from `array`. */
+            return array.sort(() => Math.random() - 0.5).slice(0, count)
+        }
+
+        let authors = await schemat.global.AuthorCategory.list_objects({load: true})
+        let books = await schemat.global.BookCategory.list_objects({load: true})
+
+        let featured_authors = select_random(authors, 6)
+        let featured_books = select_random(books, 6)
+
+        for (let book of featured_books)
+            for (let author of book.author$) await author.load()
+    %>
+    <%-
+        // The instruction below makes Schemat runtime (`schemat`) available on client, in case we need it.
+        // IMPORTANT: its output must be embedded here as a non-escaped EJS block!
+        schemat.init_client()
+    %>
     <header>
         <h1>Welcome to The Bookstore!</h1>
         <nav>
