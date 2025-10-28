@@ -76,7 +76,7 @@ export class Routes {
             if (type) this.exact_routes.set(url_path, {type, path, ext})
 
             // renderable files become routes without extension
-            if (['js', 'jsx', 'svelte', 'ejs'].includes(ext)) {
+            if (this.app._rendered_exts.includes(ext)) {
                 type = 'render'
                 let seg = this.app._norm_segment(name.slice(0, -(ext.length + 1)))
                 let [_params, _url] = this._parse(seg, params, url)     // update accumulators with file segment (without extension)

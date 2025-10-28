@@ -42,8 +42,10 @@ export class Application extends WebObject {
     webserver
     default_path
 
-    static_extensions
-    transpiled_extensions
+    static_extensions           // html, css, ... extensions included in URL, sent in their original form to client
+    transpiled_extensions       // pcss, ... extensions included in URL, undergoing transformation before the file is sent to client
+    rendered_extensions         // js, jsx, svelte ... extensions removed from URL, the files are rendered via _render_EXT() methods
+
     private_routes
     system_route
     flat_routes
@@ -55,10 +57,11 @@ export class Application extends WebObject {
     logger
     async_ejs
 
-    get _static_exts()      { return this.static_extensions.toLowerCase().split(/[ ,;:]+/) }
-    get _transpiled_exts()  { return this.transpiled_extensions.toLowerCase().split(/[ ,;:]+/) }
-    get _private_routes()   { return this.private_routes.split(/\s+/) || [] }
+    get _static_exts()      { return this.static_extensions.toLowerCase().split(/\s+/) }
+    get _transpiled_exts()  { return this.transpiled_extensions.toLowerCase().split(/\s+/) }
+    get _rendered_exts()    { return this.rendered_extensions.toLowerCase().split(/\s+/) }
 
+    get _private_routes()   { return this.private_routes.split(/\s+/) || [] }
     get _app_root()         { return mod_path.normalize(schemat.PATH_PROJECT + '/' + this.app_root) }
     get routes()            { if (Routes) return new Routes(this) }
 

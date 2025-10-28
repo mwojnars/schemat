@@ -318,6 +318,12 @@
         be served from application folder after being transpiled, the extension is
         included in the URL then.
       "@": "#schemat/types/type.js:STRING"
+    rendered_extensions:
+      default: js jsx ejs svelte
+      info: Space-separated list of extensions (case insensitive) of files that have 
+        a corresponding _render_EXT() method in the application and are served as
+        pages, with extension removed from the URL.
+      "@": "#schemat/types/type.js:STRING"
     private_routes:
       default: "_ . + # _$"
       info: Space-separated list of prefixes that indicate the file or directory is
