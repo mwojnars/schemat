@@ -80,7 +80,7 @@ export class Routes {
                     name = ""
                 }
 
-                let segm = this._norm_segment(name)
+                let segm = this._make_segment(name)
                 let [_params, _regex] = this._parse(segm, params, regex)    // update accumulators with file segment (without extension)
 
                 if (_params.length) {
@@ -99,24 +99,24 @@ export class Routes {
         let ext = fileExtension(file)
         if (ext) file = file.slice(0, -(ext.length + 1))
 
-        file = this._norm_segment(file)
+        let segment = this._make_segment(file)
 
-        if (file && ext) file += '.' + ext
-        if (file) route += '/' + file
+        if (segment && ext) segment += '.' + ext
+        if (segment) route += '/' + segment
 
         return route
     }
 
-    _norm_segment(segm) {
+    _make_segment(segm) {
         // if (name[0] === '(' && name.endsWith(')'))       // drop virtual directories, like "(root)", from the URL
         if (this.app.flat_routes) segm = segm.replaceAll('.', '/')
         return segm
     }
 
     _parse(segment, params, regex) {
-        /* Parse another `segment` (dir/file name) of a route file path, and convert it into a list of
-           parameter names (_params) and URL regex pattern (_regex), to be appended to the corresponding
-           `params` and `regex` parsed so far for the parent of `segment`.
+        /* Parse another `segment` of a route path and convert it into a list of parameter names (_params)
+           and URL regex pattern (_regex), to be appended to the corresponding `params` and `regex`
+           as parsed so far for the parent of `segment`.
          */
         let [_params, _regex] = this._make_regex(segment)
         params = [...params, ..._params]
