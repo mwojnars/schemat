@@ -53,7 +53,7 @@ export class Routes {
 
             if (ent.isDirectory()) {
                 if (name === 'node_modules') continue                       // protection against accidental scanning of a big source tree
-                if (name[0] === '(' && name.endsWith(')'))                  // drop virtual directories, like "(root)", from the URL
+                if (name[0] === '(' && name.endsWith(')'))                  // cut off virtual directories (route groups), like "(root)", from the URL
                     await this._walk(path, base_route, params, regex)
                 else {
                     let [_params, _regex] = this._parse(name, params, regex)    // update accumulators with this directory segment
@@ -78,7 +78,7 @@ export class Routes {
                 name = dropExtension(name)
                 let segm = ''
 
-                if (name === this.app.default_route)                        // drop segment when default name (ex. "index")
+                if (name === this.app.default_route)                        // cut off the segment when default name (ex. "index")
                     route = base_route
                 else {
                     segm = this._make_segment(name)
