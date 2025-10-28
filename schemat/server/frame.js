@@ -103,7 +103,11 @@ export class Frame {
         schemat._print(`${tag} start ...`)
 
         // when multiple frames exist for the same agent, each one uses a different copy of `agent`, so that agent.$frame can be set unequivocally
-        if (agent.$frame) this.agent = agent = await agent.reload()
+        if (agent.$frame) {
+            // schemat._print(`${tag} agent.reload() ...`)
+            this.agent = agent = await agent.reload()
+            // schemat._print(`${tag} agent.reload() done`)
+        }
         agent.$frame = this
 
         let state = await agent.app_context(() => agent.__start__(this)) || {}

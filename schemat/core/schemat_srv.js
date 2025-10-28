@@ -281,9 +281,9 @@ export class ServerSchemat extends Schemat {
             // db = (typeof db_id === 'object') ? db_id : this.get_object(db_id)
             db ??= this.get_object(db_id)
             if (!db.is_loaded()) {
-                // this._print(`app_context() loading db object [${db_id}] ...`)
+                // this._print(`schemat.app_context() loading db object [${db_id}] ...`)
                 await db.load()
-                // this._print(`app_context() loading db object [${db_id}] done`)
+                // this._print(`schemat.app_context() loading db object [${db_id}] done`)
             }
             app_id = db?.application?.id
             // this._print(`app_context() this.app_id=${this.app_id} app_id=${app_id}`)
