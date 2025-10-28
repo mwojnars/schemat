@@ -46,7 +46,7 @@ export class Routes {
             if (this.app._is_private_name.test(name)) continue
 
             let path = mod_path.join(base_path, name)
-            let route = this._normalize(base_route + '/' + name)
+            let route = base_route + '/' + this._normalize(name)
 
             if (ent.isSymbolicLink())
                 ent = await lstat(await realpath(path))
