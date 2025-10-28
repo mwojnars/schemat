@@ -43,10 +43,10 @@ export class Routes {
         
         for (let ent of entries) {
             let name = ent.name
-            let path = mod_path.join(base_path, name)
-            // let route = base_route + '/' + this._normalize(name)
-
             if (this.app._is_private_name.test(name)) continue
+
+            let path = mod_path.join(base_path, name)
+            let route = this._normalize(base_route + '/' + name)
 
             if (ent.isSymbolicLink())
                 ent = await lstat(await realpath(path))
@@ -54,7 +54,7 @@ export class Routes {
             if (ent.isDirectory()) {
                 if (name === 'node_modules') continue                       // protection against accidental scanning of a big source tree
                 let [_params, _regex] = this._parse(name, params, regex)    // update accumulators with this directory segment
-                await this._walk(path, '', _params, _regex)
+                await this._walk(path, route, _params, _regex)
                 continue
             }
 
@@ -63,8 +63,8 @@ export class Routes {
             let ext = fileExtension(name).toLowerCase()
             if (ext) name = name.slice(0, -(ext.length + 1))            // from now on, `name` has no extension
 
-            let route = '/' + mod_path.relative(this.app_root, path)    // truncate the leading `app_root` path; the route still includes extension
-            route = this._normalize(route)
+            // let route = '/' + mod_path.relative(this.app_root, path)    // truncate the leading `app_root` path; the route still includes extension
+            // route = this._normalize(route)
 
             // determine route type based on extension
             let type =
