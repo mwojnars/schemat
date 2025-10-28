@@ -251,7 +251,6 @@ export class WebRequest extends _Request {   // WebConnection (conn)
         return `
             <script type="importmap"> {
                 "imports": {
-                    "#root/": "/$/local/",
                     "$app/": "/",
                     "#schemat/": "/$/schemat/",
                     "#schemat": "/$/schemat/index.js"
