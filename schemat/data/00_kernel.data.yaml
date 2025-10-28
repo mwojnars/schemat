@@ -337,7 +337,9 @@
       "@": "#schemat/types/type.js:PATH"
     default_route:
       default: index
-      info: Name of the default file to be rendered when the URL points to a folder.
+      info: Name of the default page to be rendered when the URL points to a folder.
+        Note that such a page is no longer accessible by its full name (!), yet the
+        source file may still be accessible via the URL containing file extension.
       "@": "#schemat/types/type.js:STRING"
     flat_routes:
       default: true
