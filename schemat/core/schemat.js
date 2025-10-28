@@ -548,8 +548,9 @@ export class Schemat {
     /***  Dynamic imports  ***/
 
     import(path) {
-        /* May return a Promise.
-           See also "importmap" (import maps) for client-side customization of imports with a prefix like "$lib/*"
+        /* Isomorphic import that works on client and server alike; `path` is a module path or descriptor (path:symbol).
+           Manages aliases: $app (already now), and maybe $schemat, $lib, in the future. May return a Promise.
+           Aliases must also be configured on client via <importmap>, see:
            https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/script/type/importmap
          */
         if (path.startsWith('schemat:') || !this.app?.is_loaded())
