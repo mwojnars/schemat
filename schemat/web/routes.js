@@ -101,23 +101,11 @@ export class Routes {
 
         file = this._norm_segment(file)
 
-        if (ext) file += '.' + ext
+        if (file && ext) file += '.' + ext
+        if (file) route += '/' + file
 
-        return route + '/' + file
+        return route
     }
-
-    // _normalize(file) {
-    //     /* Convert a file path or segment to a URL path, by replacing or removing special characters/substrings.
-    //        //Any file extension must have been removed beforehand.//
-    //      */
-    //     let ext = fileExtension(file)
-    //     if (ext) file = file.slice(0, -(ext.length + 1))
-    //
-    //     file = this._norm_segment(file)
-    //
-    //     if (ext) file += '.' + ext
-    //     return file
-    // }
 
     _norm_segment(segm) {
         // if (name[0] === '(' && name.endsWith(')'))       // drop virtual directories, like "(root)", from the URL
