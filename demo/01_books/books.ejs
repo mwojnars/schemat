@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <% let title = "List of Books" %>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= title %> | The Bookstore</title>
@@ -18,6 +19,11 @@
     </header>
     <main>
         <ul id="book-list">
+            <%
+                let books = await schemat.global.BookCategory.list_objects({load: true})
+                let authors = books.flatMap(book => book.author$)
+                await Promise.all(authors.map(a => a.load()))       // load every Author object so we know the author's name
+            %>
             <% books.forEach(book => { %>
                 <li id="<%= book.id %>">
                     <h2><a href="/book/<%= book.id %>"><%= book.title %></a></h2>

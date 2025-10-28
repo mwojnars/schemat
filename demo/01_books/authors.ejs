@@ -19,8 +19,8 @@
     <main>
         <ul id="author-list">
             <%
-               let authors = await schemat.global.AuthorCategory.list_objects({load: true})
-               let books = await schemat.global.BookCategory.list_objects({load: true})
+                let authors = await schemat.global.AuthorCategory.list_objects({load: true})
+                let books = await schemat.global.BookCategory.list_objects({load: true})
             %>
             <% authors.forEach(author => { %>
                 <li id="<%= author.id %>">
