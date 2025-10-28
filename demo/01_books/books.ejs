@@ -22,7 +22,7 @@
             <%
                 let books = await schemat.global.BookCategory.list_objects({load: true})
                 let authors = books.flatMap(book => book.author$)
-                await Promise.all(authors.map(a => a.load()))       // load every Author object so we know the author's name
+                await Promise.all(authors.map(a => a.load()))       // load from DB every related Author object so we know their names
             %>
             <% books.forEach(book => { %>
                 <li id="<%= book.id %>">
