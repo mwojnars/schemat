@@ -124,6 +124,7 @@ export class Routes {
 
     match(url_path) {
         // this.app._print(`match()`, {url_path})
+        if (url_path === '/') url_path = ''             // canonical representation of URL root
 
         // request for a static or transpiled file (with extension)
         let entry = this.exact_routes.get(url_path)
