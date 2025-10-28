@@ -29,8 +29,8 @@ export class Routes {
         // this.app._print(` `, {dynamic_routes: this.dynamic_routes})
     }
 
-    async _walk(folder, params = [], regex = '') {
-        let entries = await readdir(folder, {withFileTypes: true})
+    async _walk(base_path, base_route = '', params = [], regex = '') {
+        let entries = await readdir(base_path, {withFileTypes: true})
         
         // sort entries by replacing '(' and '[' with high-code chars to control segment order
         const HIGH_CHAR = '\uffff'
@@ -43,7 +43,8 @@ export class Routes {
         
         for (let ent of entries) {
             let name = ent.name
-            let path = mod_path.join(folder, name)
+            let path = mod_path.join(base_path, name)
+            // let route = base_route + '/' + this._normalize(name)
 
             if (this.app._is_private_name.test(name)) continue
 
@@ -53,7 +54,7 @@ export class Routes {
             if (ent.isDirectory()) {
                 if (name === 'node_modules') continue                       // protection against accidental scanning of a big source tree
                 let [_params, _regex] = this._parse(name, params, regex)    // update accumulators with this directory segment
-                await this._walk(path, _params, _regex)
+                await this._walk(path, '', _params, _regex)
                 continue
             }
 
