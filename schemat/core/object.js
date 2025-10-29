@@ -1359,7 +1359,7 @@ export class WebObject {
 
     /***  Endpoints  ***/
 
-    /* Handlers, below, take `request` (Request instance) as the only argument. However, when a handler is called via its
+    /* Handlers, below, take `request` (WebRequest instance) as the only argument. However, when a handler is called via its
        trigger function (this.GET.xxx(), this.POST.xxx() etc.), `request` is left undefined. Handler may either:
        - return the web response (a string); or
        - send the response by itself via `request.res`; or
@@ -1367,12 +1367,12 @@ export class WebObject {
        - return a Service instance that (on server) provides generation of response, and (on client) can invoke the service remotely.
      */
 
-    'GET.test_txt'()        { return "TEST txt ..." }                   // works
-    'GET.test_fun'()        { return () => "TEST function ..." }        // works
-    'GET.test_res'({res})   { res.send("TEST res.send() ...") }         // works
-
-    'GET.json'({res})       { res.json(this.__record) }
-    'GET.inspect'()         { return new ReactPage(InspectView) }
+    // 'GET.test_txt'()        { return "TEST txt ..." }                   // works
+    // 'GET.test_fun'()        { return () => "TEST function ..." }        // works
+    // 'GET.test_res'({res})   { res.send("TEST res.send() ...") }         // works
+    //
+    // 'GET.json'({res})       { res.json(this.__record) }
+    // 'GET.inspect'()         { return new ReactPage(InspectView) }
 
     'LOCAL.self'()          { return this }     // TODO: apparently not needed, tests pass without this method
 
