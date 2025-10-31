@@ -113,6 +113,13 @@ export class Category extends WebObject {
         return this.GET.list_objects(opts)
     }
 
+    async list_objects__(opts = {}) {
+        /* Return an array of all objects in this category, possibly truncated or re-ordered according to `opts`.
+           Can be called on server or client; the list is generated on server.
+         */
+        if (SERVER) return schemat.list_category(this, opts)
+    }
+
     // _get_handler(endpoint) {
     //     /* Web handler can be defined as a *static* method of this category's member_class. */
     //     assert(!(this.member_class instanceof Promise))

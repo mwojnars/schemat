@@ -609,5 +609,16 @@ export class Schemat {
     //     /* Schemat's client-side import path converted to a standard JS import URL for importing remote code from SUN namespace. */
     //     return path + '::import'
     // }
+
+
+    /***  Web requests  ***/
+
+    async fetch_system(path, {json = false, ...options} = {}) {
+        /* Send an HTTP request to a system endpoint, typically /$/{path}. */
+        let base = schemat.app.system_route
+        let url = `${base}/${path}`
+        let response = await fetch(url, options)
+        return json ? response.json() : response.text()
+    }
 }
 
