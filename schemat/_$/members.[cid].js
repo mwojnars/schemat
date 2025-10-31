@@ -14,5 +14,5 @@ export async function GET(request, {cid}) {
     let opts = body ? JSONx.parse(body) : {}
 
     let members = await schemat.list_category(category, {load: true, ...opts})
-    return request.send_json(members)
+    return JSON.stringify(members.map(obj => obj?.__record))
 }
