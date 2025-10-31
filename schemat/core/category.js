@@ -234,7 +234,7 @@ export class Category extends WebObject {
 
     /***  Endpoints  ***/
 
-    'GET.inspect'() { return new ReactPage(CategoryInspectView) }
+    // 'GET.inspect'() { return new ReactPage(CategoryInspectView) }
 
     'GET.list_objects'() {
         return new JsonGET({
