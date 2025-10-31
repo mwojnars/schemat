@@ -3,6 +3,7 @@ import {JSONx} from "../common/jsonx.js"
 
 /** GET /$/members/[cid]
     Returns the list of members of a web category with a given ID.
+    Options {...} can be passed in request body as a JSONx-encoded string.
  */
 export async function GET(request, {cid}) {
     let category = await schemat.load(cid)

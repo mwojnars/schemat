@@ -345,7 +345,7 @@ export class ServerSchemat extends Schemat {
            `scan_category` and may include, among others: `load`, `limit`, `offset`, `reverse`.
            NOT ISOMORPHIC. This method loads each object one by one. For this reason, it should only be used on server.
          */
-        let _opts = {...opts, load: false}              // it is better to load objects *after* scan, concurrently
+        let _opts = {load: false, ...opts}          // it is better to load objects *after* scan, concurrently
         let objects = []
         for await (const obj of this.scan_category(category_or_id, _opts))
             objects.push(obj)
