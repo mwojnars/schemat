@@ -113,10 +113,11 @@ export class Application extends WebObject {
            otherwise the URL returned may be incorrect (!). See _check_default_container().
          */
         let id = typeof object_or_id === 'number' ? object_or_id : object_or_id.id
-        return this.default_path + `/${id}`
+        return this.system_route + `/id/${id}`
+        // return this.default_path + `/${id}`
     }
 
-    async resolve(path) { return this.root.resolve(path) }
+    // async resolve(path) { return this.root.resolve(path) }
 
 
     /***  Request resolution  ***/
