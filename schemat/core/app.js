@@ -372,21 +372,21 @@ export class Application extends WebObject {
 
     /***  Endpoints & Actions  ***/
 
-    'POST.server'() {
-        /* Run eval(code) on the server and return a JSONx-encoded result; `code` is a string.
-           Any locally created data modifications are implicitly saved at the end unless the code raised an error.
-         */
-        return new JsonPOST({
-            server: async (code, in_tx = false) => {
-                if (!this.eval_allowed) throw new Error(`custom server-side code execution is not allowed`)
-                let result = await (in_tx ? schemat.new_session(() => eval(code)) : eval(code))
-                await schemat.save()
-                return result
-            },
-            input:  mString,
-            // output: mActionResult,
-        })
-    }
+    // 'POST.server'() {
+    //     /* Run eval(code) on the server and return a JSONx-encoded result; `code` is a string.
+    //        Any locally created data modifications are implicitly saved at the end unless the code raised an error.
+    //      */
+    //     return new JsonPOST({
+    //         server: async (code, in_tx = false) => {
+    //             if (!this.eval_allowed) throw new Error(`custom server-side code execution is not allowed`)
+    //             let result = await (in_tx ? schemat.new_session(() => eval(code)) : eval(code))
+    //             await schemat.save()
+    //             return result
+    //         },
+    //         input:  mString,
+    //         // output: mActionResult,
+    //     })
+    // }
 
     'POST.action'() {
         /* Execute a server-side action inside a Session so that record modifications are captured and sent back to caller. */
