@@ -2,7 +2,9 @@ import {JSONx} from "../common/jsonx.js"
 
 
 /** GET /$/members/[cid]
-    Returns the list of members of a web category with a given ID.
+    If option load=true (default), returns the list of {id, data} records
+    representing member objects of a web category with a given CID.
+    Otherwise, returns an array of IDs of these objects.
     Options {...} can be passed in request body as a JSONx-encoded string.
  */
 export async function GET(request, {cid}) {
