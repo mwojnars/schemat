@@ -840,11 +840,6 @@ export class WebObject {
 
     /***  URLs and URL paths  ***/
 
-    get __url() {
-        /* Calculation of __url if missing: same as __path but with blank routes (*ROUTE) removed. */
-        return this.__path?.replace(/\/\*[^/]*/g, '') || this.url_admin     // no-category objects may have no __path because of lack of schema and imputation
-    }
-
     get url() {
         /* URL of this object's public "view" page. Can be overridden in subclasses. */
         return this.url_admin
@@ -854,6 +849,12 @@ export class WebObject {
         /* URL of this object's administrative page, typically /$/object/<ID>. */
         assert(this.id)
         return schemat.app.system_route + `/object/${this.id}`
+    }
+
+    get __url() {
+        /* Calculation of __url if missing: same as __path but with blank routes (*ROUTE) removed. */
+        return this.url_admin
+        // return this.__path?.replace(/\/\*[^/]*/g, '') || this.url_admin     // no-category objects may have no __path because of lack of schema and imputation
     }
 
     _impute_path() {
