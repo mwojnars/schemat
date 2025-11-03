@@ -108,16 +108,18 @@ export class Category extends WebObject {
         return cls._new([this], props, args)
     }
 
-    async list_objects(opts = {}) {
-        /* Return an array of all objects in this category, possibly truncated or re-ordered according to `opts`. */
-        return this.GET.list_objects(opts)
-    }
+    // async list_objects(opts = {}) {
+    //     /* Return an array of all objects in this category, possibly truncated or re-ordered according to `opts`. */
+    //     return this.GET.list_objects(opts)
+    // }
 
-    async list_objects__(opts = {}) {
-        /* Return an array of all objects in this category, possibly truncated or re-ordered according to `opts`.
+    async list_objects(opts = {}) {
+        /* Return an array of member objects in this category, possibly truncated or re-ordered according to `opts`.
            Can be called on server or client; the list is generated on server.
          */
-        if (SERVER) return schemat.list_category(this, opts)
+        if (SERVER) return schemat.list_category(this, {load: true, opts})
+        let records = await schemat.fetch_system(`members/${this.id}`, {json: true})
+        return Promise.all(records.map(rec => rec && schemat.register_record(rec) && schemat.get_loaded(rec.id)))
     }
 
     // _get_handler(endpoint) {

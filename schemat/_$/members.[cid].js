@@ -10,9 +10,10 @@ export async function GET(request, {cid}) {
     if (!category.is_category()) request.not_found()
 
     // decode `opts` from request body
-    let body = request.text()
+    let body = await request.text()
     let opts = body ? JSONx.parse(body) : {}
 
     let members = await schemat.list_category(category, {load: true, ...opts})
-    return JSON.stringify(members.map(obj => obj?.__record))
+    let json = JSON.stringify(members.map(obj => obj?.__record))
+    return request.send(json)
 }

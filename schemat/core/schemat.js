@@ -613,7 +613,7 @@ export class Schemat {
 
     /***  Web requests  ***/
 
-    async fetch_system(path, {json = false, text = true, ...options} = {}) {
+    async fetch_system(path, {json = false, text = false, ...options} = {}) {
         /* Send an HTTP request to a system endpoint, typically /$/{path}. */
         let base = schemat.app.system_route
         let url = `${base}/${path}`
