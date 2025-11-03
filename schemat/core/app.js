@@ -387,17 +387,17 @@ export class Application extends WebObject {
     //         // output: mActionResult,
     //     })
     // }
-
-    'POST.action'() {
-        /* Execute a server-side action inside a Session so that record modifications are captured and sent back to caller. */
-        return new JsonPOST({
-            server: (id, action, args) => {
-                let obj = schemat.get_object(id)
-                return schemat.execute_action(obj, action, args)    // [result, tx]; `tx` is used internally by mActionResult (below) and then dropped
-            },
-            output: mActionResult,
-        })
-    }
+    //
+    // 'POST.action'() {
+    //     /* Execute a server-side action inside a Session so that record modifications are captured and sent back to caller. */
+    //     return new JsonPOST({
+    //         server: (id, action, args) => {
+    //             let obj = schemat.get_object(id)
+    //             return schemat.execute_action(obj, action, args)    // [result, tx]; `tx` is used internally by mActionResult (below) and then dropped
+    //         },
+    //         output: mActionResult,
+    //     })
+    // }
 
 
     // runs inside a TX, so updated DB records are captured at the end and returned to caller

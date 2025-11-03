@@ -1007,8 +1007,7 @@ export class WebObject {
     /***  Web Triggers  ***/
 
     get act() {
-        /* Triggers of server-side actions: obj.act.X(...args) invokes app.POST.action(id, 'X', args),
-           which forwards the call to obj['act.X'](...args) on server. Inside the 'act.X'() method,
+        /* Triggers of server-side actions: obj.act.X(...args) invokes obj['act.X'](...args) on server. Inside the 'act.X'() method,
            `this` object is made mutable, so it can be easily edited. Any modified records are returned to the caller
            and saved in Registry, so the caller can recreate corresponding objects with their most recent content
            by simply refreshing/reloading them. Action triggers can be called on stubs without fully loading the target object.
