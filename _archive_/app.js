@@ -1,6 +1,20 @@
 
 export class Application extends WebObject {
 
+    get_file_url(path) {
+        /* Convert a local file path to its corresponding URL-path (href=...). Typically used for loading assets on the client. */
+        if (path.startsWith('file://')) path = path.slice(7)                // trim leading 'file://' if present
+        let root = schemat.PATH_PROJECT
+        if (!path.startsWith(root + '/')) throw new Error(`path is not accessible via URL: ${path}`)
+        return path.replace(root, Application.URL_LOCAL)
+    }
+
+    get_module_url(path) {
+        /* Convert a local import path, like "schemat/.../file.js" to a URL-path that can be used with import() on the client. */
+        if (path[0] === '/') throw new Error(`cannot make an import URL-path for an absolute local path: ${path}`)
+        return `${Application.URL_LOCAL}/${path}::import`          // ::import is sometimes needed to get the proper MIME header, esp. if target is a web object not a local file
+    }
+
     /*** Legacy routing ***/
 
     // async find_object(path) {

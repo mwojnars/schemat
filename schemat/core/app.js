@@ -89,6 +89,13 @@ export class Application extends WebObject {
         await schemat.after_boot(() => this.load_globals())
     }
 
+    async load_globals() {
+        /* Load objects listed in [global] property and make them globally available for application code. */
+        let __global = this.__self.__global = {}
+        for (let [name, object] of this.global || [])
+            __global[name] = await object.load()
+    }
+
     // async _check_default_container() {
     //     while (!schemat.app) await sleep(0.1)
     //     let default_container = await this.resolve(this.default_path.slice(1))
@@ -99,13 +106,6 @@ export class Application extends WebObject {
     //     // ...and that this container is an ObjectSpace, so it is compatible with the URL generation on the client
     //     assert(default_container.__category.name === 'ObjectSpace', `container [${this.id}] at the default path ('${this.default_path}') must be an ObjectSpace`)
     // }
-
-    async load_globals() {
-        /* Load objects listed in [global] property and make them globally available for application code. */
-        let __global = this.__self.__global = {}
-        for (let [name, object] of this.global || [])
-            __global[name] = await object.load()
-    }
 
 
     /***  URL / URL-path / local file-path conversions  ***/
@@ -120,20 +120,6 @@ export class Application extends WebObject {
     }
 
     async resolve(path) { return this.root.resolve(path) }
-
-    // get_file_url(path) {
-    //     /* Convert a local file path to its corresponding URL-path (href=...). Typically used for loading assets on the client. */
-    //     if (path.startsWith('file://')) path = path.slice(7)                // trim leading 'file://' if present
-    //     let root = schemat.PATH_PROJECT
-    //     if (!path.startsWith(root + '/')) throw new Error(`path is not accessible via URL: ${path}`)
-    //     return path.replace(root, Application.URL_LOCAL)
-    // }
-    //
-    // get_module_url(path) {
-    //     /* Convert a local import path, like "schemat/.../file.js" to a URL-path that can be used with import() on the client. */
-    //     if (path[0] === '/') throw new Error(`cannot make an import URL-path for an absolute local path: ${path}`)
-    //     return `${Application.URL_LOCAL}/${path}::import`          // ::import is sometimes needed to get the proper MIME header, esp. if target is a web object not a local file
-    // }
 
 
     /***  Request resolution  ***/
