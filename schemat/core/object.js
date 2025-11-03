@@ -1019,9 +1019,11 @@ export class WebObject {
 
         return new Proxy({}, {
             get(target, name) {
-                if (typeof name === 'string')
-                    if (CLIENT && name[0] === '_') throw new Error(`private act.${name}() can only be invoked on server`)
-                    else return (...args) => SERVER ? schemat.execute_action(obj, name, args, false) : schemat.app.POST.action(id, name, args)
+                if (typeof name !== 'string') return undefined
+                if (CLIENT && name[0] === '_') throw new Error(`private act.${name}() can only be invoked on server`)
+                if (SERVER) return (...args) => schemat.execute_action(obj, name, args, false)
+                return (...args) => schemat.app.POST.action(id, name, args)
+                // return (...args) => SERVER ? schemat.execute_action(obj, name, args, false) : schemat.app.POST.action(id, name, args)
             }
         })
     }

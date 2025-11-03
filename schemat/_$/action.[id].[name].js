@@ -9,7 +9,6 @@ export async function POST(request, {id, name}) {
     let args = await request.jsonx() || {}
 
     let [result, sess] = await schemat.execute_action(obj, name, args)
-
     let records = sess.dump_records()
     if (!records?.length) schemat._print(`WARNING: no object got modified during action ${obj}.act.${name}()`)
 
