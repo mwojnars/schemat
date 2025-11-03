@@ -10,12 +10,12 @@ import {ROOT_ID, as_plural} from '../common/globals.js'
 import {print, assert, T, escape_html, unique, sleep, randint} from '../common/utils.js'
 import {NotLoaded, URLNotFound, ValidationError} from '../common/errors.js'
 import {Catalog, Struct} from '../common/catalog.js'
+import {JSONx} from "../common/jsonx.js";
 import {generic_type, REF, SCHEMA_GENERIC} from "../types/type.js"
 import {Intercept} from "./inter.js";
 
 import {Assets} from "../web/component.js"
 import {WebRequest} from "../web/request.js"
-import {ReactPage, InspectView} from "../web/pages.js"
 import {Service} from "../web/services.js";
 
 // due to circular dependency between object.js and category.js, RootCategory must be imported with dynamic import() and NOT awaited
@@ -1020,9 +1020,17 @@ export class WebObject {
         return new Proxy({}, {
             get(target, name) {
                 if (typeof name !== 'string') return undefined
-                if (CLIENT && name[0] === '_') throw new Error(`private act.${name}() can only be invoked on server`)
                 if (SERVER) return (...args) => schemat.execute_action(obj, name, args, false)
-                return (...args) => schemat.app.POST.action(id, name, args)
+                if (name[0] === '_') throw new Error(`private act.${name}() can only be invoked on server`)
+
+                let endpoint = `action/${id}/${name}`
+                return async (...args) => {
+                    let body = JSONx.stringify(args)
+                    let msg = await schemat.fetch_system(endpoint, {method: 'POST', body})
+                    let {status, result, records} = JSON.parse(msg)
+                    schemat.register_changes(...records)        // on client, put records returned from server into Registry
+                    return JSONx.decode_checked(result)
+                }
                 // return (...args) => SERVER ? schemat.execute_action(obj, name, args, false) : schemat.app.POST.action(id, name, args)
             }
         })

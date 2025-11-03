@@ -601,8 +601,11 @@ export class Schemat {
 
     /***  Web requests  ***/
 
-    async fetch_system(path, {text = false, json = false, jsonx = false, ...options} = {}) {
-        /* Send an HTTP request to a system endpoint, typically /$/{path}. */
+    async fetch_system(path, {text = true, json = false, jsonx = false, ...options} = {}) {
+        /* Send an HTTP request to a system endpoint, typically /$/{path}.
+           Return a Response object, or its decoded body (text/json/jsonx), text by default.
+           TODO: decode & throw an error message when http status >= 400
+         */
         let base = schemat.app.system_route
         let url = `${base}/${path}`
         let response = await fetch(url, options)

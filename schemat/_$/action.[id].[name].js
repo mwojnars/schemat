@@ -2,7 +2,8 @@ import {JSONx} from "../common/jsonx.js";
 
 /** POST /$/action/[id]/[name]
     Execute a server-side action, act.[name], of a web object identified by `id`.
-    Send modified records back to caller.
+    The arguments are passed in body, as a JSONx string. The result of the call, as well as
+    modified records, are sent back to caller as a JSONx object {status, result, records}.
  */
 export async function POST(request, {id, name}) {
     let obj = schemat.get_object(id)
