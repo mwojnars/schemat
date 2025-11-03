@@ -1,5 +1,6 @@
 import {ROOT_ID} from "../common/globals.js";
 import {ObjectNotFound} from "../common/errors.js";
+import {JSONx} from "../common/jsonx.js";
 import {T, print, assert, normalizePath, splitLast} from '../common/utils.js'
 import {DependenciesStack} from '../common/structs.js'
 import {WebObject} from './object.js'
@@ -613,12 +614,15 @@ export class Schemat {
 
     /***  Web requests  ***/
 
-    async fetch_system(path, {json = false, text = false, ...options} = {}) {
+    async fetch_system(path, {text = false, json = false, jsonx = false, ...options} = {}) {
         /* Send an HTTP request to a system endpoint, typically /$/{path}. */
         let base = schemat.app.system_route
         let url = `${base}/${path}`
         let response = await fetch(url, options)
-        return json ? response.json() : text ? response.text() : response
+        return jsonx ? JSONx.decode(await response.json()) :
+               json  ? response.json() :
+               text  ? response.text() :
+               response
     }
 }
 
