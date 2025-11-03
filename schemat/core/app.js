@@ -81,19 +81,16 @@ export class Application extends WebObject {
 
     async __load__() {
         if (SERVER) {
-            // if (this.default_path) this._check_default_container()      // no await to avoid blocking the app's startup
-
             // pre-scan file-based routes once at startup
             await this.routes.scan()
         }
-        await schemat.after_boot(() => this.load_globals())
-    }
 
-    async load_globals() {
-        /* Load objects listed in [global] property and make them globally available for application code. */
-        let __global = this.__self.__global = {}
-        for (let [name, object] of this.global || [])
-            __global[name] = await object.load()
+        // load objects listed in [global] property and make them globally available for application code
+        await schemat.after_boot(async () => {
+            let __global = this.__self.__global = {}
+            for (let [name, object] of this.global || [])
+                __global[name] = await object.load()
+        })
     }
 
     // async _check_default_container() {
