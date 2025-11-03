@@ -111,6 +111,7 @@ export class Category extends WebObject {
     async list_objects({load = true, ...opts} = {}) {
         /* Return an array of member objects in this category, possibly truncated or re-ordered according to `opts`.
            Can be called on server or client; the list is generated on server.
+           If load=true, each of the returned objects is loaded.
          */
         if (SERVER) return schemat.list_category(this, {load, ...opts})
         let records = await schemat.fetch_system(`members/${this.id}`, {json: true})
