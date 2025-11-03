@@ -38,10 +38,7 @@ export class Client extends Schemat {
     // a mockup object that provides the same core interface as server-side Database, but forwards all requests to the server
     db = {
         async select(id, opts) {
-            /* Load an object from the server via AJAX call. */
-            // let base = schemat.app.system_route     // typically /$
-            // let url = `${base}/json/${id}`
-            // let {data} = await fetch(url).then(response => response.json())     // {id, data} encoded
+            /* Load an object from server via AJAX call. */
             let {data} = await schemat.fetch_system(`json/${id}`, {json: true})     // {id, data} encoded
             return JSON.stringify(data)
         },
