@@ -859,7 +859,8 @@ export class WebObject {
 
     _impute_path() {
         /* Imputation function for __path. Root container must have its path='/' configured in DB, and so this method cannot be a getter. */
-        return this.__container?.get_access_path(this) || this.url_admin
+        return this.url_admin
+        // return this.__container?.get_access_path(this) || this.url_admin
     }
 
     system_slug() {
