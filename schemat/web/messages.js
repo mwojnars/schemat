@@ -134,8 +134,8 @@ export class mActionResult extends MessageEncoder {
        automatically put in the caller's registry and registered with the local Session, if present.
      */
     array = true
-    encode(result, tx) {
-        let records = tx.dump_records()
+    encode(result, sess) {
+        let records = sess.dump_records()
         if (!records?.length) schemat._print('WARNING in mActionResult.encode(): no object got modified during a (trans)action')
         return JSON.stringify({status: 'success', result: JSONx.encode_checked(result), records})
     }
