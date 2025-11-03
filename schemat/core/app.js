@@ -40,7 +40,6 @@ export class Application extends WebObject {
     global
     cluster
     webserver
-    default_path
 
     static_extensions           // html, css, ... extensions included in URL, sent in their original form to client
     transpiled_extensions       // pcss, ... extensions included in URL, undergoing transformation before the file is sent to client
@@ -116,8 +115,6 @@ export class Application extends WebObject {
         return this.system_route + `/id/${id}`
         // return this.default_path + `/${id}`
     }
-
-    // async resolve(path) { return this.root.resolve(path) }
 
 
     /***  Request resolution  ***/

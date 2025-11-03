@@ -6,7 +6,6 @@
     "@": 2002
   global:
     "@": "#schemat:Catalog"
-  default_path: /$/id
   logger:
     "@": 1037
   eval_allowed: true

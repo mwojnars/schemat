@@ -11,7 +11,6 @@
     BookCategory:
       "@": 2101
     "@": "#schemat:Catalog"
-  default_path: /$/id
   logger:
     "@": 1037
   eval_allowed: true

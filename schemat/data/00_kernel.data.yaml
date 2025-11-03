@@ -301,11 +301,6 @@
         project root.
       default: app
       "@": "#schemat/types/type.js:PATH"
-    default_path:
-      info: URL path of a default container that can be used to access any object via
-        its ID. For internal purposes. Should contain a leading slash and no
-        trailing slash.
-      "@": "#schemat/types/type.js:PATH"
     static_extensions:
       default: html htm xml css js mjs json jpg jpeg png gif bmp svg pdf mp3 mp4 wav
         webp ico ttf txt woff woff2

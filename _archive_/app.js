@@ -1,6 +1,8 @@
 
 export class Application extends WebObject {
 
+    async resolve(path) { return this.root.resolve(path) }
+
     get_file_url(path) {
         /* Convert a local file path to its corresponding URL-path (href=...). Typically used for loading assets on the client. */
         if (path.startsWith('file://')) path = path.slice(7)                // trim leading 'file://' if present
