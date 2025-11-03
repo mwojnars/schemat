@@ -81,24 +81,24 @@ export class Application extends WebObject {
 
     async __load__() {
         if (SERVER) {
-            // this._vm = await import('node:vm')
-            if (this.default_path) this._check_default_container()      // no await to avoid blocking the app's startup
+            // if (this.default_path) this._check_default_container()      // no await to avoid blocking the app's startup
+
             // pre-scan file-based routes once at startup
             await this.routes.scan()
         }
         await schemat.after_boot(() => this.load_globals())
     }
 
-    async _check_default_container() {
-        while (!schemat.app) await sleep(0.1)
-        let default_container = await this.resolve(this.default_path.slice(1))
-
-        // check that default_path maps to a container...
-        assert(default_container?._is_container, `default_path ('${this.default_path}') is incorrect and does not map to a container`)
-
-        // ...and that this container is an ObjectSpace, so it is compatible with the URL generation on the client
-        assert(default_container.__category.name === 'ObjectSpace', `container [${this.id}] at the default path ('${this.default_path}') must be an ObjectSpace`)
-    }
+    // async _check_default_container() {
+    //     while (!schemat.app) await sleep(0.1)
+    //     let default_container = await this.resolve(this.default_path.slice(1))
+    //
+    //     // check that default_path maps to a container...
+    //     assert(default_container?._is_container, `default_path ('${this.default_path}') is incorrect and does not map to a container`)
+    //
+    //     // ...and that this container is an ObjectSpace, so it is compatible with the URL generation on the client
+    //     assert(default_container.__category.name === 'ObjectSpace', `container [${this.id}] at the default path ('${this.default_path}') must be an ObjectSpace`)
+    // }
 
     async load_globals() {
         /* Load objects listed in [global] property and make them globally available for application code. */
