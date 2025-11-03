@@ -24,7 +24,7 @@ export class Container extends WebObject {
 
     get __url() {
         /* All containers are exposed on internal URLs to avoid conflicts with URLs of member objects (on blank routes). */
-        return this.system_url
+        return this.url_admin
     }
 
     resolve(path) {

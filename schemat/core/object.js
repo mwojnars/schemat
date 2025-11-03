@@ -851,20 +851,14 @@ export class WebObject {
     }
 
     get url_admin() {
-        /* URL of this object's administrative page. */
+        /* URL of this object's administrative page, typically /$/object/<ID>. */
         assert(this.id)
         return schemat.app.system_route + `/object/${this.id}`
     }
 
-    get system_url() {
-        /* The internal URL of this object, typically /$/id/<ID> */
-        return schemat.app.system_route + `/id/${this.id}`
-        // return schemat.app.default_path_of(this)
-    }
-
     _impute_path() {
         /* Imputation function for __path. Root container must have its path='/' configured in DB, and so this method cannot be a getter. */
-        return this.__container?.get_access_path(this) || this.system_url
+        return this.__container?.get_access_path(this) || this.url_admin
     }
 
     system_slug() {
