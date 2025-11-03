@@ -115,7 +115,7 @@ export class Category extends WebObject {
         if (SERVER) return schemat.list_category(this, {load, ...opts})
         let records = await schemat.fetch_system(`members/${this.id}`, {json: true})
         return load ?
-            Promise.all(records.map(rec => rec && schemat.register_record(rec) && schemat.get_loaded(rec.id))) :
+            Promise.all(records.map(rec => schemat.register_record(rec) && schemat.get_loaded(rec.id))) :
             records.map(id => schemat.get_object(id))
     }
 
