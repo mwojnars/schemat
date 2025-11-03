@@ -137,37 +137,34 @@ export class Application extends WebObject {
     /***  Request resolution  ***/
 
     async route(request) {
-        /* Find request.path on disk, then return the static file, or render .ejs, or execute .js function. */
+        /* Find request.path on disk, then respond with a static file, or render .ejs, or execute .js function. */
 
         // this._print(`request.path:`, request.path)
         let path = request.path
         assert(!path || path[0] === '/', path)
 
         // make sure that no segment in request.path starts with a forbidden prefix (_private_routes)
-        if (this._is_private_path.test(path)) request.not_found()
+        if (this._is_private_path.test(path)) return request.not_found()
 
         // use precomputed file routes
         let match = this.routes.match(path)
-        if (!match) return false
+        if (!match) return request.not_found()
         // this._print(`app._route_file_based() match:`, match)
 
         if (match.type === 'static') {                      // send a static file as is
             request.send_mimetype(match.ext)
-            await request.send_file(match.path)
-            return true
+            return request.send_file(match.path)
         }
 
         if (match.type === 'transpiled') {                  // send a transpiled file via a corresponding _transpile_*() method
             let method = `_transpile_${match.ext}`
-            await this[method](match.path, request)
-            return true
+            return this[method](match.path, request)
         }
 
         if (match.type === 'render') {
             request.set_params(match.params)
             let method = `_render_${match.ext}`
-            await this[method](match.path, request)
-            return true
+            return this[method](match.path, request)
         }
 
         // // execute directory-based views: path/+page.svelte  ... TODO: +layout +page.js
@@ -175,15 +172,12 @@ export class Application extends WebObject {
         //     let page_path = mod_path.join(path, '+page.svelte')
         //     if (await check_file_type(page_path) === 'file') {
         //         let module = await import(page_path)
-        //         if (typeof module.default === 'function') {
-        //             await module.default(request)
-        //             return true
-        //         }
+        //         if (typeof module.default === 'function')
+        //             return module.default(request)
         //     }
         // }
 
-        return false
-        // request.not_found()
+        assert(false, `unknown route type: ${match.type}`)
     }
 
     get _svelte_imports() {
