@@ -6,6 +6,8 @@ import {JSONx} from "../common/jsonx.js";
  */
 export async function POST(request, {id, name}) {
     let obj = schemat.get_object(id)
+    let args = await request.jsonx() || {}
+
     let [result, sess] = await schemat.execute_action(obj, name, args)
 
     let records = sess.dump_records()

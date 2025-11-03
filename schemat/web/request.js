@@ -1,3 +1,4 @@
+import {JSONx} from "../common/jsonx.js";
 import {URLNotFound} from "../common/errors.js";
 import {print, assert, splitLast} from "../common/utils.js";
 import {RecentObjects} from "../common/structs.js";
@@ -159,8 +160,13 @@ export class WebRequest extends _Request {   // WebConnection (conn)
     }
 
     async json() {
-        /* Like Request.json() API. */
-        return this.text().then(text => JSON.parse(text))
+        /* Parse body as a JSON string. Like Request.json() API. Supports empty body. */
+        return this.text().then(text => text ? JSON.parse(text) : undefined)
+    }
+
+    async jsonx() {
+        /* Parse body as a JSONx string. Supports empty body. */
+        return this.text().then(text => text ? JSONx.parse(text) : undefined)
     }
 
 
