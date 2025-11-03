@@ -136,8 +136,9 @@ export class Application extends WebObject {
 
     /***  Request resolution  ***/
 
-    async _route_file_based(request) {
+    async route(request) {
         /* Find request.path on disk, then return the static file, or render .ejs, or execute .js function. */
+
         // this._print(`request.path:`, request.path)
         let path = request.path
         assert(!path || path[0] === '/', path)
@@ -337,35 +338,35 @@ export class Application extends WebObject {
     //     return this.route_local(path)
     // }
 
-    async route_local(path) {
-        /* URL-call to a LOCAL/* endpoint of an object identified by a URL `path`.
-           The path should contain an endpoint name, otherwise the default endpoint is used.
-         */
-        return this.route(new WebRequest({path}))
-        // return WebRequest.run_with({path}, () => this.route(request))
-    }
-
-    async route(request) {
-        /* Find the object pointed to by the request's URL path and execute its endpoint function through handle(). */
-
-        let handled = await this._route_file_based(request)
-        if (handled) return
-
-        this._print(`app.route() LEGACY ROUTE:`, request.req.url)
-        let path = request.path.slice(1)                // drop the leading slash
-        let object = await this.resolve(path)
-        if (!object) throw new URLNotFound({path})
-
-        if (typeof object === 'function') return object(request)        // `object` can be a tail function, just call it then
-        if (!object.is_loaded()) await object.load()
-
-        // if (path !== object.get_url()) {
-        //     // TODO: redirect to the canonical URL
-        // }
-        request.set_target(object)
-
-        return object._handle_request(request)      // a promise
-    }
+    // async route_local(path) {
+    //     /* URL-call to a LOCAL/* endpoint of an object identified by a URL `path`.
+    //        The path should contain an endpoint name, otherwise the default endpoint is used.
+    //      */
+    //     return this.route(new WebRequest({path}))
+    //     // return WebRequest.run_with({path}, () => this.route(request))
+    // }
+    //
+    // async route(request) {
+    //     /* Find the object pointed to by the request's URL path and execute its endpoint function through handle(). */
+    //
+    //     let handled = await this._route_file_based(request)
+    //     if (handled) return
+    //
+    //     this._print(`app.route() LEGACY ROUTE:`, request.req.url)
+    //     let path = request.path.slice(1)                // drop the leading slash
+    //     let object = await this.resolve(path)
+    //     if (!object) throw new URLNotFound({path})
+    //
+    //     if (typeof object === 'function') return object(request)        // `object` can be a tail function, just call it then
+    //     if (!object.is_loaded()) await object.load()
+    //
+    //     // if (path !== object.get_url()) {
+    //     //     // TODO: redirect to the canonical URL
+    //     // }
+    //     request.set_target(object)
+    //
+    //     return object._handle_request(request)      // a promise
+    // }
 
     async resolve(path) { return this.root.resolve(path) }
 

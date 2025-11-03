@@ -544,7 +544,7 @@ export class Schemat {
          */
         if (path.startsWith('schemat:') || !this.app?.is_loaded())
             return this.get_builtin(path)
-        if (path[0] === '/') return this.import_global(path)    // NOT USED currently
+        // if (path[0] === '/') return this.import_global(path)    // NOT USED currently
 
         if (path.startsWith('$app/'))
             if (SERVER) path = this.app._app_root + path.slice(4)
@@ -572,30 +572,13 @@ export class Schemat {
         })
     }
 
-    import_global(path, referrer = null) {
-        /* Import from an absolute URL path in the SUN namespace, like "/$/sys/Revision" etc.
-           TODO: The path must not contain any endpoint (::xxx), but it may contain an in-module selector (:symbol)
-         */
-        if (path[0] === '.') path = normalizePath(referrer.__url + '/' + path)      // convert a relative URL path to an absolute one
-        assert(path[0] === '/')
-        return this.app.route_local(path)
-    }
-
-
-    // async import(path, name) {
-    //     /* Import a module and (optionally) its element, `name`, from a SUN path, or from a regular JS path.
-    //        Uses the app's routing mechanism to locate the `path` anywhere across the SUN namespace.
-    //        Can be called client-side and server-side alike.
-    //        IMPORTANT: a new global context is created every time a module is imported using this method,
-    //                   so this method should be called only ONCE when the process is starting.
+    // import_global(path, referrer = null) {
+    //     /* Import from an absolute URL path in the SUN namespace, like "/$/sys/Revision" etc.
+    //        TODO: The path must not contain any endpoint (::xxx), but it may contain an in-module selector (:symbol)
     //      */
-    //     let module = CLIENT ? import(this._js_import_url(path)) : this.loader.import(path)
-    //     return name ? (await module)[name] : module
-    // }
-    //
-    // _js_import_url(path) {
-    //     /* Schemat's client-side import path converted to a standard JS import URL for importing remote code from SUN namespace. */
-    //     return path + '::import'
+    //     if (path[0] === '.') path = normalizePath(referrer.__url + '/' + path)      // convert a relative URL path to an absolute one
+    //     assert(path[0] === '/')
+    //     return this.app.route_local(path)
     // }
 
 
