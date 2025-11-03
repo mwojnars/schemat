@@ -247,13 +247,13 @@ export class Category extends WebObject {
     /***  Endpoints  ***/
 
     // 'GET.inspect'() { return new ReactPage(CategoryInspectView) }
-
-    'GET.list_objects'() {
-        return new JsonGET({
-            server: (opts) => schemat.list_category(this, {load: true, ...opts}),
-            output: mWebObjects,
-        })
-    }
+    //
+    // 'GET.list_objects'() {
+    //     return new JsonGET({
+    //         server: (opts) => schemat.list_category(this, {load: true, ...opts}),
+    //         output: mWebObjects,
+    //     })
+    // }
 
     // 'act.insert'(...args) {
     //     /* Create a new object of this category inside a transaction and insert it to the database (tx.save() invoked automatically). */
