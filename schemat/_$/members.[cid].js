@@ -11,7 +11,7 @@ export async function GET(request, {cid}) {
     let category = await schemat.load(cid)
     if (!category.is_category()) request.not_found()
 
-    // decode `opts` from request body
+    // decode `opts` from request body .. TODO: read `opts` from query
     let body = await request.text()
     let {load = true, ...opts} = body ? JSONx.parse(body) : {}
 

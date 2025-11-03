@@ -507,9 +507,10 @@ export class Schemat {
         }
     }
 
-    async server(code) {
+    async server(code, opts = {}) {
         /* Execute `code` on the server via eval(code). */
-        return this.app.POST.server(code)
+        return this.fetch_system('exec', {method: 'POST', body: code, jsonx: true, ...opts})
+        // return this.app.POST.server(code)
     }
 
     // /* Proxy object that handles both direct calls (remote(code)) and property access (remote.XYZ).
@@ -619,7 +620,7 @@ export class Schemat {
         let base = schemat.app.system_route
         let url = `${base}/${path}`
         let response = await fetch(url, options)
-        return jsonx ? JSONx.decode(await response.json()) :
+        return jsonx ? JSONx.decode_checked(await response.json()) :
                json  ? response.json() :
                text  ? response.text() :
                response
