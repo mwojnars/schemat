@@ -853,7 +853,7 @@ export class WebObject {
     get url_admin() {
         /* URL of this object's administrative page. */
         assert(this.id)
-        return `/$/object/${this.id}`
+        return schemat.app.system_route + `/object/${this.id}`
     }
 
     get system_url() {
