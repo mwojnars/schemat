@@ -1,6 +1,17 @@
 
 export class Application extends WebObject {
 
+    async _check_default_container() {
+        while (!schemat.app) await sleep(0.1)
+        let default_container = await this.resolve(this.default_path.slice(1))
+
+        // check that default_path maps to a container...
+        assert(default_container?._is_container, `default_path ('${this.default_path}') is incorrect and does not map to a container`)
+
+        // ...and that this container is an ObjectSpace, so it is compatible with the URL generation on the client
+        assert(default_container.__category.name === 'ObjectSpace', `container [${this.id}] at the default path ('${this.default_path}') must be an ObjectSpace`)
+    }
+
     async resolve(path) { return this.root.resolve(path) }
 
     get_file_url(path) {

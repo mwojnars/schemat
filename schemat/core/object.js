@@ -858,7 +858,8 @@ export class WebObject {
 
     get system_url() {
         /* The internal URL of this object, typically /$/id/<ID> */
-        return schemat.app.default_path_of(this)
+        return schemat.app.system_route + `/id/${this.id}`
+        // return schemat.app.default_path_of(this)
     }
 
     _impute_path() {
