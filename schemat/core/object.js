@@ -839,7 +839,7 @@ export class WebObject {
     //     /* Custom clean up to be executed after the item was evicted from the registry cache. Can be async. */
 
 
-    /***  URLs and URL paths  ***/
+    /***  URLs  ***/
 
     get url() {
         /* URL of this object's public "view" page. Can be overridden in subclasses. */
@@ -863,35 +863,35 @@ export class WebObject {
     //     // return this.__container?.get_access_path(this) || this.url_admin
     // }
 
-    system_slug() {
-        /* This object's URL slug for administrative purposes. */
-        assert(this.id)
-        return `${this.id}`
-    }
-
-    make_slug() {
-        /* Slug to be used in public (non-admin) URLs of this object. Can be overridden in subclasses.
-           If this method is async (returns a Promise), __slug should be stored directly in DB -- not supported yet.
-         */
-        return this.system_slug()
-    }
-
-    static get_slug(obj) {
-        let slug = obj.__slug || obj.make_slug()
-        if (slug instanceof Promise) throw new Error(`slug generation in make_slug() is asynchronous, result should be stored explicitly in __slug`)
-        return slug
-    }
-
-    static async resolve_url(slug) {
-        /* Category method to be overridden in subclasses (see Category.resolve_url()).
-           Maps a URL `slug` or `path` back to a member object of this category.
-         */
-        try {
-            let id = Number(slug)
-            return isNaN(id) ? null : await schemat.get_loaded(id)
-        }
-        catch (ex) { return null }
-    }
+    // system_slug() {
+    //     /* This object's URL slug for administrative purposes. */
+    //     assert(this.id)
+    //     return `${this.id}`
+    // }
+    //
+    // make_slug() {
+    //     /* Slug to be used in public (non-admin) URLs of this object. Can be overridden in subclasses.
+    //        If this method is async (returns a Promise), __slug should be stored directly in DB -- not supported yet.
+    //      */
+    //     return this.system_slug()
+    // }
+    //
+    // static get_slug(obj) {
+    //     let slug = obj.__slug || obj.make_slug()
+    //     if (slug instanceof Promise) throw new Error(`slug generation in make_slug() is asynchronous, result should be stored explicitly in __slug`)
+    //     return slug
+    // }
+    //
+    // static async resolve_url(slug) {
+    //     /* Category method to be overridden in subclasses (see Category.resolve_url()).
+    //        Maps a URL `slug` or `path` back to a member object of this category.
+    //      */
+    //     try {
+    //         let id = Number(slug)
+    //         return isNaN(id) ? null : await schemat.get_loaded(id)
+    //     }
+    //     catch (ex) { return null }
+    // }
 
     get_url(endpoint, args) {
         /* Canonical URL of this object, possibly with ::endpoint and ?args strings added. The ::endpoint directs to
