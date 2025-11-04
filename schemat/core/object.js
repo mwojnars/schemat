@@ -90,8 +90,8 @@ export class WebObject {
     __ttl_ms                same as __ttl, but in milliseconds
 
     __slug                  last part of a URL path of this object, "web identifier" of the object within its category
-    __path                  (virtual) URL path of this object; similar to __url, but contains blank segments; imputed via _impute_path()
-    __url                   (virtual) absolute URL path of this object, calculated via __url() getter
+    __path                  (TODO: drop) URL path of this object; similar to __url, but contains blank segments; imputed via _impute_path()
+    __url                   (TODO: drop) absolute URL path of this object, calculated via __url() getter
 
     __content               JSONx-encoded representation of {id, ...__data, __meta} for display during debugging
     __record                JSONx-encoded representation of this object as {id, data}, where `data` is this.__flat
@@ -851,11 +851,10 @@ export class WebObject {
         return schemat.app.system_route + `/object/${this.id}`
     }
 
-    get __url() {
-        /* Calculation of __url if missing: same as __path but with blank routes (*ROUTE) removed. */
-        return this.url_admin
-        // return this.__path?.replace(/\/\*[^/]*/g, '') || this.url_admin     // no-category objects may have no __path because of lack of schema and imputation
-    }
+    // get __url() {
+    //     /* Calculation of __url if missing: same as __path but with blank routes (*ROUTE) removed. */
+    //     return this.__path?.replace(/\/\*[^/]*/g, '') || this.url_admin     // no-category objects may have no __path because of lack of schema and imputation
+    // }
 
     _impute_path() {
         /* Imputation function for __path. Root container must have its path='/' configured in DB, and so this method cannot be a getter. */
@@ -897,7 +896,7 @@ export class WebObject {
         /* Canonical URL of this object, possibly with ::endpoint and ?args strings added. The ::endpoint directs to
            PROTO.endpoint() on server, and `args` are appended as a URL query string.
          */
-        let url = `${this.__url}`
+        let url = `${this.url}`
         if (endpoint) url += WebRequest.SEP_ENDPOINT + endpoint        // append ::endpoint and ?args if present...
         if (args) url += '?' + new URLSearchParams(args).toString()
         return url
