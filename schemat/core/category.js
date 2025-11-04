@@ -156,13 +156,13 @@ export class RootCategory extends Category {
         await super.__load__(true)
     }
 
-    member_url(obj) {
-        assert(false)   //TODO
-    }
-
-    async resolve_url(slug) {
-        /* Resolves to an object of any category. `slug` is an ID. */
-        return this.constructor.resolve_url(slug)
-    }
+    // member_url(obj) {
+    //     assert(false)   //TODO
+    // }
+    //
+    // async resolve_url(slug) {
+    //     /* Resolves to an object of any category. `slug` is an ID. */
+    //     return this.constructor.resolve_url(slug)
+    // }
 }
 

@@ -943,62 +943,62 @@ export class WebObject {
 
     /***  Networking  ***/
 
-    async _handle_request(request, SEP = '.') {
-        /* Handle a web or internal Request by executing the corresponding handler or service from this.__handlers.
-           Query parameters are passed in `req.query`, as:
-           - a string if there's one occurrence of PARAM in a query string,
-           - an array [val1, val2, ...] if PARAM occurs multiple times.
-           TODO: move this method to Application.handle_web(request)
-        */
-        assert(this.is_loaded)
-
-        // convert endpoint names to full protocol-qualified communication endpoints: GET.name
-        let names = this._get_endpoints(request)
-        let endpoints = names.map(e => `${request.protocol}${SEP}${e}`)
-
-        // find the first endpoint that matches this request and launch its handler
-        for (let endpoint of endpoints) {
-            // TODO: method _call_endpoint(endpoint, ...args)
-            let handler = this._get_handler(endpoint)
-            if (!handler) continue
-
-            // print(`handle() endpoint: ${endpoint}`)
-            request.set_endpoint(endpoint)
-
-            try {
-                let result = await handler.call(this, request)
-                if (result instanceof Service) result = await result.handle(this, request)
-                if (typeof result === 'function') result = await result.call(this, request)
-                return result
-            }
-            catch (ex) {
-                this._print_error(`${endpoint}() failed with`, ex)      // ${ex.constructor.name}: ${ex.message}
-                return
-            }
-        }
-
-        throw new URLNotFound(`endpoint(s) not found in the target object: [${endpoints}]`, {path: request.path})
-    }
-
-    _get_handler(endpoint) {
-        return this.__self[endpoint]
-    }
-
-    _get_endpoints(request) {
-        /* Return a list of endpoint names (no protocol included) to be tried for this request. */
-
-        // use request's endpoint if specified in the URL (::endpoint)
-        let {endpoints, protocol} = request
-        if (endpoints.length) return endpoints
-
-        // otherwise, use category defaults, OR global defaults (for no-category objects)
-        let glob_defaults = {GET: ['view', 'admin', 'inspect'], LOCAL: ['self']}
-        let catg_defaults = this.__base?.default_endpoints.getAll(protocol)
-        let defaults = catg_defaults || glob_defaults[protocol]
-        if (defaults.length) return defaults
-
-        throw new URLNotFound(`endpoint not specified (protocol ${protocol})`, {path: request.path})
-    }
+    // async _handle_request(request, SEP = '.') {
+    //     /* Handle a web or internal Request by executing the corresponding handler or service from this.__handlers.
+    //        Query parameters are passed in `req.query`, as:
+    //        - a string if there's one occurrence of PARAM in a query string,
+    //        - an array [val1, val2, ...] if PARAM occurs multiple times.
+    //        TODO: move this method to Application.handle_web(request)
+    //     */
+    //     assert(this.is_loaded)
+    //
+    //     // convert endpoint names to full protocol-qualified communication endpoints: GET.name
+    //     let names = this._get_endpoints(request)
+    //     let endpoints = names.map(e => `${request.protocol}${SEP}${e}`)
+    //
+    //     // find the first endpoint that matches this request and launch its handler
+    //     for (let endpoint of endpoints) {
+    //         // TODO: method _call_endpoint(endpoint, ...args)
+    //         let handler = this._get_handler(endpoint)
+    //         if (!handler) continue
+    //
+    //         // print(`handle() endpoint: ${endpoint}`)
+    //         request.set_endpoint(endpoint)
+    //
+    //         try {
+    //             let result = await handler.call(this, request)
+    //             if (result instanceof Service) result = await result.handle(this, request)
+    //             if (typeof result === 'function') result = await result.call(this, request)
+    //             return result
+    //         }
+    //         catch (ex) {
+    //             this._print_error(`${endpoint}() failed with`, ex)      // ${ex.constructor.name}: ${ex.message}
+    //             return
+    //         }
+    //     }
+    //
+    //     throw new URLNotFound(`endpoint(s) not found in the target object: [${endpoints}]`, {path: request.path})
+    // }
+    //
+    // _get_handler(endpoint) {
+    //     return this.__self[endpoint]
+    // }
+    //
+    // _get_endpoints(request) {
+    //     /* Return a list of endpoint names (no protocol included) to be tried for this request. */
+    //
+    //     // use request's endpoint if specified in the URL (::endpoint)
+    //     let {endpoints, protocol} = request
+    //     if (endpoints.length) return endpoints
+    //
+    //     // otherwise, use category defaults, OR global defaults (for no-category objects)
+    //     let glob_defaults = {GET: ['view', 'admin', 'inspect'], LOCAL: ['self']}
+    //     let catg_defaults = this.__base?.default_endpoints.getAll(protocol)
+    //     let defaults = catg_defaults || glob_defaults[protocol]
+    //     if (defaults.length) return defaults
+    //
+    //     throw new URLNotFound(`endpoint not specified (protocol ${protocol})`, {path: request.path})
+    // }
 
 
     /***  Web Triggers  ***/
