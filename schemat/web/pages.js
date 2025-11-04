@@ -235,7 +235,7 @@ export class InspectView extends ReactPage.View {
             // e(MaterialUI.Box, {component:"span", sx:{ fontSize: 16, mt: 1 }}, 'MaterialUI TEST'),
             // e(this._mui_test),
             this.Title(),
-            this.Breadcrumb(),
+            // this.Breadcrumb(),
             H2('Properties'),
             this.PropertiesTable(),
             extra,
@@ -253,13 +253,13 @@ export class InspectView extends ReactPage.View {
         return H1(label, ' ', catg_label)
     }
 
-    Breadcrumb() {
-        /* A list of links to the parent containers of the object. */
-        let steps = this.get_breadcrumb()
-        let links = steps.map(([name, obj]) => A({href: obj.url_admin}, name || 'home'))
-        let elems = links.map((link, i) => [link, i < links.length-1 ? ' » ' : ''])
-        return P(...elems)
-    }
+    // Breadcrumb() {
+    //     /* A list of links to the parent containers of the object. */
+    //     let steps = this.get_breadcrumb()
+    //     let links = steps.map(([name, obj]) => A({href: obj.url_admin}, name || 'home'))
+    //     let elems = links.map((link, i) => [link, i < links.length-1 ? ' » ' : ''])
+    //     return P(...elems)
+    // }
 
     PropertiesTable() {
         /* Display this item's data as a SCHEMA.Widget table with possibly nested Catalog objects. */
