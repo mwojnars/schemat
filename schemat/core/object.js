@@ -1032,28 +1032,28 @@ export class WebObject {
         })
     }
 
-    // GET/POST/LOCAL.*() are isomorphic triggers ({name: trigger_function}) for this object's web endpoints ...
-
-    get GET()   { return this._web_triggers('GET') }        // triggers for HTTP GET endpoints of this object
-    get POST()  { return this._web_triggers('POST') }       // triggers for HTTP POST endpoints
-    get LOCAL() { return this._web_triggers('LOCAL') }      // triggers for LOCAL endpoints that only accept requests issued by the same process (no actual networking, similar to "localhost" protocol)
-
-    _web_triggers(protocol, SEP = '.') {
-        /* Triggers of web endpoints on a given protocol: obj.<protocol>.<endpoint>() redirects to obj['<protocol>.<endpoint>']().
-           If the result is a Service, its .client() or .server() is called (via .invoke()), according to the current environment.
-         */
-        let obj = this
-        return new Proxy({}, {
-            get(target, name) {
-                if (typeof name === 'string') return (...args) => {
-                    let endpoint = protocol + SEP + name
-                    let result = obj.__self[endpoint]()
-                    let invoke = (res) => res instanceof Service ? res.invoke(obj, endpoint, ...args) : res
-                    return result instanceof Promise ? result.then(invoke) : invoke(result)
-                }
-            }
-        })
-    }
+    // // GET/POST/LOCAL.*() are isomorphic triggers ({name: trigger_function}) for this object's web endpoints ...
+    //
+    // get GET()   { return this._web_triggers('GET') }        // triggers for HTTP GET endpoints of this object
+    // get POST()  { return this._web_triggers('POST') }       // triggers for HTTP POST endpoints
+    // get LOCAL() { return this._web_triggers('LOCAL') }      // triggers for LOCAL endpoints that only accept requests issued by the same process (no actual networking, similar to "localhost" protocol)
+    //
+    // _web_triggers(protocol, SEP = '.') {
+    //     /* Triggers of web endpoints on a given protocol: obj.<protocol>.<endpoint>() redirects to obj['<protocol>.<endpoint>']().
+    //        If the result is a Service, its .client() or .server() is called (via .invoke()), according to the current environment.
+    //      */
+    //     let obj = this
+    //     return new Proxy({}, {
+    //         get(target, name) {
+    //             if (typeof name === 'string') return (...args) => {
+    //                 let endpoint = protocol + SEP + name
+    //                 let result = obj.__self[endpoint]()
+    //                 let invoke = (res) => res instanceof Service ? res.invoke(obj, endpoint, ...args) : res
+    //                 return result instanceof Promise ? result.then(invoke) : invoke(result)
+    //             }
+    //         }
+    //     })
+    // }
 
     /***  RPC  ***/
 
@@ -1339,29 +1339,26 @@ export class WebObject {
 
 
 
-    /***  Actions  ***/
-
-    async 'act.move_to'(directory, overwrite = false) {
-        /* Move this object from its current __container to `directory`, which must be a Directory object, or its URL. */
-
-        if (typeof directory === 'number') directory = await schemat.get_loaded(directory)
-        else if (typeof directory === 'string') directory = await schemat.import(directory)
-        assert(directory.instanceof(schemat.std.Directory))
-
-        // FIXME: __ident is no longer with us
-        let ident = this.__ident || this.name || `${this.id}`
-        let src = this.__container
-        let dst = directory
-
-        if (!overwrite && dst.has_entry(ident)) throw new Error(`entry '${ident}' already exists in the target directory (${dst})`)
-
-        this.__container = dst
-        dst.edit.set_entry(ident, this)
-
-        if (src?.has_entry(this.__ident, this))
-            src.edit.del_entry(this.__ident)
-    }
-
+    // async 'act.move_to'(directory, overwrite = false) {
+    //     /* Move this object from its current __container to `directory`, which must be a Directory object, or its URL. */
+    //
+    //     if (typeof directory === 'number') directory = await schemat.get_loaded(directory)
+    //     else if (typeof directory === 'string') directory = await schemat.import(directory)
+    //     assert(directory.instanceof(schemat.std.Directory))
+    //
+    //     // FIXME: __ident is no longer with us
+    //     let ident = this.__ident || this.name || `${this.id}`
+    //     let src = this.__container
+    //     let dst = directory
+    //
+    //     if (!overwrite && dst.has_entry(ident)) throw new Error(`entry '${ident}' already exists in the target directory (${dst})`)
+    //
+    //     this.__container = dst
+    //     dst.edit.set_entry(ident, this)
+    //
+    //     if (src?.has_entry(this.__ident, this))
+    //         src.edit.del_entry(this.__ident)
+    // }
 
     /***  Endpoints  ***/
 
@@ -1379,8 +1376,7 @@ export class WebObject {
     //
     // 'GET.json'({res})       { res.json(this.__record) }
     // 'GET.inspect'()         { return new ReactPage(InspectView) }
-
-    'LOCAL.self'()          { return this }     // TODO: apparently not needed, tests pass without this method
-
+    //
+    // 'LOCAL.self'()          { return this }     // TODO: apparently not needed, tests pass without this method
 }
 
