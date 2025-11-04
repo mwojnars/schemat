@@ -229,7 +229,7 @@ export class WebRequest extends _Request {   // WebConnection (conn)
             items.add(obj)
             queue.push(...obj.__category$)
             queue.push(...obj.__prototype$)
-            queue.push(obj.__container)
+            // queue.push(obj.__container)
         }
         items = [...items]
 

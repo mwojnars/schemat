@@ -558,10 +558,10 @@ export class WebObject {
         let cats = this.__category$.filter(c => !c.is_loaded() && c !== this)   // load categories, if any (none for non-categorized objects)
         if (cats.length) await (cats.length === 1 ? cats[0].load() : Promise.all(cats.map(c => c.load())))
 
-        let container = this.__container
-        if (container && !container.is_loaded())
-            await container.load()          // [Category], [Container], [Directory] have no __container set up despite being placed in /$/sys just to avoid deadlocks here!
-            // if (this.id <= 5) container.load(); else await container.load()   // __container of [Container] must not be awaited
+        // let container = this.__container
+        // if (container && !container.is_loaded())
+        //     await container.load()          // [Category], [Container], [Directory] have no __container set up despite being placed in /$/sys just to avoid deadlocks here!
+        //     // if (this.id <= 5) container.load(); else await container.load()   // __container of [Container] must not be awaited
 
         if (this.__status) this._print_stack(`WARNING: __status == ${this.__status}`)
 
