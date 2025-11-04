@@ -82,7 +82,6 @@ export class WebObject {
     __category              category of this object, as a Category instance; there can be multiple __category$; can be inherited from __prototype$
     __class                 JS class (or its class path) for this object; assigned AFTER object creation during .load()
 
-    __container             Container of this object, for canonical URL generation
     __status                a string describing the current state of this object in the DB, e.g., "DELETED"; undefined means normal state
     __std                   shortcut for __category.std: standard related objects (categories) that might be needed in __new__(), __setup__() etc
 
@@ -90,6 +89,8 @@ export class WebObject {
     __ttl_ms                same as __ttl, but in milliseconds
 
     __slug                  last part of a URL path of this object, "web identifier" of the object within its category
+
+    __container             (TODO: drop) Container of this object, for canonical URL generation
     __path                  (TODO: drop) URL path of this object; similar to __url, but contains blank segments; imputed via _impute_path()
     __url                   (TODO: drop) absolute URL path of this object, calculated via __url() getter
 
@@ -855,12 +856,12 @@ export class WebObject {
     //     /* Calculation of __url if missing: same as __path but with blank routes (*ROUTE) removed. */
     //     return this.__path?.replace(/\/\*[^/]*/g, '') || this.url_admin     // no-category objects may have no __path because of lack of schema and imputation
     // }
-
-    _impute_path() {
-        /* Imputation function for __path. Root container must have its path='/' configured in DB, and so this method cannot be a getter. */
-        return this.url_admin
-        // return this.__container?.get_access_path(this) || this.url_admin
-    }
+    //
+    // _impute_path() {
+    //     /* Imputation function for __path. Root container must have its path='/' configured in DB, and so this method cannot be a getter. */
+    //     return this.url_admin
+    //     // return this.__container?.get_access_path(this) || this.url_admin
+    // }
 
     system_slug() {
         /* This object's URL slug for administrative purposes. */
